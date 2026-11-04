@@ -609,7 +609,7 @@ class Unit {
       const e = Math.min(1, (t - 0.48) / 0.08);
       o.kick = lerp(0.4, 1, ease(e)); o.rot = -0.22 * ease(e); o.dx = 0.06 * ease(e);
       o.bh = [-0.15, -0.62]; o.fh = [0.02, -0.66];
-      if (e >= 1 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.85, -0.3]); }
+      if (e >= 1 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
     } else {                               // recoge la pierna y vuelve a la guardia
       const e = ease((t - 0.7) / 0.3);
       o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
