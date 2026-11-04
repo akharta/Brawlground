@@ -181,7 +181,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Lobo</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>20</dd><dt>Daño</dt><dd>20</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
+      <dl><dt>Vida</dt><dd>50</dd><dt>Daño</dt><dd>20</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -216,7 +216,7 @@ const CH = {
   pistolero: { hp: 60, dmg: [11, 13], speed: 56, cd: [1.4, 1.8], range: H * 2.7, ranged: true, h: 1,
     rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } },
   // Animal sin manos: cabeza (dos versiones), cuerpo y cola por separado. Embestida al ver a un enemigo cerca.
-  lobo: { hp: 20, dmg: [18, 22], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
+  lobo: { hp: 50, dmg: [19, 21], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
     rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] }
 };
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -451,12 +451,12 @@ class Unit {
       o.sw = lerp(-2.75, 0.35, e);
       o.bh = lerp2([r.bh[0] - 0.09, r.bh[1] - 0.09], [0.33, -0.2], e);
       o.rot = lerp(-0.08, 0.13, e); o.dx = 0.08 * e; o.sh[0] += 0.04 * e; o.fh[0] += 0.04 * e;
-      if (e > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
     } else {
       const e = ease((p - 0.55) / 0.45);
       o.sw = lerp(0.35, r.sw, e); o.bh = lerp2([0.33, -0.2], r.bh, e);
       o.rot = lerp(0.13, 0, e); o.dx = lerp(0.08, 0, e); o.sh[0] += 0.04 * (1 - e); o.fh[0] += 0.04 * (1 - e);
     }
+    if (p >= 0.52 && !this.fired) { this.fired = true; onMelee(this); }
     if (p >= 1) this.set('idle');
   }
   attackAxe(o, t) {
@@ -508,11 +508,11 @@ class Unit {
       const e = easeIn((p - 0.35) / 0.27);
       o.dx = lerp(-0.06, 0.2, e); o.sy = lerp(0.9, 1.04, e); o.headR = lerp(-0.12, 0.18, e); o.bite = e < 0.85;
       o.head = [0.05 * e, -0.03 * e]; o.tail = lerp(0.3, -0.4, e);
-      if (e > 0.8 && !this.fired) { this.fired = true; onMelee(this); }
     } else {
       const e = ease((p - 0.62) / 0.38);
       o.dx = lerp(0.2, 0, e); o.headR = lerp(0.18, 0, e); o.head = [0.05 * (1 - e), -0.03 * (1 - e)]; o.tail = lerp(-0.4, 0, e);
     }
+    if (p >= 0.58 && !this.fired) { this.fired = true; onMelee(this); }
     if (p >= 1) this.set('idle');
   }
   attackGuns(o, t) {
@@ -922,6 +922,7 @@ $('anim-controls').addEventListener('click', e => {
   u.set(act);
 });
 
+window.__debugUnits = () => units.map(u => ({ type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x) }));
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
 </script>
