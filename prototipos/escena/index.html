@@ -312,6 +312,9 @@ class Unit {
       this.fh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
       this.parts = [...this.braidSegs.slice().reverse(), this.legB, this.legF, this.body, this.bh, this.fh];
       this.rig.add(this.parts);
+      // vista de espaldas completa: sustituye a las piezas durante la mitad de la vuelta en que da la espalda
+      this.back = sc.add.image(0, 0, 'kf_espalda').setOrigin(0.536, 1).setScale(0.2487 * f).setVisible(false);
+      this.rig.add(this.back);
       this.drops = [];
     } else if (type === 'samurai') {
       const f = H / 120;
@@ -760,6 +763,12 @@ class Unit {
     if (this.type === 'kungfu') {
       const c = this.cfg, key = o.palm ? 'kf_palma' : 'kf_puno';
       if (o.spin !== undefined) this.rig.scaleX = this.dir * o.sx * (Math.abs(o.spin) < 0.08 ? 0.08 * Math.sign(o.spin || 1) : o.spin);
+      const backView = o.spin !== undefined && o.spin < 0 && this.state !== 'die';
+      if (backView !== !!this.showingBack) {
+        this.showingBack = backView;
+        this.back.setVisible(backView);
+        this.parts.forEach(pt => pt.setVisible(!backView));
+      }
       // piernas: pasos al andar; en la patada la delantera gira desde la cadera y se estira
       const f = H / 120, now2 = this.sc.time.now / 1000;
       let rb = 0, rf = 0;
@@ -1117,7 +1126,7 @@ function start() {
       L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
       L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
       L('sam_cuerpo', 'samurai_cuerpo'); L('sam_arma', 'samurai_arma'); L('sam_vaina', 'samurai_vaina');
-      L('kf_torso', 'kungfu_torso'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
+      L('kf_torso', 'kungfu_torso'); L('kf_espalda', 'kungfu_espalda'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
     }, create, update }
   });
 }
