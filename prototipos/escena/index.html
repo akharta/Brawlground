@@ -205,6 +205,7 @@ const W = 960, HGT = 540, GROUND = 410, H = 120;
 const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
+const easeInOut = p => p < 0 ? 0 : p > 1 ? 1 : p * p * (3 - 2 * p);
 const lerp = (a, b, p) => a + (b - a) * p;
 const lerp2 = (a, b, p) => [lerp(a[0], b[0], p), lerp(a[1], b[1], p)];
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -525,31 +526,47 @@ class Unit {
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
   attackIaido(o, t) {
-    const r = this.cfg.rest, c = this.cfg, p = t / 0.95;
-    const sheathR = Math.PI + c.sayaR, slashR = -0.5;
+    // Tajo ascendente al desenvainar; después cuadra la espada en horizontal y la envaina despacio, con cuidado.
+    const r = this.cfg.rest, c = this.cfg;
+    const sheathR = Math.PI + c.sayaR, slashR = -0.5, ax = [Math.cos(c.sayaR), Math.sin(c.sayaR)];
     const grip = [c.saya[0] - KAT.g2g * Math.cos(sheathR), c.saya[1] - KAT.g2g * Math.sin(sheathR)];
+    const holdSaya = [c.saya[0] - 0.02, c.saya[1] + 0.01];
     const out = [0.36, -0.4];
-    if (p < 0.3) {                       // postura: se agacha con la mano en la empuñadura y tiembla de tensión
-      const e = ease(p / 0.3);
-      o.fh = lerp2(r.fh, grip, e); o.bh = lerp2(r.bh, [c.saya[0] - 0.02, c.saya[1] + 0.01], e);
+    const BL = 0.554;                                        // largo de la hoja (en H)
+    const tipAt = [c.saya[0] + ax[0] * BL, c.saya[1] + ax[1] * BL];          // guarda con la punta en la boca
+    const handAt = [tipAt[0] + KAT.g2g * ax[0], tipAt[1] + KAT.g2g * ax[1]];
+    const T = [0.285, 0.36, 0.63, 1.0, 1.2, 1.95, 2.25];     // fin de cada fase (s)
+    o.bh = holdSaya;
+    if (t < T[0]) {                        // postura
+      const e = ease(t / T[0]);
+      o.fh = lerp2(r.fh, grip, e); o.bh = lerp2(r.bh, holdSaya, e);
       o.sy = 1 - 0.06 * e; o.sx = 1 + 0.04 * e; o.rot = -0.05 * e;
       if (e > 0.9) o.dx = Math.sin(t * 90) * 0.006;
-    } else if (p < 0.38) {               // desenvaina: tajo ascendente instantáneo y avance
-      const e = (p - 0.3) / 0.08;
+    } else if (t < T[1]) {                 // tajo ascendente al desenvainar
+      const e = (t - T[0]) / (T[1] - T[0]);
       o.drawn = true; o.katR = lerp(sheathR, slashR, e); o.fh = lerp2(grip, out, e);
-      o.dx = 0.28 * e; o.rot = lerp(-0.05, 0.1, e); o.bh = [c.saya[0] - 0.02, c.saya[1] + 0.01];
+      o.dx = 0.28 * e; o.rot = lerp(-0.05, 0.1, e);
       if (!this.slashed) { this.slashed = true; iaidoSlash(this, 1.7, -0.9); }
-    } else if (p < 0.66) {               // zanshin: aguanta la pose con un brillo en la hoja
-      o.drawn = true; o.katR = slashR; o.fh = out; o.dx = 0.28; o.rot = 0.1;
-      o.bh = [c.saya[0] - 0.02, c.saya[1] + 0.01]; o.glint = Math.sin(Math.min(1, (p - 0.38) / 0.2) * Math.PI);
-    } else {                             // envaina despacio y vuelve a su sitio
-      const e = ease((p - 0.66) / 0.34);
-      o.drawn = e < 0.92; o.katR = lerp(slashR, sheathR, e); o.fh = lerp2(out, grip, Math.min(1, e * 1.2));
-      if (e > 0.85) o.fh = lerp2(grip, r.fh, (e - 0.85) / 0.15);
-      o.dx = lerp(0.28, 0, e); o.rot = lerp(0.1, 0, e); o.bh = lerp2([c.saya[0] - 0.02, c.saya[1] + 0.01], r.bh, e);
+      if (e > 0.5 && !this.fired) { this.fired = true; onMelee(this); }
+    } else if (t < T[2]) {                 // aguanta la pose con brillo en la hoja
+      const e = (t - T[1]) / (T[2] - T[1]);
+      o.drawn = true; o.katR = slashR; o.fh = out; o.dx = 0.28; o.rot = 0.1; o.glint = Math.sin(e * Math.PI);
+    } else if (t < T[3]) {                 // cuadra la espada: la gira en horizontal hasta alinearla con la vaina
+      const q = ease((t - T[2]) / (T[3] - T[2]));
+      o.drawn = true; o.katR = lerp(slashR, c.sayaR, q); o.ksx = Math.cos(q * Math.PI);
+      o.fh = lerp2(out, handAt, q); o.dx = lerp(0.28, 0.1, q); o.rot = lerp(0.1, 0, q);
+    } else if (t < T[4]) {                 // punta apoyada en la boca de la vaina, un instante de calma
+      o.slideIn = 0; o.fh = handAt; o.dx = 0.1;
+    } else if (t < T[5]) {                 // la desliza dentro despacio
+      const q = easeInOut((t - T[4]) / (T[5] - T[4]));
+      o.slideIn = q; o.dx = lerp(0.1, 0, q);
+      o.fh = [c.saya[0] + ax[0] * (BL * (1 - q) + KAT.g2g), c.saya[1] + ax[1] * (BL * (1 - q) + KAT.g2g)];
+      if (q > 0.985 && !this.click) { this.click = true; burst(this.x + this.dir * c.saya[0] * H, this.gy + c.saya[1] * H, 0xffe9a8, 6, 70); }
+    } else {                               // suelta la empuñadura y vuelve a la guardia
+      const e = ease((t - T[5]) / (T[6] - T[5]));
+      o.fh = lerp2(grip, r.fh, e); o.bh = lerp2(holdSaya, r.bh, e);
     }
-    if (p >= 0.36 && !this.fired) { this.fired = true; onMelee(this); }
-    if (p >= 1) { this.slashed = false; this.set('idle'); }
+    if (t >= T[6]) { this.slashed = this.click = false; this.set('idle'); }
   }
   attackBite(o, t) {
     // agacharse, lanzarse con la boca abierta y cerrar de golpe
