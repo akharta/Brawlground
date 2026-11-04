@@ -58,6 +58,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 }
 #game canvas { display: block; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pick { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 3px solid var(--outline); border-radius: 12px; padding: 4px 6px 4px 12px; }
+.pick span { color: var(--muted); font-size: .9rem; }
+.pick select { font-family: var(--font-display); font-size: 1rem; background: var(--panel-hi); color: var(--ink); border: 0; border-radius: 8px; padding: 6px 8px; }
+.vs { font-family: var(--font-display); color: var(--gold); }
 .hint { color: var(--muted); font-size: .9rem; margin: 0; max-width: 65ch; }
 .cards { display: flex; flex-wrap: wrap; gap: 26px 22px; padding-top: 10px; }
 .cardbox { display: grid; gap: 10px; width: 200px; }
@@ -100,6 +104,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   <div id="game"></div>
 
+  <div class="controls" id="fight-controls">
+    <label class="pick"><span>Bando azul</span><select id="pick-blue"></select></label>
+    <span class="vs">contra</span>
+    <label class="pick"><span>Bando morado</span><select id="pick-purple"></select></label>
+  </div>
   <div class="controls" id="anim-controls" hidden>
     <div class="seg" role="group" aria-label="Personaje">
       <button data-char="legionario" aria-pressed="true">Legionario</button>
@@ -204,6 +213,9 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero' };
+const NEWEST = 'pistolero';
+let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
 class Unit {
@@ -744,7 +756,7 @@ function buildMode() {
   spawnTimers.forEach(clearTimeout); spawnTimers = [];
   clearUnits();
   if (mode === 'fight') {
-    const plan = [['legionario', 'blue', 150, 0], ['legionario', 'purple', W - 150, 0], ['arquera', 'blue', 120, 1100], ['arquera', 'purple', W - 120, 1100], ['valkiria', 'blue', 150, 2600], ['valkiria', 'purple', W - 150, 2600], ['ninja', 'blue', 140, 3800], ['ninja', 'purple', W - 140, 3800], ['pistolero', 'blue', 120, 5200], ['pistolero', 'purple', W - 120, 5200]];
+    const plan = [[pickBlue, 'blue', 140, 0], [pickPurple, 'purple', W - 140, 0]];
     for (const [type, team, x, delay] of plan) {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
@@ -794,7 +806,7 @@ function start() {
 /* ---- controles ---- */
 const $ = id => document.getElementById(id);
 const HINTS = {
-  fight: 'Cada bando saca un Legionario, una Arquera, una Valkiria, un Ninja y un Pistolero. Los de cuerpo a cuerpo chocan en el centro, arqueras y pistoleros disparan desde atrás y el Ninja lanza un shuriken, desaparece en humo y reaparece a la espalda de la arquera enemiga. Quien cae vuelve a salir de su castillo.',
+  fight: 'Uno contra uno: elige qué personaje lleva cada bando. Cuando uno cae, vuelve a salir de su castillo.',
   anim: 'Un solo personaje. Elige cuál y pulsa cada botón para ver esa animación; con «Cámara lenta» se aprecia el detalle.'
 };
 function setMode(m) {
@@ -802,10 +814,16 @@ function setMode(m) {
   $('mode-fight').setAttribute('aria-pressed', m === 'fight');
   $('mode-anim').setAttribute('aria-pressed', m === 'anim');
   $('anim-controls').hidden = m !== 'anim';
+  $('fight-controls').hidden = m !== 'fight';
   $('hint').textContent = HINTS[m];
   if (scene) buildMode();
 }
 $('hint').textContent = HINTS.fight;
+for (const [id, val] of [['pick-blue', pickBlue], ['pick-purple', pickPurple]]) {
+  const sel = $(id);
+  for (const k of Object.keys(NAMES)) sel.add(new Option(NAMES[k] + (k === NEWEST ? ' (nuevo)' : ''), k, false, k === val));
+  sel.onchange = () => { if (id === 'pick-blue') pickBlue = sel.value; else pickPurple = sel.value; if (scene && mode === 'fight') buildMode(); };
+}
 $('mode-fight').onclick = () => setMode('fight');
 $('mode-anim').onclick = () => setMode('anim');
 $('slow').onclick = e => {
