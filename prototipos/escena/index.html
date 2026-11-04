@@ -290,14 +290,24 @@ class Unit {
       this.drops = [[this.weapon, -0.6, -560, 10]];
     } else if (type === 'kungfu') {
       const f = H / 120;
-      this.braid = sc.add.image(0, 0, 'kf_trenza').setOrigin(0.5, 0.02).setScale(0.2317 * f);
+      // la trenza se corta en segmentos encadenados para que ondule como pelo
+      const tex = sc.textures.get('kf_trenza'), src = tex.getSourceImage(), TW = src.width, TH = src.height;
+      const N = 6, segH = TH / N, pad = 5;
+      this.braidSegs = [];
+      for (let i = 0; i < N; i++) {
+        const name = 'seg' + i, y0 = Math.max(0, Math.round(i * segH - pad)), h = Math.min(TH - y0, Math.round(segH + pad * 2));
+        if (!tex.has(name)) tex.add(name, 0, 0, y0, TW, h);
+        const img = sc.add.image(0, 0, 'kf_trenza', name).setOrigin(0.5, (i * segH - y0) / h).setScale(0.2317 * f);
+        this.braidSegs.push(img);
+      }
+      this.segLen = segH * 0.2317 * f;
+      this.braidAng = new Array(N).fill(this.cfg.braidR); this.braidVel = new Array(N).fill(0);
       this.body = sc.add.image(0, 0, 'kf_cuerpo').setOrigin(0.485, 1).setScale(H / 512);
       this.bh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
       this.fh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
-      this.parts = [this.braid, this.body, this.bh, this.fh];
+      this.parts = [...this.braidSegs.slice().reverse(), this.body, this.bh, this.fh];
       this.rig.add(this.parts);
       this.drops = [];
-      this.braidA = this.cfg.braidR; this.braidV = 0;
     } else if (type === 'samurai') {
       const f = H / 120;
       this.body = sc.add.image(0, 0, 'sam_cuerpo').setOrigin(0.458, 1).setScale(H / 512);
@@ -721,12 +731,24 @@ class Unit {
     if (this.type === 'kungfu') {
       const c = this.cfg, key = o.palm ? 'kf_palma' : 'kf_puno';
       if (this.bh.texture.key !== key) { this.bh.setTexture(key); this.bh.setScale(o.palm ? 0.0469 * (H / 120) : 0.0373 * (H / 120)); }
-      // trenza: muelle que se queda atrás con la velocidad y da latigazos con los golpes
+      // trenza: cadena de segmentos; cada uno sigue al anterior con retraso y una onda la recorre de arriba abajo
       const wx = this.x + this.rig.x, vx = dt > 0 ? (wx - (this.prevWX ?? wx)) / dt : 0; this.prevWX = wx;
-      let target = c.braidR + Math.max(-0.2, Math.min(0.9, vx * this.dir * 0.006)) - o.rot * 1.5;
-      if (this.state === 'walk') target += 0.45;
-      this.braidV += ((target - this.braidA) * 70 - this.braidV * 7) * dt; this.braidA += this.braidV * dt;
-      this.braid.setPosition(c.braid[0] * H, c.braid[1] * H).setRotation(this.braidA);
+      const running = this.state === 'walk', now = this.sc.time.now / 1000;
+      let rootT = c.braidR + Math.max(-0.25, Math.min(0.9, vx * this.dir * 0.006)) - o.rot * 1.5 + (running ? 0.5 : 0);
+      const A = running ? 0.16 : 0.07, w = running ? 11 : 3.2;
+      const ang = this.braidAng, vel = this.braidVel, n = ang.length;
+      for (let i = 0; i < n; i++) {
+        const wave = A * Math.sin(now * w - i * 0.95) * (0.4 + i / n);
+        const target = (i === 0 ? rootT : ang[i - 1]) + wave;
+        const k = 80 - i * 9, d = 7 - i * 0.5;
+        vel[i] += ((target - ang[i]) * k - vel[i] * d) * Math.min(dt, 0.033);
+        ang[i] += vel[i] * Math.min(dt, 0.033);
+      }
+      let px = c.braid[0] * H, py = c.braid[1] * H;
+      for (let i = 0; i < n; i++) {
+        this.braidSegs[i].setPosition(px, py).setRotation(ang[i]);
+        px += -Math.sin(ang[i]) * this.segLen; py += Math.cos(ang[i]) * this.segLen;
+      }
     } else if (this.type === 'samurai') {
       const c = this.cfg;
       this.saya.setPosition(c.saya[0] * H, c.saya[1] * H).setRotation(c.sayaR);
