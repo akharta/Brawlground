@@ -245,7 +245,8 @@ const CH = {
     rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
   // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
   kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [0.6, 0.8], range: H * 0.85, ranged: false, h: 1,
-    rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25 }
+    rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
+    torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] }
 };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -303,12 +304,14 @@ class Unit {
       }
       this.segLen = segH * 0.2317 * f;
       this.braidAng = new Array(N).fill(this.cfg.braidR); this.braidVel = new Array(N).fill(0);
-      this.body = sc.add.image(0, 0, 'kf_cuerpo').setOrigin(0.485, 1).setScale(H / 512);
+      // torso y dos piernas (la misma pieza): la cadera queda tapada por el fajín
+      this.legB = sc.add.image(0, 0, 'kf_pierna').setOrigin(0.495, 0.02).setScale(0.0556 * f);
+      this.legF = sc.add.image(0, 0, 'kf_pierna').setOrigin(0.495, 0.02).setScale(0.0556 * f);
+      this.body = sc.add.image(0, 0, 'kf_torso').setOrigin(0, 0).setScale(0.2054 * f);
       this.bh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
       this.fh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
-      this.leg = sc.add.graphics();
-      this.parts = [...this.braidSegs.slice().reverse(), this.body, this.bh, this.fh];
-      this.rig.add([...this.braidSegs.slice().reverse(), this.body, this.leg, this.bh, this.fh]);
+      this.parts = [...this.braidSegs.slice().reverse(), this.legB, this.legF, this.body, this.bh, this.fh];
+      this.rig.add(this.parts);
       this.drops = [];
     } else if (type === 'samurai') {
       const f = H / 120;
@@ -757,19 +760,16 @@ class Unit {
     if (this.type === 'kungfu') {
       const c = this.cfg, key = o.palm ? 'kf_palma' : 'kf_puno';
       if (o.spin !== undefined) this.rig.scaleX = this.dir * o.sx * (Math.abs(o.spin) < 0.08 ? 0.08 * Math.sign(o.spin || 1) : o.spin);
-      const lg = this.leg; lg.clear();
-      if (o.kick > 0) {
-        // pierna provisional dibujada en el estilo del personaje: pantalón naranja, pie vendado y contorno azul marino
-        const hx = 0.02 * H, hy = -0.3 * H, len = (0.15 + 0.62 * o.kick) * H, fx = hx + len, fy = hy - 0.02 * H * o.kick;
-        lg.lineStyle(0.15 * H + 6, OUT, 1).beginPath(); lg.moveTo(hx, hy); lg.lineTo(fx - 0.08 * H, fy); lg.strokePath();
-        lg.lineStyle(0.15 * H, 0xf59a1f, 1).beginPath(); lg.moveTo(hx, hy); lg.lineTo(fx - 0.08 * H, fy); lg.strokePath();
-        lg.lineStyle(0.05 * H, 0xd9741a, 1).beginPath(); lg.moveTo(hx, hy + 0.045 * H); lg.lineTo(fx - 0.1 * H, fy + 0.045 * H); lg.strokePath();
-        lg.fillStyle(OUT, 1).fillEllipse(fx, fy, 0.2 * H + 6, 0.13 * H + 6);
-        lg.fillStyle(0xf2efe9, 1).fillEllipse(fx, fy, 0.2 * H, 0.13 * H);
-        lg.lineStyle(2, OUT, 1).beginPath(); lg.moveTo(fx - 0.04 * H, fy - 0.06 * H); lg.lineTo(fx - 0.06 * H, fy + 0.06 * H); lg.strokePath();
-        lg.beginPath(); lg.moveTo(fx + 0.02 * H, fy - 0.065 * H); lg.lineTo(fx, fy + 0.065 * H); lg.strokePath();
-      }
-      if (this.bh.texture.key !== key) { this.bh.setTexture(key); this.bh.setScale(o.palm ? 0.0469 * (H / 120) : 0.0373 * (H / 120)); }
+      // piernas: pasos al andar; en la patada la delantera gira desde la cadera y se estira
+      const f = H / 120, now2 = this.sc.time.now / 1000;
+      let rb = 0, rf = 0;
+      if (this.state === 'walk') { const ph = this.t * 15; rb = Math.sin(ph) * 0.4; rf = -Math.sin(ph) * 0.4; }
+      else if (this.state === 'idle') { rb = Math.sin(now2 * 6) * 0.05; rf = -rb; }
+      const kick = o.kick || 0;
+      rf = lerp(rf, -1.62 - (o.rot || 0), kick);
+      this.legB.setPosition(c.hipB[0] * H, c.hipB[1] * H).setRotation(rb).setScale(0.0556 * f);
+      this.legF.setPosition(c.hipF[0] * H, c.hipF[1] * H).setRotation(rf).setScale(0.0556 * f, 0.0556 * f * (1 + 0.9 * kick));
+      this.body.setPosition(c.torso[0] * H, c.torso[1] * H);
       // trenza: cadena de segmentos; cada uno sigue al anterior con retraso y una onda la recorre de arriba abajo
       const wx = this.x + this.rig.x, vx = dt > 0 ? (wx - (this.prevWX ?? wx)) / dt : 0; this.prevWX = wx;
       const running = this.state === 'walk', now = this.sc.time.now / 1000;
@@ -1117,7 +1117,7 @@ function start() {
       L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
       L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
       L('sam_cuerpo', 'samurai_cuerpo'); L('sam_arma', 'samurai_arma'); L('sam_vaina', 'samurai_vaina');
-      L('kf_cuerpo', 'kungfu_cuerpo'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
+      L('kf_torso', 'kungfu_torso'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
     }, create, update }
   });
 }
