@@ -1120,8 +1120,9 @@ function fightLogic(dt) {
     if (o && dist <= u.cfg.range) {
       u.cd -= dt;
       const ownWall = u.teamDir > 0 ? 130 : W - 130, roomBehind = u.teamDir > 0 ? u.x > ownWall : u.x < ownWall;
-      if (u.cd <= 0 && (u.state === 'idle' || u.state === 'walk')) { u.backing = false; u.set('attack'); u.cd = rand(...u.cfg.cd); }
-      else if (u.cfg.keepAway && dist < u.cfg.keepAway && roomBehind && (u.state === 'idle' || u.state === 'walk')) {
+      if (u.cd <= 0 && (u.state === 'idle' || u.state === 'walk')) { u.backing = false; u.set('attack'); u.cd = rand(...u.cfg.cd); u.backBudget = 0.4; }
+      else if (u.cfg.keepAway && dist < u.cfg.keepAway && roomBehind && (u.backBudget || 0) > 0 && (u.state === 'idle' || u.state === 'walk')) {
+        if (u.backing) u.backBudget -= dt;          // un solo pasito atrás después de cada estocada
         if (u.state !== 'walk' || !u.backing) { u.set('walk'); u.backing = true; }   // retrocede para mantener la distancia de pica
       }
       else if (u.state === 'walk') { u.backing = false; u.set('idle'); }
