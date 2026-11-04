@@ -594,28 +594,28 @@ class Unit {
     if (t >= 1.05) { this.hits = 0; this.kickNext = true; this.set('idle'); }
   }
   attackKick(o, t) {
-    // patada giratoria: carga, vuelta completa con saltito y patada lateral a la altura de la cadera
+    // patada giratoria: la pierna sale durante el giro y golpea justo al completar la vuelta
     const r = this.cfg.rest, guard = [[0.05, -0.55], [0.2, -0.58]];
-    if (t < 0.18) {                        // carga
-      const e = ease(t / 0.18);
+    if (t < 0.15) {                        // carga
+      const e = ease(t / 0.15);
       o.sy = 1 - 0.08 * e; o.sx = 1 + 0.05 * e; o.rot = 0.05 * e;
       o.bh = lerp2(r.bh, guard[0], e); o.fh = lerp2(r.fh, guard[1], e);
-    } else if (t < 0.48) {                 // giro completo: se ve de espaldas a mitad de la vuelta
-      const e = easeInOut((t - 0.18) / 0.3);
-      o.spin = Math.cos(e * Math.PI * 2); o.hop = Math.sin(e * Math.PI) * H * 0.12;
-      o.bh = guard[0]; o.fh = guard[1]; o.sy = 1 + 0.04 * Math.sin(e * Math.PI);
-      if (e > 0.75) o.kick = (e - 0.75) / 0.25 * 0.4;
-    } else if (t < 0.7) {                  // patada lateral: el cuerpo se echa atrás y la pierna sale de golpe
-      const e = Math.min(1, (t - 0.48) / 0.08);
-      o.kick = lerp(0.4, 1, ease(e)); o.rot = -0.22 * ease(e); o.dx = 0.06 * ease(e);
-      o.bh = [-0.15, -0.62]; o.fh = [0.02, -0.66];
-      if (e >= 1 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
+    } else if (t < 0.47) {                 // giro con la pierna saliendo en la segunda mitad
+      const e = easeInOut((t - 0.15) / 0.32);
+      o.spin = Math.cos(e * Math.PI * 2); o.hop = Math.sin(e * Math.PI) * H * 0.1;
+      o.bh = guard[0]; o.fh = guard[1];
+      const k = easeInOut((e - 0.45) / 0.45);
+      o.kick = k; o.rot = -0.22 * k; o.dx = 0.06 * k;
+      if (e >= 0.88 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
+    } else if (t < 0.6) {                  // mantiene la pierna extendida un instante
+      o.kick = 1; o.rot = -0.22; o.dx = 0.06; o.bh = [-0.15, -0.62]; o.fh = [0.02, -0.66];
+      if (!this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
     } else {                               // recoge la pierna y vuelve a la guardia
-      const e = ease((t - 0.7) / 0.3);
+      const e = ease((t - 0.6) / 0.28);
       o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
       o.bh = lerp2([-0.15, -0.62], r.bh, e); o.fh = lerp2([0.02, -0.66], r.fh, e);
     }
-    if (t >= 1.0) { this.kicked = false; this.kickNext = false; this.set('idle'); }
+    if (t >= 0.88) { this.kicked = false; this.kickNext = false; this.set('idle'); }
   }
   attackIaido(o, t) {
     // Tajo ascendente al desenvainar; después cuadra la espada en horizontal y la envaina despacio, con cuidado.
