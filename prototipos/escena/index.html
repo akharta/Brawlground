@@ -17,6 +17,7 @@
   --gold: #ffc83d;
   --blue: #3b82f6;
   --common: #9aa3bd;
+  --rare: #4da3ff;
   --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
 }
@@ -63,6 +64,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   background: var(--common); border: 4px solid var(--outline); border-radius: 16px;
   padding: 8px; position: relative; box-shadow: 0 5px 0 var(--outline);
 }
+.card.rare { background: var(--rare); }
 .card .art { background: #c7cde0; border: 3px solid var(--outline); border-radius: 10px; aspect-ratio: 1; overflow: hidden; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
 .card .cost {
@@ -82,7 +84,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario y Arquera.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera y Valkiria.</p>
     </div>
   </header>
 
@@ -100,6 +102,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <div class="seg" role="group" aria-label="Personaje">
       <button data-char="legionario" aria-pressed="true">Legionario</button>
       <button data-char="arquera" aria-pressed="false">Arquera</button>
+      <button data-char="valkiria" aria-pressed="false">Valkiria</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -128,6 +131,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>55</dd><dt>Daño</dt><dd>12</dd><dt>Alcance</dt><dd>Largo</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de la Valkiria a caballo">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/valkiria_carta.png" alt="Ilustración de la Valkiria a caballo"></div>
+        <div class="name">Valkiria</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>20 en área</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -147,10 +159,13 @@ const rand = (a, b) => a + Math.random() * (b - a);
 // Datos de cada personaje. Posiciones en alturas de cuerpo (H), relativas a los pies, medidas sobre la imagen completa aprobada.
 const CH = {
   legionario: { hp: 100, dmg: [10, 14], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false,
-    rest: { sw: -1.97, bh: [-0.207, -0.165], fh: [0.245, -0.169], sh: [0.388, -0.215] } },
-  arquera: { hp: 55, dmg: [10, 14], speed: 54, cd: [1.45, 1.85], range: H * 4.3, ranged: true,
+    h: 1, rest: { sw: -1.97, bh: [-0.207, -0.165], fh: [0.245, -0.169], sh: [0.388, -0.215] } },
+  arquera: { hp: 55, dmg: [10, 14], speed: 54, cd: [1.45, 1.85], range: H * 4.3, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
-    bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } }
+    bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
+  // Montada: la jinete va detrás del caballo para que la silla y el cuello la tapen, como en la imagen aprobada.
+  valkiria: { hp: 120, dmg: [18, 22], speed: 84, cd: [1.25, 1.55], range: H * 1.45, ranged: false, aoe: true, h: 1.3,
+    rest: { sw: -1.71, bh: [-0.344, -0.584] }, mount: [0.091, 0], rider: [-0.015, -0.282] }
 };
 const BOW = CH.arquera.bow;
 const bowW = BOW.w * H, bowH = BOW.h * H;
@@ -165,7 +180,8 @@ class Unit {
     this.sc = sc; this.type = type; this.cfg = CH[type]; this.team = team;
     this.dir = team === 'blue' ? 1 : -1; this.homeX = x;
     this.root = sc.add.container(x, GROUND);
-    this.shadow = sc.add.ellipse(0, 0, H * 0.62, H * 0.15, 0x10131f, 0.28);
+    const wide = type === 'valkiria';
+    this.shadow = sc.add.ellipse(wide ? H * 0.08 : 0, 0, H * (wide ? 1.15 : 0.62), H * (wide ? 0.18 : 0.15), 0x10131f, 0.28);
     this.rig = sc.add.container(0, 0);
     const handScale = n => sc.add.image(0, 0, n);
     if (type === 'legionario') {
@@ -177,6 +193,15 @@ class Unit {
       this.parts = [this.body, this.weapon, this.bh, this.shield, this.fh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -520, 9], [this.shield, 0.9, -380, -5]];
+    } else if (type === 'valkiria') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'val_cuerpo').setOrigin(0.5, 1).setScale(0.2394 * f);
+      this.mount = sc.add.image(0, 0, 'val_montura').setOrigin(0.5, 1).setScale(0.2748 * f);
+      this.weapon = sc.add.image(0, 0, 'val_arma').setOrigin(0.41, 0.495).setScale(0.1344 * f);
+      this.bh = handScale('val_mano').setScale(0.0297 * f);
+      this.parts = [this.body, this.mount, this.weapon, this.bh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.6, -560, 10]];
     } else {
       this.body = sc.add.image(0, 0, 'arq_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.weapon = sc.add.image(0, 0, 'arq_arma').setOrigin(BOW.ox, BOW.oy).setScale(bowH / 512);
@@ -207,14 +232,15 @@ class Unit {
   damage(d) {
     if (!this.alive || this.state === 'die') return;
     this.hp -= d; this.hurtT = 0.32;
-    floatText(this.x, this.gy - H - 18, '-' + d);
+    floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
     if (this.hp <= 0) { this.hp = 0; this.set('die'); }
   }
   restPose() {
     const r = this.cfg.rest;
-    const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: [...r.fh] };
+    const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
     if (this.type === 'legionario') { o.sw = r.sw; o.sh = [...r.sh]; }
+    else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
     else { o.bow = bowRestFromHand(r.fh); o.bowR = 0; o.nock = null; o.arrow = false; }
     return o;
   }
@@ -232,7 +258,8 @@ class Unit {
       case 'idle':
         o.sy = 1 + 0.022 * breathe; o.sx = 1 - 0.014 * breathe;
         o.bh[1] += Math.sin(now * 3.2 + 0.6) * 0.012;
-        o.fh[1] += Math.sin(now * 3.2 + 1.1) * 0.012;
+        if (o.fh) o.fh[1] += Math.sin(now * 3.2 + 1.1) * 0.012;
+        if (o.mount) { o.mount.y = Math.max(0, Math.sin(now * 2.2)) * 0.01; o.rider.y = 0.012 * breathe; }
         if (o.sw !== undefined) o.sw += 0.04 * breathe;
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
         break;
@@ -241,14 +268,23 @@ class Unit {
         o.hop = Math.abs(Math.sin(ph)) * H * 0.075;
         o.rot = Math.sin(ph) * 0.07;
         o.sy = 1 - Math.abs(Math.cos(ph)) * 0.04;
-        o.bh[0] += Math.sin(ph) * 0.03; o.fh[0] -= Math.sin(ph) * 0.02;
-        if (o.sw !== undefined) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
+        o.bh[0] += Math.sin(ph) * 0.03; if (o.fh) o.fh[0] -= Math.sin(ph) * 0.02;
+        if (o.mount) {               // galope: el caballo rebota y se mece; la jinete rebota con retraso
+          const g = t * 13;
+          o.hop = 0; o.rot = 0; o.sy = 1;
+          o.mount.y = Math.abs(Math.sin(g)) * 0.09; o.mount.r = Math.sin(g) * 0.07;
+          o.rider.y = Math.abs(Math.sin(g - 0.7)) * 0.07; o.rider.r = Math.sin(g - 0.7) * 0.05;
+          o.bh[1] -= Math.abs(Math.sin(g - 0.9)) * 0.06;
+        }
+        if (o.sh) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
         if (!this.inPlace) this.x += this.dir * this.cfg.speed * dt;
         break;
       }
       case 'attack':
-        if (this.type === 'legionario') this.attackSword(o, t); else this.attackBow(o, t);
+        if (this.type === 'legionario') this.attackSword(o, t);
+        else if (this.type === 'valkiria') this.attackAxe(o, t);
+        else this.attackBow(o, t);
         break;
       case 'die': {
         if (t < dt * 1.5) this.detach();
@@ -288,6 +324,26 @@ class Unit {
     }
     if (p >= 1) this.set('idle');
   }
+  attackAxe(o, t) {
+    const r = this.cfg.rest, p = t / 0.72;
+    const up = [-0.6, -0.72], hit = [0.42, -0.5];
+    if (p < 0.4) {                 // el caballo se encabrita y el hacha sube por detrás
+      const e = ease(p / 0.4);
+      o.sw = lerp(r.sw, -2.45, e); o.bh = lerp2(r.bh, up, e);
+      o.mount.r = -0.1 * e; o.mount.y = 0.04 * e; o.rider.r = -0.08 * e; o.rider.y = 0.05 * e;
+    } else if (p < 0.56) {         // hachazo hacia delante y abajo
+      const e = easeIn((p - 0.4) / 0.16);
+      o.sw = lerp(-2.45, 0.55, e); o.bh = lerp2(up, hit, e);
+      o.mount.r = lerp(-0.1, 0.06, e); o.mount.y = lerp(0.04, 0, e); o.rider.r = lerp(-0.08, 0.12, e);
+      o.dx = 0.06 * e;
+      if (e > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
+    } else {
+      const e = ease((p - 0.56) / 0.44);
+      o.sw = lerp(0.55, r.sw, e); o.bh = lerp2(hit, r.bh, e);
+      o.mount.r = lerp(0.06, 0, e); o.rider.r = lerp(0.12, 0, e); o.dx = lerp(0.06, 0, e);
+    }
+    if (p >= 1) this.set('idle');
+  }
   attackBow(o, t) {
     const r = this.cfg.rest, D = 1.15, p = t / D;
     const aimHand = [0.42, -0.43];
@@ -324,8 +380,15 @@ class Unit {
     this.rig.scaleX = this.dir * o.sx; this.rig.scaleY = o.sy;
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
-    this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'legionario') {
+    if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
+    if (this.type === 'valkiria') {
+      const c = this.cfg;
+      this.mount.setPosition(c.mount[0] * H, (c.mount[1] - o.mount.y) * H).setRotation(o.mount.r);
+      this.body.setPosition(c.rider[0] * H, (c.rider[1] - o.rider.y - o.mount.y) * H).setRotation(o.rider.r);
+      const by = -(o.rider.y + o.mount.y) * H;
+      this.bh.y += by;
+      this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
+    } else if (this.type === 'legionario') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.sw);
       this.shield.setPosition(o.sh[0] * H, o.sh[1] * H);
     } else {
@@ -346,7 +409,7 @@ class Unit {
     }
     this.bar.clear();
     if (mode === 'fight' && this.alive && this.state !== 'die') {
-      const bw = 58, bx = this.x - bw / 2, by = this.gy - H - 28;
+      const bw = 58, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h - 22;
       this.bar.fillStyle(OUT, 1).fillRoundedRect(bx - 3, by - 3, bw + 6, 14, 6);
       this.bar.fillStyle(0x3a3f55, 1).fillRoundedRect(bx, by, bw, 8, 4);
       this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
@@ -386,8 +449,10 @@ function nearestEnemy(u) {
 }
 function onMelee(u) {
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
-  const o = nearestEnemy(u);
-  if (o && Math.abs(o.x - u.x) <= u.cfg.range + 14) o.damage(Math.round(rand(...u.cfg.dmg)));
+  const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14);
+  const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
+  if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
+  targets.forEach(v => v.damage(Math.round(rand(...u.cfg.dmg))));
 }
 function onShoot(u, sx, sy) {
   let tx, ty, target = null;
@@ -464,12 +529,12 @@ function buildMode() {
   spawnTimers.forEach(clearTimeout); spawnTimers = [];
   clearUnits();
   if (mode === 'fight') {
-    const plan = [['legionario', 'blue', 150, 0], ['legionario', 'purple', W - 150, 0], ['arquera', 'blue', 120, 1100], ['arquera', 'purple', W - 120, 1100]];
+    const plan = [['legionario', 'blue', 150, 0], ['legionario', 'purple', W - 150, 0], ['arquera', 'blue', 120, 1100], ['arquera', 'purple', W - 120, 1100], ['valkiria', 'blue', 150, 2600], ['valkiria', 'purple', W - 150, 2600]];
     for (const [type, team, x, delay] of plan) {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -504,6 +569,7 @@ function start() {
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
       L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');
+      L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
     }, create, update }
   });
 }
@@ -511,7 +577,7 @@ function start() {
 /* ---- controles ---- */
 const $ = id => document.getElementById(id);
 const HINTS = {
-  fight: 'Cada bando saca un Legionario y una Arquera. Los legionarios chocan en el centro mientras las arqueras disparan desde atrás. Quien cae vuelve a salir de su castillo.',
+  fight: 'Cada bando saca un Legionario, una Arquera y una Valkiria. Los de cuerpo a cuerpo chocan en el centro (el hachazo de la Valkiria golpea a todos los que tiene delante) mientras las arqueras disparan desde atrás. Quien cae vuelve a salir de su castillo.',
   anim: 'Un solo personaje. Elige cuál y pulsa cada botón para ver esa animación; con «Cámara lenta» se aprecia el detalle.'
 };
 function setMode(m) {
@@ -540,7 +606,7 @@ $('anim-controls').addEventListener('click', e => {
   }
   const act = b.dataset.act, u = units[0];
   if (!act || !u || !u.alive || u.state === 'die') return;
-  if (act === 'hurt') { u.hurtT = 0.32; floatText(u.x, u.gy - H - 18, '-12'); burst(u.x - H * 0.15, u.gy - H * 0.45, 0xffffff, 7, 170); return; }
+  if (act === 'hurt') { u.hurtT = 0.32; floatText(u.x, u.gy - H * u.cfg.h - 18, '-12'); burst(u.x - H * 0.15, u.gy - H * 0.45, 0xffffff, 7, 170); return; }
   u.inPlace = act === 'walk';
   if (act === 'die') u.hp = 0;
   u.set(act);
