@@ -212,7 +212,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Tercio</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>15 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga</dd></dl>
+      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>15 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga, empuja</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -258,7 +258,7 @@ const CH = {
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [14, 16], speed: 46, cd: [1.4, 1.7], range: H * 1.65, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 },
+  tercio: { hp: 100, dmg: [14, 16], speed: 46, cd: [1.4, 1.7], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } }
 };
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
@@ -486,7 +486,7 @@ class Unit {
           o.bk = 2.9; o.fk = 2.7;
           o.scarf.r = 0.12 + Math.sin(t * 22) * 0.1; o.scarf.sx = 1.1 + Math.sin(t * 17) * 0.05;
         }
-        if (!this.inPlace) this.x += this.dir * this.cfg.speed * dt;
+        if (!this.inPlace) this.x += this.dir * this.cfg.speed * dt * (this.backing ? -0.7 : 1);
         break;
       }
       case 'attack':
@@ -659,10 +659,10 @@ class Unit {
     else if (t < P[1]) { const e = ease((t - P[0]) / (P[1] - P[0])); ang = lvl; back = lerp2([-0.1, -0.36], [-0.3, -0.37], e); o.rot = lerp(-0.02, -0.07, e); o.sx = 1 - 0.04 * e; }
     else if (t < P[2]) {
       const e = easeIn((t - P[1]) / (P[2] - P[1]));
-      ang = lvl; back = lerp2([-0.3, -0.37], [0.24, -0.35], e); o.rot = lerp(-0.07, 0.09, e); o.dx = 0.12 * e;
+      ang = lvl; back = lerp2([-0.3, -0.37], [0.4, -0.35], e); o.rot = lerp(-0.07, 0.09, e); o.dx = 0.28 * e;
     }
-    else if (t < P[3]) { ang = lvl; back = [0.24, -0.35]; o.rot = 0.09; o.dx = 0.12; }
-    else { const e = ease((t - P[3]) / (P[4] - P[3])); ang = lerp(lvl, r.pr, e); back = lerp2([0.24, -0.35], r.bh, e); o.rot = lerp(0.09, 0, e); o.dx = lerp(0.12, 0, e); }
+    else if (t < P[3]) { ang = lvl; back = [0.4, -0.35]; o.rot = 0.09; o.dx = 0.28; }
+    else { const e = ease((t - P[3]) / (P[4] - P[3])); ang = lerp(lvl, r.pr, e); back = lerp2([0.4, -0.35], r.bh, e); o.rot = lerp(0.09, 0, e); o.dx = lerp(0.28, 0, e); }
     if (t >= P[1] + 0.08 && !this.fired) { this.fired = true; onMelee(this); this.sparkNext = true; }
     o.pr = ang; o.bh = back;
     o.fh = [back[0] + Math.cos(ang) * PIKE.gap, back[1] + Math.sin(ang) * PIKE.gap];
@@ -1082,7 +1082,10 @@ function onMelee(u) {
   const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14);
   const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
   if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
-  targets.forEach(v => v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1))));
+  targets.forEach(v => {
+    v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1)));
+    if (u.cfg.push && v.alive && v.state !== 'die') v.x = Math.max(60, Math.min(W - 60, v.x + Math.sign(v.x - u.x || u.dir) * u.cfg.push));
+  });
 }
 function onShoot(u, sx, sy) {
   let tx, ty, target = null;
@@ -1115,10 +1118,14 @@ function fightLogic(dt) {
     }
     const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.dir === u.teamDir && (u.teamDir > 0 ? u.x >= wall : u.x <= wall);
     if (o && dist <= u.cfg.range) {
-      if (u.state === 'walk') u.set('idle');
       u.cd -= dt;
-      if (u.cd <= 0 && u.state === 'idle') { u.set('attack'); u.cd = rand(...u.cfg.cd); }
-    } else if (u.state === 'idle' && !atWall) u.set('walk');
+      const ownWall = u.teamDir > 0 ? 130 : W - 130, roomBehind = u.teamDir > 0 ? u.x > ownWall : u.x < ownWall;
+      if (u.cd <= 0 && (u.state === 'idle' || u.state === 'walk')) { u.backing = false; u.set('attack'); u.cd = rand(...u.cfg.cd); }
+      else if (u.cfg.keepAway && dist < u.cfg.keepAway && roomBehind && (u.state === 'idle' || u.state === 'walk')) {
+        if (u.state !== 'walk' || !u.backing) { u.set('walk'); u.backing = true; }   // retrocede para mantener la distancia de pica
+      }
+      else if (u.state === 'walk') { u.backing = false; u.set('idle'); }
+    } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
     else if (u.state === 'walk' && atWall) u.set('idle');
   }
 }
