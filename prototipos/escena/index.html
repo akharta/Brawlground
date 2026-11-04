@@ -325,24 +325,27 @@ class Unit {
     if (p >= 1) this.set('idle');
   }
   attackAxe(o, t) {
-    const r = this.cfg.rest, p = t / 0.72;
-    const up = [-0.6, -0.72], hit = [0.42, -0.5];
-    if (p < 0.4) {                 // el caballo se encabrita y el hacha sube por detrás
-      const e = ease(p / 0.4);
-      o.sw = lerp(r.sw, -2.45, e); o.bh = lerp2(r.bh, up, e);
-      o.mount.r = -0.1 * e; o.mount.y = 0.04 * e; o.rider.r = -0.08 * e; o.rider.y = 0.05 * e;
-    } else if (p < 0.56) {         // hachazo hacia delante y abajo
-      const e = easeIn((p - 0.4) / 0.16);
-      o.sw = lerp(-2.45, 0.55, e); o.bh = lerp2(up, hit, e);
-      o.mount.r = lerp(-0.1, 0.06, e); o.mount.y = lerp(0.04, 0, e); o.rider.r = lerp(-0.08, 0.12, e);
-      o.dx = 0.06 * e;
-      if (e > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
-    } else {
-      const e = ease((p - 0.56) / 0.44);
-      o.sw = lerp(0.55, r.sw, e); o.bh = lerp2(hit, r.bh, e);
-      o.mount.r = lerp(0.06, 0, e); o.rider.r = lerp(0.12, 0, e); o.dx = lerp(0.06, 0, e);
+    // Barrido horizontal: el hacha gira alrededor de la jinete (vista de perfil, se acorta al pasar por delante).
+    const r = this.cfg.rest, p = t / 0.8, R = 0.5, cy = -0.52;
+    const handAt = th => [Math.cos(th) * R, cy + Math.sin(th) * 0.08];
+    if (p < 0.36) {                 // carga: el hacha va atrás, en horizontal, y la jinete se gira
+      const e = ease(p / 0.36);
+      o.sw = lerp(r.sw, -Math.PI, e); o.bh = lerp2(r.bh, handAt(Math.PI), e);
+      o.rider.r = -0.08 * e; o.mount.r = -0.03 * e;
+    } else if (p < 0.56) {          // barrido de atrás hacia delante pasando por delante del cuerpo
+      const e = easeIn((p - 0.36) / 0.2), th = lerp(Math.PI, -0.35, e);
+      o.sw = 0; o.wsx = Math.cos(th); o.bh = handAt(th);
+      o.rider.r = lerp(-0.08, 0.1, e); o.mount.r = lerp(-0.03, 0.04, e); o.dx = 0.05 * e;
+      if (!this.slashed && e > 0.15) { this.slashed = true; slashArc(this); }
+      if (th < Math.PI / 2 && !this.fired) { this.fired = true; onMelee(this); }
+    } else {                        // mantiene el hacha al frente y la recoge por abajo, sin taparse la cara
+      const q = (p - 0.56) / 0.44, e = ease((q - 0.3) / 0.7), end = handAt(-0.35), mid = [0.08, -0.36];
+      const bez = (a, m, c, k) => (1 - k) * (1 - k) * a + 2 * (1 - k) * k * m + k * k * c;
+      o.sw = lerp(0, r.sw, e); o.wsx = lerp(Math.cos(-0.35), 1, e);
+      o.bh = [bez(end[0], mid[0], r.bh[0], e), bez(end[1], mid[1], r.bh[1], e)];
+      o.rider.r = lerp(0.1, 0, e); o.mount.r = lerp(0.04, 0, e); o.dx = lerp(0.05, 0, e);
     }
-    if (p >= 1) this.set('idle');
+    if (p >= 1) { this.slashed = false; this.set('idle'); }
   }
   attackBow(o, t) {
     const r = this.cfg.rest, D = 1.15, p = t / D;
@@ -388,6 +391,7 @@ class Unit {
       const by = -(o.rider.y + o.mount.y) * H;
       this.bh.y += by;
       this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
+      this.weapon.setScale(0.1344 * (H / 120) * (o.wsx === undefined ? 1 : o.wsx), 0.1344 * (H / 120));
     } else if (this.type === 'legionario') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.sw);
       this.shield.setPosition(o.sh[0] * H, o.sh[1] * H);
@@ -434,6 +438,20 @@ function burst(x, y, color, n, spd) {
     const a = Math.random() * Math.PI * 2, s = spd * rand(0.4, 1);
     fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, r: rand(3, 7), life: 0.5, t: 0.5, color });
   }
+}
+function slashArc(u) {
+  // media luna blanca que marca toda la zona barrida, por delante de la jinete
+  const g = scene.add.graphics().setDepth(960);
+  const cx = u.x + u.dir * H * 0.25, cy = u.gy - H * 0.5, RX = H * 1.25, RY = H * 0.26, N = 22;
+  for (let i = 0; i < N; i++) {
+    const a0 = Math.PI - (i / N) * (Math.PI + 0.35), a1 = Math.PI - ((i + 1) / N) * (Math.PI + 0.35);
+    const k = i / N, w = 3 + 13 * Math.sin(k * Math.PI * 0.9 + 0.1);
+    g.lineStyle(w, 0xffffff, 0.25 + 0.65 * k).beginPath();
+    g.moveTo(cx + u.dir * Math.cos(a0) * RX, cy + Math.sin(a0) * RY);
+    g.lineTo(cx + u.dir * Math.cos(a1) * RX, cy + Math.sin(a1) * RY);
+    g.strokePath();
+  }
+  scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
 function floatText(x, y, txt) {
   const t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '30px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 7 }).setOrigin(0.5).setDepth(1000);
