@@ -191,7 +191,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Samurái</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>19</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
+      <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>20 (2 tajos)</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -229,7 +229,7 @@ const CH = {
   lobo: { hp: 50, dmg: [19, 21], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
     rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] },
   // Iaido: la katana vive en la vaina; desenvaina con un tajo ascendente y vuelve a envainar.
-  samurai: { hp: 140, dmg: [17, 21], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
+  samurai: { hp: 140, dmg: [9, 11], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
     rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 }
 };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
@@ -525,31 +525,63 @@ class Unit {
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
   attackIaido(o, t) {
-    const r = this.cfg.rest, c = this.cfg, p = t / 0.95;
-    const sheathR = Math.PI + c.sayaR, slashR = -0.5;
+    // Secuencia completa: tajo ascendente al desenvainar, tajo descendente, chiburi y envainado lento.
+    const r = this.cfg.rest, c = this.cfg;
+    const sheathR = Math.PI + c.sayaR, ax = [Math.cos(c.sayaR), Math.sin(c.sayaR)];
     const grip = [c.saya[0] - KAT.g2g * Math.cos(sheathR), c.saya[1] - KAT.g2g * Math.sin(sheathR)];
-    const out = [0.36, -0.4];
-    if (p < 0.3) {                       // postura: se agacha con la mano en la empuñadura y tiembla de tensión
-      const e = ease(p / 0.3);
-      o.fh = lerp2(r.fh, grip, e); o.bh = lerp2(r.bh, [c.saya[0] - 0.02, c.saya[1] + 0.01], e);
+    const holdSaya = [c.saya[0] - 0.02, c.saya[1] + 0.01];
+    const up = [0.3, -0.56], high = [0.16, -0.74], low = [0.44, -0.28];
+    const T = [0.32, 0.46, 0.7, 0.86, 1.15, 1.42, 1.96, 2.3];   // fin de cada fase (s)
+    o.bh = holdSaya;
+    if (t < T[0]) {                        // postura
+      const e = ease(t / T[0]);
+      o.fh = lerp2(r.fh, grip, e); o.bh = lerp2(r.bh, holdSaya, e);
       o.sy = 1 - 0.06 * e; o.sx = 1 + 0.04 * e; o.rot = -0.05 * e;
       if (e > 0.9) o.dx = Math.sin(t * 90) * 0.006;
-    } else if (p < 0.38) {               // desenvaina: tajo ascendente instantáneo y avance
-      const e = (p - 0.3) / 0.08;
-      o.drawn = true; o.katR = lerp(sheathR, slashR, e); o.fh = lerp2(grip, out, e);
-      o.dx = 0.28 * e; o.rot = lerp(-0.05, 0.1, e); o.bh = [c.saya[0] - 0.02, c.saya[1] + 0.01];
-      if (!this.slashed) { this.slashed = true; iaidoSlash(this); }
-    } else if (p < 0.66) {               // zanshin: aguanta la pose con un brillo en la hoja
-      o.drawn = true; o.katR = slashR; o.fh = out; o.dx = 0.28; o.rot = 0.1;
-      o.bh = [c.saya[0] - 0.02, c.saya[1] + 0.01]; o.glint = Math.sin(Math.min(1, (p - 0.38) / 0.2) * Math.PI);
-    } else {                             // envaina despacio y vuelve a su sitio
-      const e = ease((p - 0.66) / 0.34);
-      o.drawn = e < 0.92; o.katR = lerp(slashR, sheathR, e); o.fh = lerp2(out, grip, Math.min(1, e * 1.2));
-      if (e > 0.85) o.fh = lerp2(grip, r.fh, (e - 0.85) / 0.15);
-      o.dx = lerp(0.28, 0, e); o.rot = lerp(0.1, 0, e); o.bh = lerp2([c.saya[0] - 0.02, c.saya[1] + 0.01], r.bh, e);
+    } else if (t < T[1]) {                 // 1.er tajo: ascendente, desenvainando
+      const e = (t - T[0]) / (T[1] - T[0]);
+      o.drawn = true; o.katR = lerp(sheathR, -1.2, e); o.fh = lerp2(grip, up, e);
+      o.dx = 0.18 * e; o.rot = lerp(-0.05, 0.06, e);
+      if (!this.slash1) { this.slash1 = true; iaidoSlash(this, 1.7, -0.9); }
+      if (e > 0.6 && !this.hit1) { this.hit1 = true; onMelee(this); }
+    } else if (t < T[2]) {                 // alza la espada por encima de la cabeza
+      const e = ease((t - T[1]) / (T[2] - T[1]));
+      o.drawn = true; o.katR = lerp(-1.2, -1.75, e); o.fh = lerp2(up, high, e);
+      o.dx = 0.18; o.rot = lerp(0.06, -0.06, e); o.sy = 1 + 0.03 * e;
+    } else if (t < T[3]) {                 // 2.º tajo: descendente
+      const e = easeIn((t - T[2]) / (T[3] - T[2]));
+      o.drawn = true; o.katR = lerp(-1.75, 0.95, e); o.fh = lerp2(high, low, e);
+      o.dx = lerp(0.18, 0.3, e); o.rot = lerp(-0.06, 0.14, e); o.sy = 1 - 0.05 * e;
+      if (!this.slash2) { this.slash2 = true; iaidoSlash(this, -1.5, 1.4); }
+      if (e > 0.55 && !this.hit2) { this.hit2 = true; onMelee(this); }
+    } else if (t < T[4]) {                 // pausa con la espada abajo y brillo en la hoja
+      const e = (t - T[3]) / (T[4] - T[3]);
+      o.drawn = true; o.katR = 0.95; o.fh = low; o.dx = 0.3; o.rot = 0.14; o.sy = 0.95;
+      o.glint = Math.sin(e * Math.PI);
+    } else if (t < T[5]) {                 // chiburi: sacudida seca de la hoja
+      const e = (t - T[4]) / (T[5] - T[4]), k = Math.sin(e * Math.PI);
+      o.drawn = true; o.katR = 0.95 - 0.75 * k + (e > 0.5 ? 0.25 * Math.sin((e - 0.5) * 2 * Math.PI) : 0);
+      o.fh = [low[0] + 0.08 * k, low[1] - 0.12 * k]; o.dx = 0.3; o.rot = lerp(0.14, 0.04, e); o.sy = lerp(0.95, 1, e);
+      if (e > 0.5 && !this.flick) { this.flick = true; burst(this.x + this.dir * H * 0.75, this.gy - H * 0.35, 0xffffff, 4, 140); }
+    } else if (t < T[6]) {                 // noto: lleva la hoja a la boca de la vaina y la desliza dentro
+      const e = (t - T[5]) / (T[6] - T[5]);
+      if (e < 0.4) {
+        const q = ease(e / 0.4);
+        const guardStart = [c.saya[0] + ax[0] * 0.554, c.saya[1] + ax[1] * 0.554];
+        const handStart = [guardStart[0] + KAT.g2g * ax[0], guardStart[1] + KAT.g2g * ax[1]];
+        o.drawn = true; o.katR = lerp(0.2, c.sayaR, q); o.ksx = Math.cos(q * Math.PI);   // gira en horizontal y se acorta al pasar
+        o.fh = lerp2([low[0] + 0.05, low[1] - 0.04], handStart, q); o.dx = lerp(0.3, 0.12, q); o.rot = lerp(0.04, 0, q);
+      } else {
+        const q = ease((e - 0.4) / 0.6);
+        o.slideIn = q; o.dx = lerp(0.12, 0, q);
+        o.fh = [c.saya[0] + ax[0] * (0.554 * (1 - q) + KAT.g2g), c.saya[1] + ax[1] * (0.554 * (1 - q) + KAT.g2g)];
+        if (q > 0.98 && !this.click) { this.click = true; burst(this.x + this.dir * c.saya[0] * H, this.gy + c.saya[1] * H, 0xffe9a8, 5, 70); }
+      }
+    } else {                               // suelta la empuñadura y vuelve a la guardia
+      const e = ease((t - T[6]) / (T[7] - T[6]));
+      o.fh = lerp2(grip, r.fh, e); o.bh = lerp2(holdSaya, r.bh, e);
     }
-    if (p >= 0.36 && !this.fired) { this.fired = true; onMelee(this); }
-    if (p >= 1) { this.slashed = false; this.set('idle'); }
+    if (t >= T[7]) { this.slash1 = this.slash2 = this.hit1 = this.hit2 = this.flick = this.click = false; this.set('idle'); }
   }
   attackBite(o, t) {
     // agacharse, lanzarse con la boca abierta y cerrar de golpe
@@ -658,7 +690,14 @@ class Unit {
       }
       if (o.drawn) {
         const gx = o.fh[0] + KAT.g2g * Math.cos(o.katR), gy = o.fh[1] + KAT.g2g * Math.sin(o.katR);
-        this.kat.setPosition(gx * H, gy * H).setRotation(o.katR);
+        const ks = o.ksx === undefined ? 1 : o.ksx, ang = ks < 0 ? o.katR + Math.PI : o.katR;
+        const gx2 = o.fh[0] + KAT.g2g * Math.cos(ang), gy2 = o.fh[1] + KAT.g2g * Math.sin(ang);
+        this.kat.setPosition((o.ksx === undefined ? gx : gx2) * H, (o.ksx === undefined ? gy : gy2) * H).setRotation(o.katR);
+        this.kat.setScale(0.17 * (H / 120) * ks, 0.17 * (H / 120));
+      } else if (o.slideIn !== undefined) {
+        this.kat.setScale(0.17 * (H / 120));
+        const d = 0.554 * (1 - o.slideIn);
+        this.kat.setPosition((c.saya[0] + Math.cos(c.sayaR) * d) * H, (c.saya[1] + Math.sin(c.sayaR) * d) * H).setRotation(Math.PI + c.sayaR);
       } else this.kat.setPosition(c.saya[0] * H, c.saya[1] * H).setRotation(Math.PI + c.sayaR);
       if (o.glint > 0.05 && Math.random() < 0.5) {
         const m = this.kat.getWorldTransformMatrix(), tip = m.transformPoint((1 - KAT.ox) * 512 * 0.85, 0);
@@ -756,12 +795,12 @@ function fireGun(u, gun) {
   burst(tx, ty, 0xfff3c4, 4, 90);
   if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
 }
-function iaidoSlash(u) {
+function iaidoSlash(u, from, to) {
   // destello en media luna: de abajo-atrás a arriba-delante, delante del samurái
   const g = scene.add.graphics().setDepth(960);
   const cx = u.x + u.dir * H * 0.35, cy = u.gy - H * 0.4, R = H * 0.62, N = 20;
   for (let i = 0; i < N; i++) {
-    const a0 = lerp(1.7, -0.9, i / N), a1 = lerp(1.7, -0.9, (i + 1) / N), k = i / N;
+    const a0 = lerp(from, to, i / N), a1 = lerp(from, to, (i + 1) / N), k = i / N;
     g.lineStyle(3 + 12 * Math.sin(k * Math.PI), 0xffffff, 0.35 + 0.6 * k).beginPath();
     g.moveTo(cx + u.dir * Math.cos(a0) * R * 0.75, cy + Math.sin(a0) * R);
     g.lineTo(cx + u.dir * Math.cos(a1) * R * 0.75, cy + Math.sin(a1) * R);
