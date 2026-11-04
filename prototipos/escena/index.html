@@ -133,6 +133,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="dash" id="dash-btn" hidden>Embestida</button>
     <button class="btn" data-act="kick" id="kick-btn" hidden>Patada giratoria</button>
     <button class="btn" data-act="shade" id="shade-btn" hidden>Corte de oscuridad</button>
+    <button class="btn" data-act="spin" id="spin-btn" hidden>Corte giratorio</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -225,7 +226,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Muerte</div>
         <div class="rar">Legendaria</div>
       </div>
-      <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>30 en área</dd><dt>Habilidad</dt><dd>Corte de oscuridad</dd></dl>
+      <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>30 en área</dd><dt>Habilidades</dt><dd>Corte giratorio y corte de oscuridad</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -329,8 +330,9 @@ class Unit {
       this.weapon = sc.add.image(0, 0, 'mu_arma').setOrigin(0, 0.881).setFlipY(true).setScale(SCY.len * H / 512);
       this.bh = handScale('mu_mano').setScale(0.161 * H / 491);
       this.fh = handScale('mu_mano').setScale(0.161 * H / 491);
+      this.eyes = sc.add.graphics();
       this.parts = [this.body, this.weapon, this.bh, this.fh];
-      this.rig.add(this.parts);
+      this.rig.add([this.body, this.eyes, this.weapon, this.bh, this.fh]);
       this.drops = [[this.weapon, -0.4, -520, 7]];
       this.shadow.setSize(H * 0.55, H * 0.12);
     } else if (type === 'tercio') {
@@ -537,7 +539,7 @@ class Unit {
         break;
       }
       case 'shadeOut': {             // se disuelve en sombras
-        if (!this.fired) { this.fired = true; darkPuff(this.x, this.gy - H * 0.5, 26); }
+        if (!this.fired) { this.fired = true; darkPuff(this.x, this.gy - H * 0.5, 26); this.eyeT = 1.9; }
         const e = ease(t / 0.35);
         o.sx = 1 - 0.7 * e; o.sy = 1 + 0.25 * e; o.hop = H * 0.2 * e; this.root.setAlpha(1 - e);
         if (t >= 0.35) this.shadeJump();
@@ -704,9 +706,25 @@ class Unit {
     if (t >= 0.88) { this.kicked = false; this.kickNext = false; this.set('idle'); }
   }
   attackReap(o, t) {
+    if (!this.atkChosen) { this.atkChosen = true; this.reapN = (this.reapN || 0) + 1; this.spinMode = this.forceSpin || this.reapN % 3 === 0; this.forceSpin = false; }
+    if (this.spinMode) return this.attackSpin(o, t);
     const T = this.sweep(o, t, 1);
     if (t >= 0.42 && !this.fired) { this.fired = true; onMelee(this); }
-    if (t >= T[4]) { this.slashed = false; this.set('idle'); }
+    if (t >= T[4]) { this.slashed = false; this.atkChosen = false; this.set('idle'); }
+  }
+  attackSpin(o, t) {
+    // corte giratorio: guadaña extendida al frente y dos vueltas completas sobre sí misma, golpeando a ambos lados
+    const r = this.cfg.rest, ext = [0.62, -0.42];
+    if (t < 0.2) { const e = ease(t / 0.2); o.sc = lerp(r.sc, -Math.PI, e); o.hf = lerp2(r.hf, [-0.5, -0.42], e); o.sy = 1 - 0.06 * e; }
+    else if (t < 0.32) { const e = ease((t - 0.2) / 0.12); o.hz = -Math.cos(lerp(Math.PI, 0, e)); o.hf = [0.5 * Math.cos(lerp(Math.PI, 0, e)) + 0.12 * e, -0.42]; }
+    else if (t < 1.0) {
+      const e = easeInOut((t - 0.32) / 0.68);
+      o.hz = -1; o.hf = ext; o.spinF = Math.cos(e * Math.PI * 4); o.hop = H * 0.06 * Math.sin(e * Math.PI);
+      const turn = Math.floor(e * 2);
+      if (turn >= (this.spins || 0) && e < 0.99) { this.spins = turn + 1; whirl(this); spinHit(this); }
+    }
+    else if (t < 1.3) { const e = ease((t - 1.0) / 0.3); o.hz = -1; o.hf = lerp2(ext, [0.3, -0.42], e); o.rot = 0; if (e > 0.5) { o.hz = undefined; o.sc = lerp(0, r.sc, (e - 0.5) * 2); o.hf = lerp2([0.3, -0.42], r.hf, (e - 0.5) * 2); } }
+    if (t >= 1.3) { this.spins = 0; this.atkChosen = false; this.set('idle'); }
   }
   sweep(o, t, k) {
     // siega horizontal: guadaña atrás, barrido alrededor de la cintura (se acorta al pasar por delante) y vuelta completa por detrás
@@ -901,6 +919,17 @@ class Unit {
       this.fh.setPosition(o.hf[0] * H, o.hf[1] * H);
       this.bh.setPosition((butt[0] + SCY.d2 * d[0]) * H, (butt[1] + SCY.d2 * d[1]) * H);
       if (this.boomNext) { this.boomNext = false; darkCutBoom(this); }
+      if (o.spinF !== undefined) this.rig.scaleX = this.dir * o.sx * (Math.abs(o.spinF) < 0.06 ? 0.06 * Math.sign(o.spinF || 1) : o.spinF);
+      this.eyeT = Math.max(0, (this.eyeT || 0) - dt);
+      const eg = this.eyes; eg.clear();
+      if (this.eyeT > 0 && this.state !== 'die') {
+        const a = Math.min(1, this.eyeT / 0.4), fl = 1 + 0.15 * Math.sin(this.sc.time.now / 60);
+        for (const [ex, ey, er] of [[0.0641, -0.5731, 0.0164], [0.2223, -0.5885, 0.0147]]) {
+          eg.fillStyle(0xff2a2a, 0.3 * a).fillCircle(ex * H, ey * H, er * H * 2.6 * fl);
+          eg.fillStyle(0xff3030, a).fillCircle(ex * H, ey * H, er * H * 1.2);
+          eg.fillStyle(0xffd0d0, a).fillCircle(ex * H - 1, ey * H - 1, er * H * 0.45);
+        }
+      }
     } else if (this.type === 'tercio') {
       if (this.state !== 'attack') { o.fh = [o.bh[0] + Math.cos(o.pr) * PIKE.gap, o.bh[1] + Math.sin(o.pr) * PIKE.gap]; this.fh.setPosition(o.fh[0] * H, o.fh[1] * H); }
       this.pike.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.pr);
@@ -1125,6 +1154,19 @@ function reapArc(u, k = 1) {
     g.lineStyle(2, 0x7ff6ff, 0.2 + 0.7 * q).beginPath(); g.moveTo(...p0); g.lineTo(...p1); g.strokePath();
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 340 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
+}
+function whirl(u) {
+  // remolino: elipse completa oscura con borde cian alrededor de la Muerte
+  const g = scene.add.graphics().setDepth(960).setPosition(u.x, u.gy - H * 0.45);
+  const RX = H * 1.15, RY = H * 0.3;
+  g.lineStyle(14, 0x2a1f45, 0.6).strokeEllipse(0, 0, RX * 2, RY * 2);
+  g.lineStyle(3, 0x7ff6ff, 0.85).strokeEllipse(0, 0, RX * 2, RY * 2);
+  scene.tweens.add({ targets: g, alpha: 0, scaleX: { from: 0.8, to: 1.12 }, duration: 380 / timeScale, ease: 'Quad.easeOut', onComplete: () => g.destroy() });
+  darkPuff(u.x, u.gy - H * 0.3, 8);
+}
+function spinHit(u) {
+  if (mode !== 'fight') return;
+  enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range * 1.1).forEach(v => v.damage(Math.round(rand(...u.cfg.dmg) * 0.65)));
 }
 function darkPuff(x, y, n) {
   for (let i = 0; i < n; i++) {
@@ -1406,11 +1448,14 @@ $('anim-controls').addEventListener('click', e => {
     $('dash-btn').hidden = animChar !== 'lobo';
     $('kick-btn').hidden = animChar !== 'kungfu';
     $('shade-btn').hidden = animChar !== 'muerte';
+    $('spin-btn').hidden = animChar !== 'muerte';
     if (scene) buildMode();
     return;
   }
   const act = b.dataset.act, u = units[0];
   if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut'].includes(u.state)) return;
+  if (act === 'spin') { if (u.type === 'muerte') { u.forceSpin = true; u.atkChosen = false; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'muerte') u.atkChosen = false;
   if (act === 'shade') { if (u.type === 'muerte') { u.shadeTarget = null; u.dir = u.x < W / 2 ? 1 : -1; u.set('shadeOut'); } return; }
   if (act === 'tp') { if (u.type === 'ninja') { u.tpTarget = null; u.set('tpOut'); } return; }
   if (act === 'kick') { if (u.type === 'kungfu') { u.kickNext = true; u.inPlace = false; u.set('attack'); } return; }
