@@ -525,13 +525,15 @@ class Unit {
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
   attackIaido(o, t) {
-    // Secuencia completa: tajo ascendente al desenvainar, tajo descendente, chiburi y envainado lento.
+    // Tajo ascendente al desenvainar, respiro, tajo descendente lento siguiendo el arco del brazo, envainado.
     const r = this.cfg.rest, c = this.cfg;
     const sheathR = Math.PI + c.sayaR, ax = [Math.cos(c.sayaR), Math.sin(c.sayaR)];
     const grip = [c.saya[0] - KAT.g2g * Math.cos(sheathR), c.saya[1] - KAT.g2g * Math.sin(sheathR)];
     const holdSaya = [c.saya[0] - 0.02, c.saya[1] + 0.01];
-    const up = [0.3, -0.56], high = [0.16, -0.74], low = [0.44, -0.28];
-    const T = [0.32, 0.46, 0.7, 0.86, 1.15, 1.42, 1.96, 2.3];   // fin de cada fase (s)
+    const S = [0.12, -0.42], R = 0.28;                      // hombro y radio del arco de la mano
+    const arc = phi => [S[0] + R * Math.cos(phi), S[1] + R * Math.sin(phi)];
+    const easeIO = q => q < 0 ? 0 : q > 1 ? 1 : q * q * (3 - 2 * q);
+    const T = [0.32, 0.46, 0.96, 1.2, 1.5, 1.8, 2.1, 2.5, 2.75];   // fin de cada fase (s)
     o.bh = holdSaya;
     if (t < T[0]) {                        // postura
       const e = ease(t / T[0]);
@@ -540,48 +542,43 @@ class Unit {
       if (e > 0.9) o.dx = Math.sin(t * 90) * 0.006;
     } else if (t < T[1]) {                 // 1.er tajo: ascendente, desenvainando
       const e = (t - T[0]) / (T[1] - T[0]);
-      o.drawn = true; o.katR = lerp(sheathR, -1.2, e); o.fh = lerp2(grip, up, e);
+      o.drawn = true; o.katR = lerp(sheathR, -1.0, e); o.fh = lerp2(grip, arc(-0.95), e);
       o.dx = 0.18 * e; o.rot = lerp(-0.05, 0.06, e);
       if (!this.slash1) { this.slash1 = true; iaidoSlash(this, 1.7, -0.9); }
       if (e > 0.6 && !this.hit1) { this.hit1 = true; onMelee(this); }
-    } else if (t < T[2]) {                 // alza la espada por encima de la cabeza
-      const e = ease((t - T[1]) / (T[2] - T[1]));
-      o.drawn = true; o.katR = lerp(-1.2, -1.75, e); o.fh = lerp2(up, high, e);
-      o.dx = 0.18; o.rot = lerp(0.06, -0.06, e); o.sy = 1 + 0.03 * e;
-    } else if (t < T[3]) {                 // 2.º tajo: descendente
-      const e = easeIn((t - T[2]) / (T[3] - T[2]));
-      o.drawn = true; o.katR = lerp(-1.75, 0.95, e); o.fh = lerp2(high, low, e);
-      o.dx = lerp(0.18, 0.3, e); o.rot = lerp(-0.06, 0.14, e); o.sy = 1 - 0.05 * e;
-      if (!this.slash2) { this.slash2 = true; iaidoSlash(this, -1.5, 1.4); }
+    } else if (t < T[2]) {                 // respiro con la espada arriba
+      const e = (t - T[1]) / (T[2] - T[1]), b = Math.sin(e * Math.PI * 2) * 0.012;
+      o.drawn = true; o.katR = -1.0 + b; o.fh = [arc(-0.95)[0], arc(-0.95)[1] + b]; o.dx = 0.18;
+      o.rot = lerp(0.06, 0, ease(e)); o.sy = 1 + b;
+    } else if (t < T[3]) {                 // carga: sube la espada siguiendo el arco
+      const e = easeIO((t - T[2]) / (T[3] - T[2])), phi = lerp(-0.95, -1.8, e);
+      o.drawn = true; o.fh = arc(phi); o.katR = lerp(-1.0, -1.75, e); o.dx = 0.18; o.rot = -0.06 * e; o.sy = 1 + 0.03 * e;
+    } else if (t < T[4]) {                 // 2.º tajo: descendente, la hoja sigue al brazo
+      const e = easeIO((t - T[3]) / (T[4] - T[3])), phi = lerp(-1.8, 0.55, e);
+      o.drawn = true; o.fh = arc(phi); o.katR = lerp(-1.75, 0.6, e);
+      o.dx = lerp(0.18, 0.28, e); o.rot = lerp(-0.06, 0.12, e); o.sy = 1 + 0.03 - 0.08 * e;
+      if (!this.slash2 && e > 0.15) { this.slash2 = true; iaidoSlash(this, -1.45, 1.0); }
       if (e > 0.55 && !this.hit2) { this.hit2 = true; onMelee(this); }
-    } else if (t < T[4]) {                 // pausa con la espada abajo y brillo en la hoja
-      const e = (t - T[3]) / (T[4] - T[3]);
-      o.drawn = true; o.katR = 0.95; o.fh = low; o.dx = 0.3; o.rot = 0.14; o.sy = 0.95;
+    } else if (t < T[5]) {                 // pausa con la espada abajo y brillo en la hoja
+      const e = (t - T[4]) / (T[5] - T[4]);
+      o.drawn = true; o.fh = arc(0.55); o.katR = 0.6; o.dx = 0.28; o.rot = lerp(0.12, 0.06, e); o.sy = 0.95;
       o.glint = Math.sin(e * Math.PI);
-    } else if (t < T[5]) {                 // chiburi: sacudida seca de la hoja
-      const e = (t - T[4]) / (T[5] - T[4]), k = Math.sin(e * Math.PI);
-      o.drawn = true; o.katR = 0.95 - 0.75 * k + (e > 0.5 ? 0.25 * Math.sin((e - 0.5) * 2 * Math.PI) : 0);
-      o.fh = [low[0] + 0.08 * k, low[1] - 0.12 * k]; o.dx = 0.3; o.rot = lerp(0.14, 0.04, e); o.sy = lerp(0.95, 1, e);
-      if (e > 0.5 && !this.flick) { this.flick = true; burst(this.x + this.dir * H * 0.75, this.gy - H * 0.35, 0xffffff, 4, 140); }
-    } else if (t < T[6]) {                 // noto: lleva la hoja a la boca de la vaina y la desliza dentro
-      const e = (t - T[5]) / (T[6] - T[5]);
-      if (e < 0.4) {
-        const q = ease(e / 0.4);
-        const guardStart = [c.saya[0] + ax[0] * 0.554, c.saya[1] + ax[1] * 0.554];
-        const handStart = [guardStart[0] + KAT.g2g * ax[0], guardStart[1] + KAT.g2g * ax[1]];
-        o.drawn = true; o.katR = lerp(0.2, c.sayaR, q); o.ksx = Math.cos(q * Math.PI);   // gira en horizontal y se acorta al pasar
-        o.fh = lerp2([low[0] + 0.05, low[1] - 0.04], handStart, q); o.dx = lerp(0.3, 0.12, q); o.rot = lerp(0.04, 0, q);
-      } else {
-        const q = ease((e - 0.4) / 0.6);
-        o.slideIn = q; o.dx = lerp(0.12, 0, q);
-        o.fh = [c.saya[0] + ax[0] * (0.554 * (1 - q) + KAT.g2g), c.saya[1] + ax[1] * (0.554 * (1 - q) + KAT.g2g)];
-        if (q > 0.98 && !this.click) { this.click = true; burst(this.x + this.dir * c.saya[0] * H, this.gy + c.saya[1] * H, 0xffe9a8, 5, 70); }
-      }
+    } else if (t < T[6]) {                 // gira la hoja en horizontal hacia la boca de la vaina
+      const q = ease((t - T[5]) / (T[6] - T[5]));
+      const guardStart = [c.saya[0] + ax[0] * 0.554, c.saya[1] + ax[1] * 0.554];
+      const handStart = [guardStart[0] + KAT.g2g * ax[0], guardStart[1] + KAT.g2g * ax[1]];
+      o.drawn = true; o.katR = lerp(0.6, c.sayaR, q); o.ksx = Math.cos(q * Math.PI);
+      o.fh = lerp2(arc(0.55), handStart, q); o.dx = lerp(0.28, 0.12, q); o.rot = lerp(0.06, 0, q); o.sy = lerp(0.95, 1, q);
+    } else if (t < T[7]) {                 // la desliza dentro de la vaina
+      const q = ease((t - T[6]) / (T[7] - T[6]));
+      o.slideIn = q; o.dx = lerp(0.12, 0, q);
+      o.fh = [c.saya[0] + ax[0] * (0.554 * (1 - q) + KAT.g2g), c.saya[1] + ax[1] * (0.554 * (1 - q) + KAT.g2g)];
+      if (q > 0.98 && !this.click) { this.click = true; burst(this.x + this.dir * c.saya[0] * H, this.gy + c.saya[1] * H, 0xffe9a8, 5, 70); }
     } else {                               // suelta la empuñadura y vuelve a la guardia
-      const e = ease((t - T[6]) / (T[7] - T[6]));
+      const e = ease((t - T[7]) / (T[8] - T[7]));
       o.fh = lerp2(grip, r.fh, e); o.bh = lerp2(holdSaya, r.bh, e);
     }
-    if (t >= T[7]) { this.slash1 = this.slash2 = this.hit1 = this.hit2 = this.flick = this.click = false; this.set('idle'); }
+    if (t >= T[8]) { this.slash1 = this.slash2 = this.hit1 = this.hit2 = this.click = false; this.set('idle'); }
   }
   attackBite(o, t) {
     // agacharse, lanzarse con la boca abierta y cerrar de golpe
