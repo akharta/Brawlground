@@ -448,6 +448,10 @@ class Unit {
     this.set('spawn');
   }
   set(s) { this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  knock(dir) {
+    if (!this.alive || this.state === 'die' || this.hp <= 0) return;
+    this.knockDir = dir; this.knockFrom = this.x; this.cd = Math.max(this.cd, 1.0); this.set('knock');
+  }
   damage(d, src) {
     if (!this.alive || this.state === 'die') return;
     this.hp -= d; this.hurtT = 0.32;
@@ -549,6 +553,14 @@ class Unit {
         o.hop = Math.sin(p * Math.PI) * H * 0.4; o.rot = lerp(-0.22, 0.25, p);
         o.bite = p > 0.35; o.headR = lerp(-0.15, 0.1, p); o.tail = -0.6; o.sx = 1.08; o.sy = 0.94;
         if (p >= 1) { burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110); this.set('attack'); this.t = 0.18; }
+        break;
+      }
+      case 'knock': {                // derribado: sale despedido hacia atrás, cae de espaldas y se levanta
+        const D = 1.0;
+        if (t < 0.35) { const e = ease(t / 0.35); this.x = Math.max(60, Math.min(W - 60, this.knockFrom + this.knockDir * 85 * e)); o.rot = -1.25 * e; o.hop = Math.sin(e * Math.PI) * H * 0.18; o.dx = -0.1 * e; }
+        else if (t < 0.7) { o.rot = -1.25; o.dx = -0.1; if (!this.landed) { this.landed = true; burst(this.x, this.gy, 0xe8d3b0, 10, 120); } }
+        else { const e = ease((t - 0.7) / 0.3); o.rot = lerp(-1.25, 0, e); o.dx = lerp(-0.1, 0, e); o.hop = Math.sin(e * Math.PI) * H * 0.05; }
+        if (t >= D) { this.landed = false; this.set('idle'); }
         break;
       }
       case 'rise': {                 // sale de la tumba: emerge del suelo
@@ -701,8 +713,8 @@ class Unit {
     if (t >= 1.05) { this.hits = 0; this.kickNext = true; this.set('idle'); }
   }
   attackKick(o, t) {
-    // patada giratoria: la pierna sale durante el giro y golpea justo al completar la vuelta
-    const r = this.cfg.rest, guard = [[0.05, -0.55], [0.2, -0.58]];
+    // patada giratoria: la pierna sale durante el giro, derriba al enemigo y le persigue con la pierna estirada
+    const r = this.cfg.rest, guard = [[0.05, -0.55], [0.2, -0.58]], air = [[-0.15, -0.62], [0.02, -0.66]];
     if (t < 0.15) {                        // carga
       const e = ease(t / 0.15);
       o.sy = 1 - 0.08 * e; o.sx = 1 + 0.05 * e; o.rot = 0.05 * e;
@@ -713,16 +725,21 @@ class Unit {
       o.bh = guard[0]; o.fh = guard[1];
       const k = easeInOut((e - 0.45) / 0.45);
       o.kick = k; o.rot = -0.22 * k; o.dx = 0.06 * k;
-      if (e >= 0.88 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
-    } else if (t < 0.6) {                  // mantiene la pierna extendida un instante
-      o.kick = 1; o.rot = -0.22; o.dx = 0.06; o.bh = [-0.15, -0.62]; o.fh = [0.02, -0.66];
-      if (!this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
+      if (e >= 0.88 && !this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
+    } else if (t < 0.8) {                  // persecución: avanza deslizándose con la pierna estirada
+      const e = easeInOut((t - 0.47) / 0.33), tg = this.kickTarget;
+      if (!this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
+      const goal = tg && tg.alive && tg.state !== 'die' ? tg.x - this.dir * this.cfg.range * 0.7 : this.chaseFrom + this.dir * H * 0.7;
+      const toward = this.dir * (goal - this.chaseFrom) > 0 ? goal : this.chaseFrom;
+      this.x = Math.max(60, Math.min(W - 60, lerp(this.chaseFrom, toward, e)));
+      o.kick = 1; o.rot = -0.22; o.dx = 0.06; o.hop = H * 0.05 * Math.sin(e * Math.PI); o.bh = air[0]; o.fh = air[1];
+      if (Math.random() < 0.5) fx.push({ x: this.x - this.dir * H * 0.1, y: this.gy - 2, vx: -this.dir * rand(30, 70), vy: -rand(20, 50), r: rand(3, 5), life: 0.35, t: 0.35, color: 0xe8d3b0 });
     } else {                               // recoge la pierna y vuelve a la guardia
-      const e = ease((t - 0.6) / 0.28);
+      const e = ease((t - 0.8) / 0.25);
       o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
-      o.bh = lerp2([-0.15, -0.62], r.bh, e); o.fh = lerp2([0.02, -0.66], r.fh, e);
+      o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
-    if (t >= 0.88) { this.kicked = false; this.kickNext = false; this.set('idle'); }
+    if (t >= 1.05) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.cd = Math.min(this.cd, 0.2); this.set('idle'); }
   }
   attackBone(o, t) {
     // tajo torpe de esqueleto: alza la espada oxidada y la deja caer
@@ -1154,7 +1171,7 @@ function fireGun(u, gun) {
   burst(tx, ty, 0xfff3c4, 4, 90);
   if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
 }
-function kungfuHit(u, dmg, push, hand, at) {
+function kungfuHit(u, dmg, push, hand, at, knock) {
   // impacto en el puño: estrella blanca y líneas de velocidad; la palma además empuja y frena al enemigo
   let px, py;
   if (hand) { const m = hand.getWorldTransformMatrix(); px = m.tx; py = m.ty; }
@@ -1172,7 +1189,9 @@ function kungfuHit(u, dmg, push, hand, at) {
   const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
   o.damage(Math.round(rand(...dmg)));
+  if (knock) { o.knock(u.dir); return o; }
   if (push && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
+  return o;
 }
 // tamaño en pantalla de cada tumba según el ancho que tenía en su imagen original (misma escala para todas)
 const GRAVE = { tumba1: 813 / 416, tumba1_rota: 939 / 418, tumba2: 1078 / 512, tumba2_rota: 1144 / 512, tumba3: 885 / 485, tumba3_rota: 929 / 410 };
@@ -1334,7 +1353,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise'].includes(u.state)) continue;
     const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
     if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
     if (u.type === 'muerte') {
@@ -1515,7 +1534,7 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock'].includes(u.state)) return;
   if (act === 'graves') { if (u.type === 'muerte') [1, 2, 3].forEach(i => addGrave(u, { x: u.x + i * 95, gy: u.gy, lane: 0 })); return; }
   if (act === 'spin') { if (u.type === 'muerte') { u.forceSpin = true; u.atkChosen = false; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'attack' && u.type === 'muerte') u.atkChosen = false;
