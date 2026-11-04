@@ -269,7 +269,7 @@ const CH = {
   samurai: { hp: 140, dmg: [17, 21], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
     rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
   // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
-  kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [0.6, 0.8], range: H * 0.85, ranged: false, h: 1,
+  kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [1.4, 1.7], range: H * 0.85, ranged: false, h: 1,
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
@@ -447,10 +447,13 @@ class Unit {
     if (this.arrow) this.arrow.setVisible(false);
     this.set('spawn');
   }
-  set(s) { this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
     if ((this.knockImm || 0) > 0) return false;           // inmune: tras un derribo no puede volver a caer en un rato
+    if (!['idle', 'walk', 'attack'].includes(this.state)) return false;   // no interrumpe habilidades (teletransporte, embestida…)
+    this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
   damage(d, src) {
@@ -476,7 +479,11 @@ class Unit {
     return o;
   }
   update(dt) {
-    this.t += dt; if (this.knockImm > 0) this.knockImm -= dt; const t = this.t;
+    this.t += dt; if (this.knockImm > 0) this.knockImm -= dt;
+    if (this.pushLeft) {                       // empujón suave: se desliza hacia atrás en unas décimas
+      const step = Math.abs(this.pushLeft) < 0.5 ? this.pushLeft : this.pushLeft * Math.min(1, dt * 12);
+      this.x = Math.max(60, Math.min(W - 60, this.x + step)); this.pushLeft -= step;
+    } const t = this.t;
     const o = this.restPose();
     const now = this.sc.time.now / 1000, breathe = Math.sin(now * 3.2 + this.homeX + this.lane);
     switch (this.state) {
@@ -560,7 +567,7 @@ class Unit {
         if (t < 0.25) { const e = ease(t / 0.25); this.x = Math.max(60, Math.min(W - 60, this.knockFrom + this.knockDir * 70 * e)); o.rot = -1.1 * e; o.hop = Math.sin(e * Math.PI) * H * 0.15; o.dx = -0.1 * e; }
         else if (t < 0.45) { o.rot = -1.1; o.dx = -0.1; if (!this.landed) { this.landed = true; burst(this.x, this.gy, 0xe8d3b0, 10, 120); } }
         else { const e = ease((t - 0.45) / 0.25); o.rot = lerp(-1.1, 0, e); o.dx = lerp(-0.1, 0, e); o.hop = Math.sin(e * Math.PI) * H * 0.05; }
-        if (t >= 0.7) { this.landed = false; this.cd = Math.min(this.cd, 0.1); this.set('idle'); }   // se levanta y contraataca
+        if (t >= 0.7) { this.landed = false; this.set('idle'); }
         break;
       }
       case 'rise': {                 // sale de la tumba: emerge del suelo
@@ -726,20 +733,21 @@ class Unit {
       const k = easeInOut((e - 0.45) / 0.45);
       o.kick = k; o.rot = -0.22 * k; o.dx = 0.06 * k;
       if (e >= 0.88 && !this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
-    } else if (t < 0.8) {                  // persecución: avanza deslizándose con la pierna estirada
-      const e = easeInOut((t - 0.47) / 0.33), tg = this.kickTarget;
+    } else if (t < 0.95) {                 // persecución: avanza deslizándose con la pierna estirada
+      const e = easeInOut((t - 0.47) / 0.48), tg = this.kickTarget;
       if (!this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
-      const goal = tg && tg.alive && tg.state !== 'die' ? tg.x - this.dir * this.cfg.range * 0.7 : this.chaseFrom + this.dir * H * 0.7;
+      // solo persigue si lo ha derribado; si no, se queda en su sitio
+      const goal = tg && tg.alive && tg.state !== 'die' ? tg.x - this.dir * this.cfg.range * 0.7 : this.chaseFrom;
       const toward = this.dir * (goal - this.chaseFrom) > 0 ? goal : this.chaseFrom;
       this.x = Math.max(60, Math.min(W - 60, lerp(this.chaseFrom, toward, e)));
       o.kick = 1; o.rot = -0.22; o.dx = 0.06; o.hop = H * 0.05 * Math.sin(e * Math.PI); o.bh = air[0]; o.fh = air[1];
       if (Math.random() < 0.5) fx.push({ x: this.x - this.dir * H * 0.1, y: this.gy - 2, vx: -this.dir * rand(30, 70), vy: -rand(20, 50), r: rand(3, 5), life: 0.35, t: 0.35, color: 0xe8d3b0 });
     } else {                               // recoge la pierna y vuelve a la guardia
-      const e = ease((t - 0.8) / 0.25);
+      const e = ease((t - 0.95) / 0.25);
       o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
-    if (t >= 1.05) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+    if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
   }
   attackBone(o, t) {
     // tajo torpe de esqueleto: alza la espada oxidada y la deja caer
@@ -1186,15 +1194,15 @@ function kungfuHit(u, dmg, push, hand, at, knock) {
   if (push) { g.lineStyle(4, 0xffe9a8, 0.9).strokeCircle(sx, py, R * 1.6); }
   scene.tweens.add({ targets: g, alpha: 0, duration: (push ? 260 : 150) / timeScale, onComplete: () => g.destroy() });
   if (mode === 'anim') return;
-  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
   o.damage(Math.round(rand(...dmg)));
   if (knock) {
     if (o.knock(u.dir)) return o;
-    if (o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 25)); o.hurtT = 0.32; }
+    if (o.alive) o.shove(u.dir * 25);
     return null;
   }
-  if (push && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
+  if (push && o.alive) o.shove(u.dir * 30);
   return o;
 }
 // tamaño en pantalla de cada tumba según el ancho que tenía en su imagen original (misma escala para todas)
@@ -1333,12 +1341,12 @@ function nearestEnemy(u) {
 }
 function onMelee(u) {
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
-  const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14);
+  const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.25);
   const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
   if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
   targets.forEach(v => {
     v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1)), u);
-    if (u.cfg.push && v.alive && v.state !== 'die') v.x = Math.max(60, Math.min(W - 60, v.x + Math.sign(v.x - u.x || u.dir) * u.cfg.push));
+    if (u.cfg.push && v.alive && v.shove) v.shove(Math.sign(v.x - u.x || u.dir) * u.cfg.push);
   });
 }
 function onShoot(u, sx, sy) {
@@ -1556,7 +1564,8 @@ $('anim-controls').addEventListener('click', e => {
   u.set(act);
 });
 
-window.__debugUnits = () => units.map(u => ({ type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x) }));
+let __uid = 0;
+window.__debugUnits = () => units.map(u => ({ id: u._id || (u._id = ++__uid), type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x) }));
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
 </script>
