@@ -90,7 +90,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja y Pistolero.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero y Lobo.</p>
     </div>
   </header>
 
@@ -116,6 +116,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="valkiria" aria-pressed="false">Valkiria</button>
       <button data-char="ninja" aria-pressed="false">Ninja</button>
       <button data-char="pistolero" aria-pressed="false">Pistolero</button>
+      <button data-char="lobo" aria-pressed="false">Lobo</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -123,6 +124,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="hurt">Recibir golpe</button>
     <button class="btn" data-act="die">Morir</button>
     <button class="btn" data-act="tp" id="tp-btn" hidden>Teletransporte</button>
+    <button class="btn" data-act="dash" id="dash-btn" hidden>Embestida</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -172,6 +174,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>23 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta del Lobo">
+        <div class="cost">1</div>
+        <div class="art"><img src="img/lobo_carta.png" alt="Ilustración del Lobo"></div>
+        <div class="name">Lobo</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>20</dd><dt>Daño</dt><dd>20</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -203,7 +214,10 @@ const CH = {
     rest: { bk: 2.37, fk: -0.757, bh: [-0.213, -0.177], fh: [0.196, -0.177] }, scarf: [-0.149, -0.297] },
   // Dos revólveres: ráfaga alterna a media distancia y giro del revólver en el dedo.
   pistolero: { hp: 60, dmg: [11, 13], speed: 56, cd: [1.4, 1.8], range: H * 2.7, ranged: true, h: 1,
-    rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } }
+    rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } },
+  // Animal sin manos: cabeza (dos versiones), cuerpo y cola por separado. Embestida al ver a un enemigo cerca.
+  lobo: { hp: 20, dmg: [18, 22], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
+    rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] }
 };
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
 const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
@@ -213,8 +227,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero' };
-const NEWEST = 'pistolero';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo' };
+const NEWEST = 'lobo';
 let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -224,7 +238,8 @@ class Unit {
     this.teamDir = team === 'blue' ? 1 : -1; this.dir = this.teamDir; this.homeX = x;
     this.root = sc.add.container(x, GROUND);
     const wide = type === 'valkiria';
-    this.shadow = sc.add.ellipse(wide ? H * 0.08 : 0, 0, H * (wide ? 1.15 : 0.62), H * (wide ? 0.18 : 0.15), 0x10131f, 0.28);
+    const sw = type === 'lobo' ? 0.9 : wide ? 1.15 : 0.62;
+    this.shadow = sc.add.ellipse(wide ? H * 0.08 : 0, 0, H * sw, H * (wide ? 0.18 : 0.15), 0x10131f, 0.28);
     this.rig = sc.add.container(0, 0);
     const handScale = n => sc.add.image(0, 0, n);
     if (type === 'legionario') {
@@ -245,6 +260,14 @@ class Unit {
       this.parts = [this.body, this.mount, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'lobo') {
+      const f = H / 120;
+      this.tail = sc.add.image(0, 0, 'lob_cola').setOrigin(0.943, 0.061).setScale(0.0607 * f);
+      this.body = sc.add.image(0, 0, 'lob_cuerpo').setOrigin(0.5, 1).setScale(0.1554 * f);
+      this.head = sc.add.image(0, 0, 'lob_cabeza').setOrigin(0.382, 0.739).setScale(0.1929 * f);
+      this.parts = [this.tail, this.body, this.head];
+      this.rig.add(this.parts);
+      this.drops = [];
     } else if (type === 'pistolero') {
       const f = H / 120;
       this.body = sc.add.image(0, 0, 'pis_cuerpo').setOrigin(0.456, 1).setScale(H / 512);
@@ -284,7 +307,7 @@ class Unit {
   get gy() { return GROUND + this.lane; }
   reset(x) {
     this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-18, 16)) : 0;
-    this.dir = this.teamDir; this.tpT = 1.0; this.atkN = 0; this.tpTarget = null;
+    this.dir = this.teamDir; this.tpT = 1.0; this.atkN = 0; this.tpTarget = null; this.dashed = false;
     this.root.y = this.gy; this.root.setDepth(this.gy);
     this.hp = this.max = this.cfg.hp; this.alive = true; this.inPlace = false;
     this.cd = rand(0.2, 0.6); this.hurtT = 0; this.fired = false; this.poofed = false; this.vib = 0;
@@ -308,6 +331,7 @@ class Unit {
     else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
     else if (this.type === 'ninja') { o.bk = r.bk; o.fk = r.fk; o.scarf = { r: -0.3, sx: 1 }; }
     else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
+    else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
     else { o.bow = bowRestFromHand(r.fh); o.bowR = 0; o.nock = null; o.arrow = false; }
     return o;
   }
@@ -331,6 +355,7 @@ class Unit {
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
         if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
+        if (o.tail !== undefined) { o.tail = Math.sin(now * 5) * 0.18; o.headR = 0.03 * breathe; o.head[1] = 0.01 * breathe; }
         break;
       case 'walk': {
         const ph = t * 10;
@@ -348,6 +373,12 @@ class Unit {
         if (o.sh) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
         if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
+        if (o.tail !== undefined) {   // galope: el cuerpo se mece, la cabeza contrarresta y la cola va al viento
+          const g = t * 15;
+          o.hop = Math.abs(Math.sin(g)) * H * 0.1; o.rot = Math.sin(g) * 0.09; o.sy = 1 - Math.abs(Math.cos(g)) * 0.06;
+          o.headR = -Math.sin(g) * 0.07; o.head[1] = Math.abs(Math.sin(g + 0.8)) * 0.02;
+          o.tail = -0.35 + Math.sin(g * 1.3) * 0.12;
+        }
         if (o.scarf) {               // carrera ninja: inclinado hacia delante, kunai atrás y bufanda al viento
           const q = t * 15;
           o.hop = Math.abs(Math.sin(q)) * H * 0.06; o.rot = 0.12 + Math.sin(q) * 0.03;
@@ -363,8 +394,17 @@ class Unit {
         else if (this.type === 'valkiria') this.attackAxe(o, t);
         else if (this.type === 'ninja') this.attackKunai(o, t);
         else if (this.type === 'pistolero') this.attackGuns(o, t);
+        else if (this.type === 'lobo') this.attackBite(o, t);
         else this.attackBow(o, t);
         break;
+      case 'dash': {                 // embestida: salto largo con la boca abierta hacia el enemigo
+        const D = 0.34, p = Math.min(1, t / D);
+        this.x = lerp(this.dashFrom, this.dashTo, p);
+        o.hop = Math.sin(p * Math.PI) * H * 0.4; o.rot = lerp(-0.22, 0.25, p);
+        o.bite = p > 0.35; o.headR = lerp(-0.15, 0.1, p); o.tail = -0.6; o.sx = 1.08; o.sy = 0.94;
+        if (p >= 1) { burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110); this.set('attack'); this.t = 0.18; }
+        break;
+      }
       case 'tpOut': {                // lanza un shuriken y desaparece en una nube de humo
         if (!this.fired) { this.fired = true; smoke(this.x, this.gy - H * 0.4); throwShuriken(this); }
         const e = ease(t / 0.28);
@@ -458,6 +498,23 @@ class Unit {
     if (p > 0.32 && !this.fired) { this.fired = true; onMelee(this); }
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
+  attackBite(o, t) {
+    // agacharse, lanzarse con la boca abierta y cerrar de golpe
+    const p = t / 0.5;
+    if (p < 0.35) {
+      const e = ease(p / 0.35);
+      o.dx = -0.06 * e; o.sy = 1 - 0.1 * e; o.sx = 1 + 0.06 * e; o.headR = -0.12 * e; o.tail = 0.3 * e;
+    } else if (p < 0.62) {
+      const e = easeIn((p - 0.35) / 0.27);
+      o.dx = lerp(-0.06, 0.2, e); o.sy = lerp(0.9, 1.04, e); o.headR = lerp(-0.12, 0.18, e); o.bite = e < 0.85;
+      o.head = [0.05 * e, -0.03 * e]; o.tail = lerp(0.3, -0.4, e);
+      if (e > 0.8 && !this.fired) { this.fired = true; onMelee(this); }
+    } else {
+      const e = ease((p - 0.62) / 0.38);
+      o.dx = lerp(0.2, 0, e); o.headR = lerp(0.18, 0, e); o.head = [0.05 * (1 - e), -0.03 * (1 - e)]; o.tail = lerp(-0.4, 0, e);
+    }
+    if (p >= 1) this.set('idle');
+  }
   attackGuns(o, t) {
     const r = this.cfg.rest, p = t / 1.25;
     const aimF = [0.44, -0.34], aimB = [0.3, -0.45];
@@ -536,9 +593,16 @@ class Unit {
     this.rig.rotation = o.rot * this.dir;
     this.rig.scaleX = this.dir * o.sx; this.rig.scaleY = o.sy;
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
-    this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
+    if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'pistolero') {
+    if (this.type === 'lobo') {
+      const c = this.cfg;
+      this.tail.setPosition(c.tail[0] * H, (c.tail[1] + o.by) * H).setRotation(o.tail);
+      this.body.setPosition(c.body[0] * H, o.by * H);
+      this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
+      const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
+      if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'pistolero') {
       this.bg.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bg);
       this.fg.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fg);
     } else if (this.type === 'ninja') {
@@ -685,9 +749,12 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (u.state === 'tpOut' || u.state === 'tpIn') continue;
+    if (u.state === 'tpOut' || u.state === 'tpIn' || u.state === 'dash') continue;
     const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
     if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
+    if (u.type === 'lobo' && o && !u.dashed && u.state === 'walk' && dist > u.cfg.range && dist < H * 2.8) {
+      u.dashed = true; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.85; u.set('dash'); continue;
+    }
     if (u.type === 'ninja') {
       u.tpT -= dt;
       const prey = enemiesOf(u).filter(v => v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
@@ -761,7 +828,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -799,6 +866,7 @@ function start() {
       L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
       L('nin_cuerpo', 'ninja_cuerpo'); L('nin_bufanda', 'ninja_bufanda'); L('nin_arma', 'ninja_arma'); L('nin_mano', 'ninja_mano'); L('nin_shuriken', 'ninja_shuriken');
       L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
+      L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
     }, create, update }
   });
 }
@@ -837,12 +905,17 @@ $('anim-controls').addEventListener('click', e => {
     animChar = b.dataset.char;
     document.querySelectorAll('[data-char]').forEach(x => x.setAttribute('aria-pressed', x === b));
     $('tp-btn').hidden = animChar !== 'ninja';
+    $('dash-btn').hidden = animChar !== 'lobo';
     if (scene) buildMode();
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || u.state === 'die' || u.state === 'tpOut' || u.state === 'tpIn') return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash'].includes(u.state)) return;
   if (act === 'tp') { if (u.type === 'ninja') { u.tpTarget = null; u.set('tpOut'); } return; }
+  if (act === 'dash') {
+    if (u.type === 'lobo') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 260 : u.x - 260; u.dir = Math.sign(u.dashTo - u.x); u.set('dash'); }
+    return;
+  }
   if (act === 'hurt') { u.hurtT = 0.32; floatText(u.x, u.gy - H * u.cfg.h - 18, '-12'); burst(u.x - H * 0.15, u.gy - H * 0.45, 0xffffff, 7, 170); return; }
   u.inPlace = act === 'walk';
   if (act === 'die') u.hp = 0;
