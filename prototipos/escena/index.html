@@ -713,18 +713,18 @@ class Unit {
     if (t >= T[4]) { this.slashed = false; this.atkChosen = false; this.set('idle'); }
   }
   attackSpin(o, t) {
-    // corte giratorio: guadaña extendida al frente y dos vueltas completas sobre sí misma, golpeando a ambos lados
+    // corte giratorio: carga, una sola vuelta rápida y contundente con la guadaña extendida, golpe a ambos lados
     const r = this.cfg.rest, ext = [0.62, -0.42];
-    if (t < 0.2) { const e = ease(t / 0.2); o.sc = lerp(r.sc, -Math.PI, e); o.hf = lerp2(r.hf, [-0.5, -0.42], e); o.sy = 1 - 0.06 * e; }
-    else if (t < 0.32) { const e = ease((t - 0.2) / 0.12); o.hz = -Math.cos(lerp(Math.PI, 0, e)); o.hf = [0.5 * Math.cos(lerp(Math.PI, 0, e)) + 0.12 * e, -0.42]; }
-    else if (t < 1.0) {
-      const e = easeInOut((t - 0.32) / 0.68);
-      o.hz = -1; o.hf = ext; o.spinF = Math.cos(e * Math.PI * 4); o.hop = H * 0.06 * Math.sin(e * Math.PI);
-      const turn = Math.floor(e * 2);
-      if (turn >= (this.spins || 0) && e < 0.99) { this.spins = turn + 1; whirl(this); spinHit(this); }
+    if (t < 0.28) { const e = ease(t / 0.28); o.sc = lerp(r.sc, -Math.PI, e); o.hf = lerp2(r.hf, [-0.5, -0.42], e); o.sy = 1 - 0.1 * e; o.sx = 1 + 0.06 * e; o.rot = -0.1 * e; }
+    else if (t < 0.38) { const e = ease((t - 0.28) / 0.1); o.hz = -Math.cos(lerp(Math.PI, 0, e)); o.hf = [0.5 * Math.cos(lerp(Math.PI, 0, e)) + 0.12 * e, -0.42]; o.sy = 0.9; }
+    else if (t < 0.7) {
+      const e = easeInOut((t - 0.38) / 0.32);
+      o.hz = -1; o.hf = ext; o.spinF = Math.cos(e * Math.PI * 2); o.hop = H * 0.1 * Math.sin(e * Math.PI); o.sy = 1 + 0.05 * Math.sin(e * Math.PI);
+      if (e >= 0.9 && !this.spinHitDone) { this.spinHitDone = true; spinHit(this); }
     }
-    else if (t < 1.3) { const e = ease((t - 1.0) / 0.3); o.hz = -1; o.hf = lerp2(ext, [0.3, -0.42], e); o.rot = 0; if (e > 0.5) { o.hz = undefined; o.sc = lerp(0, r.sc, (e - 0.5) * 2); o.hf = lerp2([0.3, -0.42], r.hf, (e - 0.5) * 2); } }
-    if (t >= 1.3) { this.spins = 0; this.atkChosen = false; this.set('idle'); }
+    else if (t < 0.88) { o.hz = -1; o.hf = ext; o.rot = 0.12; o.dx = 0.06; o.sy = 0.94; }
+    else if (t < 1.2) { const e = ease((t - 0.88) / 0.32); o.hz = -1; o.hf = lerp2(ext, [0.3, -0.42], e); if (e > 0.5) { o.hz = undefined; o.sc = lerp(0, r.sc, (e - 0.5) * 2); o.hf = lerp2([0.3, -0.42], r.hf, (e - 0.5) * 2); } }
+    if (t >= 1.2) { this.spinHitDone = false; this.atkChosen = false; this.set('idle'); }
   }
   sweep(o, t, k) {
     // siega horizontal: guadaña atrás, barrido alrededor de la cintura (se acorta al pasar por delante) y vuelta completa por detrás
@@ -1155,18 +1155,12 @@ function reapArc(u, k = 1) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 340 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
-function whirl(u) {
-  // remolino: elipse completa oscura con borde cian alrededor de la Muerte
-  const g = scene.add.graphics().setDepth(960).setPosition(u.x, u.gy - H * 0.45);
-  const RX = H * 1.15, RY = H * 0.3;
-  g.lineStyle(14, 0x2a1f45, 0.6).strokeEllipse(0, 0, RX * 2, RY * 2);
-  g.lineStyle(3, 0x7ff6ff, 0.85).strokeEllipse(0, 0, RX * 2, RY * 2);
-  scene.tweens.add({ targets: g, alpha: 0, scaleX: { from: 0.8, to: 1.12 }, duration: 380 / timeScale, ease: 'Quad.easeOut', onComplete: () => g.destroy() });
-  darkPuff(u.x, u.gy - H * 0.3, 8);
-}
 function spinHit(u) {
+  // impacto del giro: polvo y sombras a ambos lados, sin anillos
+  darkPuff(u.x + H * 0.7, u.gy - H * 0.35, 10); darkPuff(u.x - H * 0.7, u.gy - H * 0.35, 10);
+  burst(u.x, u.gy - 6, 0xe8d3b0, 12, 170);
   if (mode !== 'fight') return;
-  enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range * 1.1).forEach(v => v.damage(Math.round(rand(...u.cfg.dmg) * 0.65)));
+  enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range * 1.1).forEach(v => v.damage(Math.round(rand(...u.cfg.dmg) * 1.25)));
 }
 function darkPuff(x, y, n) {
   for (let i = 0; i < n; i++) {
