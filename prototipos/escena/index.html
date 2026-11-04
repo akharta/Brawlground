@@ -450,7 +450,8 @@ class Unit {
   set(s) { this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
-    this.knockDir = dir; this.knockFrom = this.x; this.cd = Math.max(this.cd, 1.0); this.set('knock');
+    if ((this.knockImm || 0) > 0) return false;           // inmune: tras un derribo no puede volver a caer en un rato
+    this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
   damage(d, src) {
     if (!this.alive || this.state === 'die') return;
@@ -475,7 +476,7 @@ class Unit {
     return o;
   }
   update(dt) {
-    this.t += dt; const t = this.t;
+    this.t += dt; if (this.knockImm > 0) this.knockImm -= dt; const t = this.t;
     const o = this.restPose();
     const now = this.sc.time.now / 1000, breathe = Math.sin(now * 3.2 + this.homeX + this.lane);
     switch (this.state) {
@@ -555,12 +556,11 @@ class Unit {
         if (p >= 1) { burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110); this.set('attack'); this.t = 0.18; }
         break;
       }
-      case 'knock': {                // derribado: sale despedido hacia atrás, cae de espaldas y se levanta
-        const D = 1.0;
-        if (t < 0.35) { const e = ease(t / 0.35); this.x = Math.max(60, Math.min(W - 60, this.knockFrom + this.knockDir * 85 * e)); o.rot = -1.25 * e; o.hop = Math.sin(e * Math.PI) * H * 0.18; o.dx = -0.1 * e; }
-        else if (t < 0.7) { o.rot = -1.25; o.dx = -0.1; if (!this.landed) { this.landed = true; burst(this.x, this.gy, 0xe8d3b0, 10, 120); } }
-        else { const e = ease((t - 0.7) / 0.3); o.rot = lerp(-1.25, 0, e); o.dx = lerp(-0.1, 0, e); o.hop = Math.sin(e * Math.PI) * H * 0.05; }
-        if (t >= D) { this.landed = false; this.set('idle'); }
+      case 'knock': {                // derribado: sale despedido, cae de espaldas y se levanta enseguida
+        if (t < 0.25) { const e = ease(t / 0.25); this.x = Math.max(60, Math.min(W - 60, this.knockFrom + this.knockDir * 70 * e)); o.rot = -1.1 * e; o.hop = Math.sin(e * Math.PI) * H * 0.15; o.dx = -0.1 * e; }
+        else if (t < 0.45) { o.rot = -1.1; o.dx = -0.1; if (!this.landed) { this.landed = true; burst(this.x, this.gy, 0xe8d3b0, 10, 120); } }
+        else { const e = ease((t - 0.45) / 0.25); o.rot = lerp(-1.1, 0, e); o.dx = lerp(-0.1, 0, e); o.hop = Math.sin(e * Math.PI) * H * 0.05; }
+        if (t >= 0.7) { this.landed = false; this.cd = Math.min(this.cd, 0.1); this.set('idle'); }   // se levanta y contraataca
         break;
       }
       case 'rise': {                 // sale de la tumba: emerge del suelo
@@ -739,7 +739,7 @@ class Unit {
       o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
-    if (t >= 1.05) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.cd = Math.min(this.cd, 0.2); this.set('idle'); }
+    if (t >= 1.05) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
   }
   attackBone(o, t) {
     // tajo torpe de esqueleto: alza la espada oxidada y la deja caer
@@ -1189,7 +1189,11 @@ function kungfuHit(u, dmg, push, hand, at, knock) {
   const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
   o.damage(Math.round(rand(...dmg)));
-  if (knock) { o.knock(u.dir); return o; }
+  if (knock) {
+    if (o.knock(u.dir)) return o;
+    if (o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 25)); o.hurtT = 0.32; }
+    return null;
+  }
   if (push && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
   return o;
 }
