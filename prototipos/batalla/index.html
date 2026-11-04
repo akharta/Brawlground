@@ -1,0 +1,1197 @@
+<meta charset="utf-8">
+<title>Batalla de Brawlground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: pantalla de juego: campo arriba, mazo y energía abajo (como en vertical en el móvil). */
+:root {
+  color-scheme: dark;
+  --bg: #161b2b; --panel: #252e48; --panel-hi: #33406a; --ink: #f4f1e8; --muted: #a9b2cc;
+  --outline: #1e2235; --gold: #ffc83d; --energy: #b06bff; --energy-hi: #d8b4ff;
+  --common: #9aa3bd; --rare: #4da3ff; --epic: #a855f7;
+  --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+html, body { height: auto; }
+[hidden] { display: none !important; }
+.dock > *, .wrap > *, .stage { min-width: 0; }
+#game canvas { max-width: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 600; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 12px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 12px; }
+header { display: flex; align-items: center; gap: 12px; }
+header img { width: 56px; height: auto; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; line-height: 1; }
+header p { margin: 3px 0 0; color: var(--muted); font-size: .9rem; }
+header .tools { margin-left: auto; display: flex; gap: 8px; }
+.btn { font-family: var(--font-display); font-size: 1rem; letter-spacing: .02em; cursor: pointer;
+  background: var(--panel-hi); color: var(--ink); border: 3px solid var(--outline); border-radius: 12px; padding: 7px 12px;
+  box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 3px 0 var(--outline); }
+.btn:active { transform: translateY(2px); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 1px 0 var(--outline); }
+.btn.gold { background: var(--gold); color: var(--outline); }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.stage { position: relative; }
+#game { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border: 4px solid var(--outline); border-radius: 18px; overflow: hidden; background: #7fb85a; }
+#game canvas { display: block; }
+#over { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,17,30,.55); border-radius: 18px; }
+#over .panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 18px 26px; text-align: center; box-shadow: 0 6px 0 var(--outline); }
+#over h2 { font-family: var(--font-display); font-weight: 400; font-size: 2.4rem; margin: 0 0 4px; }
+#over p { margin: 0 0 14px; color: var(--muted); }
+.dock { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 12px; }
+.energy { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+.ebar { position: relative; flex: 1; height: 22px; background: #141826; border: 3px solid var(--outline); border-radius: 12px; overflow: hidden; }
+#efill { position: absolute; inset: 0 auto 0 0; width: 50%; background: linear-gradient(var(--energy-hi), var(--energy)); }
+.eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
+#enum { font-family: var(--font-display); font-size: 1.6rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
+.hand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; max-width: 520px; }
+.hc { position: relative; padding: 5px 5px 4px; border: 3px solid var(--outline); border-radius: 12px; cursor: pointer; background: var(--common);
+  box-shadow: 0 4px 0 var(--outline); display: grid; gap: 2px; min-width: 0; transition: transform .08s, filter .15s; }
+.hc.rara { background: var(--rare); } .hc.epica { background: var(--epic); }
+.hc img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--outline); border-radius: 8px; background: #c7cde0; }
+.hc .nm { font-family: var(--font-display); font-size: .9rem; color: var(--outline); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hc .cost { position: absolute; top: -10px; left: -10px; width: 32px; height: 32px; border-radius: 50%; background: var(--energy); border: 3px solid var(--outline);
+  display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: 1.05rem; text-shadow: 0 2px 0 var(--outline); }
+.hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
+.hc:not(.poor):active { transform: translateY(3px); }
+.side { display: grid; gap: 8px; justify-items: center; }
+.next { font-size: .75rem; color: var(--muted); text-align: center; display: grid; gap: 3px; justify-items: center; }
+.next img { width: 52px; height: 52px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
+#hero { font-family: var(--font-display); background: #4a3a1a; color: var(--gold); border: 3px solid var(--outline); border-radius: 12px; padding: 6px 10px; display: grid; gap: 2px; justify-items: center; }
+#hero span { font-family: var(--font-body); font-size: .75rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+#hero:disabled { opacity: .85; cursor: default; }
+.hint { color: var(--muted); font-size: .85rem; margin: 0; max-width: 70ch; }
+@media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm { font-size: .75rem; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <img src="img/logo.png" alt="Brawlground">
+    <div><h1>Batalla</h1><p>Primera partida jugable contra la IA.</p></div>
+    <div class="tools"><button class="btn" id="speed" aria-pressed="false">x1</button><button class="btn" id="restart">Reiniciar</button></div>
+  </header>
+  <div class="stage">
+    <div id="game"></div>
+    <div id="over" hidden><div class="panel"><h2 id="over-title"></h2><p id="over-text"></p><button class="btn gold" id="again">Jugar otra vez</button></div></div>
+  </div>
+  <div class="dock">
+    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
+    <div class="hand" id="hand"></div>
+    <div class="side">
+      <div class="next">Siguiente<img id="next" alt=""></div>
+      <button id="hero" disabled title="El héroe llegará cuando tengamos su arte">Héroe<span id="herok">0/15 bajas</span></button>
+    </div>
+  </div>
+  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). La energía se recarga sola y con cada enemigo abatido. Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<script>
+(() => {
+'use strict';
+const W = 960, HGT = 540, GROUND = 410, H = 120;
+const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;
+const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
+const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
+const easeInOut = p => p < 0 ? 0 : p > 1 ? 1 : p * p * (3 - 2 * p);
+const lerp = (a, b, p) => a + (b - a) * p;
+const lerp2 = (a, b, p) => [lerp(a[0], b[0], p), lerp(a[1], b[1], p)];
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// Datos de cada personaje. Posiciones en alturas de cuerpo (H), relativas a los pies, medidas sobre la imagen completa aprobada.
+const CH = {
+  legionario: { hp: 100, dmg: [10, 14], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false,
+    h: 1, rest: { sw: -1.97, bh: [-0.207, -0.165], fh: [0.245, -0.169], sh: [0.388, -0.215] } },
+  arquera: { hp: 55, dmg: [10, 14], speed: 54, cd: [1.45, 1.85], range: H * 4.3, ranged: true, h: 1,
+    rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
+    bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
+  // Montada: la jinete va detrás del caballo para que la silla y el cuello la tapen, como en la imagen aprobada.
+  valkiria: { hp: 120, dmg: [18, 22], speed: 84, cd: [1.25, 1.55], range: H * 1.45, ranged: false, aoe: true, h: 1.3,
+    rest: { sw: -1.71, bh: [-0.344, -0.584] }, mount: [0.091, 0], rider: [-0.015, -0.282] },
+  // Dos kunai, bufanda animada aparte y teletransporte detrás de las unidades a distancia enemigas.
+  ninja: { hp: 60, dmg: [15, 19], speed: 74, cd: [0.45, 0.65], range: H * 0.95, ranged: false, h: 1, tpCd: 9,
+    rest: { bk: 2.37, fk: -0.757, bh: [-0.213, -0.177], fh: [0.196, -0.177] }, scarf: [-0.149, -0.297] },
+  // Dos revólveres: ráfaga alterna a media distancia y giro del revólver en el dedo.
+  pistolero: { hp: 60, dmg: [11, 13], speed: 56, cd: [1.4, 1.8], range: H * 2.7, ranged: true, h: 1,
+    rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } },
+  // Animal sin manos: cabeza (dos versiones), cuerpo y cola por separado. Embestida al ver a un enemigo cerca.
+  lobo: { hp: 50, dmg: [19, 21], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
+    rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] },
+  // Iaido: la katana vive en la vaina; desenvaina con un tajo ascendente y vuelve a envainar.
+  samurai: { hp: 140, dmg: [17, 21], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
+    rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
+  // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
+  kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [0.6, 0.8], range: H * 0.85, ranged: false, h: 1,
+    rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
+    torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
+  // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
+  tercio: { hp: 100, dmg: [14, 16], speed: 34, cd: [2.2, 2.6], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
+    rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } }
+};
+const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
+// rareza de cada carta y color de su aura (común sin aura)
+const RARITY = { tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const AURA = { rara: { c: 0x4da3ff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, rate: 16, big: 1.4 } };
+const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
+// revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
+const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
+const BOW = CH.arquera.bow;
+const bowW = BOW.w * H, bowH = BOW.h * H;
+// posición del arco (su origen) para que la mano agarre el punto de agarre en reposo
+const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
+
+let castles = {}, scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio' };
+const NEWEST = 'tercio';
+let pickBlue = NEWEST, pickPurple = 'legionario';
+let units = [], fx = [], loose = [], arrows = [], fxG;
+
+class Unit {
+  constructor(sc, type, team, x) {
+    this.sc = sc; this.type = type; this.cfg = CH[type]; this.team = team;
+    this.teamDir = team === 'blue' ? 1 : -1; this.dir = this.teamDir; this.homeX = x;
+    this.root = sc.add.container(x, GROUND);
+    const wide = type === 'valkiria';
+    const sw = type === 'lobo' ? 0.9 : wide ? 1.15 : 0.62;
+    this.shadow = sc.add.ellipse(wide ? H * 0.08 : 0, 0, H * sw, H * (wide ? 0.18 : 0.15), 0x10131f, 0.28);
+    this.rig = sc.add.container(0, 0);
+    const handScale = n => sc.add.image(0, 0, n);
+    if (type === 'legionario') {
+      this.body = sc.add.image(0, 0, 'leg_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.weapon = sc.add.image(0, 0, 'leg_arma').setOrigin(0.19, 0.5).setScale(0.5 * H / 512);
+      this.bh = handScale('leg_mano').setScale(0.105 * H / 510);
+      this.shield = sc.add.image(0, 0, 'leg_escudo').setScale(0.42 * H / 512);
+      this.fh = handScale('leg_mano').setScale(0.105 * H / 510);
+      this.parts = [this.body, this.weapon, this.bh, this.shield, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.5, -520, 9], [this.shield, 0.9, -380, -5]];
+    } else if (type === 'valkiria') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'val_cuerpo').setOrigin(0.5, 1).setScale(0.2394 * f);
+      this.mount = sc.add.image(0, 0, 'val_montura').setOrigin(0.5, 1).setScale(0.2748 * f);
+      this.weapon = sc.add.image(0, 0, 'val_arma').setOrigin(0.41, 0.495).setScale(0.1344 * f);
+      this.bh = handScale('val_mano').setScale(0.0297 * f);
+      this.parts = [this.body, this.mount, this.weapon, this.bh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'tercio') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'ter_cuerpo').setOrigin(0.517, 1).setScale(H / 512);
+      this.pike = sc.add.image(0, 0, 'ter_pica').setOrigin(PIKE.ox, 0.5).setScale(PIKE.len * H / 1024);
+      this.bh = handScale('ter_mano').setScale(0.085 * H / 484);
+      this.fh = handScale('ter_mano').setScale(0.085 * H / 484);
+      this.parts = [this.body, this.pike, this.bh, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.pike, -0.3, -420, 4]];
+    } else if (type === 'kungfu') {
+      const f = H / 120;
+      // la trenza se corta en segmentos encadenados para que ondule como pelo
+      const tex = sc.textures.get('kf_trenza'), src = tex.getSourceImage(), TW = src.width, TH = src.height;
+      const N = 6, segH = TH / N, pad = 5;
+      this.braidSegs = [];
+      for (let i = 0; i < N; i++) {
+        const name = 'seg' + i, y0 = Math.max(0, Math.round(i * segH - pad)), h = Math.min(TH - y0, Math.round(segH + pad * 2));
+        if (!tex.has(name)) tex.add(name, 0, 0, y0, TW, h);
+        const img = sc.add.image(0, 0, 'kf_trenza', name).setOrigin(0.5, (i * segH - y0) / h).setScale(0.2317 * f);
+        this.braidSegs.push(img);
+      }
+      this.segLen = segH * 0.2317 * f;
+      this.braidAng = new Array(N).fill(this.cfg.braidR); this.braidVel = new Array(N).fill(0);
+      // torso y dos piernas (la misma pieza): la cadera queda tapada por el fajín
+      this.legB = sc.add.image(0, 0, 'kf_pierna').setOrigin(0.495, 0.02).setScale(0.0556 * f);
+      this.legF = sc.add.image(0, 0, 'kf_pierna').setOrigin(0.495, 0.02).setScale(0.0556 * f);
+      this.body = sc.add.image(0, 0, 'kf_torso').setOrigin(0, 0).setScale(0.2054 * f);
+      this.bh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
+      this.fh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
+      this.parts = [...this.braidSegs.slice().reverse(), this.legB, this.legF, this.body, this.bh, this.fh];
+      this.rig.add(this.parts);
+
+      this.drops = [];
+    } else if (type === 'samurai') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'sam_cuerpo').setOrigin(0.458, 1).setScale(H / 512);
+      this.saya = sc.add.image(0, 0, 'sam_vaina').setOrigin(0.967, 0.5).setScale(0.13 * f);
+      this.kat = sc.add.image(0, 0, 'sam_arma').setOrigin(KAT.ox, 0.5).setScale(0.17 * f);
+      this.bh = handScale('leg_mano').setScale(0.1 * H / 510);
+      this.fh = handScale('leg_mano').setScale(0.1 * H / 510);
+      this.parts = [this.body, this.saya, this.kat, this.bh, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.kat, 0.6, -600, 12], [this.saya, -0.4, -420, -6]];
+    } else if (type === 'lobo') {
+      const f = H / 120;
+      this.tail = sc.add.image(0, 0, 'lob_cola').setOrigin(0.943, 0.061).setScale(0.0607 * f);
+      this.body = sc.add.image(0, 0, 'lob_cuerpo').setOrigin(0.5, 1).setScale(0.1554 * f);
+      this.head = sc.add.image(0, 0, 'lob_cabeza').setOrigin(0.382, 0.739).setScale(0.1929 * f);
+      this.parts = [this.tail, this.body, this.head];
+      this.rig.add(this.parts);
+      this.drops = [];
+    } else if (type === 'pistolero') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'pis_cuerpo').setOrigin(0.456, 1).setScale(H / 512);
+      this.bg = sc.add.image(0, 0, 'pis_arma').setOrigin(GUN.ox, GUN.oy).setScale(0.0741 * f);
+      this.bh = handScale('pis_mano').setScale(0.103 * H / 400);
+      this.fg = sc.add.image(0, 0, 'pis_arma').setOrigin(GUN.ox, GUN.oy).setScale(0.0741 * f);
+      this.fh = handScale('pis_mano').setScale(0.103 * H / 400);
+      this.parts = [this.body, this.bg, this.bh, this.fg, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.bg, -0.6, -520, 14], [this.fg, 0.7, -580, -14]];
+    } else if (type === 'ninja') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'nin_cuerpo').setOrigin(0.483, 1).setScale(H / 512);
+      this.scarf = sc.add.image(0, 0, 'nin_bufanda').setOrigin(0.555, 0.745).setScale(0.1562 * f);
+      this.bk = sc.add.image(0, 0, 'nin_arma').setOrigin(0.31, 0.5).setScale(0.0802 * f);
+      this.bh = handScale('nin_mano').setScale(0.103 * H / 469);
+      this.fk = sc.add.image(0, 0, 'nin_arma').setOrigin(0.31, 0.5).setScale(0.0802 * f);
+      this.fh = handScale('nin_mano').setScale(0.103 * H / 469);
+      this.parts = [this.body, this.scarf, this.bk, this.bh, this.fk, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.bk, -0.6, -500, 12], [this.fk, 0.6, -560, -12]];
+    } else {
+      this.body = sc.add.image(0, 0, 'arq_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.weapon = sc.add.image(0, 0, 'arq_arma').setOrigin(BOW.ox, BOW.oy).setScale(bowH / 512);
+      this.str = sc.add.graphics();
+      this.arrow = sc.add.image(0, 0, 'arq_flecha').setOrigin(0.04, 0.5).setScale(0.6 * H / 512).setVisible(false);
+      this.bh = handScale('arq_mano').setScale(0.12 * H / 479);
+      this.fh = handScale('arq_mano').setScale(0.12 * H / 479);
+      this.parts = [this.body, this.weapon, this.arrow, this.bh, this.fh];
+      this.rig.add([this.body, this.weapon, this.str, this.arrow, this.bh, this.fh]);
+      this.drops = [[this.weapon, 0.7, -480, 7]];
+    }
+    this.aura = AURA[RARITY[type]] || null;
+    this.auraBack = sc.add.graphics(); this.auraFront = sc.add.graphics(); this.auraP = [];
+    this.root.add([this.auraBack, this.shadow, this.rig, this.auraFront]);
+    this.bar = sc.add.graphics().setDepth(900);
+    this.reset(x);
+  }
+  get gy() { return GROUND + this.lane; }
+  reset(x) {
+    this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-18, 16)) : 0;
+    this.dir = this.teamDir; this.tpT = 1.0; this.atkN = 0; this.tpTarget = null; this.dashed = false;
+    this.root.y = this.gy; this.root.setDepth(this.gy);
+    this.hp = this.max = this.cfg.hp; this.alive = true; this.inPlace = false;
+    this.cd = rand(0.2, 0.6); this.hurtT = 0; this.fired = false; this.poofed = false; this.vib = 0;
+    this.root.setVisible(true).setAlpha(1);
+    this.parts.forEach(p => { p.setVisible(true).clearTint(); });
+    if (this.arrow) this.arrow.setVisible(false);
+    this.set('spawn');
+  }
+  set(s) { this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  damage(d) {
+    if (!this.alive || this.state === 'die') return;
+    this.hp -= d; this.hurtT = 0.32;
+    floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
+    burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
+    if (this.hp <= 0) { this.hp = 0; this.set('die'); onKill(this); }
+  }
+  restPose() {
+    const r = this.cfg.rest;
+    const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
+    if (this.type === 'legionario') { o.sw = r.sw; o.sh = [...r.sh]; }
+    else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
+    else if (this.type === 'ninja') { o.bk = r.bk; o.fk = r.fk; o.scarf = { r: -0.3, sx: 1 }; }
+    else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
+    else if (this.type === 'tercio') { o.pr = r.pr; }
+    else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
+    else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
+    else { o.bow = bowRestFromHand(r.fh); o.bowR = 0; o.nock = null; o.arrow = false; }
+    return o;
+  }
+  update(dt) {
+    this.t += dt; const t = this.t;
+    const o = this.restPose();
+    const now = this.sc.time.now / 1000, breathe = Math.sin(now * 3.2 + this.homeX + this.lane);
+    switch (this.state) {
+      case 'spawn': {
+        const p = ease(t / 0.35);
+        o.sx = o.sy = lerp(0.2, 1, p); o.hop = (1 - p) * H * 0.5;
+        if (t >= 0.35) { burst(this.x, this.gy, 0xe8d3b0, 10, 120); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        break;
+      }
+      case 'idle':
+        o.sy = 1 + 0.022 * breathe; o.sx = 1 - 0.014 * breathe;
+        o.bh[1] += Math.sin(now * 3.2 + 0.6) * 0.012;
+        if (o.fh) o.fh[1] += Math.sin(now * 3.2 + 1.1) * 0.012;
+        if (o.mount) { o.mount.y = Math.max(0, Math.sin(now * 2.2)) * 0.01; o.rider.y = 0.012 * breathe; }
+        if (o.sw !== undefined) o.sw += 0.04 * breathe;
+        if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
+        if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
+        if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
+        if (o.pr !== undefined) o.pr += 0.025 * breathe;
+        if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
+          const b = Math.abs(Math.sin(now * 6));
+          o.hop = b * H * 0.025; o.bh[1] += Math.sin(now * 6) * 0.015; o.fh[1] -= Math.sin(now * 6) * 0.015;
+        }
+        if (o.tail !== undefined) { o.tail = Math.sin(now * 5) * 0.18; o.headR = 0.03 * breathe; o.head[1] = 0.01 * breathe; }
+        break;
+      case 'walk': {
+        const ph = t * 10;
+        o.hop = Math.abs(Math.sin(ph)) * H * 0.075;
+        o.rot = Math.sin(ph) * 0.07;
+        o.sy = 1 - Math.abs(Math.cos(ph)) * 0.04;
+        o.bh[0] += Math.sin(ph) * 0.03; if (o.fh) o.fh[0] -= Math.sin(ph) * 0.02;
+        if (o.mount) {               // galope: el caballo rebota y se mece; la jinete rebota con retraso
+          const g = t * 13;
+          o.hop = 0; o.rot = 0; o.sy = 1;
+          o.mount.y = Math.abs(Math.sin(g)) * 0.09; o.mount.r = Math.sin(g) * 0.07;
+          o.rider.y = Math.abs(Math.sin(g - 0.7)) * 0.07; o.rider.r = Math.sin(g - 0.7) * 0.05;
+          o.bh[1] -= Math.abs(Math.sin(g - 0.9)) * 0.06;
+        }
+        if (o.sh) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
+        if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
+        if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
+        if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
+        if (o.tail !== undefined) {   // galope: el cuerpo se mece, la cabeza contrarresta y la cola va al viento
+          const g = t * 15;
+          o.hop = Math.abs(Math.sin(g)) * H * 0.1; o.rot = Math.sin(g) * 0.09; o.sy = 1 - Math.abs(Math.cos(g)) * 0.06;
+          o.headR = -Math.sin(g) * 0.07; o.head[1] = Math.abs(Math.sin(g + 0.8)) * 0.02;
+          o.tail = -0.35 + Math.sin(g * 1.3) * 0.12;
+        }
+        if (o.scarf) {               // carrera ninja: inclinado hacia delante, kunai atrás y bufanda al viento
+          const q = t * 15;
+          o.hop = Math.abs(Math.sin(q)) * H * 0.06; o.rot = 0.12 + Math.sin(q) * 0.03;
+          o.bh = [-0.3, -0.2 + Math.sin(q) * 0.02]; o.fh = [-0.05, -0.22 - Math.sin(q) * 0.02];
+          o.bk = 2.9; o.fk = 2.7;
+          o.scarf.r = 0.12 + Math.sin(t * 22) * 0.1; o.scarf.sx = 1.1 + Math.sin(t * 17) * 0.05;
+        }
+        if (!this.inPlace) this.x += this.dir * this.cfg.speed * dt * (this.backing ? -0.7 : 1);
+        break;
+      }
+      case 'attack':
+        if (this.type === 'legionario') this.attackSword(o, t);
+        else if (this.type === 'valkiria') this.attackAxe(o, t);
+        else if (this.type === 'ninja') this.attackKunai(o, t);
+        else if (this.type === 'pistolero') this.attackGuns(o, t);
+        else if (this.type === 'lobo') this.attackBite(o, t);
+        else if (this.type === 'samurai') this.attackIaido(o, t);
+        else if (this.type === 'tercio') this.attackPike(o, t);
+        else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
+        else this.attackBow(o, t);
+        break;
+      case 'dash': {                 // embestida: salto largo con la boca abierta hacia el enemigo
+        const D = 0.34, p = Math.min(1, t / D);
+        this.x = lerp(this.dashFrom, this.dashTo, p);
+        o.hop = Math.sin(p * Math.PI) * H * 0.4; o.rot = lerp(-0.22, 0.25, p);
+        o.bite = p > 0.35; o.headR = lerp(-0.15, 0.1, p); o.tail = -0.6; o.sx = 1.08; o.sy = 0.94;
+        if (p >= 1) { burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110); this.set('attack'); this.t = 0.18; }
+        break;
+      }
+      case 'tpOut': {                // lanza un shuriken y desaparece en una nube de humo
+        if (!this.fired) { this.fired = true; smoke(this.x, this.gy - H * 0.4); throwShuriken(this); }
+        const e = ease(t / 0.28);
+        o.sx = 1 - 0.85 * e; o.sy = 1 + 0.4 * e; o.hop = H * 0.15 * e;
+        this.root.setAlpha(1 - e);
+        if (t >= 0.28) this.teleport();
+        break;
+      }
+      case 'tpIn': {
+        const e = ease(t / 0.3), over = Math.sin(Math.min(1, t / 0.3) * Math.PI) * 0.15;
+        o.sx = lerp(0.3, 1, e) + over; o.sy = lerp(1.3, 1, e) - over * 0.5;
+        o.scarf.r = 0.3 - 0.4 * e;
+        this.root.setAlpha(Math.min(1, t / 0.12));
+        if (t >= 0.3) this.set('idle');
+        break;
+      }
+      case 'die': {
+        if (t < dt * 1.5) this.detach();
+        o.hop = Math.sin(Math.min(1, t / 0.45) * Math.PI) * H * 0.35;
+        o.rot = -ease(t / 0.45) * 1.45;
+        o.dx = -ease(t / 0.45) * 0.35;
+        this.root.setAlpha(t < 0.75 ? 1 : Math.max(0, 1 - (t - 0.75) / 0.4));
+        if (t >= 0.75 && !this.poofed) { this.poofed = true; burst(this.x - this.dir * H * 0.3, this.gy - 10, 0xd9d4e8, 16, 150); }
+        if (t >= 1.25) { this.alive = false; this.root.setVisible(false); this.bar.clear(); onDead(this); return; }
+        break;
+      }
+    }
+    if (this.hurtT > 0) {
+      this.hurtT -= dt; const k = Math.max(0, this.hurtT / 0.32);
+      o.sx *= 1 + 0.12 * k; o.sy *= 1 - 0.1 * k; o.dx -= 0.06 * k;
+      const white = this.hurtT > 0.22;
+      this.parts.forEach(pt => white ? pt.setTintFill(0xffffff) : pt.clearTint());
+    }
+    this.apply(o, dt);
+  }
+  attackSword(o, t) {
+    const r = this.cfg.rest, p = t / 0.62;
+    if (p < 0.38) {
+      const e = ease(p / 0.38);
+      o.sw = lerp(r.sw, -2.75, e); o.bh[0] -= 0.09 * e; o.bh[1] -= 0.09 * e; o.rot = -0.08 * e;
+      o.sx = 1 - 0.04 * e; o.sy = 1 + 0.04 * e;
+    } else if (p < 0.55) {
+      const e = easeIn((p - 0.38) / 0.17);
+      o.sw = lerp(-2.75, 0.35, e);
+      o.bh = lerp2([r.bh[0] - 0.09, r.bh[1] - 0.09], [0.33, -0.2], e);
+      o.rot = lerp(-0.08, 0.13, e); o.dx = 0.08 * e; o.sh[0] += 0.04 * e; o.fh[0] += 0.04 * e;
+    } else {
+      const e = ease((p - 0.55) / 0.45);
+      o.sw = lerp(0.35, r.sw, e); o.bh = lerp2([0.33, -0.2], r.bh, e);
+      o.rot = lerp(0.13, 0, e); o.dx = lerp(0.08, 0, e); o.sh[0] += 0.04 * (1 - e); o.fh[0] += 0.04 * (1 - e);
+    }
+    if (p >= 0.52 && !this.fired) { this.fired = true; onMelee(this); }
+    if (p >= 1) this.set('idle');
+  }
+  attackAxe(o, t) {
+    // Barrido horizontal: el hacha gira alrededor de la jinete (vista de perfil, se acorta al pasar por delante).
+    const r = this.cfg.rest, p = t / 0.8, R = 0.5, cy = -0.52;
+    const handAt = th => [Math.cos(th) * R, cy + Math.sin(th) * 0.08];
+    if (p < 0.36) {                 // carga: el hacha va atrás, en horizontal, y la jinete se gira
+      const e = ease(p / 0.36);
+      o.sw = lerp(r.sw, -Math.PI, e); o.bh = lerp2(r.bh, handAt(Math.PI), e);
+      o.rider.r = -0.08 * e; o.mount.r = -0.03 * e;
+    } else if (p < 0.56) {          // barrido de atrás hacia delante pasando por delante del cuerpo
+      const e = easeIn((p - 0.36) / 0.2), th = lerp(Math.PI, -0.35, e);
+      o.sw = 0; o.wsx = Math.cos(th); o.bh = handAt(th);
+      o.rider.r = lerp(-0.08, 0.1, e); o.mount.r = lerp(-0.03, 0.04, e); o.dx = 0.05 * e;
+      if (!this.slashed && e > 0.15) { this.slashed = true; slashArc(this); }
+      if (th < Math.PI / 2 && !this.fired) { this.fired = true; onMelee(this); }
+    } else {                        // mantiene el hacha al frente y la recoge por abajo, sin taparse la cara
+      const q = (p - 0.56) / 0.44, e = ease((q - 0.3) / 0.7), end = handAt(-0.35), mid = [0.08, -0.36];
+      const bez = (a, m, c, k) => (1 - k) * (1 - k) * a + 2 * (1 - k) * k * m + k * k * c;
+      o.sw = lerp(0, r.sw, e); o.wsx = lerp(Math.cos(-0.35), 1, e);
+      o.bh = [bez(end[0], mid[0], r.bh[0], e), bez(end[1], mid[1], r.bh[1], e)];
+      o.rider.r = lerp(0.1, 0, e); o.mount.r = lerp(0.04, 0, e); o.dx = lerp(0.05, 0, e);
+    }
+    if (p >= 1) { this.slashed = false; this.set('idle'); }
+  }
+  attackKunai(o, t) {
+    // ataques rápidos alternando: estocada con el kunai delantero y tajo con el trasero
+    const r = this.cfg.rest, p = t / 0.4, front = this.atkN % 2 === 0;
+    const k = p < 0.35 ? ease(p / 0.35) : p < 0.6 ? 1 : 1 - ease((p - 0.6) / 0.4);
+    o.rot = 0.1 * k; o.dx = 0.07 * k; o.scarf.r = -0.3 + 0.35 * k;
+    if (front) {
+      o.fh = lerp2(r.fh, [0.52, -0.3], k); o.fk = lerp(r.fk, 0.05, k);
+      o.bh = lerp2(r.bh, [-0.26, -0.25], k);
+    } else {
+      const sw = p < 0.35 ? easeIn(p / 0.35) : 1;
+      o.bh = lerp2(r.bh, [0.45, -0.42], k); o.bk = p < 0.6 ? lerp(-2.6, -0.4, sw) : lerp(-0.4, r.bk, 1 - k);
+      o.fh = lerp2(r.fh, [0.08, -0.15], k);
+    }
+    if (p > 0.32 && !this.fired) { this.fired = true; onMelee(this); }
+    if (p >= 1) { this.atkN++; this.set('idle'); }
+  }
+  attackCombo(o, t) {
+    const r = this.cfg.rest;
+    const punches = [[0, 'fh', [0.64, -0.43]], [0.18, 'bh', [0.58, -0.47]], [0.36, 'fh', [0.66, -0.42]]];
+    this.hits = this.hits || 0;
+    punches.forEach(([s0, hand, ext], i) => {
+      const q = (t - s0) / 0.16;
+      if (q >= 0 && q <= 1) {
+        const k = q < 0.35 ? ease(q / 0.35) : 1 - ease((q - 0.35) / 0.65);
+        o[hand] = lerp2(r[hand], ext, k); o.rot = 0.07 * k; o.dx = 0.05 * k; o.sx = 1 + 0.03 * k;
+        if (q >= 0.35 && this.hits <= i) { this.hits = i + 1; kungfuHit(this, this.cfg.dmg, false, this[hand]); }
+      }
+    });
+    if (t >= 0.56 && t < 0.72) {           // prepara la palma: la mano trasera se abre y retrocede, el cuerpo se carga
+      const e = ease((t - 0.56) / 0.16);
+      o.palm = true; o.bh = lerp2(r.bh, [-0.32, -0.4], e); o.rot = -0.09 * e; o.sx = 1 - 0.05 * e; o.dx = -0.03 * e;
+    } else if (t >= 0.72 && t < 0.82) {    // golpe de palma
+      const e = easeIn((t - 0.72) / 0.1);
+      o.palm = true; o.bh = lerp2([-0.32, -0.4], [0.7, -0.44], e); o.rot = lerp(-0.09, 0.12, e); o.dx = lerp(-0.03, 0.14, e);
+      if (e > 0.7 && this.hits < 4) { this.hits = 4; kungfuHit(this, this.cfg.palm, true, this.bh); }
+    } else if (t >= 0.82) {                // vuelve a la guardia
+      const e = ease((t - 0.82) / 0.23);
+      o.palm = e < 0.5; o.bh = lerp2([0.7, -0.44], r.bh, e); o.rot = lerp(0.12, 0, e); o.dx = lerp(0.14, 0, e);
+    }
+    if (t >= 1.05) { this.hits = 0; this.kickNext = true; this.set('idle'); }
+  }
+  attackKick(o, t) {
+    // patada giratoria: la pierna sale durante el giro y golpea justo al completar la vuelta
+    const r = this.cfg.rest, guard = [[0.05, -0.55], [0.2, -0.58]];
+    if (t < 0.15) {                        // carga
+      const e = ease(t / 0.15);
+      o.sy = 1 - 0.08 * e; o.sx = 1 + 0.05 * e; o.rot = 0.05 * e;
+      o.bh = lerp2(r.bh, guard[0], e); o.fh = lerp2(r.fh, guard[1], e);
+    } else if (t < 0.47) {                 // giro con la pierna saliendo en la segunda mitad
+      const e = easeInOut((t - 0.15) / 0.32);
+      o.spin = Math.cos(e * Math.PI * 2); o.hop = Math.sin(e * Math.PI) * H * 0.1;
+      o.bh = guard[0]; o.fh = guard[1];
+      const k = easeInOut((e - 0.45) / 0.45);
+      o.kick = k; o.rot = -0.22 * k; o.dx = 0.06 * k;
+      if (e >= 0.88 && !this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
+    } else if (t < 0.6) {                  // mantiene la pierna extendida un instante
+      o.kick = 1; o.rot = -0.22; o.dx = 0.06; o.bh = [-0.15, -0.62]; o.fh = [0.02, -0.66];
+      if (!this.kicked) { this.kicked = true; kungfuHit(this, [8, 10], true, null, [0.68, -0.27]); }
+    } else {                               // recoge la pierna y vuelve a la guardia
+      const e = ease((t - 0.6) / 0.28);
+      o.kick = 1 - e; o.rot = lerp(-0.22, 0, e); o.dx = lerp(0.06, 0, e);
+      o.bh = lerp2([-0.15, -0.62], r.bh, e); o.fh = lerp2([0.02, -0.66], r.fh, e);
+    }
+    if (t >= 0.88) { this.kicked = false; this.kickNext = false; this.set('idle'); }
+  }
+  attackPike(o, t) {
+    // baja la pica a horizontal, la recoge, estocada con paso adelante y vuelve a alzarla
+    const r = this.cfg.rest, lvl = -0.05;
+    const P = [0.3, 0.46, 0.56, 0.78, 1.15];
+    let back = r.bh, ang = r.pr;
+    if (t < P[0]) { const e = ease(t / P[0]); ang = lerp(r.pr, lvl, e); back = lerp2(r.bh, [-0.1, -0.36], e); o.rot = -0.02 * e; }
+    else if (t < P[1]) { const e = ease((t - P[0]) / (P[1] - P[0])); ang = lvl; back = lerp2([-0.1, -0.36], [-0.3, -0.37], e); o.rot = lerp(-0.02, -0.07, e); o.sx = 1 - 0.04 * e; }
+    else if (t < P[2]) {
+      const e = easeIn((t - P[1]) / (P[2] - P[1]));
+      ang = lvl; back = lerp2([-0.3, -0.37], [0.4, -0.35], e); o.rot = lerp(-0.07, 0.09, e); o.dx = 0.28 * e;
+    }
+    else if (t < P[3]) { ang = lvl; back = [0.4, -0.35]; o.rot = 0.09; o.dx = 0.28; }
+    else { const e = ease((t - P[3]) / (P[4] - P[3])); ang = lerp(lvl, r.pr, e); back = lerp2([0.4, -0.35], r.bh, e); o.rot = lerp(0.09, 0, e); o.dx = lerp(0.28, 0, e); }
+    if (t >= P[1] + 0.08 && !this.fired) { this.fired = true; onMelee(this); this.sparkNext = true; }
+    o.pr = ang; o.bh = back;
+    o.fh = [back[0] + Math.cos(ang) * PIKE.gap, back[1] + Math.sin(ang) * PIKE.gap];
+    if (t >= P[4]) this.set('idle');
+  }
+  attackIaido(o, t) {
+    // Tajo ascendente al desenvainar; después cuadra la espada en horizontal y la envaina despacio, con cuidado.
+    const r = this.cfg.rest, c = this.cfg;
+    const sheathR = Math.PI + c.sayaR, slashR = -0.5, ax = [Math.cos(c.sayaR), Math.sin(c.sayaR)];
+    const grip = [c.saya[0] - KAT.g2g * Math.cos(sheathR), c.saya[1] - KAT.g2g * Math.sin(sheathR)];
+    const holdSaya = [c.saya[0] - 0.02, c.saya[1] + 0.01];
+    const out = [0.36, -0.4];
+    const BL = 0.554;                                        // largo de la hoja (en H)
+    const tipAt = [c.saya[0] + ax[0] * BL, c.saya[1] + ax[1] * BL];          // guarda con la punta en la boca
+    const handAt = [tipAt[0] + KAT.g2g * ax[0], tipAt[1] + KAT.g2g * ax[1]];
+    const T = [0.285, 0.36, 0.63, 1.0, 1.2, 1.95, 2.25];     // fin de cada fase (s)
+    o.bh = holdSaya;
+    if (t < T[0]) {                        // postura
+      const e = ease(t / T[0]);
+      o.fh = lerp2(r.fh, grip, e); o.bh = lerp2(r.bh, holdSaya, e);
+      o.sy = 1 - 0.06 * e; o.sx = 1 + 0.04 * e; o.rot = -0.05 * e;
+      if (e > 0.9) o.dx = Math.sin(t * 90) * 0.006;
+    } else if (t < T[1]) {                 // tajo ascendente al desenvainar
+      const e = (t - T[0]) / (T[1] - T[0]);
+      o.drawn = true; o.katR = lerp(sheathR, slashR, e); o.fh = lerp2(grip, out, e);
+      o.dx = 0.28 * e; o.rot = lerp(-0.05, 0.1, e);
+      if (!this.slashed) { this.slashed = true; iaidoSlash(this, 1.7, -0.9); }
+      if (e > 0.5 && !this.fired) { this.fired = true; onMelee(this); }
+    } else if (t < T[2]) {                 // aguanta la pose con brillo en la hoja
+      const e = (t - T[1]) / (T[2] - T[1]);
+      o.drawn = true; o.katR = slashR; o.fh = out; o.dx = 0.28; o.rot = 0.1; o.glint = Math.sin(e * Math.PI);
+    } else if (t < T[3]) {                 // cuadra la espada: la gira en horizontal hasta alinearla con la vaina
+      const q = ease((t - T[2]) / (T[3] - T[2]));
+      o.drawn = true; o.katR = lerp(slashR, c.sayaR, q); o.ksx = Math.cos(q * Math.PI);
+      o.fh = lerp2(out, handAt, q); o.dx = lerp(0.28, 0.1, q); o.rot = lerp(0.1, 0, q);
+    } else if (t < T[4]) {                 // punta apoyada en la boca de la vaina, un instante de calma
+      o.slideIn = 0; o.fh = handAt; o.dx = 0.1;
+    } else if (t < T[5]) {                 // la desliza dentro despacio
+      const q = easeInOut((t - T[4]) / (T[5] - T[4]));
+      o.slideIn = q; o.dx = lerp(0.1, 0, q);
+      o.fh = [c.saya[0] + ax[0] * (BL * (1 - q) + KAT.g2g), c.saya[1] + ax[1] * (BL * (1 - q) + KAT.g2g)];
+      if (q > 0.985 && !this.click) { this.click = true; burst(this.x + this.dir * c.saya[0] * H, this.gy + c.saya[1] * H, 0xffe9a8, 6, 70); }
+    } else {                               // suelta la empuñadura y vuelve a la guardia
+      const e = ease((t - T[5]) / (T[6] - T[5]));
+      o.fh = lerp2(grip, r.fh, e); o.bh = lerp2(holdSaya, r.bh, e);
+    }
+    if (t >= T[6]) { this.slashed = this.click = false; this.set('idle'); }
+  }
+  attackBite(o, t) {
+    // agacharse, lanzarse con la boca abierta y cerrar de golpe
+    const p = t / 0.5;
+    if (p < 0.35) {
+      const e = ease(p / 0.35);
+      o.dx = -0.06 * e; o.sy = 1 - 0.1 * e; o.sx = 1 + 0.06 * e; o.headR = -0.12 * e; o.tail = 0.3 * e;
+    } else if (p < 0.62) {
+      const e = easeIn((p - 0.35) / 0.27);
+      o.dx = lerp(-0.06, 0.2, e); o.sy = lerp(0.9, 1.04, e); o.headR = lerp(-0.12, 0.18, e); o.bite = e < 0.85;
+      o.head = [0.05 * e, -0.03 * e]; o.tail = lerp(0.3, -0.4, e);
+    } else {
+      const e = ease((p - 0.62) / 0.38);
+      o.dx = lerp(0.2, 0, e); o.headR = lerp(0.18, 0, e); o.head = [0.05 * (1 - e), -0.03 * (1 - e)]; o.tail = lerp(-0.4, 0, e);
+    }
+    if (p >= 0.58 && !this.fired) { this.fired = true; onMelee(this); }
+    if (p >= 1) this.set('idle');
+  }
+  attackGuns(o, t) {
+    const r = this.cfg.rest, p = t / 1.25;
+    const aimF = [0.44, -0.34], aimB = [0.3, -0.45];
+    const shots = [[0.2, 'fg', 'fh'], [0.34, 'bg', 'bh']];
+    const k = p < 0.16 ? ease(p / 0.16) : p < 0.62 ? 1 : 0;
+    o.fh = lerp2(r.fh, aimF, k); o.bh = lerp2(r.bh, aimB, k);
+    o.fg = lerp(r.fg, 0, k); o.bg = lerp(r.bg, 0, k);
+    this.shotsDone = this.shotsDone || 0;
+    shots.forEach(([at, gun, hand], i) => {
+      if (p >= at && this.shotsDone <= i) { this.shotsDone = i + 1; fireGun(this, this[gun]); }
+      const since = (p - at) * 1.25;
+      if (since >= 0 && since < 0.14 && k > 0) {   // retroceso: el cañón salta hacia arriba y la mano atrás
+        const kick = 1 - since / 0.14;
+        o[gun] -= 0.6 * kick; o[hand] = [o[hand][0] - 0.06 * kick, o[hand][1] - 0.02 * kick];
+        o.rot = -0.04 * kick;
+      }
+    });
+    if (p >= 0.62 && p < 0.86) {       // gira el revólver delantero en el dedo
+      const e = (p - 0.62) / 0.24;
+      o.fh = lerp2(aimF, [0.3, -0.42], ease(e)); o.fg = -e * Math.PI * 2;
+      o.bh = lerp2(aimB, r.bh, ease(e)); o.bg = lerp(0, r.bg, ease(e));
+    } else if (p >= 0.86) {
+      const e = ease((p - 0.86) / 0.14);
+      o.fh = lerp2([0.3, -0.42], r.fh, e); o.fg = r.fg; o.bh = r.bh; o.bg = r.bg;
+    }
+    if (p >= 1) { this.shotsDone = 0; this.set('idle'); }
+  }
+  teleport() {
+    const old = this.x;
+    let nx;
+    const tg = this.tpTarget;
+    if (mode === 'fight' && tg && tg.alive && tg.state !== 'die') {
+      nx = tg.x - tg.dir * H * 0.8;          // aparece a la espalda del objetivo
+      this.lane = tg.lane + 4;
+    } else nx = old < W / 2 ? old + 330 : old - 330;
+    this.x = Math.max(60, Math.min(W - 60, nx));
+    const look = mode === 'fight' && tg ? tg.x : old;
+    this.dir = Math.sign(look - this.x) || this.teamDir;
+    this.root.y = this.gy; this.root.setDepth(this.gy);
+    smoke(this.x, this.gy - H * 0.4);
+    this.tpT = this.cfg.tpCd; this.tpTarget = null;
+    this.set('tpIn');
+  }
+  attackBow(o, t) {
+    const r = this.cfg.rest, D = 1.15, p = t / D;
+    const aimHand = [0.42, -0.43];
+    const bowAim = aimHand;                                  // el origen del arco es su agarre central
+    const nockStart = [aimHand[0] - (BOW.ox - BOW.tipX) * BOW.w, aimHand[1]];
+    const nockFull = [0.0, -0.43];
+    const restBow = bowRestFromHand(r.fh);
+    if (p < 0.22) {                 // levantar el arco y llevar la mano a la cuerda
+      const e = ease(p / 0.22);
+      o.fh = lerp2(r.fh, aimHand, e); o.bow = lerp2(restBow, bowAim, e);
+      o.bh = lerp2(r.bh, nockStart, e); o.arrow = p > 0.12; o.nock = o.arrow ? o.bh : null;
+    } else if (p < 0.55) {          // tensar
+      const e = ease((p - 0.22) / 0.33);
+      o.fh = aimHand; o.bow = bowAim; o.bh = lerp2(nockStart, nockFull, e);
+      o.nock = o.bh; o.arrow = true; o.rot = -0.05 * e; o.sx = 1 - 0.03 * e;
+    } else {                        // soltar y volver
+      if (!this.fired) { this.fired = true; this.vib = 1; this.shoot(nockFull, aimHand); }
+      const hold = Math.min(1, (p - 0.55) / 0.15), e = ease((p - 0.72) / 0.28);
+      const back = [nockFull[0] - 0.07 * hold, nockFull[1] + 0.01 * hold];
+      o.fh = lerp2(aimHand, r.fh, Math.max(0, e)); o.bow = lerp2(bowAim, restBow, Math.max(0, e));
+      o.bh = lerp2(back, r.bh, Math.max(0, e)); o.rot = lerp(-0.05, 0, Math.max(0, e));
+    }
+    if (p >= 1) this.set('idle');
+  }
+  shoot(nock, aim) {
+    // posición mundial de la punta de la flecha en el momento de soltar
+    const sx = this.x + this.dir * nock[0] * H, sy = this.gy + nock[1] * H;
+    onShoot(this, sx, sy);
+  }
+  apply(o, dt) {
+    this.root.x = this.x;
+    this.rig.x = this.dir * o.dx * H; this.rig.y = -o.hop;
+    this.rig.rotation = o.rot * this.dir;
+    this.rig.scaleX = this.dir * o.sx; this.rig.scaleY = o.sy;
+    this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
+    if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
+    if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
+    if (this.type === 'tercio') {
+      if (this.state !== 'attack') { o.fh = [o.bh[0] + Math.cos(o.pr) * PIKE.gap, o.bh[1] + Math.sin(o.pr) * PIKE.gap]; this.fh.setPosition(o.fh[0] * H, o.fh[1] * H); }
+      this.pike.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.pr);
+      if (this.sparkNext) { this.sparkNext = false; pikeSpark(this); }
+    } else if (this.type === 'kungfu') {
+      const c = this.cfg, key = o.palm ? 'kf_palma' : 'kf_puno';
+      if (o.spin !== undefined) this.rig.scaleX = this.dir * o.sx * (Math.abs(o.spin) < 0.08 ? 0.08 * Math.sign(o.spin || 1) : o.spin);
+      const backView = o.spin !== undefined && o.spin < 0 && this.state !== 'die';
+      if (backView !== !!this.showingBack) {      // de espaldas solo cambia el torso; piernas, puños y trenza siguen animados
+        this.showingBack = backView;
+        this.body.setTexture(backView ? 'kf_torso_esp' : 'kf_torso');
+      }
+      // piernas: pasos al andar; en la patada la delantera gira desde la cadera y se estira
+      const f = H / 120, now2 = this.sc.time.now / 1000;
+      let rb = 0, rf = 0;
+      if (this.state === 'walk') { const ph = this.t * 15; rb = Math.sin(ph) * 0.4; rf = -Math.sin(ph) * 0.4; }
+      else if (this.state === 'idle') { rb = Math.sin(now2 * 6) * 0.05; rf = -rb; }
+      const kick = o.kick || 0;
+      rf = lerp(rf, -1.62 - (o.rot || 0), kick);
+      this.legB.setPosition(c.hipB[0] * H, c.hipB[1] * H).setRotation(rb).setScale(0.0556 * f);
+      this.legF.setPosition(c.hipF[0] * H, c.hipF[1] * H).setRotation(rf).setScale(0.0556 * f, 0.0556 * f * (1 + 0.9 * kick));
+      this.body.setPosition(c.torso[0] * H, c.torso[1] * H);
+      // trenza: cadena de segmentos; cada uno sigue al anterior con retraso y una onda la recorre de arriba abajo
+      const wx = this.x + this.rig.x, vx = dt > 0 ? (wx - (this.prevWX ?? wx)) / dt : 0; this.prevWX = wx;
+      const running = this.state === 'walk', now = this.sc.time.now / 1000;
+      let rootT = c.braidR + Math.max(-0.25, Math.min(0.9, vx * this.dir * 0.006)) - o.rot * 1.5 + (running ? 0.5 : 0);
+      const A = running ? 0.16 : 0.07, w = running ? 11 : 3.2;
+      const ang = this.braidAng, vel = this.braidVel, n = ang.length;
+      for (let i = 0; i < n; i++) {
+        const wave = A * Math.sin(now * w - i * 0.95) * (0.4 + i / n);
+        const target = (i === 0 ? rootT : ang[i - 1]) + wave;
+        const k = 80 - i * 9, d = 7 - i * 0.5;
+        vel[i] += ((target - ang[i]) * k - vel[i] * d) * Math.min(dt, 0.033);
+        ang[i] += vel[i] * Math.min(dt, 0.033);
+      }
+      let px = c.braid[0] * H, py = c.braid[1] * H;
+      for (let i = 0; i < n; i++) {
+        this.braidSegs[i].setPosition(px, py).setRotation(ang[i]);
+        px += -Math.sin(ang[i]) * this.segLen; py += Math.cos(ang[i]) * this.segLen;
+      }
+    } else if (this.type === 'samurai') {
+      const c = this.cfg;
+      this.saya.setPosition(c.saya[0] * H, c.saya[1] * H).setRotation(c.sayaR);
+      // envainada, la hoja queda dentro (detrás de la vaina); desenvainada, por delante de todo menos la mano
+      if (o.drawn !== this.wasDrawn) {
+        this.wasDrawn = o.drawn;
+        if (o.drawn) this.rig.moveAbove(this.kat, this.bh); else this.rig.moveBelow(this.kat, this.saya);
+      }
+      if (o.drawn) {
+        const gx = o.fh[0] + KAT.g2g * Math.cos(o.katR), gy = o.fh[1] + KAT.g2g * Math.sin(o.katR);
+        const ks = o.ksx === undefined ? 1 : o.ksx, ang = ks < 0 ? o.katR + Math.PI : o.katR;
+        const gx2 = o.fh[0] + KAT.g2g * Math.cos(ang), gy2 = o.fh[1] + KAT.g2g * Math.sin(ang);
+        this.kat.setPosition((o.ksx === undefined ? gx : gx2) * H, (o.ksx === undefined ? gy : gy2) * H).setRotation(o.katR);
+        this.kat.setScale(0.17 * (H / 120) * ks, 0.17 * (H / 120));
+      } else if (o.slideIn !== undefined) {
+        this.kat.setScale(0.17 * (H / 120));
+        const d = 0.554 * (1 - o.slideIn);
+        this.kat.setPosition((c.saya[0] + Math.cos(c.sayaR) * d) * H, (c.saya[1] + Math.sin(c.sayaR) * d) * H).setRotation(Math.PI + c.sayaR);
+      } else this.kat.setPosition(c.saya[0] * H, c.saya[1] * H).setRotation(Math.PI + c.sayaR);
+      if (o.glint > 0.05 && Math.random() < 0.5) {
+        const m = this.kat.getWorldTransformMatrix(), tip = m.transformPoint((1 - KAT.ox) * 512 * 0.85, 0);
+        fx.push({ x: tip.x, y: tip.y, vx: 0, vy: 0, g: 0, r: 6 * o.glint, life: 0.12, t: 0.12, color: 0xffffff });
+      }
+    } else if (this.type === 'lobo') {
+      const c = this.cfg;
+      this.tail.setPosition(c.tail[0] * H, (c.tail[1] + o.by) * H).setRotation(o.tail);
+      this.body.setPosition(c.body[0] * H, o.by * H);
+      this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
+      const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
+      if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'pistolero') {
+      this.bg.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bg);
+      this.fg.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fg);
+    } else if (this.type === 'ninja') {
+      const c = this.cfg, f = H / 120;
+      this.bk.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bk);
+      this.fk.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fk);
+      this.scarf.setPosition(c.scarf[0] * H, c.scarf[1] * H).setRotation(o.scarf.r).setScale(0.1562 * f * o.scarf.sx, 0.1562 * f);
+    } else if (this.type === 'valkiria') {
+      const c = this.cfg;
+      this.mount.setPosition(c.mount[0] * H, (c.mount[1] - o.mount.y) * H).setRotation(o.mount.r);
+      this.body.setPosition(c.rider[0] * H, (c.rider[1] - o.rider.y - o.mount.y) * H).setRotation(o.rider.r);
+      const by = -(o.rider.y + o.mount.y) * H;
+      this.bh.y += by;
+      this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
+      this.weapon.setScale(0.1344 * (H / 120) * (o.wsx === undefined ? 1 : o.wsx), 0.1344 * (H / 120));
+    } else if (this.type === 'legionario') {
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.sw);
+      this.shield.setPosition(o.sh[0] * H, o.sh[1] * H);
+    } else {
+      const bx = o.bow[0] * H, by = o.bow[1] * H;
+      this.weapon.setPosition(bx, by).setRotation(o.bowR || 0);
+      const tx = bx - (BOW.ox - BOW.tipX) * bowW, top = by - (BOW.oy - BOW.tipTop) * bowH, bot = by + (BOW.tipBot - BOW.oy) * bowH;
+      this.vib = Math.max(0, this.vib - dt * 3.5);
+      const g = this.str; g.clear();
+      if (this.weapon.visible) {
+        const midY = (top + bot) / 2;
+        const n = o.nock ? [o.nock[0] * H, o.nock[1] * H] : [tx + Math.sin(this.t * 60) * 5 * this.vib, midY];
+        for (const [w, c] of [[4, OUT], [2, STRING]]) {
+          g.lineStyle(w, c, 1).beginPath(); g.moveTo(tx, top); g.lineTo(n[0], n[1]); g.lineTo(tx, bot); g.strokePath();
+        }
+      }
+      this.arrow.setVisible(!!o.arrow && this.state === 'attack');
+      if (o.nock) this.arrow.setPosition(o.nock[0] * H, o.nock[1] * H);
+    }
+    this.drawAura(dt);
+    this.bar.clear();
+    if (mode === 'fight' && this.alive && this.state !== 'die') {
+      const bw = 58, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h - 22;
+      this.bar.fillStyle(OUT, 1).fillRoundedRect(bx - 3, by - 3, bw + 6, 14, 6);
+      this.bar.fillStyle(0x3a3f55, 1).fillRoundedRect(bx, by, bw, 8, 4);
+      this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
+    }
+  }
+  drawAura(dt) {
+    // humillo de color que sube ondulando alrededor del personaje; volutas finas que se difuminan por la cola
+    const A = this.aura, gb = this.auraBack, gf = this.auraFront;
+    gb.clear(); gf.clear();
+    if (!A || this.state === 'die') { this.auraP = []; return; }
+    const cx = this.shadow.x, R = this.shadow.width * 0.55, top = H * this.cfg.h;
+    this.auraT = (this.auraT || 0) + dt * A.rate * 5;
+    while (this.auraT >= 1) {
+      this.auraT -= 1;
+      this.auraP.push({ th: Math.random() * Math.PI * 2, w: rand(0.6, 1.3) * (Math.random() < 0.5 ? 1 : -1),
+        y: -rand(0, 0.35) * top, vy: -rand(18, 34) * A.big, rr: rand(0.65, 1.1), ph: Math.random() * 6.3,
+        r: rand(1, 1.8) * A.big, life: rand(1.1, 1.9), t: 0, spark: Math.random() < 0.08 });
+    }
+    this.auraP = this.auraP.filter(p => (p.t += dt) < p.life);
+    const now = this.sc.time.now / 1000;
+    for (const p of this.auraP) {
+      p.th += p.w * dt; p.y += p.vy * dt;
+      const k = Math.sin(Math.min(1, p.t / p.life) * Math.PI);
+      const depth = Math.sin(p.th), g = depth > 0 ? gf : gb;
+      const sway = Math.sin(now * 3 + p.ph) * 4;
+      const x = cx + Math.cos(p.th) * R * p.rr + sway, y = p.y + depth * R * 0.15;
+      if (p.spark) { g.fillStyle(0xffffff, 0.9 * k).fillCircle(x, y, 1.1); continue; }
+      // voluta: varios puntos finos hacia abajo, cada vez más anchos y transparentes
+      for (let j = 0; j < 5; j++) {
+        const tx = x - Math.sin(now * 3 + p.ph - j * 0.5) * j * 1.5, ty = y + j * 3.2;
+        g.fillStyle(A.c, (0.32 - j * 0.055) * k).fillCircle(tx, ty, p.r * (1 + j * 0.35));
+      }
+    }
+  }
+  detach() {
+    if (this.str) this.str.clear();
+    if (this.arrow) this.arrow.setVisible(false);
+    this.drops.forEach(([part, vx, vy, spin]) => {
+      const m = part.getWorldTransformMatrix();
+      const img = this.sc.add.image(m.tx, m.ty, part.texture.key).setOrigin(part.originX, part.originY)
+        .setScale(part.scaleX * Math.sign(this.dir), part.scaleY).setRotation(m.rotation).setDepth(this.gy + 1);
+      loose.push({ img, vx: (vx * 260 + rand(-40, 40)) * -this.dir, vy, spin: spin * this.dir, life: 1.4, floor: this.gy - 8 });
+      part.setVisible(false);
+    });
+  }
+}
+
+/* ---- efectos ---- */
+function burst(x, y, color, n, spd) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = spd * rand(0.4, 1);
+    fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, r: rand(3, 7), life: 0.5, t: 0.5, color });
+  }
+}
+function fireGun(u, gun) {
+  // boca del cañón en coordenadas del mundo
+  const m = gun.getWorldTransformMatrix();
+  const lx = (GUN.mx - GUN.ox) * GUN.w, ly = (GUN.my - GUN.oy) * GUN.h;
+  const mz = m.transformPoint(lx, ly);
+  let tx, ty, target = null;
+  if (mode === 'fight') { target = nearestEnemy(u); if (!target) return; tx = target.x + rand(-8, 8); ty = target.gy - H * rand(0.35, 0.55); }
+  else { tx = u.x + u.dir * H * 3; ty = mz.y + rand(-4, 4); }
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(5, 0xffe08a, 0.9).beginPath(); g.moveTo(mz.x, mz.y); g.lineTo(tx, ty); g.strokePath();
+  g.lineStyle(2, 0xffffff, 1).beginPath(); g.moveTo(mz.x, mz.y); g.lineTo(tx, ty); g.strokePath();
+  // fogonazo
+  const fl = scene.add.graphics().setDepth(975), ang = Math.atan2(ty - mz.y, tx - mz.x);
+  const star = (rad, col) => { fl.fillStyle(col, 1).beginPath(); for (let i = 0; i < 10; i++) { const a = ang + i * Math.PI / 5, rr = i % 2 ? rad * 0.45 : rad; fl.lineTo(mz.x + Math.cos(a) * rr * (i === 0 ? 1.6 : 1), mz.y + Math.sin(a) * rr * (i === 0 ? 1.6 : 1)); } fl.closePath().fillPath(); };
+  star(16, 0xffb627); star(9, 0xfff3c4);
+  scene.tweens.add({ targets: g, alpha: 0, duration: 140 / timeScale, onComplete: () => g.destroy() });
+  scene.tweens.add({ targets: fl, alpha: 0, duration: 110 / timeScale, onComplete: () => fl.destroy() });
+  // casquillo que salta
+  fx.push({ x: mz.x - u.dir * 30, y: mz.y + 4, vx: -u.dir * rand(60, 120), vy: -rand(160, 240), r: 3, life: 0.5, t: 0.5, color: 0xf2c14e });
+  burst(tx, ty, 0xfff3c4, 4, 90);
+  if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
+}
+function kungfuHit(u, dmg, push, hand, at) {
+  // impacto en el puño: estrella blanca y líneas de velocidad; la palma además empuja y frena al enemigo
+  let px, py;
+  if (hand) { const m = hand.getWorldTransformMatrix(); px = m.tx; py = m.ty; }
+  else { px = u.x + u.dir * at[0] * H; py = u.gy + at[1] * H; }
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(3, 0xffffff, 0.9);
+  for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(px - u.dir * 18, py + i * 7); g.lineTo(px - u.dir * (40 + Math.abs(i) * 8), py + i * 7); g.strokePath(); }
+  const sx = px + u.dir * 10, R = push ? 22 : 12;
+  g.fillStyle(0xffffff, 1).beginPath();
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? R * 0.4 : R; g.lineTo(sx + Math.cos(a) * rr, py + Math.sin(a) * rr); }
+  g.closePath().fillPath();
+  if (push) { g.lineStyle(4, 0xffe9a8, 0.9).strokeCircle(sx, py, R * 1.6); }
+  scene.tweens.add({ targets: g, alpha: 0, duration: (push ? 260 : 150) / timeScale, onComplete: () => g.destroy() });
+  if (mode === 'anim') return;
+  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+  if (!o) return;
+  o.damage(Math.round(rand(...dmg)));
+  if (push && !o.isCastle && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
+}
+function pikeSpark(u) {
+  // destello en la punta de la pica al final de la estocada
+  const m = u.pike.getWorldTransformMatrix(), tip = m.transformPoint((1 - PIKE.ox) * 1024, 0);
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(3, 0xffffff, 0.9);
+  for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(tip.x - u.dir * 26, tip.y + i * 6); g.lineTo(tip.x - u.dir * (52 + Math.abs(i) * 10), tip.y + i * 6); g.strokePath(); }
+  g.fillStyle(0xffffff, 1).beginPath();
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? 5 : 13; g.lineTo(tip.x + Math.cos(a) * rr, tip.y + Math.sin(a) * rr); }
+  g.closePath().fillPath();
+  scene.tweens.add({ targets: g, alpha: 0, duration: 180 / timeScale, onComplete: () => g.destroy() });
+}
+function iaidoSlash(u, from, to) {
+  // destello en media luna: de abajo-atrás a arriba-delante, delante del samurái
+  const g = scene.add.graphics().setDepth(960);
+  const cx = u.x + u.dir * H * 0.35, cy = u.gy - H * 0.4, R = H * 0.62, N = 20;
+  for (let i = 0; i < N; i++) {
+    const a0 = lerp(from, to, i / N), a1 = lerp(from, to, (i + 1) / N), k = i / N;
+    g.lineStyle(3 + 12 * Math.sin(k * Math.PI), 0xffffff, 0.35 + 0.6 * k).beginPath();
+    g.moveTo(cx + u.dir * Math.cos(a0) * R * 0.75, cy + Math.sin(a0) * R);
+    g.lineTo(cx + u.dir * Math.cos(a1) * R * 0.75, cy + Math.sin(a1) * R);
+    g.strokePath();
+  }
+  scene.tweens.add({ targets: g, alpha: 0, duration: 260 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
+}
+function smoke(x, y) {
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2, s = rand(40, 130);
+    fx.push({ x: x + rand(-14, 14), y: y + rand(-20, 20), vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6 - 30, g: -60, r: rand(9, 17), life: 0.6, t: 0.6, color: i % 3 ? 0xeceaf4 : 0xc9c6d8 });
+  }
+}
+function throwShuriken(u) {
+  let tx, ty, target = null;
+  if (mode === 'fight') { target = u.tpTarget; if (!target) return; tx = target.x; ty = target.gy - H * 0.45; }
+  else { tx = u.x + u.dir * 330; ty = u.gy - H * 0.45; }
+  const sx = u.x + u.dir * H * 0.2, sy = u.gy - H * 0.45, T = Math.max(0.2, Math.abs(tx - sx) / 950);
+  const img = scene.add.image(sx, sy, 'nin_shuriken').setScale(0.22 * H / 512).setDepth(950);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: 8, stuck: 0, spin: 22 });
+}
+function slashArc(u) {
+  // media luna blanca que marca toda la zona barrida, por delante de la jinete
+  const g = scene.add.graphics().setDepth(960);
+  const cx = u.x + u.dir * H * 0.25, cy = u.gy - H * 0.5, RX = H * 1.25, RY = H * 0.26, N = 22;
+  for (let i = 0; i < N; i++) {
+    const a0 = Math.PI - (i / N) * (Math.PI + 0.35), a1 = Math.PI - ((i + 1) / N) * (Math.PI + 0.35);
+    const k = i / N, w = 3 + 13 * Math.sin(k * Math.PI * 0.9 + 0.1);
+    g.lineStyle(w, 0xffffff, 0.25 + 0.65 * k).beginPath();
+    g.moveTo(cx + u.dir * Math.cos(a0) * RX, cy + Math.sin(a0) * RY);
+    g.lineTo(cx + u.dir * Math.cos(a1) * RX, cy + Math.sin(a1) * RY);
+    g.strokePath();
+  }
+  scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
+}
+function floatText(x, y, txt) {
+  const t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '30px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 7 }).setOrigin(0.5).setDepth(1000);
+  scene.tweens.add({ targets: t, y: y - 46, alpha: { from: 1, to: 0 }, scale: { from: 1.25, to: 0.9 }, duration: 750 / timeScale, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+}
+
+/* ---- combate ---- */
+const enemiesOf = u => { const l = units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn');
+  const c = castles[u.team === 'blue' ? 'purple' : 'blue']; if (c && c.alive) l.push(c); return l; };
+function nearestEnemy(u) {
+  let best = null, bd = Infinity;
+  for (const v of enemiesOf(u)) { const d = Math.abs(v.x - u.x); if (d < bd) { bd = d; best = v; } }
+  return best;
+}
+function onMelee(u) {
+  if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
+  const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14);
+  const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
+  if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
+  targets.forEach(v => {
+    v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1)));
+    if (u.cfg.push && !v.isCastle && v.alive && v.state !== 'die') v.x = Math.max(60, Math.min(W - 60, v.x + Math.sign(v.x - u.x || u.dir) * u.cfg.push));
+  });
+}
+function onShoot(u, sx, sy) {
+  let tx, ty, target = null;
+  if (mode === 'anim') { tx = u.x + u.dir * H * 4; ty = u.gy - H * 0.35; }
+  else { target = nearestEnemy(u); if (!target) return; tx = target.x; ty = target.gy - H * 0.42; }
+  const dist = Math.abs(tx - sx), T = Math.max(0.35, dist / 720), g = 900;
+  const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0 });
+}
+function onDead(u) {            // en batalla las bajas no vuelven
+  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy();
+}
+function fightLogic(dt) {
+  for (const u of units) {
+    if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
+    if (u.state === 'tpOut' || u.state === 'tpIn' || u.state === 'dash') continue;
+    const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
+    if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
+    if (u.type === 'lobo' && o && !u.dashed && u.state === 'walk' && dist > u.cfg.range && dist < H * 2.8) {
+      u.dashed = true; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.85; u.set('dash'); continue;
+    }
+    if (u.type === 'ninja') {
+      u.tpT -= dt;
+      const prey = enemiesOf(u).filter(v => v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
+      if (u.tpT <= 0 && prey.length && (u.state === 'idle' || u.state === 'walk')) {
+        u.tpTarget = prey.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+        u.set('tpOut'); continue;
+      }
+    }
+    const atWall = false;
+    if (o && dist <= u.cfg.range) {
+      u.cd -= dt;
+      const ownWall = u.teamDir > 0 ? 130 : W - 130, roomBehind = u.teamDir > 0 ? u.x > ownWall : u.x < ownWall;
+      if (u.cd <= 0 && (u.state === 'idle' || u.state === 'walk')) { u.backing = false; u.set('attack'); u.cd = rand(...u.cfg.cd); u.backBudget = 0.4; }
+      else if (u.cfg.keepAway && dist < u.cfg.keepAway && roomBehind && (u.backBudget || 0) > 0 && (u.state === 'idle' || u.state === 'walk')) {
+        if (u.backing) u.backBudget -= dt;          // un solo pasito atrás después de cada estocada
+        if (u.state !== 'walk' || !u.backing) { u.set('walk'); u.backing = true; }   // retrocede para mantener la distancia de pica
+      }
+      else if (u.state === 'walk') { u.backing = false; u.set('idle'); }
+    } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
+    else if (u.state === 'walk' && atWall) u.set('idle');
+  }
+}
+function updateArrows(dt) {
+  arrows = arrows.filter(a => {
+    if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
+    a.t += dt; a.vy += a.g * dt; a.x += a.vx * dt; a.y += a.vy * dt;
+    a.img.setPosition(a.x, a.y);
+    if (a.spin) a.img.rotation += a.spin * dt; else a.img.setRotation(Math.atan2(a.vy, a.vx));
+    if (a.t >= a.T) {
+      if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg); a.img.destroy(); return false; }
+      burst(a.x, a.y, 0xe8d3b0, 6, 90); a.stuck = 0.6; return true;
+    }
+    return true;
+  });
+}
+
+/* ---- escenario provisional ---- */
+function drawStage(g) {
+  g.fillStyle(0x7fb85a, 1).fillRect(0, 0, W, HGT);
+  g.fillStyle(0x8cc465, 1);
+  for (let i = 0; i < 7; i++) g.fillEllipse(80 + i * 140, 60 + (i % 2) * 110, 220, 70);
+  g.fillStyle(0xc39a6b, 1).fillRect(0, 300, W, 160);
+  g.fillStyle(0xdcb588, 1).fillRect(0, 306, W, 148);
+  g.fillStyle(0xcfa77a, 1);
+  for (let i = 0; i < 26; i++) g.fillEllipse(30 + i * 37, 330 + (i * 53 % 100), 18, 6);
+  const tuft = (x, y) => { g.fillStyle(0x5f9a42, 1).fillTriangle(x - 7, y, x - 2, y - 12, x + 2, y); g.fillTriangle(x, y, x + 5, y - 15, x + 9, y); };
+  [[200, 120], [330, 240], [520, 90], [640, 260], [760, 140], [420, 500], [610, 510], [250, 505]].forEach(([x, y]) => tuft(x, y));
+  const rock = (x, y, s) => { g.fillStyle(OUT, 1).fillEllipse(x, y, 40 * s + 6, 26 * s + 6); g.fillStyle(0x9aa1b3, 1).fillEllipse(x, y, 40 * s, 26 * s); g.fillStyle(0xb8bfcf, 1).fillEllipse(x - 5 * s, y - 4 * s, 18 * s, 9 * s); };
+  rock(300, 170, 1); rock(690, 205, 0.8); rock(520, 505, 0.9);
+  const castle = (flip, col) => {
+    const w = 120, top = 190, bot = 430, x0 = flip ? W - w + 10 : -10;
+    g.fillStyle(OUT, 1).fillRect(x0 - 4, top - 4, w + 8, bot - top + 8);
+    g.fillStyle(0xa3a9b8, 1).fillRect(x0, top, w, bot - top);
+    g.fillStyle(0x8e94a4, 1);
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) g.fillRect(x0 + 8 + c * 38 + (r % 2) * 14, top + 22 + r * 36, 26, 12);
+    for (let c = 0; c < 5; c++) { g.fillStyle(OUT, 1).fillRect(x0 + c * 26 - 2, top - 24, 20, 24); g.fillStyle(0xa3a9b8, 1).fillRect(x0 + c * 26 + 2, top - 20, 12, 20); }
+    const fx0 = flip ? x0 + 30 : x0 + w - 30;
+    g.fillStyle(OUT, 1).fillRect(fx0 - 3, top - 90, 6, 70);
+    g.fillStyle(col, 1).fillTriangle(fx0 + 2, top - 88, fx0 + 2, top - 58, fx0 + (flip ? -40 : 40), top - 73);
+  };
+  castle(false, BLUE); castle(true, PURPLE);
+}
+
+
+/* ---- batalla ---- */
+const COST = { legionario: 2, arquera: 2, lobo: 1, tercio: 3, valkiria: 4, ninja: 3, samurai: 3, pistolero: 4, kungfu: 1 };
+const LABEL = { legionario: 'Legionario', arquera: 'Arquera', lobo: 'Lobo', tercio: 'Tercio', valkiria: 'Valkiria', ninja: 'Ninja', samurai: 'Samurái', pistolero: 'Pistolero', kungfu: 'Kung fu' };
+const DECK = ['legionario', 'arquera', 'lobo', 'tercio', 'valkiria', 'ninja', 'samurai', 'pistolero'];
+const EMAX = 10, EREGEN = 0.5, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
+let B = null, castleG, flashG;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function newSide() { const q = shuffle(DECK.slice()); return { energy: 5, hand: q.splice(0, 4), queue: q, kills: 0, towerT: 1 }; }
+function makeCastle(team) {
+  return { isCastle: true, type: 'castle', team, x: team === 'blue' ? 95 : W - 95, lane: 0, get gy() { return GROUND; }, alive: true, state: 'idle',
+    hp: CASTLE_HP, max: CASTLE_HP, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0,
+    damage(d) {
+      if (!this.alive || !B || B.over) return;
+      this.hp -= d; this.flash = 0.12;
+      floatText(this.x + this.dir * 20, GROUND - H * 1.7, '-' + d);
+      burst(this.x + this.dir * 40, GROUND - H * 0.8, 0xbfc4d4, 5, 120);
+      if (this.hp <= 0) { this.hp = 0; this.alive = false; endGame(this.team === 'purple'); }
+    } };
+}
+function onKill(u) {
+  if (!B) return;
+  const other = u.team === 'blue' ? 'purple' : 'blue';
+  B[other].energy = Math.min(EMAX, B[other].energy + 1); B[other].kills++;
+}
+function play(team, idx) {
+  const side = B[team], type = side.hand[idx];
+  if (!type || B.over || side.energy < COST[type]) return false;
+  side.energy -= COST[type];
+  side.hand[idx] = side.queue.shift(); side.queue.push(type);
+  units.push(new Unit(scene, type, team, team === 'blue' ? 150 : W - 150));
+  if (team === 'blue') renderHand();
+  return true;
+}
+function aiLogic(dt) {
+  B.aiT -= dt; if (B.aiT > 0) return;
+  const s = B.purple, ok = s.hand.map((t, i) => [t, i]).filter(([t]) => COST[t] <= s.energy);
+  if (ok.length && (s.energy >= 7 || Math.random() < 0.55)) { const [, i] = ok[Math.floor(Math.random() * ok.length)]; play('purple', i); B.aiT = rand(1.4, 3.4); }
+  else B.aiT = 0.5;
+}
+function towers(dt) {
+  for (const team of ['blue', 'purple']) {
+    const c = castles[team]; if (!c.alive) continue;
+    const s = B[team]; s.towerT -= dt; if (s.towerT > 0) continue;
+    const foes = units.filter(v => v.team !== team && v.alive && v.state !== 'die' && v.state !== 'spawn' && Math.abs(v.x - c.x) <= TOWER.range);
+    if (!foes.length) { s.towerT = 0.2; continue; }
+    const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
+    const sx = c.x + c.dir * 18, sy = 175, tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
+    const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
+    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
+    s.towerT = TOWER.cd;
+  }
+}
+function drawCastleUI(dt) {
+  castleG.clear(); flashG.clear();
+  for (const team of ['blue', 'purple']) {
+    const c = castles[team], bw = 120, bx = team === 'blue' ? 0 : W - bw - 0, by = 134;
+    const x0 = team === 'blue' ? 6 : W - bw - 6;
+    castleG.fillStyle(OUT, 1).fillRoundedRect(x0 - 3, by - 3, bw + 6, 18, 7);
+    castleG.fillStyle(0x3a3f55, 1).fillRoundedRect(x0, by, bw, 12, 5);
+    castleG.fillStyle(team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(x0, by, Math.max(4, bw * c.hp / c.max), 12, 5);
+    if (c.flash > 0) { c.flash -= dt; const fx0 = team === 'blue' ? -10 : W - 110; flashG.fillStyle(0xffffff, 0.35).fillRect(fx0, 190, 120, 240); }
+  }
+}
+let hpText = {};
+function endGame(win) {
+  B.over = true;
+  $('over-title').textContent = win ? '¡Victoria!' : 'Derrota';
+  $('over-text').textContent = win ? 'Has derribado el castillo rival. Enemigos abatidos: ' + B.blue.kills + '.' : 'Han derribado tu castillo. Enemigos abatidos: ' + B.blue.kills + '.';
+  $('over').hidden = false;
+}
+function resetBattle() {
+  units.forEach(u => { u.root.destroy(); u.bar.destroy(); }); units = [];
+  fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
+  B = { blue: newSide(), purple: newSide(), over: false, aiT: 2.5 };
+  castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
+  $('over').hidden = true; renderHand();
+}
+
+/* ---- Phaser ---- */
+function create() {
+  scene = this;
+  drawStage(this.add.graphics());
+  flashG = this.add.graphics().setDepth(5);
+  castleG = this.add.graphics().setDepth(990);
+  for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? 66 : W - 66, 140, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
+  fxG = this.add.graphics().setDepth(980);
+  resetBattle();
+}
+function update(_, deltaMs) {
+  const dt = Math.min(0.05, deltaMs / 1000) * timeScale;
+  if (B && !B.over) {
+    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + EREGEN * dt);
+    aiLogic(dt); towers(dt); fightLogic(dt);
+  }
+  units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
+  updateArrows(dt);
+  fxG.clear();
+  fx = fx.filter(p => (p.life -= dt) > 0);
+  for (const p of fx) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g === undefined ? 420 : p.g) * dt; fxG.fillStyle(p.color, Math.min(1, p.life / p.t * 1.5)).fillCircle(p.x, p.y, p.r * (0.5 + p.life / p.t)); }
+  loose = loose.filter(l => { l.life -= dt; if (l.life <= 0) { l.img.destroy(); return false; } return true; });
+  for (const l of loose) {
+    l.vy += 1300 * dt; l.img.x += l.vx * dt; l.img.y += l.vy * dt; l.img.rotation += l.spin * dt;
+    if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
+    l.img.setAlpha(Math.min(1, l.life / 0.4));
+  }
+  if (B) { drawCastleUI(dt); for (const t of ['blue', 'purple']) hpText[t].setText(Math.ceil(castles[t].hp)); uiTick(); }
+}
+function start() {
+  new Phaser.Game({
+    type: Phaser.AUTO, parent: 'game', width: W, height: HGT, backgroundColor: '#7fb85a',
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    scene: { preload() {
+      const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
+      L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
+      L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');
+      L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
+      L('nin_cuerpo', 'ninja_cuerpo'); L('nin_bufanda', 'ninja_bufanda'); L('nin_arma', 'ninja_arma'); L('nin_mano', 'ninja_mano'); L('nin_shuriken', 'ninja_shuriken');
+      L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
+      L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
+      L('sam_cuerpo', 'samurai_cuerpo'); L('sam_arma', 'samurai_arma'); L('sam_vaina', 'samurai_vaina');
+      L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
+      L('ter_cuerpo', 'tercio_cuerpo'); L('ter_pica', 'tercio_arma'); L('ter_mano', 'tercio_mano'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
+    }, create, update }
+  });
+}
+
+/* ---- interfaz ---- */
+const $ = id => document.getElementById(id);
+function renderHand() {
+  const h = $('hand'); h.innerHTML = '';
+  B.blue.hand.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'hc ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', LABEL[t] + ', coste ' + COST[t]);
+    b.innerHTML = '<span class="cost">' + COST[t] + '</span><img src="img/' + t + '_carta.png" alt=""><span class="nm">' + LABEL[t] + '</span>';
+    b.onclick = () => play('blue', i);
+    h.appendChild(b);
+  });
+  $('next').src = 'img/' + B.blue.queue[0] + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[B.blue.queue[0]];
+}
+let lastUI = 0;
+function uiTick() {
+  const now = performance.now(); if (now - lastUI < 80) return; lastUI = now;
+  const e = B.blue.energy;
+  $('efill').style.width = (e / EMAX * 100) + '%'; $('enum').textContent = Math.floor(e);
+  document.querySelectorAll('.hc').forEach(b => b.classList.toggle('poor', COST[B.blue.hand[+b.dataset.i]] > e));
+  $('herok').textContent = Math.min(B.blue.kills, HERO_GOAL) + '/' + HERO_GOAL + ' bajas';
+}
+$('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };
+$('restart').onclick = () => { if (scene) resetBattle(); };
+$('again').onclick = () => { if (scene) resetBattle(); };
+window.__debugBattle = () => ({ blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp }, units: units.map(u => u.type + ':' + u.team + ':' + u.hp + ':' + Math.round(u.x)), over: B.over });
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
+})();
+</script>
