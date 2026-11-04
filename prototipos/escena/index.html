@@ -276,7 +276,7 @@ const CH = {
   tercio: { hp: 100, dmg: [14, 16], speed: 34, cd: [2.2, 2.6], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
-  esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -2.0, bh: [0.2, -0.3], fh: [-0.18, -0.3] } },
+  esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   muerte: { hp: 180, dmg: [28, 32], cut: [34, 40], speed: 50, cd: [1.6, 2.0], range: H * 1.3, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
@@ -329,11 +329,11 @@ class Unit {
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
     } else if (type === 'esqueleto') {
-      this.body = sc.add.image(0, 0, 'esq_cuerpo').setOrigin(0.5, 1).setScale(0.9 * H / 240);
-      this.weapon = sc.add.image(0, 0, 'leg_arma').setOrigin(0.19, 0.5).setScale(0.45 * H / 512);
-      this.bh = sc.add.image(0, 0, 'esq_mano').setScale(0.09 * H / 40);
-      this.fh = sc.add.image(0, 0, 'esq_mano').setScale(0.09 * H / 40);
-      this.parts = [this.fh, this.body, this.weapon, this.bh];
+      this.body = sc.add.image(0, 0, 'esq_cuerpo').setOrigin(0.5, 1).setScale(0.9 * H / 512);
+      this.weapon = sc.add.image(0, 0, 'esq_arma').setOrigin(0.135, 0.53).setScale(0.422 * H / 512);
+      this.bh = sc.add.image(0, 0, 'esq_mano').setScale(0.1125 * H / 459);
+      this.fh = sc.add.image(0, 0, 'esq_mano').setScale(0.1125 * H / 459);
+      this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
     } else if (type === 'muerte') {
@@ -1174,13 +1174,17 @@ function kungfuHit(u, dmg, push, hand, at) {
   o.damage(Math.round(rand(...dmg)));
   if (push && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
 }
+// tamaño en pantalla de cada tumba según el ancho que tenía en su imagen original (misma escala para todas)
+const GRAVE = { tumba1: 813 / 416, tumba1_rota: 939 / 418, tumba2: 1078 / 512, tumba2_rota: 1144 / 512, tumba3: 885 / 485, tumba3_rota: 929 / 410 };
+const graveScale = key => H * 0.5 / 1000 * GRAVE[key];
 function addGrave(owner, victim) {
   // tumba donde cae la víctima: la lápida sale del suelo con polvo
   if (graves.filter(gv => gv.owner === owner).length >= 5) return;
-  const img = scene.add.image(victim.x, victim.gy + 2, 'tumba').setOrigin(0.5, 1).setScale(0.5 * H / 130, 0.02).setDepth(victim.gy - 2);
-  scene.tweens.add({ targets: img, scaleY: 0.5 * H / 130, duration: 380 / timeScale, delay: 900 / timeScale, ease: 'Back.easeOut',
+  const kind = 'tumba' + (1 + Math.floor(Math.random() * 3)), sc = graveScale(kind);
+  const img = scene.add.image(victim.x, victim.gy + 4, kind).setOrigin(0.5, 1).setScale(sc, 0.02).setDepth(victim.gy - 2).setFlipX(Math.random() < 0.5);
+  scene.tweens.add({ targets: img, scaleY: sc, duration: 380 / timeScale, delay: 900 / timeScale, ease: 'Back.easeOut',
     onStart: () => burst(victim.x, victim.gy, 0xc9a77a, 10, 110) });
-  graves.push({ owner, team: owner.team, x: victim.x, lane: victim.lane, img });
+  graves.push({ owner, team: owner.team, x: victim.x, lane: victim.lane, img, kind });
 }
 function raiseGraves(owner) {
   // al morir la Muerte, cada tumba tiembla, se rompe y de ella sale un esqueleto de su bando
@@ -1189,47 +1193,18 @@ function raiseGraves(owner) {
     scene.tweens.add({ targets: gv.img, x: { from: gv.x - 3, to: gv.x + 3 }, duration: 50, yoyo: true, repeat: 4, delay: d });
     scene.time.delayedCall(d + 450, () => {
       if (!graves.includes(gv)) return;
-      burst(gv.x, scene.scale ? gv.img.y - 20 : 0, 0x9aa1b3, 14, 160); darkPuff(gv.x, gv.img.y - 20, 10);
-      gv.img.destroy(); graves = graves.filter(x => x !== gv);
+      burst(gv.x, gv.img.y - 20, 0x9aa1b3, 14, 160); darkPuff(gv.x, gv.img.y - 20, 10);
+      // la lápida pasa a su versión rota y se desvanece mientras sale el esqueleto
+      const broken = gv.kind + '_rota', bsc = graveScale(broken);
+      gv.img.setTexture(broken).setScale(bsc);
+      scene.tweens.add({ targets: gv.img, alpha: 0, delay: 900 / timeScale, duration: 500 / timeScale, onComplete: () => gv.img.destroy() });
+      graves = graves.filter(x => x !== gv);
       const sk = new Unit(scene, 'esqueleto', gv.team, gv.x);
       sk.lane = gv.lane; sk.root.y = sk.gy; sk.root.setDepth(sk.gy); sk.set('rise');
       units.push(sk);
       if (mode === 'anim') scene.time.delayedCall(3500 / timeScale, () => { if (sk.alive && sk.state !== 'die') { sk.hp = 0; sk.set('die'); } });
     });
   });
-}
-function makeGraveTextures(sc) {
-  // lápida y esqueleto dibujados por código en el estilo del juego
-  const g = sc.make.graphics({ x: 0, y: 0, add: false });
-  g.fillStyle(0x6b4a2b, 1).fillEllipse(60, 124, 116, 16);
-  g.fillStyle(OUT, 1).fillRoundedRect(18, 8, 84, 118, { tl: 40, tr: 40, bl: 6, br: 6 });
-  g.fillStyle(0x9aa1b3, 1).fillRoundedRect(25, 15, 70, 106, { tl: 34, tr: 34, bl: 4, br: 4 });
-  g.fillStyle(0x7f8699, 1).fillRect(25, 92, 70, 29);
-  g.fillStyle(0xbfc5d4, 1).fillRoundedRect(36, 24, 16, 30, 6);
-  g.fillStyle(OUT, 1).fillRect(55, 38, 10, 46).fillRect(43, 50, 34, 10);
-  g.generateTexture('tumba', 120, 132); g.clear();
-  const bone = 0xebe6d6, sh = 0xcbc3ad;
-  const ol = (f) => { g.fillStyle(OUT, 1); f(5); g.fillStyle(bone, 1); f(0); };
-  // piernas y pies
-  ol(p => { g.fillRect(78 - p, 196 - p, 12 + 2 * p, 34 + 2 * p); g.fillRect(110 - p, 196 - p, 12 + 2 * p, 34 + 2 * p); });
-  ol(p => { g.fillEllipse(80, 233, 34 + 2 * p, 14 + 2 * p); g.fillEllipse(118, 233, 34 + 2 * p, 14 + 2 * p); });
-  // pelvis y costillas
-  ol(p => g.fillEllipse(100, 196, 56 + 2 * p, 22 + 2 * p));
-  ol(p => g.fillRoundedRect(72 - p, 140 - p, 56 + 2 * p, 50 + 2 * p, 12));
-  g.lineStyle(4, OUT, 1); for (let y = 152; y <= 180; y += 11) { g.beginPath(); g.moveTo(78, y); g.lineTo(122, y); g.strokePath(); }
-  g.beginPath(); g.moveTo(100, 140); g.lineTo(100, 190); g.strokePath();
-  // cráneo y mandíbula
-  ol(p => g.fillRoundedRect(72 - p, 112 - p, 56 + 2 * p, 30 + 2 * p, 10));
-  ol(p => g.fillCircle(100, 74, 62 + p));
-  g.fillStyle(sh, 1).fillEllipse(84, 112, 70, 20);
-  g.fillStyle(0xffffff, 0.6).fillEllipse(78, 34, 34, 14);
-  g.fillStyle(OUT, 1).fillEllipse(78, 80, 30, 34).fillEllipse(124, 80, 28, 32);
-  g.fillStyle(0x7ff6ff, 1).fillCircle(80, 82, 6).fillCircle(124, 82, 6);
-  g.fillStyle(OUT, 1).fillTriangle(102, 98, 96, 110, 108, 110);
-  g.lineStyle(4, OUT, 1); for (let x = 82; x <= 118; x += 9) { g.beginPath(); g.moveTo(x, 118); g.lineTo(x, 136); g.strokePath(); }
-  g.generateTexture('esq_cuerpo', 200, 242); g.clear();
-  g.fillStyle(OUT, 1).fillCircle(20, 20, 18); g.fillStyle(bone, 1).fillCircle(20, 20, 13); g.fillStyle(sh, 1).fillEllipse(20, 27, 22, 9);
-  g.generateTexture('esq_mano', 40, 40); g.destroy();
 }
 function reapArc(u, k = 1) {
   // media luna horizontal a la altura de la cintura: oscura con borde cian
@@ -1457,7 +1432,6 @@ function buildMode() {
 function create() {
   scene = this;
   drawStage(this.add.graphics());
-  makeGraveTextures(this);
   fxG = this.add.graphics().setDepth(980);
   buildMode();
 }
@@ -1490,6 +1464,8 @@ function start() {
       L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
       L('sam_cuerpo', 'samurai_cuerpo'); L('sam_arma', 'samurai_arma'); L('sam_vaina', 'samurai_vaina');
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
+      ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
+      L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
       L('mu_cuerpo', 'muerte_cuerpo'); L('mu_arma', 'muerte_arma'); L('mu_mano', 'muerte_mano');
       L('ter_cuerpo', 'tercio_cuerpo'); L('ter_pica', 'tercio_arma'); L('ter_mano', 'tercio_mano'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
     }, create, update }
