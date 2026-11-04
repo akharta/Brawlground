@@ -18,6 +18,7 @@
   --blue: #3b82f6;
   --common: #9aa3bd;
   --rare: #4da3ff;
+  --epic: #a855f7;
   --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
 }
@@ -65,6 +66,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   padding: 8px; position: relative; box-shadow: 0 5px 0 var(--outline);
 }
 .card.rare { background: var(--rare); }
+.card.epic { background: var(--epic); }
 .card .art { background: #c7cde0; border: 3px solid var(--outline); border-radius: 10px; aspect-ratio: 1; overflow: hidden; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
 .card .cost {
@@ -84,7 +86,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria y Ninja.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja y Pistolero.</p>
     </div>
   </header>
 
@@ -104,6 +106,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="arquera" aria-pressed="false">Arquera</button>
       <button data-char="valkiria" aria-pressed="false">Valkiria</button>
       <button data-char="ninja" aria-pressed="false">Ninja</button>
+      <button data-char="pistolero" aria-pressed="false">Pistolero</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -151,6 +154,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>17</dd><dt>Habilidad</dt><dd>Teletransporte</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card epic" aria-label="Carta del Pistolero">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/pistolero_carta.png" alt="Ilustración del Pistolero"></div>
+        <div class="name">Pistolero</div>
+        <div class="rar">Épica</div>
+      </div>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>23 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -179,8 +191,13 @@ const CH = {
     rest: { sw: -1.71, bh: [-0.344, -0.584] }, mount: [0.091, 0], rider: [-0.015, -0.282] },
   // Dos kunai, bufanda animada aparte y teletransporte detrás de las unidades a distancia enemigas.
   ninja: { hp: 60, dmg: [15, 19], speed: 74, cd: [0.45, 0.65], range: H * 0.95, ranged: false, h: 1, tpCd: 9,
-    rest: { bk: 2.37, fk: -0.757, bh: [-0.213, -0.177], fh: [0.196, -0.177] }, scarf: [-0.149, -0.297] }
+    rest: { bk: 2.37, fk: -0.757, bh: [-0.213, -0.177], fh: [0.196, -0.177] }, scarf: [-0.149, -0.297] },
+  // Dos revólveres: ráfaga alterna a media distancia y giro del revólver en el dedo.
+  pistolero: { hp: 60, dmg: [11, 13], speed: 56, cd: [1.4, 1.8], range: H * 2.7, ranged: true, h: 1,
+    rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } }
 };
+// revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
+const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
 const BOW = CH.arquera.bow;
 const bowW = BOW.w * H, bowH = BOW.h * H;
 // posición del arco (su origen) para que la mano agarre el punto de agarre en reposo
@@ -216,6 +233,16 @@ class Unit {
       this.parts = [this.body, this.mount, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'pistolero') {
+      const f = H / 120;
+      this.body = sc.add.image(0, 0, 'pis_cuerpo').setOrigin(0.456, 1).setScale(H / 512);
+      this.bg = sc.add.image(0, 0, 'pis_arma').setOrigin(GUN.ox, GUN.oy).setScale(0.0741 * f);
+      this.bh = handScale('pis_mano').setScale(0.103 * H / 400);
+      this.fg = sc.add.image(0, 0, 'pis_arma').setOrigin(GUN.ox, GUN.oy).setScale(0.0741 * f);
+      this.fh = handScale('pis_mano').setScale(0.103 * H / 400);
+      this.parts = [this.body, this.bg, this.bh, this.fg, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.bg, -0.6, -520, 14], [this.fg, 0.7, -580, -14]];
     } else if (type === 'ninja') {
       const f = H / 120;
       this.body = sc.add.image(0, 0, 'nin_cuerpo').setOrigin(0.483, 1).setScale(H / 512);
@@ -268,6 +295,7 @@ class Unit {
     if (this.type === 'legionario') { o.sw = r.sw; o.sh = [...r.sh]; }
     else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
     else if (this.type === 'ninja') { o.bk = r.bk; o.fk = r.fk; o.scarf = { r: -0.3, sx: 1 }; }
+    else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
     else { o.bow = bowRestFromHand(r.fh); o.bowR = 0; o.nock = null; o.arrow = false; }
     return o;
   }
@@ -290,6 +318,7 @@ class Unit {
         if (o.sw !== undefined) o.sw += 0.04 * breathe;
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
         if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
+        if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
         break;
       case 'walk': {
         const ph = t * 10;
@@ -306,6 +335,7 @@ class Unit {
         }
         if (o.sh) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
+        if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
         if (o.scarf) {               // carrera ninja: inclinado hacia delante, kunai atrás y bufanda al viento
           const q = t * 15;
           o.hop = Math.abs(Math.sin(q)) * H * 0.06; o.rot = 0.12 + Math.sin(q) * 0.03;
@@ -320,6 +350,7 @@ class Unit {
         if (this.type === 'legionario') this.attackSword(o, t);
         else if (this.type === 'valkiria') this.attackAxe(o, t);
         else if (this.type === 'ninja') this.attackKunai(o, t);
+        else if (this.type === 'pistolero') this.attackGuns(o, t);
         else this.attackBow(o, t);
         break;
       case 'tpOut': {                // lanza un shuriken y desaparece en una nube de humo
@@ -415,6 +446,33 @@ class Unit {
     if (p > 0.32 && !this.fired) { this.fired = true; onMelee(this); }
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
+  attackGuns(o, t) {
+    const r = this.cfg.rest, p = t / 1.25;
+    const aimF = [0.44, -0.34], aimB = [0.3, -0.45];
+    const shots = [[0.2, 'fg', 'fh'], [0.34, 'bg', 'bh']];
+    const k = p < 0.16 ? ease(p / 0.16) : p < 0.62 ? 1 : 0;
+    o.fh = lerp2(r.fh, aimF, k); o.bh = lerp2(r.bh, aimB, k);
+    o.fg = lerp(r.fg, 0, k); o.bg = lerp(r.bg, 0, k);
+    this.shotsDone = this.shotsDone || 0;
+    shots.forEach(([at, gun, hand], i) => {
+      if (p >= at && this.shotsDone <= i) { this.shotsDone = i + 1; fireGun(this, this[gun]); }
+      const since = (p - at) * 1.25;
+      if (since >= 0 && since < 0.14 && k > 0) {   // retroceso: el cañón salta hacia arriba y la mano atrás
+        const kick = 1 - since / 0.14;
+        o[gun] -= 0.6 * kick; o[hand] = [o[hand][0] - 0.06 * kick, o[hand][1] - 0.02 * kick];
+        o.rot = -0.04 * kick;
+      }
+    });
+    if (p >= 0.62 && p < 0.86) {       // gira el revólver delantero en el dedo
+      const e = (p - 0.62) / 0.24;
+      o.fh = lerp2(aimF, [0.3, -0.42], ease(e)); o.fg = -e * Math.PI * 2;
+      o.bh = lerp2(aimB, r.bh, ease(e)); o.bg = lerp(0, r.bg, ease(e));
+    } else if (p >= 0.86) {
+      const e = ease((p - 0.86) / 0.14);
+      o.fh = lerp2([0.3, -0.42], r.fh, e); o.fg = r.fg; o.bh = r.bh; o.bg = r.bg;
+    }
+    if (p >= 1) { this.shotsDone = 0; this.set('idle'); }
+  }
   teleport() {
     const old = this.x;
     let nx;
@@ -468,7 +526,10 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'ninja') {
+    if (this.type === 'pistolero') {
+      this.bg.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bg);
+      this.fg.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fg);
+    } else if (this.type === 'ninja') {
       const c = this.cfg, f = H / 120;
       this.bk.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bk);
       this.fk.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fk);
@@ -527,6 +588,28 @@ function burst(x, y, color, n, spd) {
     const a = Math.random() * Math.PI * 2, s = spd * rand(0.4, 1);
     fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, r: rand(3, 7), life: 0.5, t: 0.5, color });
   }
+}
+function fireGun(u, gun) {
+  // boca del cañón en coordenadas del mundo
+  const m = gun.getWorldTransformMatrix();
+  const lx = (GUN.mx - GUN.ox) * GUN.w, ly = (GUN.my - GUN.oy) * GUN.h;
+  const mz = m.transformPoint(lx, ly);
+  let tx, ty, target = null;
+  if (mode === 'fight') { target = nearestEnemy(u); if (!target) return; tx = target.x + rand(-8, 8); ty = target.gy - H * rand(0.35, 0.55); }
+  else { tx = u.x + u.dir * H * 3; ty = mz.y + rand(-4, 4); }
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(5, 0xffe08a, 0.9).beginPath(); g.moveTo(mz.x, mz.y); g.lineTo(tx, ty); g.strokePath();
+  g.lineStyle(2, 0xffffff, 1).beginPath(); g.moveTo(mz.x, mz.y); g.lineTo(tx, ty); g.strokePath();
+  // fogonazo
+  const fl = scene.add.graphics().setDepth(975), ang = Math.atan2(ty - mz.y, tx - mz.x);
+  const star = (rad, col) => { fl.fillStyle(col, 1).beginPath(); for (let i = 0; i < 10; i++) { const a = ang + i * Math.PI / 5, rr = i % 2 ? rad * 0.45 : rad; fl.lineTo(mz.x + Math.cos(a) * rr * (i === 0 ? 1.6 : 1), mz.y + Math.sin(a) * rr * (i === 0 ? 1.6 : 1)); } fl.closePath().fillPath(); };
+  star(16, 0xffb627); star(9, 0xfff3c4);
+  scene.tweens.add({ targets: g, alpha: 0, duration: 140 / timeScale, onComplete: () => g.destroy() });
+  scene.tweens.add({ targets: fl, alpha: 0, duration: 110 / timeScale, onComplete: () => fl.destroy() });
+  // casquillo que salta
+  fx.push({ x: mz.x - u.dir * 30, y: mz.y + 4, vx: -u.dir * rand(60, 120), vy: -rand(160, 240), r: 3, life: 0.5, t: 0.5, color: 0xf2c14e });
+  burst(tx, ty, 0xfff3c4, 4, 90);
+  if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
 }
 function smoke(x, y) {
   for (let i = 0; i < 16; i++) {
@@ -661,12 +744,12 @@ function buildMode() {
   spawnTimers.forEach(clearTimeout); spawnTimers = [];
   clearUnits();
   if (mode === 'fight') {
-    const plan = [['legionario', 'blue', 150, 0], ['legionario', 'purple', W - 150, 0], ['arquera', 'blue', 120, 1100], ['arquera', 'purple', W - 120, 1100], ['valkiria', 'blue', 150, 2600], ['valkiria', 'purple', W - 150, 2600], ['ninja', 'blue', 140, 3800], ['ninja', 'purple', W - 140, 3800]];
+    const plan = [['legionario', 'blue', 150, 0], ['legionario', 'purple', W - 150, 0], ['arquera', 'blue', 120, 1100], ['arquera', 'purple', W - 120, 1100], ['valkiria', 'blue', 150, 2600], ['valkiria', 'purple', W - 150, 2600], ['ninja', 'blue', 140, 3800], ['ninja', 'purple', W - 140, 3800], ['pistolero', 'blue', 120, 5200], ['pistolero', 'purple', W - 120, 5200]];
     for (const [type, team, x, delay] of plan) {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -703,6 +786,7 @@ function start() {
       L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');
       L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
       L('nin_cuerpo', 'ninja_cuerpo'); L('nin_bufanda', 'ninja_bufanda'); L('nin_arma', 'ninja_arma'); L('nin_mano', 'ninja_mano'); L('nin_shuriken', 'ninja_shuriken');
+      L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
     }, create, update }
   });
 }
@@ -710,7 +794,7 @@ function start() {
 /* ---- controles ---- */
 const $ = id => document.getElementById(id);
 const HINTS = {
-  fight: 'Cada bando saca un Legionario, una Arquera, una Valkiria y un Ninja. Los de cuerpo a cuerpo chocan en el centro, las arqueras disparan desde atrás y el Ninja lanza un shuriken, desaparece en humo y reaparece a la espalda de la arquera enemiga. Quien cae vuelve a salir de su castillo.',
+  fight: 'Cada bando saca un Legionario, una Arquera, una Valkiria, un Ninja y un Pistolero. Los de cuerpo a cuerpo chocan en el centro, arqueras y pistoleros disparan desde atrás y el Ninja lanza un shuriken, desaparece en humo y reaparece a la espalda de la arquera enemiga. Quien cae vuelve a salir de su castillo.',
   anim: 'Un solo personaje. Elige cuál y pulsa cada botón para ver esa animación; con «Cámara lenta» se aprecia el detalle.'
 };
 function setMode(m) {
