@@ -90,7 +90,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo y Samurái.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái y Kung fu.</p>
     </div>
   </header>
 
@@ -118,6 +118,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="pistolero" aria-pressed="false">Pistolero</button>
       <button data-char="lobo" aria-pressed="false">Lobo</button>
       <button data-char="samurai" aria-pressed="false">Samurái</button>
+      <button data-char="kungfu" aria-pressed="false">Kung fu</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -193,6 +194,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>19</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta del Kung fu">
+        <div class="cost">1</div>
+        <div class="art"><img src="img/kungfu_carta.png" alt="Ilustración del Kung fu"></div>
+        <div class="name">Kung fu</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>40</dd><dt>Daño</dt><dd>16 (combo)</dd><dt>Habilidad</dt><dd>Palma que empuja</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -231,7 +241,10 @@ const CH = {
     rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] },
   // Iaido: la katana vive en la vaina; desenvaina con un tajo ascendente y vuelve a envainar.
   samurai: { hp: 140, dmg: [17, 21], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
-    rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 }
+    rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
+  // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
+  kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [0.6, 0.8], range: H * 0.85, ranged: false, h: 1,
+    rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25 }
 };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -242,8 +255,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái' };
-const NEWEST = 'samurai';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu' };
+const NEWEST = 'kungfu';
 let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -275,6 +288,16 @@ class Unit {
       this.parts = [this.body, this.mount, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'kungfu') {
+      const f = H / 120;
+      this.braid = sc.add.image(0, 0, 'kf_trenza').setOrigin(0.5, 0.02).setScale(0.2317 * f);
+      this.body = sc.add.image(0, 0, 'kf_cuerpo').setOrigin(0.485, 1).setScale(H / 512);
+      this.bh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
+      this.fh = sc.add.image(0, 0, 'kf_puno').setScale(0.0373 * f);
+      this.parts = [this.braid, this.body, this.bh, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [];
+      this.braidA = this.cfg.braidR; this.braidV = 0;
     } else if (type === 'samurai') {
       const f = H / 120;
       this.body = sc.add.image(0, 0, 'sam_cuerpo').setOrigin(0.458, 1).setScale(H / 512);
@@ -381,6 +404,10 @@ class Unit {
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
         if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
+        if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
+          const b = Math.abs(Math.sin(now * 6));
+          o.hop = b * H * 0.025; o.bh[1] += Math.sin(now * 6) * 0.015; o.fh[1] -= Math.sin(now * 6) * 0.015;
+        }
         if (o.tail !== undefined) { o.tail = Math.sin(now * 5) * 0.18; o.headR = 0.03 * breathe; o.head[1] = 0.01 * breathe; }
         break;
       case 'walk': {
@@ -422,6 +449,7 @@ class Unit {
         else if (this.type === 'pistolero') this.attackGuns(o, t);
         else if (this.type === 'lobo') this.attackBite(o, t);
         else if (this.type === 'samurai') this.attackIaido(o, t);
+        else if (this.type === 'kungfu') this.attackCombo(o, t);
         else this.attackBow(o, t);
         break;
       case 'dash': {                 // embestida: salto largo con la boca abierta hacia el enemigo
@@ -524,6 +552,31 @@ class Unit {
     }
     if (p > 0.32 && !this.fired) { this.fired = true; onMelee(this); }
     if (p >= 1) { this.atkN++; this.set('idle'); }
+  }
+  attackCombo(o, t) {
+    const r = this.cfg.rest;
+    const punches = [[0, 'fh', [0.64, -0.43]], [0.18, 'bh', [0.58, -0.47]], [0.36, 'fh', [0.66, -0.42]]];
+    this.hits = this.hits || 0;
+    punches.forEach(([s0, hand, ext], i) => {
+      const q = (t - s0) / 0.16;
+      if (q >= 0 && q <= 1) {
+        const k = q < 0.35 ? ease(q / 0.35) : 1 - ease((q - 0.35) / 0.65);
+        o[hand] = lerp2(r[hand], ext, k); o.rot = 0.07 * k; o.dx = 0.05 * k; o.sx = 1 + 0.03 * k;
+        if (q >= 0.35 && this.hits <= i) { this.hits = i + 1; kungfuHit(this, this.cfg.dmg, false, this[hand]); }
+      }
+    });
+    if (t >= 0.56 && t < 0.72) {           // prepara la palma: la mano trasera se abre y retrocede, el cuerpo se carga
+      const e = ease((t - 0.56) / 0.16);
+      o.palm = true; o.bh = lerp2(r.bh, [-0.32, -0.4], e); o.rot = -0.09 * e; o.sx = 1 - 0.05 * e; o.dx = -0.03 * e;
+    } else if (t >= 0.72 && t < 0.82) {    // golpe de palma
+      const e = easeIn((t - 0.72) / 0.1);
+      o.palm = true; o.bh = lerp2([-0.32, -0.4], [0.7, -0.44], e); o.rot = lerp(-0.09, 0.12, e); o.dx = lerp(-0.03, 0.14, e);
+      if (e > 0.7 && this.hits < 4) { this.hits = 4; kungfuHit(this, this.cfg.palm, true, this.bh); }
+    } else if (t >= 0.82) {                // vuelve a la guardia
+      const e = ease((t - 0.82) / 0.23);
+      o.palm = e < 0.5; o.bh = lerp2([0.7, -0.44], r.bh, e); o.rot = lerp(0.12, 0, e); o.dx = lerp(0.14, 0, e);
+    }
+    if (t >= 1.05) { this.hits = 0; this.set('idle'); }
   }
   attackIaido(o, t) {
     // Tajo ascendente al desenvainar; después cuadra la espada en horizontal y la envaina despacio, con cuidado.
@@ -665,7 +718,16 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'samurai') {
+    if (this.type === 'kungfu') {
+      const c = this.cfg, key = o.palm ? 'kf_palma' : 'kf_puno';
+      if (this.bh.texture.key !== key) { this.bh.setTexture(key); this.bh.setScale(o.palm ? 0.0469 * (H / 120) : 0.0373 * (H / 120)); }
+      // trenza: muelle que se queda atrás con la velocidad y da latigazos con los golpes
+      const wx = this.x + this.rig.x, vx = dt > 0 ? (wx - (this.prevWX ?? wx)) / dt : 0; this.prevWX = wx;
+      let target = c.braidR + Math.max(-0.2, Math.min(0.9, vx * this.dir * 0.006)) - o.rot * 1.5;
+      if (this.state === 'walk') target += 0.45;
+      this.braidV += ((target - this.braidA) * 70 - this.braidV * 7) * dt; this.braidA += this.braidV * dt;
+      this.braid.setPosition(c.braid[0] * H, c.braid[1] * H).setRotation(this.braidA);
+    } else if (this.type === 'samurai') {
       const c = this.cfg;
       this.saya.setPosition(c.saya[0] * H, c.saya[1] * H).setRotation(c.sayaR);
       // envainada, la hoja queda dentro (detrás de la vaina); desenvainada, por delante de todo menos la mano
@@ -779,6 +841,24 @@ function fireGun(u, gun) {
   fx.push({ x: mz.x - u.dir * 30, y: mz.y + 4, vx: -u.dir * rand(60, 120), vy: -rand(160, 240), r: 3, life: 0.5, t: 0.5, color: 0xf2c14e });
   burst(tx, ty, 0xfff3c4, 4, 90);
   if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
+}
+function kungfuHit(u, dmg, push, hand) {
+  // impacto en el puño: estrella blanca y líneas de velocidad; la palma además empuja y frena al enemigo
+  const m = hand.getWorldTransformMatrix(), px = m.tx, py = m.ty;
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(3, 0xffffff, 0.9);
+  for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(px - u.dir * 18, py + i * 7); g.lineTo(px - u.dir * (40 + Math.abs(i) * 8), py + i * 7); g.strokePath(); }
+  const sx = px + u.dir * 10, R = push ? 22 : 12;
+  g.fillStyle(0xffffff, 1).beginPath();
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? R * 0.4 : R; g.lineTo(sx + Math.cos(a) * rr, py + Math.sin(a) * rr); }
+  g.closePath().fillPath();
+  if (push) { g.lineStyle(4, 0xffe9a8, 0.9).strokeCircle(sx, py, R * 1.6); }
+  scene.tweens.add({ targets: g, alpha: 0, duration: (push ? 260 : 150) / timeScale, onComplete: () => g.destroy() });
+  if (mode === 'anim') return;
+  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + 14).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+  if (!o) return;
+  o.damage(Math.round(rand(...dmg)));
+  if (push && o.alive && o.state !== 'die') { o.x = Math.max(60, Math.min(W - 60, o.x + u.dir * 30)); o.cd = Math.max(o.cd, 0.6); o.hurtT = 0.32; }
 }
 function iaidoSlash(u, from, to) {
   // destello en media luna: de abajo-atrás a arriba-delante, delante del samurái
@@ -934,7 +1014,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -974,6 +1054,7 @@ function start() {
       L('pis_cuerpo', 'pistolero_cuerpo'); L('pis_arma', 'pistolero_arma'); L('pis_mano', 'pistolero_mano');
       L('lob_cuerpo', 'lobo_cuerpo'); L('lob_cabeza', 'lobo_cabeza'); L('lob_mordisco', 'lobo_cabeza_mordisco'); L('lob_cola', 'lobo_cola');
       L('sam_cuerpo', 'samurai_cuerpo'); L('sam_arma', 'samurai_arma'); L('sam_vaina', 'samurai_vaina');
+      L('kf_cuerpo', 'kungfu_cuerpo'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
     }, create, update }
   });
 }
