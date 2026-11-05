@@ -431,7 +431,11 @@ class Unit {
     }
     this.aura = AURA[RARITY[type]] || null;
     this.auraBack = sc.add.graphics(); this.auraFront = sc.add.graphics(); this.auraP = [];
-    this.root.add([this.auraBack, this.shadow, this.rig, this.auraFront]);
+    this.root.add([this.auraBack, this.shadow]);
+    if (this.aura) this.buildAura(sc);
+    this.root.add(this.rig);
+    if (this.flameFront) this.root.add(this.flameFront);
+    this.root.add(this.auraFront);
     this.bar = sc.add.graphics().setDepth(900);
     this.reset(x);
   }
@@ -1100,6 +1104,34 @@ class Unit {
       this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
     }
   }
+  buildAura(sc) {
+    // aura de energía: llamas que suben por detrás, chispas y motitas oscuras delante, y contorno brillante en la silueta
+    const A = this.aura, w = this.shadow.width * 1.05, h = H * this.cfg.h * 0.9, f = 1 / A.rate;
+    const zone = new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.48, w, h);
+    this.flameBack = sc.add.particles(0, 0, 'auraFlame', {
+      emitZone: { type: 'random', source: zone }, frequency: 160 * f, quantity: 1,
+      speedY: { min: -120, max: -60 }, speedX: { min: -12, max: 12 }, lifespan: { min: 600, max: 1000 },
+      scaleX: { start: 0.75 * A.big, end: 0.2 }, scaleY: { start: 0.8 * A.big, end: 1.7 * A.big },
+      alpha: { start: 0.42, end: 0 }, tint: A.c });
+    this.flameCore = sc.add.particles(0, 0, 'auraFlame', {
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 0.95, h * 0.95) }, frequency: 200 * f, quantity: 1,
+      speedY: { min: -130, max: -70 }, lifespan: { min: 380, max: 650 },
+      scaleX: { start: 0.35 * A.big, end: 0.08 }, scaleY: { start: 0.5 * A.big, end: 1.2 * A.big },
+      alpha: { start: 0.5, end: 0 }, tint: A.c, blendMode: 'ADD' });
+    this.flameFront = sc.add.container(0, 0);
+    this.sparks = sc.add.particles(0, 0, 'auraDot', {
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 1.3, h) }, frequency: 900 * f, quantity: 1,
+      speedY: { min: -90, max: -40 }, speedX: { min: -20, max: 20 }, lifespan: { min: 500, max: 900 },
+      scale: { start: 0.32, end: 0 }, alpha: { start: 1, end: 0 }, tint: A.light, blendMode: 'ADD' });
+    this.flakes = sc.add.particles(0, 0, 'auraFlake', {
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.55, w * 1.4, h) }, frequency: 1300 * f, quantity: 1,
+      speedY: { min: -70, max: -30 }, speedX: { min: -25, max: 25 }, rotate: { min: 0, max: 360 }, lifespan: { min: 600, max: 1000 },
+      scale: { start: 0.5, end: 0.1 }, alpha: { start: 0.85, end: 0 }, tint: 0x141826 });
+    this.root.add([this.flameBack, this.flameCore]);
+    this.flameFront.add([this.sparks, this.flakes]);
+    this.auraFx = [this.flameBack, this.flameCore, this.sparks, this.flakes];
+    if (this.rig.postFX) this.glow = this.rig.postFX.addGlow(A.c, 2.5, 0, false, 0.1, 10);
+  }
   drawAura(dt) {
     // humillo de color que sube ondulando alrededor del personaje; volutas finas que se difuminan por la cola
     const A = this.aura, gb = this.auraBack, gf = this.auraFront;
@@ -1112,41 +1144,10 @@ class Unit {
       for (const p of this.hem) { p.x += p.vx * dt; p.y += p.vy * dt; const k = Math.sin(p.t / p.life * Math.PI);
         gb.fillStyle(0x2a2340, 0.45 * k).fillCircle(p.x, p.y + lift * 0.6, p.r * (0.7 + p.t / p.life)); }
     }
-    if (!A || this.state === 'die') { this.auraP = []; return; }
-    const cx = this.shadow.x, R = this.shadow.width * 0.55, top = H * this.cfg.h;
-    this.auraT = (this.auraT || 0) + dt * A.rate * 5;
-    while (this.auraT >= 1) {
-      this.auraT -= 1;
-      this.auraP.push({ th: Math.random() * Math.PI * 2, w: rand(0.6, 1.3) * (Math.random() < 0.5 ? 1 : -1),
-        y: -rand(0, 0.35) * top, vy: -rand(18, 34) * A.big, rr: rand(0.65, 1.1), ph: Math.random() * 6.3,
-        r: rand(1, 1.8) * A.big, life: rand(1.1, 1.9), t: 0, spark: Math.random() < 0.08 });
-      if (Math.random() < 0.3)                 // mota brillante del color del aura que acompaña al humo
-        this.auraP.push({ th: Math.random() * Math.PI * 2, w: rand(0.5, 1.1) * (Math.random() < 0.5 ? 1 : -1), mote: true,
-          y: -rand(0.05, 0.5) * top, vy: -rand(26, 46) * A.big, rr: rand(0.8, 1.25), ph: Math.random() * 6.3,
-          r: rand(1.6, 2.6), life: rand(0.9, 1.6), t: 0 });
-    }
-    this.auraP = this.auraP.filter(p => (p.t += dt) < p.life);
-    const now = this.sc.time.now / 1000;
-    for (const p of this.auraP) {
-      p.th += p.w * dt; p.y += p.vy * dt;
-      const k = Math.sin(Math.min(1, p.t / p.life) * Math.PI);
-      const depth = Math.sin(p.th), g = depth > 0 ? gf : gb;
-      const sway = Math.sin(now * 3 + p.ph) * 4;
-      const x = cx + Math.cos(p.th) * R * p.rr + sway, y = p.y + depth * R * 0.15;
-      if (p.spark) { g.fillStyle(0xffffff, 0.9 * k).fillCircle(x, y, 1.1); continue; }
-      if (p.mote) {
-        const tw = 0.65 + 0.35 * Math.sin(now * 9 + p.ph * 3);
-        g.fillStyle(A.c, 0.25 * k * tw).fillCircle(x, y, p.r * 2.2);
-        g.fillStyle(A.c, 0.95 * k).fillCircle(x, y, p.r);
-        g.fillStyle(A.light, 0.9 * k * tw).fillCircle(x - p.r * 0.25, y - p.r * 0.25, p.r * 0.45);
-        continue;
-      }
-      // voluta: varios puntos finos hacia abajo, cada vez más anchos y transparentes
-      for (let j = 0; j < 5; j++) {
-        const tx = x - Math.sin(now * 3 + p.ph - j * 0.5) * j * 1.5, ty = y + j * 3.2;
-        g.fillStyle(A.c, (0.32 - j * 0.055) * k).fillCircle(tx, ty, p.r * (1 + j * 0.35));
-      }
-    }
+    if (!A) return;
+    const dead = this.state === 'die', now = this.sc.time.now / 1000;
+    for (const em of this.auraFx) { em.timeScale = timeScale; if (dead && em.emitting) em.stop(); else if (!dead && !em.emitting) em.start(); }
+    if (this.glow) { this.glow.outerStrength = dead ? 0 : 2.2 + 0.9 * Math.sin(now * 4 + this.homeX); this.glow.color = A.c; }
   }
   detach() {
     if (this.str) this.str.clear();
@@ -1471,9 +1472,22 @@ function buildMode() {
 }
 
 /* ---- Phaser ---- */
+function makeAuraTextures(sc) {
+  // llama: gota alargada de luz suave; punto: brillo redondo; motita: escama irregular
+  const flame = sc.textures.createCanvas('auraFlame', 48, 96), c = flame.getContext();
+  c.save(); c.translate(24, 60); c.scale(1, 2.1);
+  let gr = c.createRadialGradient(0, 0, 0, 0, 0, 22); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = gr; c.beginPath(); c.arc(0, 0, 22, 0, Math.PI * 2); c.fill(); c.restore(); flame.refresh();
+  const dot = sc.textures.createCanvas('auraDot', 24, 24), d = dot.getContext();
+  gr = d.createRadialGradient(12, 12, 0, 12, 12, 12); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  d.fillStyle = gr; d.fillRect(0, 0, 24, 24); dot.refresh();
+  const fl = sc.textures.createCanvas('auraFlake', 16, 16), e = fl.getContext();
+  e.fillStyle = '#ffffff'; e.beginPath(); e.moveTo(2, 6); e.lineTo(9, 1); e.lineTo(15, 7); e.lineTo(10, 15); e.lineTo(4, 12); e.closePath(); e.fill(); fl.refresh();
+}
 function create() {
   scene = this;
   drawStage(this.add.graphics());
+  makeAuraTextures(this);
   fxG = this.add.graphics().setDepth(980);
   buildMode();
 }
