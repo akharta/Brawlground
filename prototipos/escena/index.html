@@ -938,60 +938,63 @@ class Unit {
   attackUnchain(o, t) {
     // ataque definitivo: se agacha, lanza ambos puños y las dos cadenas se estiran por el camino hasta el castillo enemigo
     const r = this.cfg.rest, end = this.teamDir > 0 ? W - 110 : 110, reach = Math.max(H, Math.abs(end - this.x) / 1.2 - 0.62 * H);
-    const bk = [-0.1, -0.3], fk = [0.62, -0.42];
+    const bk = [-0.05, -0.5], fk = [0.62, -0.5];
     if (t < 0.45) { const e = ease(t / 0.45); o.bh = lerp2(r.bh, [-0.45, -0.25], e); o.fh = lerp2(r.fh, [0.05, -0.28], e); o.sy = 1 - 0.08 * e; o.sx = 1 + 0.05 * e; o.rot = -0.06 * e; if (e > 0.6) o.dx = Math.sin(t * 90) * 0.008; }
     else if (t < 1.1) {
       const e = Math.min(1, (t - 0.45) / 0.35), ee = easeInOut(e);
-      o.bh = lerp2([-0.45, -0.25], bk, Math.min(1, e * 3)); o.fh = lerp2([0.05, -0.28], fk, Math.min(1, e * 3)); o.rot = 0.12; o.dx = 0.08;
+      o.bh = lerp2([-0.45, -0.25], bk, Math.min(1, e * 3)); o.fh = lerp2([0.05, -0.28], fk, Math.min(1, e * 3)); o.rot = 0; o.dx = 0.08;
       o.whipF = { k: ee, reach, lift: 0, low: true }; o.whipB = { k: ee, reach: reach - H * 0.2, lift: 0, low: true };
       if (!this.ultHit) this.ultHit = new Set();
       unchainSweep(this, this.x + this.teamDir * 1.2 * (reach * ee + H * 0.62));
       if (e >= 1 && Math.random() < 0.5) burst(this.x + this.teamDir * (reach * Math.random()), this.gy - 6, 0xffb0a0, 2, 90);
-    } else { const e = ease((t - 1.1) / 0.45); o.bh = lerp2(bk, r.bh, e); o.fh = lerp2(fk, r.fh, e); o.rot = lerp(0.12, 0, e); o.dx = lerp(0.08, 0, e);
+    } else { const e = ease((t - 1.1) / 0.45); o.bh = lerp2(bk, r.bh, e); o.fh = lerp2(fk, r.fh, e); o.dx = lerp(0.08, 0, e);
       o.whipF = { k: 1 - e, reach, lift: 0, low: true }; o.whipB = { k: 1 - e, reach: reach - H * 0.2, lift: 0, low: true }; }
     if (t >= 1.55) { this.ultNext = false; this.ultHit = null; this.atkN2 = (this.atkN2 || 0) + 1; this.set('idle'); }
   }
   layChains(o, dt) {
-    // cadenas: colgando con física de cuerda en reposo; estiradas en arco o rasantes al atacar
-    const L = LINK.step, g = 900;
+    // cadena física: cada eslabón es un punto con peso (verlet) unido al siguiente; el puño tira de un extremo
+    // y, al atacar, la punta se lleva hacia su objetivo mientras el resto cuelga, se retrasa y se curva por su propio peso
+    const L = LINK.step, g = 1500, d = Math.min(dt, 0.033);
     const moveX = (this.x - (this.lastCX ?? this.x)) * this.dir; this.lastCX = this.x;
     for (const [ch, hand, whip] of [[this.chB, o.bh, o.whipB], [this.chF, o.fh, o.whipF]]) {
       const ax = hand[0] * H, ay = hand[1] * H + 0.13 * H;
-      let pts;
-      if (whip && whip.tip) {
-        const T = whip.tip, len = Math.hypot(T[0] - ax, T[1] - ay), n = Math.max(LINK.hang, Math.min(ch.links.length, Math.round(len / L)));
-        const mx = (ax + T[0]) / 2, my = (ay + T[1]) / 2, px2 = -(T[1] - ay), py2 = T[0] - ax, cx = mx + px2 * whip.bend, cy = my + py2 * whip.bend;
-        pts = [];
-        for (let i = 0; i <= n; i++) { const u = i / n; pts.push([(1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx + u * u * T[0], (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy + u * u * T[1]]); }
-        ch.pts = pts.slice(0, LINK.hang + 1).map(p => [...p]); ch.prev = ch.pts.map(p => [...p]);
-      } else if (whip && whip.k > 0.01) {
-        const len = Math.max(L * LINK.hang, whip.k * whip.reach), n = Math.max(LINK.hang, Math.min(ch.links.length, Math.round(len / L)));
-        const tx = ax + len, ty = whip.low ? -0.1 * H : ay + 0.05 * H, cy = Math.min(ay, ty) - whip.lift * H * 2;
-        pts = [];
-        for (let i = 0; i <= n; i++) { const u = i / n, x = lerp(ax, tx, u), y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy + u * u * ty; pts.push([x, y + Math.sin(u * 20 + this.t * 30) * (whip.low ? 2 : 0)]); }
-        ch.pts = pts.slice(0, LINK.hang + 1).map(p => [...p]); ch.prev = ch.pts.map(p => [...p]);
+      let T = null;
+      if (whip && whip.tip) T = whip.tip;
+      else if (whip && whip.k > 0.01) T = [ax + Math.max(L * LINK.hang, whip.k * whip.reach), ay];   // recto, a la altura del puño
+      // número de eslabones según la distancia a cubrir (un poco de holgura para que cuelgue)
+      const want = T ? Math.max(LINK.hang, Math.min(ch.links.length, Math.ceil(Math.hypot(T[0] - ax, T[1] - ay) / L * (whip && whip.k ? 1.0 : 1.06)))) : LINK.hang;
+      if (!ch.pts.length) { for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax, ay + i * L]); ch.prev = ch.pts.map(p => [...p]); }
+      while (ch.pts.length - 1 < want) { const last = ch.pts[ch.pts.length - 1]; ch.pts.push([...last]); ch.prev.push([...last]); }   // suelta eslabones
+      while (ch.pts.length - 1 > want) { ch.pts.pop(); ch.prev.pop(); }                                                         // los recoge
+      const pts = ch.pts, n = pts.length - 1, taut = !!(T && whip && whip.k > 0.01);
+      if (taut) {                              // tercer ataque: cadena tensa y recta con una onda que la recorre
+        for (let i = 0; i <= n; i++) {
+          const u = i / n, wave = Math.sin(u * 14 - this.t * 26) * 3 * Math.sin(u * Math.PI);
+          pts[i][0] = lerp(ax, T[0], u); pts[i][1] = lerp(ay, T[1], u) + wave; ch.prev[i][0] = pts[i][0]; ch.prev[i][1] = pts[i][1];
+        }
       } else {
-        if (ch.pts.length !== LINK.hang + 1) { ch.pts = []; for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax, ay + i * L]); ch.prev = ch.pts.map(p => [...p]); }
-        const d = Math.min(dt, 0.033);
-        for (let i = 1; i < ch.pts.length; i++) {
-          const p = ch.pts[i], q = ch.prev[i], vx = (p[0] - q[0]) * 0.9, vy = (p[1] - q[1]) * 0.9;
-          q[0] = p[0]; q[1] = p[1]; p[0] += vx - moveX; p[1] += vy + g * d * d;
-          if (p[1] > -4) { p[1] = -4; q[0] = lerp(q[0], p[0], 0.5); }   // arrastra por el suelo con rozamiento
-        }
-        ch.pts[0] = [ax, ay];
-        for (let it = 0; it < 4; it++) for (let i = 1; i < ch.pts.length; i++) {
-          const a = ch.pts[i - 1], b = ch.pts[i], dx = b[0] - a[0], dy = b[1] - a[1], dd = Math.hypot(dx, dy) || 1, k = (dd - L) / dd;
-          if (i === 1) { b[0] -= dx * k; b[1] -= dy * k; } else { a[0] += dx * k * 0.5; a[1] += dy * k * 0.5; b[0] -= dx * k * 0.5; b[1] -= dy * k * 0.5; }
-          b[1] = Math.min(b[1], -4);
-        }
-        pts = ch.pts;
+      for (let i = 1; i <= n; i++) {
+        const p = pts[i], q = ch.prev[i], vx = (p[0] - q[0]) * 0.97, vy = (p[1] - q[1]) * 0.97;
+        q[0] = p[0]; q[1] = p[1]; p[0] += vx - moveX; p[1] += vy + g * d * d;
       }
-      const n = pts.length - 1;
+      pts[0][0] = ax; pts[0][1] = ay;
+      if (T) { const tp = pts[n], kk = taut ? 1 : 0.55; tp[0] += (T[0] - tp[0]) * kk; tp[1] += (T[1] - tp[1]) * kk; }
+      for (let it = 0; it < 10; it++) {
+        for (let i = 1; i <= n; i++) {
+          const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], dd = Math.hypot(dx, dy) || 1, k = (dd - L) / dd;
+          const pinA = i === 1, pinB = T && i === n;
+          if (pinA && !pinB) { b[0] -= dx * k; b[1] -= dy * k; }
+          else if (pinB && !pinA) { a[0] += dx * k; a[1] += dy * k; }
+          else if (!pinA && !pinB) { a[0] += dx * k * 0.5; a[1] += dy * k * 0.5; b[0] -= dx * k * 0.5; b[1] -= dy * k * 0.5; }
+        }
+        pts[0][0] = ax; pts[0][1] = ay;
+        for (let i = 1; i <= n; i++) if (pts[i][1] > -4) { pts[i][1] = -4; ch.prev[i][0] = lerp(ch.prev[i][0], pts[i][0], 0.3); }   // suelo con rozamiento
+      }
+      }
       ch.links.forEach((l, i) => {
         if (i >= n) { l.setVisible(false); return; }
         const a = pts[i], b = pts[i + 1];
-        l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]))
-          .setScale(LINK.w / 512 * 1.05, LINK.w / 512);
+        l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0])).setScale(LINK.w / 512 * 1.05, LINK.w / 512);
       });
       const a = pts[n - 1], b = pts[n];
       ch.tip.setPosition(b[0], b[1]).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]));
