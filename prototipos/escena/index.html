@@ -357,7 +357,7 @@ const CH = {
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
-const LINK = { w: 0.16 * H, step: 0.125 * H, tip: 0.24 * H, hang: 3 };
+const LINK = { w: 0.21 * H, step: 0.155 * H, tip: 0.27 * H, hang: 3 };
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
@@ -416,7 +416,7 @@ class Unit {
     } else if (type === 'desencadenado') {
       const mk = () => {
         const links = [], g = sc.add.container(0, 0);
-        for (let i = 0; i < 90; i++) { const l = sc.add.image(0, 0, 'de_eslabon').setScale(LINK.w / 512).setVisible(i < 4); links.push(l); g.add(l); }
+        for (let i = 0; i < 90; i++) { const l = sc.add.image(0, 0, i % 2 ? 'de_canto' : 'de_eslabon').setScale(LINK.w / 512).setVisible(i < 4); links.push(l); g.add(l); }
         const tip = sc.add.image(0, 0, 'de_punta').setOrigin(0.08, 0.5).setScale(LINK.tip / 512); g.add(tip);
         return { g, links, tip, pts: [], prev: [] };
       };
@@ -908,18 +908,32 @@ class Unit {
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
   }
   attackWhip(o, t) {
-    // latigazo: el puño delantero va atrás y la cadena sale en arco hasta el enemigo
-    const r = this.cfg.rest, tg = mode === 'fight' ? nearestEnemy(this) : null;
-    const reach = tg ? Math.min(this.cfg.range, Math.max(H * 0.6, Math.abs(tg.x - this.x) / 1.2 - 0.5 * H)) : this.cfg.range * 0.8;
-    const back = [0.15, -0.62], fwd = [0.55, -0.4];
-    if (t < 0.3) { const e = ease(t / 0.3); o.fh = lerp2(r.fh, back, e); o.rot = -0.08 * e; }
-    else if (t < 0.55) {
-      const e = ease((t - 0.3) / 0.25); o.fh = lerp2(back, fwd, Math.min(1, e * 2)); o.rot = lerp(-0.08, 0.1, e);
-      o.whipF = { k: e, reach, lift: 0.5 * (1 - e) };
-      if (e > 0.9 && !this.fired) { this.fired = true; whipHit(this, tg, reach); }
-    } else if (t < 0.7) { o.fh = fwd; o.rot = 0.1; o.whipF = { k: 1, reach, lift: 0 }; if (!this.fired) { this.fired = true; whipHit(this, tg, reach); } }
-    else { const e = ease((t - 0.7) / 0.35); o.fh = lerp2(fwd, r.fh, e); o.rot = lerp(0.1, 0, e); o.whipF = { k: 1 - e, reach, lift: -0.15 * e }; }
-    if (t >= 1.05) { this.atkN2 = (this.atkN2 || 0) + 1; if (this.atkN2 % 3 === 2) this.ultNext = true; this.set('idle'); }
+    // cadenazo descendente: el puño sube por encima de la cabeza, la cadena da la vuelta por detrás y cae en arco sobre el enemigo
+    const r = this.cfg.rest, front = (this.atkN2 || 0) % 3 === 0, hk = front ? 'fh' : 'bh', wk = front ? 'whipF' : 'whipB';
+    const tg = mode === 'fight' ? nearestEnemy(this) : null, hx = r[hk][0] * H;
+    const reach = tg ? Math.min(this.cfg.range, Math.max(H * 0.8, Math.abs(tg.x - this.x) / 1.2 - hx)) : this.cfg.range * 0.85;
+    const up = [front ? 0.1 : -0.05, -0.92], down = [front ? 0.45 : 0.3, -0.36], gy = -0.08 * H;
+    const anchor = h => [h[0] * H, h[1] * H + 0.13 * H];
+    const hangTip = A => [A[0] + 0.05 * H, A[1] + LINK.step * LINK.hang];
+    let hand, tip, bend = 0.12;
+    if (t < 0.38) {
+      const e = ease(t / 0.38); hand = lerp2(r[hk], up, e); const A = anchor(hand);
+      const a = lerp(1.4, -2.45, e), R = lerp(LINK.step * LINK.hang, 0.75 * H, e);
+      tip = [A[0] + Math.cos(a) * R, A[1] + Math.sin(a) * R]; bend = 0.2 * e; o.rot = -0.08 * e; o.sy = 1 + 0.03 * e;
+    } else if (t < 0.56) {
+      const e = easeIn((t - 0.38) / 0.18); hand = lerp2(up, down, e); const A = anchor(hand);
+      const end = Math.atan2(gy - A[1], reach), a = lerp(-2.45, end, e), R = lerp(0.75 * H, Math.hypot(reach, gy - A[1]), e);
+      tip = [A[0] + Math.cos(a) * R, A[1] + Math.sin(a) * R]; tip[1] = Math.min(tip[1], gy); bend = -0.3 * (1 - e); o.rot = lerp(-0.08, 0.12, e); o.dx = 0.07 * e;
+      if (e >= 0.98 && !this.fired) { this.fired = true; whipHit(this, tg, reach + hx); }
+    } else if (t < 0.78) {
+      hand = down; const A = anchor(hand); tip = [A[0] + reach, gy]; bend = 0.04 * Math.sin((t - 0.56) * 40) * (1 - (t - 0.56) / 0.22); o.rot = 0.12; o.dx = 0.07;
+      if (!this.fired) { this.fired = true; whipHit(this, tg, reach + hx); }
+    } else {
+      const e = ease((t - 0.78) / 0.35); hand = lerp2(down, r[hk], e); const A = anchor(hand);
+      tip = lerp2([A[0] + reach * (1 - e * 0.3), gy], hangTip(A), e); bend = 0.15; o.rot = lerp(0.12, 0, e); o.dx = lerp(0.07, 0, e);
+    }
+    o[hk] = hand; o[wk] = { tip, bend };
+    if (t >= 1.13) { this.atkN2 = (this.atkN2 || 0) + 1; if (this.atkN2 % 3 === 2) this.ultNext = true; this.set('idle'); }
   }
   attackUnchain(o, t) {
     // ataque definitivo: se agacha, lanza ambos puños y las dos cadenas se estiran por el camino hasta el castillo enemigo
@@ -935,7 +949,7 @@ class Unit {
       if (e >= 1 && Math.random() < 0.5) burst(this.x + this.teamDir * (reach * Math.random()), this.gy - 6, 0xffb0a0, 2, 90);
     } else { const e = ease((t - 1.1) / 0.45); o.bh = lerp2(bk, r.bh, e); o.fh = lerp2(fk, r.fh, e); o.rot = lerp(0.12, 0, e); o.dx = lerp(0.08, 0, e);
       o.whipF = { k: 1 - e, reach, lift: 0, low: true }; o.whipB = { k: 1 - e, reach: reach - H * 0.2, lift: 0, low: true }; }
-    if (t >= 1.55) { this.ultNext = false; this.ultHit = null; this.set('idle'); }
+    if (t >= 1.55) { this.ultNext = false; this.ultHit = null; this.atkN2 = (this.atkN2 || 0) + 1; this.set('idle'); }
   }
   layChains(o, dt) {
     // cadenas: colgando con física de cuerda en reposo; estiradas en arco o rasantes al atacar
@@ -944,7 +958,13 @@ class Unit {
     for (const [ch, hand, whip] of [[this.chB, o.bh, o.whipB], [this.chF, o.fh, o.whipF]]) {
       const ax = hand[0] * H, ay = hand[1] * H + 0.13 * H;
       let pts;
-      if (whip && whip.k > 0.01) {
+      if (whip && whip.tip) {
+        const T = whip.tip, len = Math.hypot(T[0] - ax, T[1] - ay), n = Math.max(LINK.hang, Math.min(ch.links.length, Math.round(len / L)));
+        const mx = (ax + T[0]) / 2, my = (ay + T[1]) / 2, px2 = -(T[1] - ay), py2 = T[0] - ax, cx = mx + px2 * whip.bend, cy = my + py2 * whip.bend;
+        pts = [];
+        for (let i = 0; i <= n; i++) { const u = i / n; pts.push([(1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx + u * u * T[0], (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy + u * u * T[1]]); }
+        ch.pts = pts.slice(0, LINK.hang + 1).map(p => [...p]); ch.prev = ch.pts.map(p => [...p]);
+      } else if (whip && whip.k > 0.01) {
         const len = Math.max(L * LINK.hang, whip.k * whip.reach), n = Math.max(LINK.hang, Math.min(ch.links.length, Math.round(len / L)));
         const tx = ax + len, ty = whip.low ? -0.1 * H : ay + 0.05 * H, cy = Math.min(ay, ty) - whip.lift * H * 2;
         pts = [];
@@ -971,7 +991,7 @@ class Unit {
         if (i >= n) { l.setVisible(false); return; }
         const a = pts[i], b = pts[i + 1];
         l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]))
-          .setScale(LINK.w / 512 * 1.05, LINK.w / 512 * (i % 2 ? 0.45 : 1));
+          .setScale(LINK.w / 512 * 1.05, LINK.w / 512);
       });
       const a = pts[n - 1], b = pts[n];
       ch.tip.setPosition(b[0], b[1]).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]));
@@ -1763,8 +1783,11 @@ function slashArc(u) {
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
 function whipHit(u, tg, reach) {
-  const px = u.x + u.dir * 1.2 * (u.cfg.rest.fh[0] * H + reach), py = u.gy - 0.3 * H;
-  burst(px, py, 0xffd0c0, 8, 150); burst(px, py, 0x9aa1b3, 5, 120);
+  const px = u.x + u.dir * 1.2 * reach, py = u.gy - 0.1 * H;
+  burst(px, py, 0xe8d3b0, 14, 180); burst(px, py - 10, 0xffb0a0, 6, 140);
+  const ring = scene.add.graphics().setDepth(965).setPosition(px, u.gy);
+  ring.lineStyle(4, 0xffe9c2, 0.8).strokeEllipse(0, 0, H * 0.9, H * 0.22);
+  scene.tweens.add({ targets: ring, alpha: 0, scale: { from: 0.4, to: 1.1 }, duration: 320 / timeScale, onComplete: () => ring.destroy() });
   if (mode !== 'fight' || !tg || !tg.alive) return;
   tg.damage(Math.round(rand(...u.cfg.dmg)), u);
   if (tg.shove) tg.shove(u.dir * 18);
@@ -2053,6 +2076,18 @@ function buildMode() {
 }
 
 /* ---- Phaser ---- */
+function makeChainEdge(sc) {
+  // eslabón visto de canto: barra metálica gruesa con contorno, brillo y óxido
+  if (sc.textures.exists('de_canto')) return;
+  const t = sc.textures.createCanvas('de_canto', 512, 150), c = t.getContext();
+  const rr = (x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+  c.fillStyle = '#1e2235'; rr(8, 8, 496, 134, 67); c.fill();
+  c.fillStyle = '#80809a'; rr(34, 34, 444, 82, 41); c.fill();
+  c.fillStyle = '#5f5d75'; rr(34, 80, 444, 36, 18); c.fill();
+  c.fillStyle = '#a8673f'; c.beginPath(); c.ellipse(330, 74, 60, 30, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#e8e6f0'; rr(80, 46, 120, 18, 9); c.fill();
+  t.refresh();
+}
 function makeAuraTextures(sc) {
   // llama: gota alargada de luz suave; punto: brillo redondo; motita: escama irregular
   const flame = sc.textures.createCanvas('auraFlame', 48, 96), c = flame.getContext();
@@ -2073,7 +2108,7 @@ function makeAuraTextures(sc) {
 function create() {
   scene = this;
   drawStage(this.add.graphics());
-  makeAuraTextures(this);
+  makeAuraTextures(this); makeChainEdge(this);
   fxG = this.add.graphics().setDepth(980);
   buildMode();
 }
