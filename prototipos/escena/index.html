@@ -339,7 +339,7 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
-  desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 2.3, ranged: false, h: 1.3,
+  desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
     rest: { bh: [-0.322, -0.33], fh: [0.382, -0.33] } },
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
   centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
@@ -357,7 +357,7 @@ const CH = {
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
-const LINK = { w: 0.21 * H, step: 0.155 * H, tip: 0.27 * H, hang: 3 };
+const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
@@ -416,7 +416,7 @@ class Unit {
     } else if (type === 'desencadenado') {
       const mk = () => {
         const links = [], g = sc.add.container(0, 0);
-        for (let i = 0; i < 90; i++) { const l = sc.add.image(0, 0, i % 2 ? 'de_canto' : 'de_eslabon').setScale(LINK.w / 512).setVisible(i < 4); links.push(l); g.add(l); }
+        for (let i = 0; i < 90; i++) { const l = sc.add.image(0, 0, i % 2 ? 'de_canto' : 'de_eslabon').setVisible(i < LINK.hang); links.push(l); g.add(l); }
         const tip = sc.add.image(0, 0, 'de_punta').setOrigin(0.08, 0.5).setScale(LINK.tip / 512); g.add(tip);
         return { g, links, tip, pts: [], prev: [] };
       };
@@ -911,18 +911,18 @@ class Unit {
     // cadenazo descendente: el puño sube por encima de la cabeza, la cadena da la vuelta por detrás y cae en arco sobre el enemigo
     const r = this.cfg.rest, front = (this.atkN2 || 0) % 3 === 0, hk = front ? 'fh' : 'bh', wk = front ? 'whipF' : 'whipB';
     const tg = mode === 'fight' ? nearestEnemy(this) : null, hx = r[hk][0] * H;
-    const reach = tg ? Math.min(this.cfg.range, Math.max(H * 0.8, Math.abs(tg.x - this.x) / 1.2 - hx)) : this.cfg.range * 0.85;
+    const chainLen = LINK.hang * LINK.step * 0.97, reach = Math.min(chainLen * 0.92, tg ? Math.max(H * 0.3, Math.abs(tg.x - this.x) / 1.2 - hx) : chainLen);
     const up = [front ? 0.1 : -0.05, -0.92], down = [front ? 0.45 : 0.3, -0.36], gy = -0.08 * H;
     const anchor = h => [h[0] * H, h[1] * H + 0.13 * H];
     const hangTip = A => [A[0] + 0.05 * H, A[1] + LINK.step * LINK.hang];
     let hand, tip, bend = 0.12;
     if (t < 0.38) {
       const e = ease(t / 0.38); hand = lerp2(r[hk], up, e); const A = anchor(hand);
-      const a = lerp(1.4, -2.45, e), R = lerp(LINK.step * LINK.hang, 0.75 * H, e);
+      const a = lerp(1.4, -2.45, e), R = LINK.step * LINK.hang * 0.9;
       tip = [A[0] + Math.cos(a) * R, A[1] + Math.sin(a) * R]; bend = 0.2 * e; o.rot = -0.08 * e; o.sy = 1 + 0.03 * e;
     } else if (t < 0.56) {
       const e = easeIn((t - 0.38) / 0.18); hand = lerp2(up, down, e); const A = anchor(hand);
-      const end = Math.atan2(gy - A[1], reach), a = lerp(-2.45, end, e), R = lerp(0.75 * H, Math.hypot(reach, gy - A[1]), e);
+      const end = Math.atan2(gy - A[1], reach), a = lerp(-2.45, end, e), R = LINK.step * LINK.hang * 0.95;
       tip = [A[0] + Math.cos(a) * R, A[1] + Math.sin(a) * R]; tip[1] = Math.min(tip[1], gy); bend = -0.3 * (1 - e); o.rot = lerp(-0.08, 0.12, e); o.dx = 0.07 * e;
       if (e >= 0.98 && !this.fired) { this.fired = true; whipHit(this, tg, reach + hx); }
     } else if (t < 0.78) {
@@ -959,10 +959,13 @@ class Unit {
     for (const [ch, hand, whip] of [[this.chB, o.bh, o.whipB], [this.chF, o.fh, o.whipF]]) {
       const ax = hand[0] * H, ay = hand[1] * H + 0.13 * H;
       let T = null;
-      if (whip && whip.tip) T = whip.tip;
+      if (whip && whip.tip) {
+        T = [...whip.tip]; const dx = T[0] - ax, dy = T[1] - ay, dd = Math.hypot(dx, dy), max = LINK.hang * L * 0.97;
+        if (dd > max) { T[0] = ax + dx / dd * max; T[1] = ay + dy / dd * max; }
+      }
       else if (whip && whip.k > 0.01) T = [ax + Math.max(L * LINK.hang, whip.k * whip.reach), ay];   // recto, a la altura del puño
       // número de eslabones según la distancia a cubrir (un poco de holgura para que cuelgue)
-      const want = T ? Math.max(LINK.hang, Math.min(ch.links.length, Math.ceil(Math.hypot(T[0] - ax, T[1] - ay) / L * (whip && whip.k ? 1.0 : 1.06)))) : LINK.hang;
+      const want = !(whip && whip.k > 0.01) ? LINK.hang : Math.max(LINK.hang, Math.min(ch.links.length, Math.ceil(Math.hypot(T[0] - ax, T[1] - ay) / L)));
       if (!ch.pts.length) { for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax, ay + i * L]); ch.prev = ch.pts.map(p => [...p]); }
       while (ch.pts.length - 1 < want) { const last = ch.pts[ch.pts.length - 1]; ch.pts.push([...last]); ch.prev.push([...last]); }   // suelta eslabones
       while (ch.pts.length - 1 > want) { ch.pts.pop(); ch.prev.pop(); }                                                         // los recoge
@@ -994,7 +997,8 @@ class Unit {
       ch.links.forEach((l, i) => {
         if (i >= n) { l.setVisible(false); return; }
         const a = pts[i], b = pts[i + 1];
-        l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0])).setScale(LINK.w / 512 * 1.05, LINK.w / 512);
+        l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]))
+          .setScale(LINK.w / 512, i % 2 ? LINK.hgt * 0.7 / 150 : LINK.hgt / 246);
       });
       const a = pts[n - 1], b = pts[n];
       ch.tip.setPosition(b[0], b[1]).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]));
