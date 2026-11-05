@@ -92,7 +92,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte y Acorazado.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado y Fraile.</p>
     </div>
   </header>
 
@@ -124,6 +124,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="tercio" aria-pressed="false">Tercio</button>
       <button data-char="muerte" aria-pressed="false">Muerte</button>
       <button data-char="acorazado" aria-pressed="false">Acorazado</button>
+      <button data-char="fraile" aria-pressed="false">Fraile</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -239,6 +240,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta del Fraile">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/fraile_carta.png" alt="Ilustración del Fraile"></div>
+        <div class="name">Fraile</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>18 cada 2 s</dd><dt>Habilidad</dt><dd>No ataca; cura al aliado más herido</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -287,6 +297,9 @@ const CH = {
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
+  // Curandero: no ataca; se queda atrás y lanza luz curativa desde el farolillo al aliado más herido (o a sí mismo).
+  fraile: { hp: 60, heal: 18, speed: 46, cd: [1.7, 2.1], range: H * 3.2, keepBack: H * 2.7, ranged: true, h: 1.05,
+    rest: { st: 0.07, bh: [-0.243, -0.275], fh: [0.321, -0.363] } },
   // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
   acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
     rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
@@ -297,7 +310,7 @@ const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 }
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const RARITY = { fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
 const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -308,8 +321,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado' };
-const NEWEST = 'acorazado';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile' };
+const NEWEST = 'fraile';
 let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -349,6 +362,15 @@ class Unit {
       this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
+    } else if (type === 'fraile') {
+      this.body = sc.add.image(0, 0, 'fr_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.bh = sc.add.image(0, 0, 'fr_mano').setScale(0.11 * H / 487);
+      this.weapon = sc.add.image(0, 0, 'fr_arma').setOrigin(0.161, 0.633).setScale(0.881 * H / 512);
+      this.fh = sc.add.image(0, 0, 'fr_mano').setScale(0.11 * H / 487);
+      this.lamp = sc.add.image(0, 0, 'auraDot').setTint(0xffd36b).setBlendMode(Phaser.BlendModes.ADD);
+      this.parts = [this.bh, this.body, this.weapon, this.fh];
+      this.rig.add([this.bh, this.body, this.weapon, this.lamp, this.fh]);
+      this.drops = [[this.weapon, 0.6, -460, 6]];
     } else if (type === 'acorazado') {
       this.body = sc.add.image(0, 0, 'ac_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.weapon = sc.add.image(0, 0, 'ac_arma').setOrigin(0.2485, 0.499).setScale(0.58 * H / 512);
@@ -509,6 +531,7 @@ class Unit {
     else if (this.type === 'tercio') { o.pr = r.pr; }
     else if (this.type === 'muerte') { o.hf = [...r.hf]; o.sc = r.sc; }
     else if (this.type === 'acorazado') { o.mc = r.mc; o.sh = [...r.sh]; }
+    else if (this.type === 'fraile') { o.st = r.st; o.glow = 0; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
@@ -591,6 +614,7 @@ class Unit {
         else if (this.type === 'tercio') this.attackPike(o, t);
         else if (this.type === 'muerte') this.attackReap(o, t);
         else if (this.type === 'acorazado') this.attackMace(o, t);
+        else if (this.type === 'fraile') this.attackHeal(o, t);
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
@@ -788,6 +812,21 @@ class Unit {
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+  }
+  attackHeal(o, t) {
+    // alza el farolillo, la luz se intensifica y sale una bola dorada hacia el aliado
+    const r = this.cfg.rest, up = [0.36, -0.55];
+    if (t < 0.35) { const e = ease(t / 0.35); o.fh = lerp2(r.fh, up, e); o.st = lerp(r.st, -0.25, e); o.glow = e; o.rot = -0.05 * e; o.sy = 1 + 0.03 * e; }
+    else if (t < 0.6) { o.fh = up; o.st = -0.25 + 0.15 * Math.sin((t - 0.35) * 30) * (1 - (t - 0.35) / 0.25); o.glow = 1; o.rot = -0.05; }
+    else { const e = ease((t - 0.6) / 0.35); o.fh = lerp2(up, r.fh, e); o.st = lerp(-0.25, r.st, e); o.glow = 1 - e; o.rot = lerp(-0.05, 0, e); }
+    if (t >= 0.4 && !this.fired) { this.fired = true; this.castNext = true; }
+    if (t >= 0.95) this.set('idle');
+  }
+  healBy(n) {
+    if (!this.alive || this.state === 'die') return;
+    const before = this.hp; this.hp = Math.min(this.max, this.hp + n);
+    floatText(this.x, this.gy - H * this.cfg.h * (this.bigK || 1) - 18, '+' + Math.max(1, Math.round(this.hp - before)), '#7dffa0');
+    for (let i = 0; i < 12; i++) fx.push({ x: this.x + rand(-H * 0.3, H * 0.3), y: this.gy - rand(0, H * 0.9), vx: rand(-15, 15), vy: -rand(40, 90), g: 0, r: rand(2, 4), life: 0.7, t: 0.7, color: i % 3 ? 0x7dffa0 : 0xffe9a8 });
   }
   attackMace(o, t) {
     // mazazo: alza la maza por encima del yelmo y la descarga hacia delante contra el suelo; el escudo se queda delante
@@ -1014,7 +1053,19 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'acorazado') {
+    if (this.type === 'fraile') {
+      // el bastón cuelga de la mano delantera; el farolillo brilla siempre y más al curar
+      const a = o.st, sc = 0.881 * H / 512, lx = 75.6 * sc, ly = -116.3 * sc;
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(a);
+      const px = o.fh[0] * H + lx * Math.cos(a) - ly * Math.sin(a), py = o.fh[1] * H + lx * Math.sin(a) + ly * Math.cos(a);
+      const pulse = 0.5 + 0.5 * Math.sin(this.sc.time.now / 1000 * 3 + this.homeX);
+      this.lamp.setPosition(px, py).setScale(1.6 + 0.4 * pulse + 2.2 * o.glow).setAlpha(this.state === 'die' ? 0 : 0.45 + 0.15 * pulse + 0.4 * o.glow);
+      if (this.castNext) {
+        this.castNext = false;
+        const m = this.rig.getWorldTransformMatrix(), w = m.transformPoint(px, py);
+        castHeal(this, w.x, w.y);
+      }
+    } else if (this.type === 'acorazado') {
       this.blockT = Math.max(0, (this.blockT || 0) - dt);
       const b = this.blockT / 0.25;               // al bloquear, empuja el escudo hacia delante
       // pasiva: escudo agrandado durante unos segundos (crece rápido y vuelve a su tamaño al final)
@@ -1442,8 +1493,18 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
-function floatText(x, y, txt) {
-  const t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '30px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 7 }).setOrigin(0.5).setDepth(1000);
+function castHeal(u, sx, sy) {
+  // bola de luz dorada que vuela en arco hasta el aliado y lo cura al llegar
+  const tg = u.healTarget && u.healTarget.alive ? u.healTarget : null;
+  const tx = tg ? tg.x : u.x + u.dir * H * 2.4, ty = tg ? tg.gy - H * 0.55 : u.gy - H * 0.6;
+  burst(sx, sy, 0xffe9a8, 8, 90);
+  if (tg === u) { u.healBy(u.cfg.heal); return; }
+  const T = Math.max(0.3, Math.abs(tx - sx) / 520), g = 500;
+  const img = scene.add.image(sx, sy, 'auraDot').setTint(0xffe27a).setScale(1.3).setBlendMode(Phaser.BlendModes.ADD).setDepth(955);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, heal: u.cfg.heal, spin: 0.01, trail: 0xffe27a });
+}
+function floatText(x, y, txt, color) {
+  const t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '30px', color: color || '#ffffff', stroke: '#1e2235', strokeThickness: 7 }).setOrigin(0.5).setDepth(1000);
   scene.tweens.add({ targets: t, y: y - 46, alpha: { from: 1, to: 0 }, scale: { from: 1.25, to: 0.9 }, duration: 750 / timeScale, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
 }
 
@@ -1481,6 +1542,7 @@ function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
     if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise'].includes(u.state)) continue;
+    if (u.type === 'fraile') { friarLogic(u, dt); continue; }
     const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
     if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
     if (u.type === 'muerte') {
@@ -1512,6 +1574,24 @@ function fightLogic(dt) {
     else if (u.state === 'walk' && atWall) u.set('idle');
   }
 }
+function friarLogic(u, dt) {
+  const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
+  // aliados heridos a su alcance (incluido él mismo), el más herido primero
+  const hurt = units.filter(v => v.team === u.team && v.alive && v.hp < v.max && !['die', 'spawn'].includes(v.state) && Math.abs(v.x - u.x) <= u.cfg.range)
+    .sort((a, b) => a.hp / a.max - b.hp / b.max);
+  u.cd -= dt;
+  if (u.state === 'attack') return;
+  if (hurt.length && u.cd <= 0) {
+    u.healTarget = hurt[0]; if (hurt[0] !== u) u.dir = Math.sign(hurt[0].x - u.x) || u.teamDir;
+    u.set('attack'); u.cd = rand(...u.cfg.cd); return;
+  }
+  // se mantiene detrás: no se acerca al enemigo más de su distancia de seguridad ni adelanta al aliado más avanzado
+  const front = units.filter(v => v.team === u.team && v !== u && v.alive && v.state !== 'die').reduce((m, v) => u.teamDir > 0 ? Math.max(m, v.x) : Math.min(m, v.x), u.teamDir > 0 ? -Infinity : Infinity);
+  const tooClose = dist <= u.cfg.keepBack, aheadOfAllies = isFinite(front) && (u.x - front) * u.teamDir > -H * 0.6;
+  const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
+  if (tooClose || aheadOfAllies || atWall) { if (u.state === 'walk') u.set('idle'); u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir; }
+  else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
+}
 function updateArrows(dt) {
   arrows = arrows.filter(a => {
     if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
@@ -1527,8 +1607,10 @@ function updateArrows(dt) {
       }
     }
     a.img.setPosition(a.x, a.y);
+    if (a.trail && Math.random() < 0.8) fx.push({ x: a.x, y: a.y, vx: rand(-15, 15), vy: rand(-15, 15), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: a.trail });
     if (a.spin) a.img.rotation += a.spin * dt; else a.img.setRotation(Math.atan2(a.vy, a.vx));
     if (a.t >= a.T) {
+      if (a.heal) { if (a.target) a.target.healBy(a.heal); else burst(a.x, a.y, 0xffe9a8, 10, 110); a.img.destroy(); return false; }
       if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg, null, a.fromX); a.img.destroy(); return false; }
       burst(a.x, a.y, 0xe8d3b0, 6, 90); a.stuck = 0.6; return true;
     }
@@ -1579,7 +1661,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -1635,6 +1717,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
+      L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
       L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
       L('mu_cuerpo', 'muerte_cuerpo'); L('mu_arma', 'muerte_arma'); L('mu_mano', 'muerte_mano');
       L('ter_cuerpo', 'tercio_cuerpo'); L('ter_pica', 'tercio_arma'); L('ter_mano', 'tercio_mano'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
