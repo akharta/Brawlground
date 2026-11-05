@@ -340,7 +340,7 @@ const CH = {
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
   desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
-    rest: { bh: [-0.322, -0.33], fh: [0.382, -0.33] } },
+    rest: { bh: [-0.3, -0.22], fh: [0.33, -0.22] } },      // puños caídos, arrastrando las cadenas
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
   centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
     rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.36, -0.72], mg: [0.104, -0.151] } },
@@ -966,7 +966,7 @@ class Unit {
       else if (whip && whip.k > 0.01) T = [ax + Math.max(L * LINK.hang, whip.k * whip.reach), ay];   // recto, a la altura del puño
       // número de eslabones según la distancia a cubrir (un poco de holgura para que cuelgue)
       const want = !(whip && whip.k > 0.01) ? LINK.hang : Math.max(LINK.hang, Math.min(ch.links.length, Math.ceil(Math.hypot(T[0] - ax, T[1] - ay) / L)));
-      if (!ch.pts.length) { for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax, ay + i * L]); ch.prev = ch.pts.map(p => [...p]); }
+      if (!ch.pts.length) { for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax - i * L * 0.9, Math.min(ay + i * L, -4)]); ch.prev = ch.pts.map(p => [...p]); }
       while (ch.pts.length - 1 < want) { const last = ch.pts[ch.pts.length - 1]; ch.pts.push([...last]); ch.prev.push([...last]); }   // suelta eslabones
       while (ch.pts.length - 1 > want) { ch.pts.pop(); ch.prev.pop(); }                                                         // los recoge
       const pts = ch.pts, n = pts.length - 1, taut = !!(T && whip && whip.k > 0.01);
@@ -991,7 +991,7 @@ class Unit {
           else if (!pinA && !pinB) { a[0] += dx * k * 0.5; a[1] += dy * k * 0.5; b[0] -= dx * k * 0.5; b[1] -= dy * k * 0.5; }
         }
         pts[0][0] = ax; pts[0][1] = ay;
-        for (let i = 1; i <= n; i++) if (pts[i][1] > -4) { pts[i][1] = -4; ch.prev[i][0] = lerp(ch.prev[i][0], pts[i][0], 0.3); }   // suelo con rozamiento
+        for (let i = 1; i <= n; i++) if (pts[i][1] > -4) { pts[i][1] = -4; ch.prev[i][0] = lerp(ch.prev[i][0], pts[i][0], 0.3); if (!T) pts[i][0] -= 0.25; }   // suelo con rozamiento; se tiende hacia atrás
       }
       }
       ch.links.forEach((l, i) => {
@@ -1293,6 +1293,8 @@ class Unit {
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
     if (this.type === 'desencadenado') {
       this.rig.scaleX *= 1.2; this.rig.scaleY *= 1.2;            // ascendido: más grande que el resto
+      // cuanto más bajo va el puño, más cae hacia delante (pesado, sin guardia)
+      for (const [img, hnd] of [[this.bh, o.bh], [this.fh, o.fh]]) img.setRotation(0.45 * Math.max(0, Math.min(1, (hnd[1] + 0.42) / 0.23)));
       this.layChains(o, dt);
       if (this.state !== 'die' && Math.random() < 0.05) fx.push({ x: this.x + rand(-0.25, 0.25) * H, y: this.gy - rand(0.3, 0.95) * H, vx: 0, vy: -20, g: 0, r: rand(2, 3), life: 0.5, t: 0.5, color: 0xff3a2a });
     } else if (this.type === 'centinela') {
