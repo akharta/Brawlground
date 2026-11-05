@@ -93,7 +93,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado y Fraile.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile y Catapulta.</p>
     </div>
   </header>
 
@@ -132,6 +132,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="muerte" aria-pressed="false">Muerte</button>
       <button data-char="acorazado" aria-pressed="false">Acorazado</button>
       <button data-char="fraile" aria-pressed="false">Fraile</button>
+      <button data-char="catapulta" aria-pressed="false">Catapulta</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -256,6 +257,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>15 en área cada 4 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card epic" aria-label="Carta de la Catapulta">
+        <div class="cost">6</div>
+        <div class="art"><img src="img/catapulta_carta.png" alt="Ilustración de la Catapulta"></div>
+        <div class="name">Catapulta</div>
+        <div class="rar">Épica</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -304,6 +314,9 @@ const CH = {
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
+  // Asedio: dispara rocas en parábola desde muy lejos; daño en área, triple a castillos; indefensa de cerca.
+  catapulta: { hp: 120, dmg: [30, 40], speed: 26, cd: [3.4, 3.8], range: H * 4.3, minRange: H * 1.7, ranged: true, h: 1.8, siege: 3, splash: H * 0.85,
+    rest: { arm: -2.415, bh: [0, 0], fh: [0, 0] } },
   // Curandero: no ataca; se queda atrás y lanza luz curativa desde el farolillo al aliado más herido (o a sí mismo).
   fraile: { hp: 60, heal: 15, speed: 46, cd: [4, 4], range: H * 2.2, keepBack: H * 2.7, ranged: true, h: 1.05,
     rest: { st: 0.07, bh: [-0.243, -0.275], fh: [0.321, -0.363] } },
@@ -317,7 +330,7 @@ const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 }
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const RARITY = { catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
 const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -328,8 +341,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile' };
-const NEWEST = 'fraile';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta' };
+const NEWEST = 'catapulta';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -369,6 +382,16 @@ class Unit {
       this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
+    } else if (type === 'catapulta') {
+      this.rock = sc.add.image(0, 0, 'ca_roca').setScale(0.345 * H / 512);
+      this.arm = sc.add.image(0, 0, 'ca_arma').setFlipY(true).setOrigin(0.0646, 0.489).setScale(0.957 * H / 512);
+      this.body = sc.add.image(-0.581 * H, -0.917 * H, 'ca_cuerpo').setOrigin(0, 0).setScale(1.162 * H / 512);
+      this.wb = sc.add.image(-0.278 * H, -0.167 * H, 'ca_rueda').setScale(0.333 * H / 512);
+      this.wf = sc.add.image(0.356 * H, -0.167 * H, 'ca_rueda').setScale(0.333 * H / 512);
+      this.parts = [this.rock, this.arm, this.body, this.wb, this.wf];
+      this.rig.add(this.parts);
+      this.drops = [[this.arm, -0.5, -420, 5], [this.wf, 0.8, -380, -9]];
+      this.shadow.setSize(H * 1.55, H * 0.22); this.wheelA = 0;
     } else if (type === 'fraile') {
       this.body = sc.add.image(0, 0, 'fr_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.bh = sc.add.image(0, 0, 'fr_mano').setScale(0.11 * H / 487);
@@ -497,7 +520,7 @@ class Unit {
   get gy() { return GROUND + this.lane; }
   reset(x) {
     this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-18, 16)) : 0;
-    this.dir = this.teamDir; this.tpT = 1.0; this.shadeT = 2.5; this.hem = []; this.atkN = 0; this.tpTarget = null; this.dashed = false; this.fortUsed = false; this.fortT = 0;
+    this.dir = this.teamDir; this.tpT = 1.0; this.shadeT = 2.5; this.hem = []; this.atkN = 0; this.tpTarget = null; this.dashed = false; this.fortUsed = false; this.fortT = 0; this.thrown = false; this.reloadT = 0;
     this.root.y = this.gy; this.root.setDepth(this.gy);
     this.hp = this.max = this.cfg.hp; this.alive = true; this.inPlace = false;
     this.cd = rand(0.2, 0.6); this.hurtT = 0; this.fired = false; this.poofed = false; this.vib = 0;
@@ -539,6 +562,7 @@ class Unit {
     else if (this.type === 'muerte') { o.hf = [...r.hf]; o.sc = r.sc; }
     else if (this.type === 'acorazado') { o.mc = r.mc; o.sh = [...r.sh]; }
     else if (this.type === 'fraile') { o.st = r.st; o.glow = 0; }
+    else if (this.type === 'catapulta') { o.arm = r.arm; o.loaded = !this.thrown; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
@@ -594,6 +618,7 @@ class Unit {
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
         if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
+        if (this.type === 'catapulta') { o.hop = 0; o.sy = 1; o.rot = Math.sin(t * 9) * 0.012; }
         if (o.mc !== undefined) { o.hop *= 0.5; o.rot *= 0.5; o.mc += Math.sin(ph) * 0.06; o.sh[1] -= Math.abs(Math.sin(ph)) * 0.02; if (Math.abs(Math.sin(ph)) < 0.12 && this.sc.time.now - (this.stepT || 0) > 250) { this.stepT = this.sc.time.now; burst(this.x, this.gy - 2, 0xe8d3b0, 3, 50); } }
         if (o.tail !== undefined) {   // galope: el cuerpo se mece, la cabeza contrarresta y la cola va al viento
           const g = t * 15;
@@ -622,6 +647,7 @@ class Unit {
         else if (this.type === 'muerte') this.attackReap(o, t);
         else if (this.type === 'acorazado') this.attackMace(o, t);
         else if (this.type === 'fraile') this.attackHeal(o, t);
+        else if (this.type === 'catapulta') this.attackThrow(o, t);
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
@@ -819,6 +845,17 @@ class Unit {
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+  }
+  attackThrow(o, t) {
+    // tensa el brazo hacia atrás, lo suelta de golpe, la roca sale volando y después recarga
+    const r = this.cfg.rest, back = -2.8, fwd = -0.75;
+    if (t < 0.6) { const e = ease(t / 0.6); o.arm = lerp(r.arm, back, e) + Math.sin(t * 60) * 0.01 * e; o.rot = 0.03 * e; o.sy = 1 - 0.03 * e; }
+    else if (t < 0.72) { const e = easeIn((t - 0.6) / 0.12); o.arm = lerp(back, fwd, e); o.rot = lerp(0.03, -0.05, e);
+      if (o.arm > -1.45 && !this.fired) { this.fired = true; this.releaseNext = true; } }
+    else if (t < 0.95) { o.arm = fwd + Math.sin((t - 0.72) * 40) * 0.08 * (1 - (t - 0.72) / 0.23); o.rot = -0.05 * (1 - (t - 0.72) / 0.23); }
+    else { const e = ease((t - 0.95) / 0.9); o.arm = lerp(fwd, r.arm, e); }
+    if (!this.fired && t >= 0.72) { this.fired = true; this.releaseNext = true; }
+    if (t >= 1.85) { if (this.thrown) { this.thrown = false; this.reloadT = 0.25; } this.set('idle'); }
   }
   attackHeal(o, t) {
     // alza el farolillo, la luz se intensifica y sale una bola dorada hacia el aliado
@@ -1070,7 +1107,24 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'fraile') {
+    if (this.type === 'catapulta') {
+      // brazo con pivote en la base del armazón; la roca va en el cazo; las ruedas giran con el avance
+      const piv = [0.2 * H, -0.617 * H], a = o.arm;
+      this.arm.setPosition(piv[0], piv[1]).setRotation(a);
+      const rx = piv[0] + 0.728 * H * Math.cos(a) - 0.071 * H * Math.sin(a), ry = piv[1] + 0.728 * H * Math.sin(a) + 0.071 * H * Math.cos(a);
+      this.rock.setPosition(rx, ry).setRotation(a + 2.415);
+      if (this.releaseNext) {
+        this.releaseNext = false; this.thrown = true;
+        const w = this.rig.getWorldTransformMatrix().transformPoint(rx, ry); throwRock(this, w.x, w.y);
+      }
+      this.reloadT = Math.max(0, (this.reloadT || 0) - dt);
+      this.rock.setVisible(!this.thrown && this.state !== 'die').setScale(0.345 * H / 512 * (1 - 2.5 * this.reloadT));
+      const vx = dt > 0 ? (this.x - (this.lastX ?? this.x)) / dt : 0; this.lastX = this.x;
+      this.wheelA += vx * this.dir * dt / (0.167 * H);
+      this.wb.setRotation(this.wheelA); this.wf.setRotation(this.wheelA);
+      this.body.y = -0.917 * H - (this.state === 'walk' ? Math.abs(Math.sin(this.t * 9)) * 2 : 0);
+      this.rig.scaleX *= 1.3; this.rig.scaleY *= 1.3;          // máquina de asedio: más grande que los soldados
+    } else if (this.type === 'fraile') {
       // el bastón cuelga de la mano delantera; el farolillo brilla siempre y más al curar
       const a = o.st, sc = 0.881 * H / 512, lx = 75.6 * sc, ly = -116.3 * sc;
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(a);
@@ -1506,6 +1560,32 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+function throwRock(u, sx, sy) {
+  // roca en parábola alta hacia el objetivo (o hacia delante en el modo animaciones)
+  const tg = u.siegeTarget && u.siegeTarget.alive ? u.siegeTarget : null;
+  let tx = tg ? tg.x : u.x + u.dir * H * 4, ty = (tg ? tg.gy : u.gy) - 8;
+  let T = Math.max(0.95, Math.abs(tx - sx) / 380);
+  if (tg && tg.state === 'walk' && tg.cfg && tg.cfg.speed) { tx += tg.dir * tg.cfg.speed * T * 0.9; T = Math.max(0.95, Math.abs(tx - sx) / 380); }   // apunta adelantado
+  const g = 1100;
+  const img = scene.add.image(sx, sy, 'ca_roca').setScale(0.345 * H / 512).setDepth(955);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, boom: u, spin: 6 * u.dir });
+  burst(sx, sy, 0xc9a77a, 6, 80);
+}
+function rockBoom(u, x, y) {
+  // impacto: polvo, piedras, grieta en el suelo y daño en área (triple a castillos)
+  burst(x, y, 0xd9b98a, 18, 220); burst(x, y - 10, 0x9aa1b3, 10, 260);
+  for (let i = 0; i < 6; i++) fx.push({ x, y: y - 6, vx: rand(-160, 160), vy: -rand(180, 320), r: rand(3, 6), life: 0.7, t: 0.7, color: 0x8b8fa0 });
+  const g = scene.add.graphics().setDepth(y - 30).setPosition(x, y);
+  g.fillStyle(0x6b4a2b, 0.45).fillEllipse(0, 0, H * 0.9, H * 0.22);
+  g.lineStyle(3, 0x3d2a18, 0.8);
+  for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + rand(-0.3, 0.3); g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * H * 0.3, Math.sin(a) * H * 0.08); g.lineTo(Math.cos(a + 0.2) * H * 0.42, Math.sin(a + 0.2) * H * 0.1); g.strokePath(); }
+  scene.tweens.add({ targets: g, alpha: 0, delay: 1800 / timeScale, duration: 1200 / timeScale, onComplete: () => g.destroy() });
+  const ring = scene.add.graphics().setDepth(965).setPosition(x, y);
+  ring.lineStyle(5, 0xffe9c2, 0.9).strokeEllipse(0, 0, u.cfg.splash * 2, u.cfg.splash * 0.5);
+  scene.tweens.add({ targets: ring, alpha: 0, scale: { from: 0.4, to: 1 }, duration: 380 / timeScale, onComplete: () => ring.destroy() });
+  if (mode !== 'fight') return;
+  enemiesOf(u).filter(v => Math.abs(v.x - x) <= u.cfg.splash).forEach(v => v.damage(Math.round(rand(...u.cfg.dmg) * (v.isCastle ? u.cfg.siege : 1)), u, x));
+}
 function healPulse(u) {
   // onda de luz dorada desde el Fraile; cura a todos los aliados dentro del aura (incluido él)
   const R = u.cfg.range;
@@ -1568,6 +1648,7 @@ function fightLogic(dt) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
     if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise'].includes(u.state)) continue;
     if (u.type === 'fraile') { friarLogic(u, dt); continue; }
+    if (u.type === 'catapulta') { siegeLogic(u, dt); continue; }
     const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
     if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
     if (u.type === 'muerte') {
@@ -1598,6 +1679,22 @@ function fightLogic(dt) {
     } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
     else if (u.state === 'walk' && atWall) u.set('idle');
   }
+}
+function siegeLogic(u, dt) {
+  // dispara a los enemigos entre su alcance mínimo y máximo; si se le pegan, no puede hacer nada
+  const foes = enemiesOf(u), near = foes.filter(v => Math.abs(v.x - u.x) <= u.cfg.range);
+  const shootable = near.filter(v => Math.abs(v.x - u.x) >= u.cfg.minRange).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x));
+  u.cd -= dt;
+  if (u.state === 'attack') return;
+  if (near.length) {
+    if (u.state === 'walk') u.set('idle');
+    const f = shootable[0] || near[0]; u.dir = Math.sign(f.x - u.x) || u.teamDir;
+    if (shootable.length && u.cd <= 0) { u.siegeTarget = shootable[0]; u.set('attack'); u.cd = rand(...u.cfg.cd); }
+    return;
+  }
+  const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
+  if (atWall) { if (u.state === 'walk') u.set('idle'); }
+  else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
 }
 function friarLogic(u, dt) {
   const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
@@ -1634,6 +1731,7 @@ function updateArrows(dt) {
     if (a.trail && Math.random() < 0.8) fx.push({ x: a.x, y: a.y, vx: rand(-15, 15), vy: rand(-15, 15), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: a.trail });
     if (a.spin) a.img.rotation += a.spin * dt; else a.img.setRotation(Math.atan2(a.vy, a.vx));
     if (a.t >= a.T) {
+      if (a.boom) { rockBoom(a.boom, a.x, a.y); a.img.destroy(); return false; }
       if (a.heal) { if (a.target) a.target.healBy(a.heal); else burst(a.x, a.y, 0xffe9a8, 10, 110); a.img.destroy(); return false; }
       if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg, null, a.fromX); a.img.destroy(); return false; }
       burst(a.x, a.y, 0xe8d3b0, 6, 90); a.stuck = 0.6; return true;
@@ -1688,7 +1786,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -1749,6 +1847,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
+      L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
       L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
       L('mu_cuerpo', 'muerte_cuerpo'); L('mu_arma', 'muerte_arma'); L('mu_mano', 'muerte_mano');
