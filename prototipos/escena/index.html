@@ -62,6 +62,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .pick { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 3px solid var(--outline); border-radius: 12px; padding: 4px 6px 4px 12px; }
 .pick span { color: var(--muted); font-size: .9rem; }
 .pick select { font-family: var(--font-display); font-size: 1rem; background: var(--panel-hi); color: var(--ink); border: 0; border-radius: 8px; padding: 6px 8px; }
+.side-picks { display: grid; gap: 6px; }
 .vs { font-family: var(--font-display); color: var(--gold); }
 .hint { color: var(--muted); font-size: .9rem; margin: 0; max-width: 65ch; }
 .cards { display: flex; flex-wrap: wrap; gap: 26px 22px; padding-top: 10px; }
@@ -107,9 +108,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   <div id="game"></div>
 
   <div class="controls" id="fight-controls">
-    <label class="pick"><span>Bando azul</span><select id="pick-blue"></select></label>
+    <div class="side-picks">
+      <label class="pick"><span>Bando azul</span><select id="pick-blue"></select></label>
+      <label class="pick"><span>Acompañante</span><select id="pick-blue2"></select></label>
+    </div>
     <span class="vs">contra</span>
-    <label class="pick"><span>Bando morado</span><select id="pick-purple"></select></label>
+    <div class="side-picks">
+      <label class="pick"><span>Bando morado</span><select id="pick-purple"></select></label>
+      <label class="pick"><span>Acompañante</span><select id="pick-purple2"></select></label>
+    </div>
   </div>
   <div class="controls" id="anim-controls" hidden>
     <div class="seg" role="group" aria-label="Personaje">
@@ -323,7 +330,7 @@ const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
 const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile' };
 const NEWEST = 'fraile';
-let pickBlue = NEWEST, pickPurple = 'legionario';
+let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
 class Unit {
@@ -1673,7 +1680,10 @@ function buildMode() {
   spawnTimers.forEach(clearTimeout); spawnTimers = [];
   clearUnits();
   if (mode === 'fight') {
+    // el acompañante sale un poco por delante del principal
     const plan = [[pickBlue, 'blue', 140, 0], [pickPurple, 'purple', W - 140, 0]];
+    if (pickBlue2) plan.push([pickBlue2, 'blue', 210, 150]);
+    if (pickPurple2) plan.push([pickPurple2, 'purple', W - 210, 150]);
     for (const [type, team, x, delay] of plan) {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
@@ -1750,7 +1760,7 @@ function start() {
 /* ---- controles ---- */
 const $ = id => document.getElementById(id);
 const HINTS = {
-  fight: 'Uno contra uno: elige qué personaje lleva cada bando. Cuando uno cae, vuelve a salir de su castillo.',
+  fight: 'Elige qué personaje lleva cada bando y, si quieres, un acompañante (por ejemplo, un aliado para que el Fraile lo cure). Quien cae vuelve a salir de su castillo.',
   anim: 'Un solo personaje. Elige cuál y pulsa cada botón para ver esa animación; con «Cámara lenta» se aprecia el detalle.'
 };
 function setMode(m) {
@@ -1763,10 +1773,15 @@ function setMode(m) {
   if (scene) buildMode();
 }
 $('hint').textContent = HINTS.fight;
-for (const [id, val] of [['pick-blue', pickBlue], ['pick-purple', pickPurple]]) {
+for (const [id, val] of [['pick-blue', pickBlue], ['pick-purple', pickPurple], ['pick-blue2', pickBlue2], ['pick-purple2', pickPurple2]]) {
   const sel = $(id);
+  if (id.endsWith('2')) sel.add(new Option('Sin acompañante', '', false, val === ''));
   for (const k of Object.keys(NAMES)) sel.add(new Option(NAMES[k] + (k === NEWEST ? ' (nuevo)' : ''), k, false, k === val));
-  sel.onchange = () => { if (id === 'pick-blue') pickBlue = sel.value; else pickPurple = sel.value; if (scene && mode === 'fight') buildMode(); };
+  sel.onchange = () => {
+    if (id === 'pick-blue') pickBlue = sel.value; else if (id === 'pick-purple') pickPurple = sel.value;
+    else if (id === 'pick-blue2') pickBlue2 = sel.value; else pickPurple2 = sel.value;
+    if (scene && mode === 'fight') buildMode();
+  };
 }
 $('mode-fight').onclick = () => setMode('fight');
 $('mode-anim').onclick = () => setMode('anim');
