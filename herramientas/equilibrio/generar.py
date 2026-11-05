@@ -10,7 +10,7 @@ cards = {}
 for m in re.finditer(r'<div class="cost">(\d+)</div>\s*<div class="art"><img src="img/(\w+)_carta.png".*?<dl>(.*?)</dl>', src, re.S):
     cards[m.group(2)] = (int(m.group(1)), re.findall(r'<dt>(.*?)</dt><dd>(.*?)</dd>', m.group(3)))
 def card(k): return cards.get(k, (None, []))
-RN = {'comun': 'Común', 'rara': 'Rara', 'epica': 'Épica', 'legendaria': 'Legendaria', 'ascendida': 'Ascendida'}
+RN = {'comun': 'Común', 'poco': 'Poco común', 'rara': 'Rara', 'epica': 'Épica', 'legendaria': 'Legendaria', 'ascendida': 'Ascendida'}
 # duelos
 W = {k: [0, 0] for k in keys}; M = {}
 for r in d['duels']:

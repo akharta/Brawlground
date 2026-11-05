@@ -7,7 +7,7 @@
 :root {
   --bg: #eef0f4; --panel: #ffffff; --ink: #1e2235; --muted: #5d6276; --line: #d6d9e3;
   --accent: #7c4ddb; --win: #2f9e5b; --lose: #d9473f; --mid: #f1e7c9;
-  --r-comun: #8a8fa3; --r-rara: #3b82f6; --r-epica: #a855f7; --r-legendaria: #c98a0b; --r-ascendida: #e0393f;
+  --r-comun: #8a8fa3; --r-poco: #2f9e5b; --r-rara: #3b82f6; --r-epica: #a855f7; --r-legendaria: #c98a0b; --r-ascendida: #e0393f;
   --hot-bg: #fde4e2; --hot-fg: #a52a24; --cold-bg: #e2ecfd; --cold-fg: #1f56b8; --ok-bg: #e3f4e8; --ok-fg: #1f7a43; --role-bg: #ecebf2; --role-fg: #4d4f63;
   --display: 'Lilita One', 'Trebuchet MS', sans-serif; --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
 }
@@ -46,7 +46,7 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
 .stats thead th[aria-sort="descending"]::after { content: ' ▼'; } .stats thead th[aria-sort="ascending"]::after { content: ' ▲'; }
 .stats tbody th { font-weight: 800; white-space: nowrap; }
 .nm { display: block; } .rar { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-.r-comun { color: var(--r-comun); } .r-rara { color: var(--r-rara); } .r-epica { color: var(--r-epica); } .r-legendaria { color: var(--r-legendaria); } .r-ascendida { color: var(--r-ascendida); }
+.r-comun { color: var(--r-comun); } .r-poco { color: var(--r-poco); } .r-rara { color: var(--r-rara); } .r-epica { color: var(--r-epica); } .r-legendaria { color: var(--r-legendaria); } .r-ascendida { color: var(--r-ascendida); }
 .num { text-align: right !important; white-space: nowrap; } .strong { font-weight: 800; }
 .bar { display: inline-block; width: 52px; height: 7px; border-radius: 4px; background: var(--line); margin-right: 8px; vertical-align: middle; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--accent); }
@@ -120,15 +120,13 @@ svg { width: 100%; height: auto; display: block; }
     <h2>Lo que veo en esta ronda</h2>
     <div class="panel">
       <ul class="notes">
-        <li><b>Los tres caros mandan, y El Desencadenado casi no pierde</b> (94 % de duelos). Es lógico que una ascendida gane, pero su única mala pareja es el Centinela, que lo abate desde lejos antes de que llegue.</li>
-        <li><b>El Lobo, con coste 1, gana la mitad de sus duelos.</b> Es la carta más rentable del juego por energía: mucho daño, embestida y llega el primero.</li>
-        <li><b>Kung fu está roto hacia abajo:</b> su carta dice coste 1 aunque ya es épica, tiene 40 de vida y gana el 7 %. Hay que rehacerle los números, como quedamos.</li>
-        <li><b>El Samurái tiene mucha vida (140) pero poco daño real</b> (7,5 por segundo): un solo tajo por ataque y cadencia lenta. Gana el 36 % con coste 3.</li>
-        <li><b>El Acorazado casi no hace daño (6,7 por segundo) y aun así gana el 73 %:</b> es un muro. Puede que esté barato a coste 4. Solo el Tercio, con su pica larga, lo gana siempre.</li>
-        <li><b>El Pistolero (coste 4) gana solo el 40 %:</b> con 60 de vida cae rápido en cuanto le alcanzan.</li>
-        <li><b>El Centinela gana el 72 % con solo 100 de vida:</b> el francotirador desde lejos castiga mucho a los que tienen que acercarse.</li>
-        <li><b>Arquera y Tercio salen flojos en duelo,</b> pero su papel es ir detrás de un tanque. Conviene juzgarlos en batalla antes de tocarlos.</li>
-        <li><b>El Imparable</b> no llega a transformarse en un duelo (necesita 7 bajas), así que aquí solo se mide su forma humana, que ya gana el 92 %.</li>
+        <li><b>Lin, el Monje, se ha pasado de largo:</b> de ganar el 7 % a ganar el 88 % con coste 1. Con 130 de vida, 15–19 por puñetazo y la patada siempre crítica, es la carta más rentable del juego con diferencia.</li>
+        <li><b>Elyss gana el 100 % de sus duelos</b> sin llegar a transformarse (no consigue 5 bajas en un duelo). Con 180 de vida y 35 por tajo, su forma humana ya no tiene rival.</li>
+        <li><b>Kazú, el Ninja, ahora a coste 2, gana el 67 %:</b> la subida de vida (90) y el teletransporte a cualquier unidad lo han hecho muy fuerte para lo que cuesta.</li>
+        <li><b>Jhotum baja al 77 %</b> con su nuevo daño (24–28) y coste 6: queda en una zona razonable para una legendaria.</li>
+        <li><b>Garra, el Lobo, baja al 27 %</b> sin haber cambiado casi nada: ahora sus rivales tienen más vida (Tulio 120, Lin 130, Kazú 90).</li>
+        <li><b>Rodrigo, Tulio y Ailin quedan muy abajo</b> (16–22 %). Es esperable para comunes de coste 2–3, pero Rodrigo apenas hace daño (5,8 por segundo).</li>
+        <li><b>Gustav, el Acorazado, baja al 47 %</b> con menos daño y más lento atacando; sigue siendo un muro, ahora menos dominante.</li>
       </ul>
     </div>
     <p class="caveat">Ojo: son duelos uno contra uno sin energía, torres ni castillos. No miden el daño en área, la curación ni el asedio, y los números de daño por energía solo son una referencia.</p>

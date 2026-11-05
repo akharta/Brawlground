@@ -17,6 +17,7 @@
   --gold: #ffc83d;
   --blue: #3b82f6;
   --common: #9aa3bd;
+  --uncommon: #3ccf86;
   --rare: #4da3ff;
   --epic: #a855f7;
   --legend: #fbbf24;
@@ -72,6 +73,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   background: var(--common); border: 4px solid var(--outline); border-radius: 16px;
   padding: 8px; position: relative; box-shadow: 0 5px 0 var(--outline);
 }
+.card.uncommon { background: var(--uncommon); }
 .card.rare { background: var(--rare); }
 .card.epic { background: var(--epic); }
 .card.legend { background: var(--legend); }
@@ -158,7 +160,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   <p class="hint" id="hint"></p>
 
   <div class="cards">
-    <div class="cardbox">
+    <div class="card">
       <div class="card" aria-label="Carta de Tulio, el Legionario">
         <div class="cost">2</div>
         <div class="art"><img src="img/legionario_carta.png" alt="Ilustración de Tulio, el Legionario"></div>
@@ -166,9 +168,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Legionario</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>12</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>11</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card">
       <div class="card" aria-label="Carta de Ailin, la Arquera">
         <div class="cost">2</div>
         <div class="art"><img src="img/arquera_carta.png" alt="Ilustración de Ailin, la Arquera"></div>
@@ -176,29 +178,29 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">la Arquera</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>55</dd><dt>Daño</dt><dd>12</dd><dt>Alcance</dt><dd>Largo</dd></dl>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>13</dd><dt>Alcance</dt><dd>Largo</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card uncommon">
       <div class="card rare" aria-label="Carta de Brynja, la Valkiria">
-        <div class="cost">4</div>
+        <div class="cost">3</div>
         <div class="art"><img src="img/valkiria_carta.png" alt="Ilustración de Brynja, la Valkiria"></div>
         <div class="name">Brynja</div>
         <div class="cls">la Valkiria</div>
-        <div class="rar">Rara</div>
+        <div class="rar">Poco común</div>
       </div>
-      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>20 en área</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>17 en área</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card rare">
       <div class="card rare" aria-label="Carta de Kazú, el Ninja">
-        <div class="cost">3</div>
+        <div class="cost">2</div>
         <div class="art"><img src="img/ninja_carta.png" alt="Ilustración de Kazú, el Ninja"></div>
         <div class="name">Kazú</div>
         <div class="cls">el Ninja</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>17</dd><dt>Habilidad</dt><dd>Teletransporte</dd></dl>
+      <dl><dt>Vida</dt><dd>90</dd><dt>Daño</dt><dd>19</dd><dt>Habilidad</dt><dd>Teletransporte</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card epic">
       <div class="card epic" aria-label="Carta de Cole, el Pistolero">
         <div class="cost">4</div>
         <div class="art"><img src="img/pistolero_carta.png" alt="Ilustración de Cole, el Pistolero"></div>
@@ -206,29 +208,29 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Pistolero</div>
         <div class="rar">Épica</div>
       </div>
-      <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>23 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
+      <dl><dt>Vida</dt><dd>70</dd><dt>Daño</dt><dd>28 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card uncommon">
       <div class="card" aria-label="Carta de Garra, el Lobo">
         <div class="cost">1</div>
         <div class="art"><img src="img/lobo_carta.png" alt="Ilustración de Garra, el Lobo"></div>
         <div class="name">Garra</div>
         <div class="cls">el Lobo</div>
-        <div class="rar">Común</div>
+        <div class="rar">Poco común</div>
       </div>
       <dl><dt>Vida</dt><dd>50</dd><dt>Daño</dt><dd>20</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card uncommon">
       <div class="card rare" aria-label="Carta de Hayato, el Samurái">
         <div class="cost">3</div>
         <div class="art"><img src="img/samurai_carta.png" alt="Ilustración de Hayato, el Samurái"></div>
         <div class="name">Hayato</div>
         <div class="cls">el Samurái</div>
-        <div class="rar">Rara</div>
+        <div class="rar">Poco común</div>
       </div>
-      <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>19</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
+      <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>30 (siempre crítico)</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card epic">
       <div class="card epic" aria-label="Carta de Lin, el Monje">
         <div class="cost">1</div>
         <div class="art"><img src="img/kungfu_carta.png" alt="Ilustración de Lin, el Monje"></div>
@@ -236,9 +238,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Monje</div>
         <div class="rar">Épica</div>
       </div>
-      <dl><dt>Vida</dt><dd>40</dd><dt>Daño</dt><dd>16 (combo)</dd><dt>Ataques</dt><dd>Combo y patada giratoria</dd></dl>
+      <dl><dt>Vida</dt><dd>130</dd><dt>Daño</dt><dd>17 por puñetazo</dd><dt>Ataques</dt><dd>Combo y patada giratoria</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card">
       <div class="card" aria-label="Carta de Rodrigo, el Tercio">
         <div class="cost">3</div>
         <div class="art"><img src="img/tercio_carta.png" alt="Ilustración de Rodrigo, el Tercio"></div>
@@ -246,9 +248,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Tercio</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>15 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga, empuja</dd></dl>
+      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>13 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga, empuja</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card legend">
       <div class="card legend" aria-label="Carta de Velkara, la Muerte">
         <div class="cost">5</div>
         <div class="art"><img src="img/muerte_carta.png" alt="Ilustración de Velkara, la Muerte"></div>
@@ -256,9 +258,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">la Muerte</div>
         <div class="rar">Legendaria</div>
       </div>
-      <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>30 en área</dd><dt>Habilidades</dt><dd>Corte giratorio, corte de oscuridad y tumbas</dd></dl>
+      <dl><dt>Vida</dt><dd>160</dd><dt>Daño</dt><dd>28 en área</dd><dt>Habilidades</dt><dd>Corte giratorio, corte de oscuridad y tumbas</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card rare">
       <div class="card rare" aria-label="Carta de Gustav, el Acorazado">
         <div class="cost">4</div>
         <div class="art"><img src="img/acorazado_carta.png" alt="Ilustración de Gustav, el Acorazado"></div>
@@ -266,9 +268,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Acorazado</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s</dd></dl>
+      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>10</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card rare">
       <div class="card rare" aria-label="Carta de Fray Tomé, el Fraile">
         <div class="cost">4</div>
         <div class="art"><img src="img/fraile_carta.png" alt="Ilustración de Fray Tomé, el Fraile"></div>
@@ -276,9 +278,9 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Fraile</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>15 en área cada 4 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>20–25 en área cada 3–4,5 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card epic">
       <div class="card epic" aria-label="Carta de Berta, la Catapulta">
         <div class="cost">6</div>
         <div class="art"><img src="img/catapulta_carta.png" alt="Ilustración de Berta, la Catapulta"></div>
@@ -288,7 +290,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card legend">
       <div class="card legend" aria-label="Carta de Unidad X-9, el Centinela">
         <div class="cost">5</div>
         <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Unidad X-9, el Centinela"></div>
@@ -298,17 +300,17 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun continua hasta abatirlo</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card legend">
       <div class="card ascended" aria-label="Carta de Jhotum, el Desencadenado">
-        <div class="cost">7</div>
+        <div class="cost">6</div>
         <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de Jhotum, el Desencadenado"></div>
         <div class="name">Jhotum</div>
         <div class="cls">el Desencadenado</div>
-        <div class="rar">Ascendida</div>
+        <div class="rar">Legendaria</div>
       </div>
-      <dl><dt>Vida</dt><dd>200</dd><dt>Daño</dt><dd>45</dd><dt>Habilidad</dt><dd>Cada 3 ataques, cadenas hasta el castillo enemigo</dd></dl>
+      <dl><dt>Vida</dt><dd>200</dd><dt>Daño</dt><dd>26</dd><dt>Habilidad</dt><dd>Cada 3 ataques, cadenas hasta el castillo enemigo</dd></dl>
     </div>
-    <div class="cardbox">
+    <div class="card ascended">
       <div class="card ascended" aria-label="Carta de Elyss, el Insaciable">
         <div class="cost">7</div>
         <div class="art"><img src="img/imparable_carta.png" alt="Ilustración de Elyss, el Insaciable"></div>
@@ -316,7 +318,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Insaciable</div>
         <div class="rar">Ascendida</div>
       </div>
-      <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 7 bajas se convierte en monstruo; si lo matan implosiona y renace consumido</dd></dl>
+      <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 5 bajas se convierte en monstruo; si lo matan implosiona y renace consumido</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -337,59 +339,60 @@ const rand = (a, b) => a + Math.random() * (b - a);
 
 // Datos de cada personaje. Posiciones en alturas de cuerpo (H), relativas a los pies, medidas sobre la imagen completa aprobada.
 const CH = {
-  legionario: { hp: 100, dmg: [10, 14], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false,
+  legionario: { hp: 120, dmg: [10, 12], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false,
     h: 1, rest: { sw: -1.97, bh: [-0.207, -0.165], fh: [0.245, -0.169], sh: [0.388, -0.215] } },
-  arquera: { hp: 55, dmg: [10, 14], speed: 54, cd: [1.45, 1.85], range: H * 4.3, ranged: true, h: 1,
+  arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
   // Montada: la jinete va detrás del caballo para que la silla y el cuello la tapen, como en la imagen aprobada.
-  valkiria: { hp: 120, dmg: [18, 22], speed: 84, cd: [1.25, 1.55], range: H * 1.45, ranged: false, aoe: true, h: 1.3,
+  valkiria: { hp: 120, dmg: [15, 19], speed: 90, cd: [1.1, 1.4], range: H * 1.45, ranged: false, aoe: true, h: 1.3,
     rest: { sw: -1.71, bh: [-0.344, -0.584] }, mount: [0.091, 0], rider: [-0.015, -0.282] },
   // Dos kunai, bufanda animada aparte y teletransporte detrás de las unidades a distancia enemigas.
-  ninja: { hp: 60, dmg: [15, 19], speed: 74, cd: [0.45, 0.65], range: H * 0.95, ranged: false, h: 1, tpCd: 9,
+  ninja: { hp: 90, dmg: [17, 21], speed: 74, cd: [0.45, 0.65], range: H * 0.95, ranged: false, h: 1, tpCd: 9, star: [17, 21],
     rest: { bk: 2.37, fk: -0.757, bh: [-0.213, -0.177], fh: [0.196, -0.177] }, scarf: [-0.149, -0.297] },
   // Dos revólveres: ráfaga alterna a media distancia y giro del revólver en el dedo.
-  pistolero: { hp: 60, dmg: [11, 13], speed: 56, cd: [1.4, 1.8], range: H * 2.7, ranged: true, h: 1,
+  pistolero: { hp: 70, dmg: [13, 15], speed: 62, cd: [1.2, 1.6], range: H * 2.7, ranged: true, h: 1,
     rest: { bg: -2.1, fg: 0, bh: [-0.267, -0.296], fh: [0.246, -0.296] } },
   // Animal sin manos: cabeza (dos versiones), cuerpo y cola por separado. Embestida al ver a un enemigo cerca.
-  lobo: { hp: 50, dmg: [19, 21], speed: 108, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
+  lobo: { hp: 50, dmg: [19, 21], speed: 110, cd: [0.7, 0.9], range: H * 0.78, ranged: false, h: 0.85,
     rest: { bh: [0, 0] }, tail: [-0.257, -0.353], body: [-0.0345, 0], head: [-0.036, -0.242] },
   // Iaido: la katana vive en la vaina; desenvaina con un tajo ascendente y vuelve a envainar.
-  samurai: { hp: 140, dmg: [17, 21], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, h: 1,
+  samurai: { hp: 140, dmg: [18, 22], speed: 52, cd: [1.3, 1.6], range: H * 1.2, ranged: false, crit: true, h: 1,
     rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
   // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
-  kungfu: { hp: 40, dmg: [3, 4], palm: [5, 7], speed: 76, cd: [1.4, 1.7], range: H * 0.85, ranged: false, h: 1,
+  kungfu: { hp: 130, dmg: [15, 19], palm: [5, 7], speed: 76, cd: [0.8, 1.1], range: H * 0.85, ranged: false, h: 1,
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [14, 16], speed: 34, cd: [2.2, 2.6], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
+  tercio: { hp: 100, dmg: [12, 15], speed: 34, cd: [2.2, 2.6], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
-  desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
+  desencadenado: { hp: 200, dmg: [24, 28], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
     rest: { bh: [-0.3, -0.22], fh: [0.33, -0.22] } },      // puños caídos, arrastrando las cadenas
   // Ascendido de tres formas: humano maldito (un tajo cada vez, alternando espadas; embestida; cada baja es una marca);
   // a las 7 marcas, monstruo (vida completa y doble, triple daño, mitad de velocidad de ataque, tajo en X en área, robo de vida);
   // si matan al monstruo implosiona y de la explosión sale la forma consumida (doble daño, triple velocidad de ataque,
   // tajos desquiciados, se desgasta). Al morir la forma consumida muere del todo.
-  imparable: { hp: 150, dmg: [32, 38], speed: 60, cd: [1.1, 1.4], range: H * 1.05, ranged: false, h: 1.1, lunge: H * 2.6, lungeCd: 5,
+  imparable: { hp: 180, dmg: [32, 38], speed: 70, cd: [1.1, 1.4], range: H * 1.05, ranged: false, h: 1.1, lunge: H * 2.6, lungeCd: 5,
     rest: { bh: [-0.28, -0.24], fh: [0.3, -0.24] } },
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
-  centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
+  centinela: { hp: 100, snipe: [28, 32], burst: [3, 4], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
     rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.36, -0.72], mg: [0.104, -0.151] } },
   // Asedio: dispara rocas en parábola desde muy lejos; daño en área, triple a castillos; indefensa de cerca.
-  catapulta: { hp: 120, dmg: [30, 40], speed: 26, cd: [3.4, 3.8], range: H * 4.3, minRange: H * 1.7, ranged: true, h: 1.8, siege: 3, splash: H * 0.85,
+  catapulta: { hp: 120, dmg: [30, 40], speed: 26, cd: [3.4, 3.8], range: H * 5.3, minRange: H * 1.5, ranged: true, h: 1.8, siege: 3, splash: H * 0.85,
     rest: { arm: -2.415, bh: [0, 0], fh: [0, 0] } },
   // Curandero: no ataca; se queda atrás y lanza luz curativa desde el farolillo al aliado más herido (o a sí mismo).
-  fraile: { hp: 60, heal: 15, speed: 46, cd: [4, 4], range: H * 2.2, keepBack: H * 2.7, ranged: true, h: 1.05,
+  fraile: { hp: 60, heal: [20, 25], speed: 46, cd: [3, 4.5], range: H * 3, keepBack: H * 2.7, ranged: true, h: 1.05,
     rest: { st: 0.07, bh: [-0.243, -0.275], fh: [0.321, -0.363] } },
   // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
-  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
+  acorazado: { hp: 260, dmg: [8, 11], speed: 36, cd: [1.8, 2], range: H * 0.9, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
     rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
-  muerte: { hp: 180, dmg: [28, 32], cut: [34, 40], speed: 50, cd: [1.6, 2.0], range: H * 1.3, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
+  muerte: { hp: 160, dmg: [26, 30], cut: [34, 38], speed: 60, cd: [1.6, 2.0], range: H * 1.6, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
+const CRIT = 1.5;   // multiplicador de los golpes críticos
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
 // formas de El Imparable: pieza, origen (pies en la imagen completa), espada (agarre, ángulo de la hoja en la imagen, largo)
@@ -398,17 +401,17 @@ const IMP = {
   1: { body: 'imp_cuerpo', o: [0.5428, 1.0], sw: 'imp_espada', so: [0.1278, 0.4924], sa: -0.154, sl: 606.2, len: 0.763, hand: 'imp_mano', hh: 0.134, k: 1.1,
        rest: { bh: [-0.266, -0.235], fh: [0.301, -0.235], bs: -1.689, fs: -1.365 }, arc: null, mul: { dmg: 1, cd: 1, spd: 1, anim: 1, steal: 0 } },
   2: { body: 'imp_mon_cuerpo', o: [0.4791, 1.0059], sw: 'imp_mon_espada', so: [0.1278, 0.4491], sa: -0.1143, sl: 602.9, len: 0.76, hand: 'imp_mon_mano', hh: 0.168, k: 1.5,
-       rest: { bh: [-0.305, -0.235], fh: [0.312, -0.235], bs: -1.645, fs: -1.409 }, arc: 0xff2a3a, mul: { dmg: 3, cd: 2, spd: 0.9, anim: 1.25, steal: 0.3 } },
+       rest: { bh: [-0.305, -0.235], fh: [0.312, -0.235], bs: -1.645, fs: -1.409 }, arc: 0xff2a3a, mul: { dmg: 2, cd: 2, spd: 0.9, anim: 1.25, steal: 0.25 } },
   3: { body: 'imp_esp_cuerpo', o: [0.4754, 1.0048], sw: 'imp_esp_espada', so: [0.1278, 0.4695], sa: -0.1213, sl: 603.4, len: 0.736, hand: 'imp_esp_mano', hh: 0.123, k: 1.1,
-       rest: { bh: [-0.266, -0.268], fh: [0.3, -0.268], bs: -1.701, fs: -1.359 }, arc: 0xd7ff3a, mul: { dmg: 2, cd: 1 / 3, spd: 1.35, anim: 1, steal: 0 } }
+       rest: { bh: [-0.266, -0.268], fh: [0.3, -0.268], bs: -1.701, fs: -1.359 }, arc: 0xd7ff3a, mul: { dmg: 1.5, cd: 1 / 3, spd: 1.35, anim: 1, steal: 0 } }
 };
 const IMP_BODY = 1 / 621;            // escala de los cuerpos (px de la pieza guardada → alturas H)
-const IMP_RULES = { stacks: 7, rebornHp: 0.5, drain: 3, implode: 40, implodeR: H * 2.6 };
+const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H * 2.6 };
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { imparable: 'ascendida', desencadenado: 'ascendida', centinela: 'legendaria', catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
-const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
+const RARITY = { imparable: 'ascendida', desencadenado: 'legendaria', centinela: 'legendaria', catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'poco', valkiria: 'poco', ninja: 'rara', samurai: 'poco', pistolero: 'epica', kungfu: 'epica' };
+const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 3, big: 0.65 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
 const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
@@ -652,7 +655,7 @@ class Unit {
     this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
-  damage(d, src, fromX) {
+  damage(d, src, fromX, crit) {
     if (!this.alive || this.state === 'die' || this.state === 'transform' || this.state === 'reborn') return;
     const fx = fromX !== undefined ? fromX : src ? src.x : undefined;
     if (this.cfg.block && fx !== undefined && (fx - this.x) * this.dir > 0 && !['knock', 'spawn'].includes(this.state)) {
@@ -661,7 +664,7 @@ class Unit {
     }
     this.hp -= d; this.hurtT = 0.32;
     if (this.cfg.fortTime && !this.fortUsed && this.hp > 0 && this.hp < this.max / 2) { this.fortUsed = true; this.fortT = this.cfg.fortTime; fortify(this); }
-    floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
+    if (crit) floatText(this.x, this.gy - H * this.cfg.h * (this.bigK || 1) - 22, '¡-' + d + '!', '#ffd84a'); else floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
     if (this.hp <= 0 && this.type === 'imparable' && this.form === 2 && !this.reborn) { this.hp = 0; this.set('reborn'); return; }
     if (this.hp <= 0) { this.hp = 0; this.set('die'); if (src && src.type === 'muerte' && src.alive && src.state !== 'die') addGrave(src, this); }
@@ -897,7 +900,7 @@ class Unit {
         } else {
           if (this.form !== 3) {
             this.parts.forEach(pt => pt.clearTint());
-            this.setForm(3); this.reborn = true; this.max = Math.round(this.cfg.hp * IMP_RULES.rebornHp); this.hp = this.max;
+            this.setForm(3); this.reborn = true; this.max = IMP_RULES.rebornHp; this.hp = this.max;
           }
           const e = Math.min(1, (t - B) / 0.5), over = Math.sin(e * Math.PI) * 0.18;
           o.sx = lerp(0.2, 1, ease(e)) + over * 0.5; o.sy = lerp(0.2, 1, ease(e)) + over; o.hop = Math.sin(e * Math.PI) * H * 0.25;
@@ -1054,10 +1057,10 @@ class Unit {
       o.bh = guard[0]; o.fh = guard[1];
       const k = easeInOut((e - 0.45) / 0.45);
       o.kick = k; o.rot = -0.22 * k; o.dx = 0.06 * k;
-      if (e >= 0.88 && !this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
+      if (e >= 0.88 && !this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true, true); this.chaseFrom = this.x; }
     } else if (t < 0.95) {                 // persecución: avanza deslizándose con la pierna estirada
       const e = easeInOut((t - 0.47) / 0.48), tg = this.kickTarget;
-      if (!this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true); this.chaseFrom = this.x; }
+      if (!this.kicked) { this.kicked = true; this.kickTarget = kungfuHit(this, [8, 10], true, null, [0.68, -0.27], true, true); this.chaseFrom = this.x; }
       // solo persigue si lo ha derribado; si no, se queda en su sitio
       const goal = tg && tg.alive && tg.state !== 'die' ? tg.x - this.dir * this.cfg.range * 0.7 : this.chaseFrom;
       const toward = this.dir * (goal - this.chaseFrom) > 0 ? goal : this.chaseFrom;
@@ -1823,7 +1826,7 @@ function maceSlam(u) {
   burst(x, u.gy - 4, 0xe8d3b0, 12, 160);
   for (let i = 0; i < 5; i++) fx.push({ x, y: u.gy - 4, vx: u.dir * rand(20, 120), vy: -rand(150, 260), r: rand(2.5, 4), life: 0.5, t: 0.5, color: 0x9aa1b3 });
 }
-function kungfuHit(u, dmg, push, hand, at, knock) {
+function kungfuHit(u, dmg, push, hand, at, knock, crit) {
   // impacto en el puño: estrella blanca y líneas de velocidad; la palma además empuja y frena al enemigo
   let px, py;
   if (hand) { const m = hand.getWorldTransformMatrix(); px = m.tx; py = m.ty; }
@@ -1840,7 +1843,7 @@ function kungfuHit(u, dmg, push, hand, at, knock) {
   if (mode === 'anim') return;
   const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
-  o.damage(Math.round(rand(...dmg)), u);
+  o.damage(Math.round(rand(...dmg) * (crit ? CRIT : 1)), u, undefined, !!crit);
   if (knock) {
     if (o.knock(u.dir)) return o;
     if (o.alive) o.shove(u.dir * 25);
@@ -1955,7 +1958,7 @@ function throwShuriken(u) {
   else { tx = u.x + u.dir * 330; ty = u.gy - H * 0.45; }
   const sx = u.x + u.dir * H * 0.2, sy = u.gy - H * 0.45, T = Math.max(0.2, Math.abs(tx - sx) / 950);
   const img = scene.add.image(sx, sy, 'nin_shuriken').setScale(0.22 * H / 512).setDepth(950);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: 8, stuck: 0, spin: 22, team: u.team, fromX: u.x });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: Math.round(rand(...u.cfg.star)), stuck: 0, spin: 22, team: u.team, fromX: u.x });
 }
 function slashArc(u) {
   // media luna blanca que marca toda la zona barrida, por delante de la jinete
@@ -2116,17 +2119,17 @@ function healPulse(u) {
   scene.tweens.add({ targets: g, scale: { from: 0.15, to: 1 }, alpha: { from: 1, to: 0 }, duration: 1000 / timeScale, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
   for (let i = 0; i < 18; i++) { const a = Math.random() * Math.PI * 2; fx.push({ x: u.x + Math.cos(a) * R * rand(0.2, 1), y: u.gy + Math.sin(a) * R * 0.25, vx: 0, vy: -rand(40, 90), g: 0, r: rand(2, 3.5), life: 0.9, t: 0.9, color: 0xffe27a }); }
   units.filter(v => v.team === u.team && v.alive && !['die', 'spawn'].includes(v.state) && Math.abs(v.x - u.x) <= R)
-    .forEach(v => { if (v.hp < v.max) v.healBy(u.cfg.heal); else v.healGlow && v.healGlow(); });
+    .forEach(v => { if (v.hp < v.max) v.healBy(Math.round(rand(...u.cfg.heal))); else v.healGlow && v.healGlow(); });
 }
 function castHeal(u, sx, sy) {
   // bola de luz dorada que vuela en arco hasta el aliado y lo cura al llegar
   const tg = u.healTarget && u.healTarget.alive ? u.healTarget : null;
   const tx = tg ? tg.x : u.x + u.dir * H * 2.4, ty = tg ? tg.gy - H * 0.55 : u.gy - H * 0.6;
   burst(sx, sy, 0xffe9a8, 8, 90);
-  if (tg === u) { u.healBy(u.cfg.heal); return; }
+  if (tg === u) { u.healBy(Math.round(rand(...u.cfg.heal))); return; }
   const T = Math.max(0.3, Math.abs(tx - sx) / 520), g = 500;
   const img = scene.add.image(sx, sy, 'auraDot').setTint(0xffe27a).setScale(1.3).setBlendMode(Phaser.BlendModes.ADD).setDepth(955);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, heal: u.cfg.heal, spin: 0.01, trail: 0xffe27a });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, heal: Math.round(rand(...u.cfg.heal)), spin: 0.01, trail: 0xffe27a });
 }
 function floatText(x, y, txt, color) {
   const t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '30px', color: color || '#ffffff', stroke: '#1e2235', strokeThickness: 7 }).setOrigin(0.5).setDepth(1000);
@@ -2146,7 +2149,7 @@ function onMelee(u) {
   const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
   if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
   targets.forEach(v => {
-    v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1)), u);
+    v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1) * (u.cfg.crit ? CRIT : 1)), u, undefined, !!u.cfg.crit);
     if (u.cfg.push && v.alive && v.shove) v.shove(Math.sign(v.x - u.x || u.dir) * u.cfg.push);
   });
 }
@@ -2189,7 +2192,8 @@ function fightLogic(dt) {
     }
     if (u.type === 'ninja') {
       u.tpT -= dt;
-      const prey = enemiesOf(u).filter(v => v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
+      let prey = enemiesOf(u).filter(v => v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
+      if (!prey.length) { const far = enemiesOf(u).filter(v => Math.abs(v.x - u.x) > H * 1.6).sort((a, b) => Math.abs(b.x - u.x) - Math.abs(a.x - u.x)); prey = far.slice(0, 1); }   // sin tiradores: a la unidad más alejada
       if (u.tpT <= 0 && prey.length && (u.state === 'idle' || u.state === 'walk')) {
         u.tpTarget = prey.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
         u.set('tpOut'); continue;
