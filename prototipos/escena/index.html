@@ -20,6 +20,7 @@
   --rare: #4da3ff;
   --epic: #a855f7;
   --legend: #fbbf24;
+  --ascended: #ef4444;
   --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
 }
@@ -74,6 +75,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .card.rare { background: var(--rare); }
 .card.epic { background: var(--epic); }
 .card.legend { background: var(--legend); }
+.card.ascended { background: var(--ascended); }
 .card .art { background: #c7cde0; border: 3px solid var(--outline); border-radius: 10px; aspect-ratio: 1; overflow: hidden; }
 .card .art img { width: 100%; height: 100%; object-fit: cover; }
 .card .cost {
@@ -93,7 +95,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile, Catapulta y Centinela X-9.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile, Catapulta, Centinela X-9 y El Desencadenado.</p>
     </div>
   </header>
 
@@ -134,6 +136,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="fraile" aria-pressed="false">Fraile</button>
       <button data-char="catapulta" aria-pressed="false">Catapulta</button>
       <button data-char="centinela" aria-pressed="false">Centinela X-9</button>
+      <button data-char="desencadenado" aria-pressed="false">El Desencadenado</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -147,6 +150,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="spin" id="spin-btn" hidden>Corte giratorio</button>
     <button class="btn" data-act="graves" id="graves-btn" hidden>Poner 3 tumbas</button>
     <button class="btn" data-act="burst" id="burst-btn" hidden>Ráfaga de minigun</button>
+    <button class="btn" data-act="unchain" id="unchain-btn" hidden>Cadenas hasta el castillo</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -277,6 +281,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun continua hasta abatirlo</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card ascended" aria-label="Carta de El Desencadenado">
+        <div class="cost">7</div>
+        <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de El Desencadenado"></div>
+        <div class="name">Desencadenado</div>
+        <div class="rar">Ascendida</div>
+      </div>
+      <dl><dt>Vida</dt><dd>200</dd><dt>Daño</dt><dd>45</dd><dt>Habilidad</dt><dd>Cada 3 ataques, cadenas hasta el castillo enemigo</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -325,6 +338,9 @@ const CH = {
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
+  // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
+  desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 2.3, ranged: false, h: 1.3,
+    rest: { bh: [-0.322, -0.33], fh: [0.382, -0.33] } },
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
   centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
     rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.36, -0.72], mg: [0.104, -0.151] } },
@@ -341,10 +357,11 @@ const CH = {
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
+const LINK = { w: 0.16 * H, step: 0.125 * H, tip: 0.24 * H, hang: 3 };
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { centinela: 'legendaria', catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const RARITY = { desencadenado: 'ascendida', centinela: 'legendaria', catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
 const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -355,8 +372,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta', centinela: 'Centinela X-9' };
-const NEWEST = 'centinela';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta', centinela: 'Centinela X-9', desencadenado: 'El Desencadenado' };
+const NEWEST = 'desencadenado';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -396,6 +413,21 @@ class Unit {
       this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
+    } else if (type === 'desencadenado') {
+      const mk = () => {
+        const links = [], g = sc.add.container(0, 0);
+        for (let i = 0; i < 90; i++) { const l = sc.add.image(0, 0, 'de_eslabon').setScale(LINK.w / 512).setVisible(i < 4); links.push(l); g.add(l); }
+        const tip = sc.add.image(0, 0, 'de_punta').setOrigin(0.08, 0.5).setScale(LINK.tip / 512); g.add(tip);
+        return { g, links, tip, pts: [], prev: [] };
+      };
+      this.chB = mk(); this.chF = mk();
+      this.body = sc.add.image(0, 0, 'de_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.bh = sc.add.image(0, 0, 'de_mano').setScale(0.332 * H / 512);
+      this.fh = sc.add.image(0, 0, 'de_mano').setScale(0.332 * H / 512);
+      this.parts = [this.bh, this.body, this.fh];
+      this.rig.add([this.chB.g, this.bh, this.body, this.chF.g, this.fh]);
+      this.drops = [];
+      this.shadow.setSize(H * 0.95, H * 0.17);
     } else if (type === 'centinela') {
       this.rifle = sc.add.image(0, 0, 'ce_rifle').setFlipY(true).setScale(0.82 * H / 1024);
       this.body = sc.add.image(0, 0, 'ce_cuerpo_v').setOrigin(0.5, 1).setScale(H / 512);
@@ -588,6 +620,7 @@ class Unit {
     else if (this.type === 'acorazado') { o.mc = r.mc; o.sh = [...r.sh]; }
     else if (this.type === 'fraile') { o.st = r.st; o.glow = 0; }
     else if (this.type === 'catapulta') { o.arm = r.arm; o.loaded = !this.thrown; }
+    else if (this.type === 'desencadenado') { o.whipF = null; o.whipB = null; }
     else if (this.type === 'centinela') { o.rf = r.rf; o.rp = [...r.rp]; o.mg = [...r.mg]; o.mgR = 0; o.aim = false; o.laser = 0; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
@@ -674,6 +707,7 @@ class Unit {
         else if (this.type === 'acorazado') this.attackMace(o, t);
         else if (this.type === 'fraile') this.attackHeal(o, t);
         else if (this.type === 'catapulta') this.attackThrow(o, t);
+        else if (this.type === 'desencadenado') { if (this.ultNext) this.attackUnchain(o, t); else this.attackWhip(o, t); }
         else if (this.type === 'centinela') { if (this.sentMode === 'burst') this.attackBurst(o, t); else this.attackSnipe(o, t); }
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
@@ -872,6 +906,76 @@ class Unit {
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+  }
+  attackWhip(o, t) {
+    // latigazo: el puño delantero va atrás y la cadena sale en arco hasta el enemigo
+    const r = this.cfg.rest, tg = mode === 'fight' ? nearestEnemy(this) : null;
+    const reach = tg ? Math.min(this.cfg.range, Math.max(H * 0.6, Math.abs(tg.x - this.x) / 1.2 - 0.5 * H)) : this.cfg.range * 0.8;
+    const back = [0.15, -0.62], fwd = [0.55, -0.4];
+    if (t < 0.3) { const e = ease(t / 0.3); o.fh = lerp2(r.fh, back, e); o.rot = -0.08 * e; }
+    else if (t < 0.55) {
+      const e = ease((t - 0.3) / 0.25); o.fh = lerp2(back, fwd, Math.min(1, e * 2)); o.rot = lerp(-0.08, 0.1, e);
+      o.whipF = { k: e, reach, lift: 0.5 * (1 - e) };
+      if (e > 0.9 && !this.fired) { this.fired = true; whipHit(this, tg, reach); }
+    } else if (t < 0.7) { o.fh = fwd; o.rot = 0.1; o.whipF = { k: 1, reach, lift: 0 }; if (!this.fired) { this.fired = true; whipHit(this, tg, reach); } }
+    else { const e = ease((t - 0.7) / 0.35); o.fh = lerp2(fwd, r.fh, e); o.rot = lerp(0.1, 0, e); o.whipF = { k: 1 - e, reach, lift: -0.15 * e }; }
+    if (t >= 1.05) { this.atkN2 = (this.atkN2 || 0) + 1; if (this.atkN2 % 3 === 2) this.ultNext = true; this.set('idle'); }
+  }
+  attackUnchain(o, t) {
+    // ataque definitivo: se agacha, lanza ambos puños y las dos cadenas se estiran por el camino hasta el castillo enemigo
+    const r = this.cfg.rest, end = this.teamDir > 0 ? W - 110 : 110, reach = Math.max(H, Math.abs(end - this.x) / 1.2 - 0.62 * H);
+    const bk = [-0.1, -0.3], fk = [0.62, -0.42];
+    if (t < 0.45) { const e = ease(t / 0.45); o.bh = lerp2(r.bh, [-0.45, -0.25], e); o.fh = lerp2(r.fh, [0.05, -0.28], e); o.sy = 1 - 0.08 * e; o.sx = 1 + 0.05 * e; o.rot = -0.06 * e; if (e > 0.6) o.dx = Math.sin(t * 90) * 0.008; }
+    else if (t < 1.1) {
+      const e = Math.min(1, (t - 0.45) / 0.35), ee = easeInOut(e);
+      o.bh = lerp2([-0.45, -0.25], bk, Math.min(1, e * 3)); o.fh = lerp2([0.05, -0.28], fk, Math.min(1, e * 3)); o.rot = 0.12; o.dx = 0.08;
+      o.whipF = { k: ee, reach, lift: 0, low: true }; o.whipB = { k: ee, reach: reach - H * 0.2, lift: 0, low: true };
+      if (!this.ultHit) this.ultHit = new Set();
+      unchainSweep(this, this.x + this.teamDir * 1.2 * (reach * ee + H * 0.62));
+      if (e >= 1 && Math.random() < 0.5) burst(this.x + this.teamDir * (reach * Math.random()), this.gy - 6, 0xffb0a0, 2, 90);
+    } else { const e = ease((t - 1.1) / 0.45); o.bh = lerp2(bk, r.bh, e); o.fh = lerp2(fk, r.fh, e); o.rot = lerp(0.12, 0, e); o.dx = lerp(0.08, 0, e);
+      o.whipF = { k: 1 - e, reach, lift: 0, low: true }; o.whipB = { k: 1 - e, reach: reach - H * 0.2, lift: 0, low: true }; }
+    if (t >= 1.55) { this.ultNext = false; this.ultHit = null; this.set('idle'); }
+  }
+  layChains(o, dt) {
+    // cadenas: colgando con física de cuerda en reposo; estiradas en arco o rasantes al atacar
+    const L = LINK.step, g = 900;
+    const moveX = (this.x - (this.lastCX ?? this.x)) * this.dir; this.lastCX = this.x;
+    for (const [ch, hand, whip] of [[this.chB, o.bh, o.whipB], [this.chF, o.fh, o.whipF]]) {
+      const ax = hand[0] * H, ay = hand[1] * H + 0.13 * H;
+      let pts;
+      if (whip && whip.k > 0.01) {
+        const len = Math.max(L * LINK.hang, whip.k * whip.reach), n = Math.max(LINK.hang, Math.min(ch.links.length, Math.round(len / L)));
+        const tx = ax + len, ty = whip.low ? -0.1 * H : ay + 0.05 * H, cy = Math.min(ay, ty) - whip.lift * H * 2;
+        pts = [];
+        for (let i = 0; i <= n; i++) { const u = i / n, x = lerp(ax, tx, u), y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy + u * u * ty; pts.push([x, y + Math.sin(u * 20 + this.t * 30) * (whip.low ? 2 : 0)]); }
+        ch.pts = pts.slice(0, LINK.hang + 1).map(p => [...p]); ch.prev = ch.pts.map(p => [...p]);
+      } else {
+        if (ch.pts.length !== LINK.hang + 1) { ch.pts = []; for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax, ay + i * L]); ch.prev = ch.pts.map(p => [...p]); }
+        const d = Math.min(dt, 0.033);
+        for (let i = 1; i < ch.pts.length; i++) {
+          const p = ch.pts[i], q = ch.prev[i], vx = (p[0] - q[0]) * 0.9, vy = (p[1] - q[1]) * 0.9;
+          q[0] = p[0]; q[1] = p[1]; p[0] += vx - moveX; p[1] += vy + g * d * d;
+          if (p[1] > -4) { p[1] = -4; q[0] = lerp(q[0], p[0], 0.5); }   // arrastra por el suelo con rozamiento
+        }
+        ch.pts[0] = [ax, ay];
+        for (let it = 0; it < 4; it++) for (let i = 1; i < ch.pts.length; i++) {
+          const a = ch.pts[i - 1], b = ch.pts[i], dx = b[0] - a[0], dy = b[1] - a[1], dd = Math.hypot(dx, dy) || 1, k = (dd - L) / dd;
+          if (i === 1) { b[0] -= dx * k; b[1] -= dy * k; } else { a[0] += dx * k * 0.5; a[1] += dy * k * 0.5; b[0] -= dx * k * 0.5; b[1] -= dy * k * 0.5; }
+          b[1] = Math.min(b[1], -4);
+        }
+        pts = ch.pts;
+      }
+      const n = pts.length - 1;
+      ch.links.forEach((l, i) => {
+        if (i >= n) { l.setVisible(false); return; }
+        const a = pts[i], b = pts[i + 1];
+        l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]))
+          .setScale(LINK.w / 512 * 1.05, LINK.w / 512 * (i % 2 ? 0.45 : 1));
+      });
+      const a = pts[n - 1], b = pts[n];
+      ch.tip.setPosition(b[0], b[1]).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]));
+    }
   }
   attackSnipe(o, t) {
     // baja el rifle de la espalda al hombro, mira láser, disparo devastador con retroceso y lo vuelve a colgar
@@ -1160,7 +1264,11 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'centinela') {
+    if (this.type === 'desencadenado') {
+      this.rig.scaleX *= 1.2; this.rig.scaleY *= 1.2;            // ascendido: más grande que el resto
+      this.layChains(o, dt);
+      if (this.state !== 'die' && Math.random() < 0.05) fx.push({ x: this.x + rand(-0.25, 0.25) * H, y: this.gy - rand(0.3, 0.95) * H, vx: 0, vy: -20, g: 0, r: rand(2, 3), life: 0.5, t: 0.5, color: 0xff3a2a });
+    } else if (this.type === 'centinela') {
       this.rifle.setPosition(o.rp[0] * H, o.rp[1] * H).setRotation(o.rf);
       this.weapon.setPosition(o.mg[0] * H, o.mg[1] * H).setRotation(o.mgR);
       // giro de los cilindros: la cara del cañón rota y las barras del tambor se desplazan
@@ -1654,6 +1762,21 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+function whipHit(u, tg, reach) {
+  const px = u.x + u.dir * 1.2 * (u.cfg.rest.fh[0] * H + reach), py = u.gy - 0.3 * H;
+  burst(px, py, 0xffd0c0, 8, 150); burst(px, py, 0x9aa1b3, 5, 120);
+  if (mode !== 'fight' || !tg || !tg.alive) return;
+  tg.damage(Math.round(rand(...u.cfg.dmg)), u);
+  if (tg.shove) tg.shove(u.dir * 18);
+}
+function unchainSweep(u, tipX) {
+  // la punta de las cadenas avanza por el suelo: golpea a cada enemigo que alcanza (y al castillo al llegar)
+  if (mode !== 'fight') return;
+  for (const v of enemiesOf(u)) {
+    if (u.ultHit.has(v)) continue;
+    if ((tipX - v.x) * u.teamDir >= 0) { u.ultHit.add(v); v.damage(Math.round(rand(...u.cfg.dmg)), u); burst(v.x, v.gy - H * 0.3, 0xff6a50, 10, 170); if (v.shove) v.shove(u.teamDir * 22); }
+  }
+}
 function sentinelShot(u, kind, sx, sy) {
   // disparo instantáneo con trazador; el escudo del Acorazado lo intercepta como las balas del Pistolero
   const snipe = kind === 'snipe';
@@ -1924,7 +2047,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : animChar === 'centinela' ? W / 2 - 220 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : animChar === 'centinela' ? W / 2 - 220 : animChar === 'desencadenado' ? 170 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -1985,6 +2108,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
+      L('de_cuerpo', 'desencadenado_cuerpo'); L('de_mano', 'desencadenado_mano'); L('de_eslabon', 'desencadenado_eslabon'); L('de_punta', 'desencadenado_punta');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
@@ -2040,11 +2164,14 @@ $('anim-controls').addEventListener('click', e => {
     $('spin-btn').hidden = animChar !== 'muerte';
     $('graves-btn').hidden = animChar !== 'muerte';
     $('burst-btn').hidden = animChar !== 'centinela';
+    $('unchain-btn').hidden = animChar !== 'desencadenado';
     if (scene) buildMode();
     return;
   }
   const act = b.dataset.act, u = units[0];
   if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock'].includes(u.state)) return;
+  if (act === 'unchain') { if (u.type === 'desencadenado') { u.ultNext = true; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'desencadenado') u.ultNext = false;
   if (act === 'burst') { if (u.type === 'centinela') { u.sentMode = 'burst'; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'attack' && u.type === 'centinela') u.sentMode = 'snipe';
   if (act === 'graves') { if (u.type === 'muerte') [1, 2, 3].forEach(i => addGrave(u, { x: u.x + i * 95, gy: u.gy, lane: 0 })); return; }
