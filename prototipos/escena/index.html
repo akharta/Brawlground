@@ -92,7 +92,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio y Muerte.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte y Acorazado.</p>
     </div>
   </header>
 
@@ -123,6 +123,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="kungfu" aria-pressed="false">Kung fu</button>
       <button data-char="tercio" aria-pressed="false">Tercio</button>
       <button data-char="muerte" aria-pressed="false">Muerte</button>
+      <button data-char="acorazado" aria-pressed="false">Acorazado</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -229,6 +230,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>30 en área</dd><dt>Habilidades</dt><dd>Corte giratorio, corte de oscuridad y tumbas</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta del Acorazado">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/acorazado_carta.png" alt="Ilustración del Acorazado"></div>
+        <div class="name">Acorazado</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo: −40 % de frente, para proyectiles</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -277,6 +287,9 @@ const CH = {
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
+  // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
+  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.4,
+    rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
   muerte: { hp: 180, dmg: [28, 32], cut: [34, 40], speed: 50, cd: [1.6, 2.0], range: H * 1.3, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
@@ -284,7 +297,7 @@ const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 }
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const RARITY = { acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
 const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -295,8 +308,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte' };
-const NEWEST = 'muerte';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado' };
+const NEWEST = 'acorazado';
 let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -336,6 +349,16 @@ class Unit {
       this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
+    } else if (type === 'acorazado') {
+      this.body = sc.add.image(0, 0, 'ac_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.weapon = sc.add.image(0, 0, 'ac_arma').setOrigin(0.2485, 0.499).setScale(0.58 * H / 512);
+      this.bh = sc.add.image(0, 0, 'ac_mano').setScale(0.17 * H / 512);
+      this.shield = sc.add.image(0, 0, 'ac_escudo').setScale(0.708 * H / 512);
+      this.fh = sc.add.image(0, 0, 'ac_mano').setScale(0.17 * H / 512);
+      this.parts = [this.body, this.weapon, this.bh, this.shield, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.5, -480, 8], [this.shield, 0.7, -360, -4]];
+      this.shadow.setSize(H * 0.8, H * 0.15);
     } else if (type === 'muerte') {
       this.body = sc.add.image(0, 0, 'mu_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.weapon = sc.add.image(0, 0, 'mu_arma').setOrigin(0, 0.881).setFlipY(true).setScale(SCY.len * H / 512);
@@ -460,8 +483,12 @@ class Unit {
     this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
-  damage(d, src) {
+  damage(d, src, fromX) {
     if (!this.alive || this.state === 'die') return;
+    const fx = fromX !== undefined ? fromX : src ? src.x : undefined;
+    if (this.cfg.block && fx !== undefined && (fx - this.x) * this.dir > 0 && !['knock', 'spawn'].includes(this.state)) {
+      d = Math.max(1, Math.round(d * (1 - this.cfg.block))); shieldClang(this);    // golpe frontal: lo para el escudo
+    }
     this.hp -= d; this.hurtT = 0.32;
     floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
@@ -476,6 +503,7 @@ class Unit {
     else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
     else if (this.type === 'tercio') { o.pr = r.pr; }
     else if (this.type === 'muerte') { o.hf = [...r.hf]; o.sc = r.sc; }
+    else if (this.type === 'acorazado') { o.mc = r.mc; o.sh = [...r.sh]; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
@@ -507,6 +535,7 @@ class Unit {
         if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
         if (o.pr !== undefined) o.pr += 0.025 * breathe;
+        if (o.mc !== undefined) o.mc += 0.03 * breathe;
         if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
           const b = Math.abs(Math.sin(now * 6));
           o.hop = b * H * 0.025; o.bh[1] += Math.sin(now * 6) * 0.015; o.fh[1] -= Math.sin(now * 6) * 0.015;
@@ -530,6 +559,7 @@ class Unit {
         if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
         if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
+        if (o.mc !== undefined) { o.hop *= 0.5; o.rot *= 0.5; o.mc += Math.sin(ph) * 0.06; o.sh[1] -= Math.abs(Math.sin(ph)) * 0.02; if (Math.abs(Math.sin(ph)) < 0.12 && this.sc.time.now - (this.stepT || 0) > 250) { this.stepT = this.sc.time.now; burst(this.x, this.gy - 2, 0xe8d3b0, 3, 50); } }
         if (o.tail !== undefined) {   // galope: el cuerpo se mece, la cabeza contrarresta y la cola va al viento
           const g = t * 15;
           o.hop = Math.abs(Math.sin(g)) * H * 0.1; o.rot = Math.sin(g) * 0.09; o.sy = 1 - Math.abs(Math.cos(g)) * 0.06;
@@ -555,6 +585,7 @@ class Unit {
         else if (this.type === 'samurai') this.attackIaido(o, t);
         else if (this.type === 'tercio') this.attackPike(o, t);
         else if (this.type === 'muerte') this.attackReap(o, t);
+        else if (this.type === 'acorazado') this.attackMace(o, t);
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
@@ -752,6 +783,16 @@ class Unit {
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+  }
+  attackMace(o, t) {
+    // mazazo: alza la maza por encima del yelmo y la descarga hacia delante contra el suelo; el escudo se queda delante
+    const r = this.cfg.rest, up = [-0.12, -0.92], hit = [0.18, -0.36];
+    if (t < 0.45) { const e = ease(t / 0.45); o.mc = lerp(r.mc, -3.3, e); o.bh = lerp2(r.bh, up, e); o.rot = -0.07 * e; o.sy = 1 + 0.03 * e; }
+    else if (t < 0.6) { const e = easeIn((t - 0.45) / 0.15); o.mc = lerp(-3.3, -0.25, e); o.bh = lerp2(up, hit, e); o.rot = lerp(-0.07, 0.1, e); o.dx = 0.06 * e; o.sy = 1 - 0.05 * e; }
+    else if (t < 0.85) { o.mc = -0.25; o.bh = hit; o.rot = 0.1; o.dx = 0.06; o.sy = 0.95; }
+    else { const e = ease((t - 0.85) / 0.4); o.mc = lerp(-0.25, r.mc, e); o.bh = lerp2(hit, r.bh, e); o.rot = lerp(0.1, 0, e); o.dx = lerp(0.06, 0, e); }
+    if (t >= 0.58 && !this.fired) { this.fired = true; onMelee(this); maceSlam(this); }
+    if (t >= 1.25) this.set('idle');
   }
   attackBone(o, t) {
     // tajo torpe de esqueleto: alza la espada oxidada y la deja caer
@@ -968,7 +1009,13 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'esqueleto') {
+    if (this.type === 'acorazado') {
+      this.blockT = Math.max(0, (this.blockT || 0) - dt);
+      const b = this.blockT / 0.25;               // al bloquear, empuja el escudo hacia delante
+      this.shield.setPosition((o.sh[0] + 0.07 * b) * H, (o.sh[1] - 0.02 * b) * H).setRotation(-0.08 * b);
+      this.fh.setPosition((o.fh[0] + 0.07 * b) * H, o.fh[1] * H);
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.mc);
+    } else if (this.type === 'esqueleto') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.sw);
       if (this.state === 'walk') this.body.setRotation(Math.sin(this.t * 22) * 0.05); else this.body.setRotation(0);
     } else if (this.type === 'muerte') {
@@ -1130,7 +1177,11 @@ class Unit {
     this.root.add([this.flameBack, this.flameCore]);
     this.flameFront.add([this.sparks, this.flakes]);
     this.auraFx = [this.flameBack, this.flameCore, this.sparks, this.flakes];
-    if (this.rig.postFX) this.glow = this.rig.postFX.addGlow(A.c, 1.4, 0, false, 0.1, 10);
+    // contorno de energía ligero: copia teñida y algo mayor de cada pieza, detrás del personaje
+    this.halo = this.parts.map(pt => {
+      const h = sc.add.image(0, 0, pt.texture.key, pt.frame.name).setOrigin(pt.originX, pt.originY).setTintFill(A.c);
+      this.rig.addAt(h, 0); return h;
+    });
   }
   drawAura(dt) {
     // humillo de color que sube ondulando alrededor del personaje; volutas finas que se difuminan por la cola
@@ -1147,7 +1198,16 @@ class Unit {
     if (!A) return;
     const dead = this.state === 'die', now = this.sc.time.now / 1000;
     for (const em of this.auraFx) { em.timeScale = timeScale; if (dead && em.emitting) em.stop(); else if (!dead && !em.emitting) em.start(); }
-    if (this.glow) { this.glow.outerStrength = dead ? 0 : 1.4 + 0.45 * Math.sin(now * 4 + this.homeX); this.glow.color = A.c; }
+    if (this.halo) {
+      const a = dead ? 0 : 0.42 + 0.12 * Math.sin(now * 4 + this.homeX);
+      this.halo.forEach((h, i) => {
+        const pt = this.parts[i];
+        if (h.texture.key !== pt.texture.key) h.setTexture(pt.texture.key, pt.frame.name).setTintFill(A.c);
+        const k = 1 + 0.09 * H / Math.max(30, Math.max(pt.displayWidth, pt.displayHeight));
+        h.setPosition(pt.x, pt.y).setRotation(pt.rotation).setScale(pt.scaleX * k, pt.scaleY * k).setFlip(pt.flipX, pt.flipY)
+          .setVisible(pt.visible).setAlpha(a);
+      });
+    }
   }
   detach() {
     if (this.str) this.str.clear();
@@ -1175,7 +1235,12 @@ function fireGun(u, gun) {
   const lx = (GUN.mx - GUN.ox) * GUN.w, ly = (GUN.my - GUN.oy) * GUN.h;
   const mz = m.transformPoint(lx, ly);
   let tx, ty, target = null;
-  if (mode === 'fight') { target = nearestEnemy(u); if (!target) return; tx = target.x + rand(-8, 8); ty = target.gy - H * rand(0.35, 0.55); }
+  if (mode === 'fight') { target = nearestEnemy(u); if (!target) return; tx = target.x + rand(-8, 8); ty = target.gy - H * rand(0.35, 0.55);
+    // la bala se queda en el primer escudo enemigo que haya por delante
+    const wall = shieldWalls(u.team).filter(ac => ac !== target && (ac.x - u.x) * u.dir > 0 && (target.x - ac.x) * u.dir > 0 && ac.dir === -u.dir)
+      .sort((p, q) => Math.abs(p.x - u.x) - Math.abs(q.x - u.x))[0];
+    if (wall) { target = wall; tx = wall.x + wall.dir * H * 0.39; ty = wall.gy - H * 0.4; }
+  }
   else { tx = u.x + u.dir * H * 3; ty = mz.y + rand(-4, 4); }
   const g = scene.add.graphics().setDepth(970);
   g.lineStyle(5, 0xffe08a, 0.9).beginPath(); g.moveTo(mz.x, mz.y); g.lineTo(tx, ty); g.strokePath();
@@ -1189,7 +1254,20 @@ function fireGun(u, gun) {
   // casquillo que salta
   fx.push({ x: mz.x - u.dir * 30, y: mz.y + 4, vx: -u.dir * rand(60, 120), vy: -rand(160, 240), r: 3, life: 0.5, t: 0.5, color: 0xf2c14e });
   burst(tx, ty, 0xfff3c4, 4, 90);
-  if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)));
+  if (target && target.alive && target.state !== 'die') target.damage(Math.round(rand(...u.cfg.dmg)), u);
+}
+const shieldWalls = team => units.filter(v => v.type === 'acorazado' && v.team !== team && v.alive && !['die', 'spawn', 'knock'].includes(v.state));
+function shieldClang(u) {
+  // chispas en el escudo y el escudo da un golpe hacia delante
+  u.blockT = 0.25;
+  const x = u.x + u.dir * H * 0.45, y = u.gy - H * 0.42;
+  for (let i = 0; i < 9; i++) { const a = (u.dir > 0 ? 0 : Math.PI) + rand(-1.1, 1.1); fx.push({ x, y: y + rand(-14, 14), vx: Math.cos(a) * rand(120, 260), vy: Math.sin(a) * rand(120, 220) - 60, r: rand(1.5, 3), life: 0.3, t: 0.3, color: i % 3 ? 0xffe08a : 0xffffff }); }
+}
+function maceSlam(u) {
+  // el mazazo levanta polvo y piedrecitas delante
+  const x = u.x + u.dir * H * 0.65;
+  burst(x, u.gy - 4, 0xe8d3b0, 12, 160);
+  for (let i = 0; i < 5; i++) fx.push({ x, y: u.gy - 4, vx: u.dir * rand(20, 120), vy: -rand(150, 260), r: rand(2.5, 4), life: 0.5, t: 0.5, color: 0x9aa1b3 });
 }
 function kungfuHit(u, dmg, push, hand, at, knock) {
   // impacto en el puño: estrella blanca y líneas de velocidad; la palma además empuja y frena al enemigo
@@ -1208,7 +1286,7 @@ function kungfuHit(u, dmg, push, hand, at, knock) {
   if (mode === 'anim') return;
   const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
-  o.damage(Math.round(rand(...dmg)));
+  o.damage(Math.round(rand(...dmg)), u);
   if (knock) {
     if (o.knock(u.dir)) return o;
     if (o.alive) o.shove(u.dir * 25);
@@ -1323,7 +1401,7 @@ function throwShuriken(u) {
   else { tx = u.x + u.dir * 330; ty = u.gy - H * 0.45; }
   const sx = u.x + u.dir * H * 0.2, sy = u.gy - H * 0.45, T = Math.max(0.2, Math.abs(tx - sx) / 950);
   const img = scene.add.image(sx, sy, 'nin_shuriken').setScale(0.22 * H / 512).setDepth(950);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: 8, stuck: 0, spin: 22 });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: 8, stuck: 0, spin: 22, team: u.team, fromX: u.x });
 }
 function slashArc(u) {
   // media luna blanca que marca toda la zona barrida, por delante de la jinete
@@ -1367,7 +1445,7 @@ function onShoot(u, sx, sy) {
   else { target = nearestEnemy(u); if (!target) return; tx = target.x; ty = target.gy - H * 0.42; }
   const dist = Math.abs(tx - sx), T = Math.max(0.35, dist / 720), g = 900;
   const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0 });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x });
 }
 function onDead(u) {
   if (u.type === 'esqueleto') { units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); return; }
@@ -1412,11 +1490,21 @@ function fightLogic(dt) {
 function updateArrows(dt) {
   arrows = arrows.filter(a => {
     if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
+    const px0 = a.x;
     a.t += dt; a.vy += a.g * dt; a.x += a.vx * dt; a.y += a.vy * dt;
+    if (a.team) {
+      // ¿ha cruzado el proyectil la línea del escudo entre este fotograma y el anterior?
+      const wall = shieldWalls(a.team).find(ac => { const sx = ac.x + ac.dir * H * 0.39;
+        return ac !== a.target && (px0 - sx) * (a.x - sx) <= 0 && a.vx * ac.dir < 0 && a.y > ac.gy - H * 0.8 && a.y < ac.gy + 10; });
+      if (wall) {                              // se estrella contra el escudo y cae rebotando
+        wall.damage(a.dmg, null, a.fromX);
+        a.img.destroy(); return false;
+      }
+    }
     a.img.setPosition(a.x, a.y);
     if (a.spin) a.img.rotation += a.spin * dt; else a.img.setRotation(Math.atan2(a.vy, a.vx));
     if (a.t >= a.T) {
-      if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg); a.img.destroy(); return false; }
+      if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg, null, a.fromX); a.img.destroy(); return false; }
       burst(a.x, a.y, 0xe8d3b0, 6, 90); a.stuck = 0.6; return true;
     }
     return true;
@@ -1466,7 +1554,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -1507,7 +1595,7 @@ function update(_, deltaMs) {
   }
 }
 function start() {
-  new Phaser.Game({
+  window.__game = new Phaser.Game({
     type: Phaser.AUTO, parent: 'game', width: W, height: HGT, backgroundColor: '#7fb85a',
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: { preload() {
@@ -1522,6 +1610,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
+      L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
       L('mu_cuerpo', 'muerte_cuerpo'); L('mu_arma', 'muerte_arma'); L('mu_mano', 'muerte_mano');
       L('ter_cuerpo', 'tercio_cuerpo'); L('ter_pica', 'tercio_arma'); L('ter_mano', 'tercio_mano'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
     }, create, update }
@@ -1590,6 +1679,14 @@ $('anim-controls').addEventListener('click', e => {
 });
 
 let __uid = 0;
+window.__testArrow = (targetType, fromX) => {   // prueba: flecha enemiga desde fromX hacia una unidad concreta
+  const target = units.find(u => u.type === targetType); if (!target) return 'no target';
+  const sx = fromX, sy = target.gy - H * 0.45, T = Math.abs(target.x - sx) / 720;
+  const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
+  arrows.push({ img, x: sx, y: sy, vx: (target.x - sx) / T, vy: 0, g: 0, t: 0, T, target, dmg: 12, stuck: 0, team: target.team === 'blue' ? 'purple' : 'blue', fromX: sx });
+  return 'ok';
+};
+window.__addUnit = (type, team, x) => { const u = new Unit(scene, type, team, x); units.push(u); return true; };
 window.__debugUnits = () => units.map(u => ({ id: u._id || (u._id = ++__uid), type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x) }));
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
