@@ -237,7 +237,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Acorazado</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; por debajo del 50 %, escudo gigante −60 % durante 3 s</dd></dl>
+      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece, escudo gigante y −60 % durante 4 s</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -288,7 +288,7 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
-  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 3,
+  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
     rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
   muerte: { hp: 180, dmg: [28, 32], cut: [34, 40], speed: 50, cd: [1.6, 2.0], range: H * 1.3, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
@@ -357,6 +357,9 @@ class Unit {
       this.fh = sc.add.image(0, 0, 'ac_mano').setScale(0.17 * H / 512);
       this.parts = [this.body, this.weapon, this.bh, this.shield, this.fh];
       this.rig.add(this.parts);
+      // fulgor del contorno del escudo durante el Refuerzo
+      this.shieldGlow = sc.add.image(0, 0, 'ac_escudo').setTintFill(0x9fe0ff).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+      this.rig.addAt(this.shieldGlow, this.rig.getIndex(this.shield));
       this.drops = [[this.weapon, -0.5, -480, 8], [this.shield, 0.7, -360, -4]];
       this.shadow.setSize(H * 0.8, H * 0.15);
     } else if (type === 'muerte') {
@@ -1017,8 +1020,15 @@ class Unit {
       // pasiva: escudo agrandado durante unos segundos (crece rápido y vuelve a su tamaño al final)
       this.fortT = Math.max(0, (this.fortT || 0) - dt);
       const ft = this.cfg.fortTime - this.fortT, big = this.fortT > 0 ? Math.min(1, ft / 0.25, this.fortT / 0.35) : 0;
-      this.shield.setScale(0.708 * H / 512 * (1 + 0.55 * ease(big)));
-      this.shield.setPosition((o.sh[0] + 0.07 * b + 0.08 * big) * H, (o.sh[1] - 0.02 * b - 0.06 * big) * H).setRotation(-0.08 * b);
+      // Refuerzo: el Acorazado crece un 55 % y el escudo un 110 % (2,1 / 1,55 dentro del personaje ya agrandado)
+      const eb = ease(big), bodyK = 1 + 0.55 * eb, shK = (1 + 1.1 * eb) / bodyK;
+      this.bigK = bodyK;
+      this.rig.scaleX *= bodyK; this.rig.scaleY *= bodyK; this.shadow.setScale(this.shadow.scaleX * bodyK, this.shadow.scaleY * bodyK);
+      this.shield.setScale(0.708 * H / 512 * shK);
+      this.shield.setPosition((o.sh[0] + 0.07 * b + 0.1 * eb) * H, (o.sh[1] - 0.02 * b - 0.04 * eb) * H).setRotation(-0.08 * b);
+      const pulse = 0.5 + 0.5 * Math.sin(this.sc.time.now / 1000 * 11);
+      this.shieldGlow.setPosition(this.shield.x, this.shield.y).setRotation(this.shield.rotation)
+        .setScale(this.shield.scaleX * (1.08 + 0.05 * pulse)).setAlpha(big * (0.35 + 0.55 * pulse)).setVisible(this.shield.visible);
       if (big > 0.5 && Math.random() < 0.35) fx.push({ x: this.x + this.dir * H * 0.55, y: this.gy - H * rand(0.1, 0.9), vx: this.dir * rand(10, 40), vy: -rand(20, 60), g: 0, r: rand(2, 3.5), life: 0.4, t: 0.4, color: 0x8fd0ff });
       this.fh.setPosition((o.fh[0] + 0.07 * b) * H, o.fh[1] * H);
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.mc);
@@ -1152,7 +1162,7 @@ class Unit {
     this.drawAura(dt);
     this.bar.clear();
     if (mode === 'fight' && this.alive && this.state !== 'die') {
-      const bw = 58, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h - 22;
+      const bw = 58, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h * (this.bigK || 1) - 22;
       this.bar.fillStyle(OUT, 1).fillRoundedRect(bx - 3, by - 3, bw + 6, 14, 6);
       this.bar.fillStyle(0x3a3f55, 1).fillRoundedRect(bx, by, bw, 8, 4);
       this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
@@ -1272,7 +1282,7 @@ function shieldClang(u) {
 }
 function fortify(u) {
   // el escudo se agranda con un destello azul y un aro de energía
-  floatText(u.x, u.gy - H * 1.35, '¡Fortaleza!');
+  floatText(u.x, u.gy - H * 1.9, '¡Refuerzo!');
   const g = scene.add.graphics().setDepth(965).setPosition(u.x + u.dir * H * 0.45, u.gy - H * 0.45);
   g.lineStyle(6, 0x8fd0ff, 0.9).strokeEllipse(0, 0, H * 0.7, H * 1.2);
   scene.tweens.add({ targets: g, alpha: 0, scale: { from: 0.6, to: 1.4 }, duration: 450 / timeScale, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
@@ -1509,8 +1519,8 @@ function updateArrows(dt) {
     a.t += dt; a.vy += a.g * dt; a.x += a.vx * dt; a.y += a.vy * dt;
     if (a.team) {
       // ¿ha cruzado el proyectil la línea del escudo entre este fotograma y el anterior?
-      const wall = shieldWalls(a.team).find(ac => { const sx = ac.x + ac.dir * H * 0.39;
-        return ac !== a.target && (px0 - sx) * (a.x - sx) <= 0 && a.vx * ac.dir < 0 && a.y > ac.gy - H * 0.8 && a.y < ac.gy + 10; });
+      const wall = shieldWalls(a.team).find(ac => { const k = ac.bigK || 1, sx = ac.x + ac.dir * H * 0.45 * k;
+        return ac !== a.target && (px0 - sx) * (a.x - sx) <= 0 && a.vx * ac.dir < 0 && a.y > ac.gy - H * 0.85 * k * (k > 1.05 ? 1.3 : 1) && a.y < ac.gy + 10; });
       if (wall) {                              // se estrella contra el escudo y cae rebotando
         wall.damage(a.dmg, null, a.fromX);
         a.img.destroy(); return false;
