@@ -1109,28 +1109,28 @@ class Unit {
     const A = this.aura, w = this.shadow.width * 1.05, h = H * this.cfg.h * 0.9, f = 1 / A.rate;
     const zone = new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.48, w, h);
     this.flameBack = sc.add.particles(0, 0, 'auraFlame', {
-      emitZone: { type: 'random', source: zone }, frequency: 160 * f, quantity: 1,
+      emitZone: { type: 'random', source: zone }, frequency: 230 * f, quantity: 1,
       speedY: { min: -120, max: -60 }, speedX: { min: -12, max: 12 }, lifespan: { min: 600, max: 1000 },
       scaleX: { start: 0.75 * A.big, end: 0.2 }, scaleY: { start: 0.8 * A.big, end: 1.7 * A.big },
-      alpha: { start: 0.42, end: 0 }, tint: A.c });
+      alpha: { start: 0.28, end: 0 }, tint: A.c });
     this.flameCore = sc.add.particles(0, 0, 'auraFlame', {
-      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 0.95, h * 0.95) }, frequency: 200 * f, quantity: 1,
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 0.95, h * 0.95) }, frequency: 300 * f, quantity: 1,
       speedY: { min: -130, max: -70 }, lifespan: { min: 380, max: 650 },
       scaleX: { start: 0.35 * A.big, end: 0.08 }, scaleY: { start: 0.5 * A.big, end: 1.2 * A.big },
-      alpha: { start: 0.5, end: 0 }, tint: A.c, blendMode: 'ADD' });
+      alpha: { start: 0.32, end: 0 }, tint: A.c, blendMode: 'ADD' });
     this.flameFront = sc.add.container(0, 0);
     this.sparks = sc.add.particles(0, 0, 'auraDot', {
-      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 1.3, h) }, frequency: 900 * f, quantity: 1,
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 1.3, h) }, frequency: 1400 * f, quantity: 1,
       speedY: { min: -90, max: -40 }, speedX: { min: -20, max: 20 }, lifespan: { min: 500, max: 900 },
       scale: { start: 0.32, end: 0 }, alpha: { start: 1, end: 0 }, tint: A.light, blendMode: 'ADD' });
     this.flakes = sc.add.particles(0, 0, 'auraFlake', {
-      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.55, w * 1.4, h) }, frequency: 1300 * f, quantity: 1,
+      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.55, w * 1.4, h) }, frequency: 2000 * f, quantity: 1,
       speedY: { min: -70, max: -30 }, speedX: { min: -25, max: 25 }, rotate: { min: 0, max: 360 }, lifespan: { min: 600, max: 1000 },
       scale: { start: 0.5, end: 0.1 }, alpha: { start: 0.85, end: 0 }, tint: 0x141826 });
     this.root.add([this.flameBack, this.flameCore]);
     this.flameFront.add([this.sparks, this.flakes]);
     this.auraFx = [this.flameBack, this.flameCore, this.sparks, this.flakes];
-    if (this.rig.postFX) this.glow = this.rig.postFX.addGlow(A.c, 2.5, 0, false, 0.1, 10);
+    if (this.rig.postFX) this.glow = this.rig.postFX.addGlow(A.c, 1.4, 0, false, 0.1, 10);
   }
   drawAura(dt) {
     // humillo de color que sube ondulando alrededor del personaje; volutas finas que se difuminan por la cola
@@ -1147,7 +1147,7 @@ class Unit {
     if (!A) return;
     const dead = this.state === 'die', now = this.sc.time.now / 1000;
     for (const em of this.auraFx) { em.timeScale = timeScale; if (dead && em.emitting) em.stop(); else if (!dead && !em.emitting) em.start(); }
-    if (this.glow) { this.glow.outerStrength = dead ? 0 : 2.2 + 0.9 * Math.sin(now * 4 + this.homeX); this.glow.color = A.c; }
+    if (this.glow) { this.glow.outerStrength = dead ? 0 : 1.4 + 0.45 * Math.sin(now * 4 + this.homeX); this.glow.color = A.c; }
   }
   detach() {
     if (this.str) this.str.clear();
