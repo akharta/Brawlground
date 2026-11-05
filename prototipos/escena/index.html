@@ -93,7 +93,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <img src="img/logo.png" alt="Brawlground">
     <div>
       <h1>Escena de prueba</h1>
-      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile y Catapulta.</p>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile, Catapulta y Centinela X-9.</p>
     </div>
   </header>
 
@@ -133,6 +133,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="acorazado" aria-pressed="false">Acorazado</button>
       <button data-char="fraile" aria-pressed="false">Fraile</button>
       <button data-char="catapulta" aria-pressed="false">Catapulta</button>
+      <button data-char="centinela" aria-pressed="false">Centinela X-9</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -145,6 +146,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="shade" id="shade-btn" hidden>Corte de oscuridad</button>
     <button class="btn" data-act="spin" id="spin-btn" hidden>Corte giratorio</button>
     <button class="btn" data-act="graves" id="graves-btn" hidden>Poner 3 tumbas</button>
+    <button class="btn" data-act="burst" id="burst-btn" hidden>Ráfaga de minigun</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -266,6 +268,15 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
     </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta del Centinela X-9">
+        <div class="cost">5</div>
+        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración del Centinela X-9"></div>
+        <div class="name">Centinela X-9</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun, ráfaga de 10 × 3–4</dd></dl>
+    </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
@@ -314,6 +325,9 @@ const CH = {
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
+  // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
+  centinela: { hp: 100, snipe: [28, 32], burst: [3, 4], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
+    rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.325, -0.686], mg: [0.104, -0.151] } },
   // Asedio: dispara rocas en parábola desde muy lejos; daño en área, triple a castillos; indefensa de cerca.
   catapulta: { hp: 120, dmg: [30, 40], speed: 26, cd: [3.4, 3.8], range: H * 4.3, minRange: H * 1.7, ranged: true, h: 1.8, siege: 3, splash: H * 0.85,
     rest: { arm: -2.415, bh: [0, 0], fh: [0, 0] } },
@@ -330,7 +344,7 @@ const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 }
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
+const RARITY = { centinela: 'legendaria', catapulta: 'epica', fraile: 'rara', acorazado: 'rara', muerte: 'legendaria', tercio: 'comun', legionario: 'comun', arquera: 'comun', lobo: 'comun', valkiria: 'rara', ninja: 'rara', samurai: 'rara', pistolero: 'epica', kungfu: 'epica' };
 const AURA = { rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -341,8 +355,8 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta' };
-const NEWEST = 'catapulta';
+const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta', centinela: 'Centinela X-9' };
+const NEWEST = 'centinela';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
 
@@ -382,6 +396,15 @@ class Unit {
       this.parts = [this.body, this.fh, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
+    } else if (type === 'centinela') {
+      this.rifle = sc.add.image(0, 0, 'ce_rifle').setFlipY(true).setScale(0.595 * H / 1024);
+      this.body = sc.add.image(0, 0, 'ce_cuerpo_v').setOrigin(0.5, 1).setScale(H / 512);
+      this.bh = sc.add.image(0, 0, 'ce_mano').setScale(0.145 * H / 512);
+      this.weapon = sc.add.image(0, 0, 'ce_arma').setScale(0.755 * H / 512);
+      this.fh = sc.add.image(0, 0, 'ce_mano').setScale(0.145 * H / 512);
+      this.parts = [this.rifle, this.body, this.bh, this.weapon, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, 0.6, -420, -6], [this.rifle, -0.5, -500, 8]];
     } else if (type === 'catapulta') {
       this.rock = sc.add.image(0, 0, 'ca_roca').setScale(0.345 * H / 512);
       this.arm = sc.add.image(0, 0, 'ca_arma').setFlipY(true).setOrigin(0.0646, 0.489).setScale(0.957 * H / 512);
@@ -563,6 +586,7 @@ class Unit {
     else if (this.type === 'acorazado') { o.mc = r.mc; o.sh = [...r.sh]; }
     else if (this.type === 'fraile') { o.st = r.st; o.glow = 0; }
     else if (this.type === 'catapulta') { o.arm = r.arm; o.loaded = !this.thrown; }
+    else if (this.type === 'centinela') { o.rf = r.rf; o.rp = [...r.rp]; o.mg = [...r.mg]; o.mgR = 0; o.aim = false; o.laser = 0; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
@@ -648,6 +672,7 @@ class Unit {
         else if (this.type === 'acorazado') this.attackMace(o, t);
         else if (this.type === 'fraile') this.attackHeal(o, t);
         else if (this.type === 'catapulta') this.attackThrow(o, t);
+        else if (this.type === 'centinela') { if (this.sentMode === 'burst') this.attackBurst(o, t); else this.attackSnipe(o, t); }
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
@@ -845,6 +870,28 @@ class Unit {
       o.bh = lerp2(air[0], r.bh, e); o.fh = lerp2(air[1], r.fh, e);
     }
     if (t >= 1.2) { this.kicked = false; this.kickNext = false; this.kickTarget = null; this.set('idle'); }
+  }
+  attackSnipe(o, t) {
+    // baja el rifle de la espalda al hombro, mira láser, disparo devastador con retroceso y lo vuelve a colgar
+    const r = this.cfg.rest, aimP = [0.06, -0.47], grip = [-0.12, -0.44];
+    const T = [0.4, 1.05, 1.15, 1.45, 1.85];
+    const pose = e => { o.rf = lerp(r.rf, 0, e); o.rp = lerp2(r.rp, aimP, e); o.bh = lerp2(r.bh, grip, e); };
+    if (t < T[0]) { pose(ease(t / T[0])); o.aim = t > T[0] * 0.5; }
+    else if (t < T[1]) { pose(1); o.aim = true; o.laser = Math.min(1, (t - T[0]) / 0.2); o.rot = -0.02; }
+    else if (t < T[2]) { pose(1); o.aim = true; const k = 1 - (t - T[1]) / (T[2] - T[1]); o.rp[0] -= 0.1 * k; o.rf -= 0.18 * k; o.bh[0] -= 0.1 * k; o.dx = -0.05 * k; o.rot = -0.06 * k;
+      if (!this.fired) { this.fired = true; this.shotNext = 'snipe'; } }
+    else if (t < T[3]) { pose(1); o.aim = true; }
+    else { pose(1 - ease((t - T[3]) / (T[4] - T[3]))); o.aim = t < T[3] + 0.2; }
+    if (t >= T[4]) this.set('idle');
+  }
+  attackBurst(o, t) {
+    // la minigun gira, vibra y suelta una ráfaga continua
+    const D = 1.3, n = 10, spin = Math.min(1, t / 0.25);
+    o.mg[0] += Math.sin(t * 80) * 0.006 * spin; o.mg[1] += Math.cos(t * 70) * 0.006 * spin; o.mgR = Math.sin(t * 90) * 0.02 * spin;
+    o.fh = [o.fh[0] + o.mg[0] - this.cfg.rest.mg[0], o.fh[1] + o.mg[1] - this.cfg.rest.mg[1]];
+    o.rot = -0.03 * spin; o.sx = 1 - 0.02 * spin;
+    if (t > 0.25) { const k = Math.floor((t - 0.25) / ((D - 0.25) / n)); while ((this.shots || 0) <= Math.min(k, n - 1)) { this.shots = (this.shots || 0) + 1; this.shotNext = 'burst'; } }
+    if (t >= D + 0.2) { this.shots = 0; this.set('idle'); }
   }
   attackThrow(o, t) {
     // tensa el brazo hacia atrás, lo suelta de golpe, la roca sale volando y después recarga
@@ -1107,7 +1154,28 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
-    if (this.type === 'catapulta') {
+    if (this.type === 'centinela') {
+      this.rifle.setPosition(o.rp[0] * H, o.rp[1] * H).setRotation(o.rf);
+      this.weapon.setPosition(o.mg[0] * H, o.mg[1] * H).setRotation(o.mgR);
+      if (o.aim !== this.aimLayer) { this.aimLayer = o.aim; if (o.aim) this.rig.moveAbove(this.rifle, this.body); else this.rig.moveBelow(this.rifle, this.body); }
+      const firing = this.state === 'attack' && this.state !== 'die';
+      const key = firing ? 'ce_cuerpo' : 'ce_cuerpo_v';
+      if (this.body.texture.key !== key) this.body.setTexture(key);
+      if (!this.laserG) { this.laserG = this.sc.add.graphics().setDepth(940); }
+      this.laserG.clear();
+      if (o.laser > 0 && this.alive) {
+        const m = this.rifle.getWorldTransformMatrix(), mz = m.transformPoint(512, 0);
+        const tg = this.snipeTarget, tx = tg && tg.alive ? tg.x : mz.x + this.dir * H * 5, ty = tg && tg.alive ? tg.gy - H * 0.5 : mz.y;
+        const blink = 0.55 + 0.45 * Math.sin(this.sc.time.now / 40);
+        this.laserG.lineStyle(2, 0xff2a2a, 0.75 * o.laser * blink).beginPath(); this.laserG.moveTo(mz.x, mz.y); this.laserG.lineTo(tx, ty); this.laserG.strokePath();
+        this.laserG.fillStyle(0xff3030, o.laser).fillCircle(tx, ty, 4);
+      }
+      if (this.shotNext) {
+        const kind = this.shotNext; this.shotNext = null;
+        const gun = kind === 'snipe' ? this.rifle : this.weapon, m = gun.getWorldTransformMatrix(), mz = m.transformPoint(kind === 'snipe' ? 512 : 256, 0);
+        sentinelShot(this, kind, mz.x, mz.y);
+      }
+    } else if (this.type === 'catapulta') {
       // brazo con pivote en la base del armazón; la roca va en el cazo; las ruedas giran con el avance
       const piv = [0.2 * H, -0.617 * H], a = o.arm;
       this.arm.setPosition(piv[0], piv[1]).setRotation(a);
@@ -1346,6 +1414,7 @@ class Unit {
   }
   detach() {
     if (this.str) this.str.clear();
+    if (this.laserG) this.laserG.clear();
     if (this.arrow) this.arrow.setVisible(false);
     this.drops.forEach(([part, vx, vy, spin]) => {
       const m = part.getWorldTransformMatrix();
@@ -1560,6 +1629,30 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+function sentinelShot(u, kind, sx, sy) {
+  // disparo instantáneo con trazador; el escudo del Acorazado lo intercepta como las balas del Pistolero
+  const snipe = kind === 'snipe';
+  let tg = snipe ? u.snipeTarget : nearestEnemy(u);
+  if (mode !== 'fight') tg = null;
+  if (tg && (!tg.alive || tg.state === 'die')) tg = null;
+  if (tg) {
+    const wall = shieldWalls(u.team).filter(ac => ac !== tg && (ac.x - u.x) * u.dir > 0 && (tg.x - ac.x) * u.dir > 0 && ac.dir === -u.dir).sort((p, q) => Math.abs(p.x - u.x) - Math.abs(q.x - u.x))[0];
+    if (wall) tg = wall;
+  }
+  const tx = tg ? tg.x + rand(-6, 6) : sx + u.dir * H * (snipe ? 6 : 2.5), ty = tg ? tg.gy - H * rand(0.35, 0.6) : sy + rand(-6, 6);
+  const g = scene.add.graphics().setDepth(970);
+  g.lineStyle(snipe ? 9 : 4, snipe ? 0xff5a5a : 0xffe08a, 0.85).beginPath(); g.moveTo(sx, sy); g.lineTo(tx, ty); g.strokePath();
+  g.lineStyle(snipe ? 3 : 1.5, 0xffffff, 1).beginPath(); g.moveTo(sx, sy); g.lineTo(tx, ty); g.strokePath();
+  scene.tweens.add({ targets: g, alpha: 0, duration: (snipe ? 320 : 90) / timeScale, onComplete: () => g.destroy() });
+  const fl = scene.add.graphics().setDepth(975).setPosition(sx, sy), R = snipe ? 22 : 11;
+  fl.fillStyle(0xffb627, 1).beginPath(); for (let i = 0; i < 10; i++) { const a = (u.dir > 0 ? 0 : Math.PI) + i * Math.PI / 5, rr = i % 2 ? R * 0.45 : R * (i === 0 ? 1.7 : 1); fl.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } fl.closePath().fillPath();
+  fl.fillStyle(0xfff3c4, 1).fillCircle(0, 0, R * 0.4);
+  scene.tweens.add({ targets: fl, alpha: 0, duration: (snipe ? 160 : 70) / timeScale, onComplete: () => fl.destroy() });
+  fx.push({ x: sx - u.dir * 24, y: sy + 4, vx: -u.dir * rand(60, 130), vy: -rand(150, 240), r: snipe ? 3.5 : 2.2, life: 0.5, t: 0.5, color: 0xf2c14e });
+  burst(tx, ty, snipe ? 0xffd0d0 : 0xfff3c4, snipe ? 10 : 3, snipe ? 160 : 80);
+  if (snipe) { const sh = scene.cameras.main; sh.shake(90, 0.004); }
+  if (tg) tg.damage(Math.round(rand(...(snipe ? u.cfg.snipe : u.cfg.burst))), u);
+}
 function throwRock(u, sx, sy) {
   // roca en parábola alta hacia el objetivo (o hacia delante en el modo animaciones)
   const tg = u.siegeTarget && u.siegeTarget.alive ? u.siegeTarget : null;
@@ -1649,6 +1742,7 @@ function fightLogic(dt) {
     if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise'].includes(u.state)) continue;
     if (u.type === 'fraile') { friarLogic(u, dt); continue; }
     if (u.type === 'catapulta') { siegeLogic(u, dt); continue; }
+    if (u.type === 'centinela') { sentinelLogic(u, dt); continue; }
     const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
     if (u.state === 'idle' || u.state === 'walk') u.dir = o ? (Math.sign(o.x - u.x) || u.teamDir) : u.teamDir;
     if (u.type === 'muerte') {
@@ -1679,6 +1773,25 @@ function fightLogic(dt) {
     } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
     else if (u.state === 'walk' && atWall) u.set('idle');
   }
+}
+function sentinelLogic(u, dt) {
+  // de cerca, minigun; de lejos, francotirador; si no hay nadie a tiro, avanza
+  const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
+  u.cd -= dt;
+  if (u.state === 'attack') return;
+  if (o && dist <= u.cfg.range) {
+    if (u.state === 'walk') u.set('idle');
+    u.dir = Math.sign(o.x - u.x) || u.teamDir;
+    if (u.cd <= 0) {
+      if (dist <= u.cfg.close) { u.sentMode = 'burst'; u.cd = rand(...u.cfg.burstCd); }
+      else { u.sentMode = 'snipe'; u.snipeTarget = o; u.cd = rand(...u.cfg.cd); }
+      u.set('attack');
+    }
+    return;
+  }
+  const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
+  if (atWall) { if (u.state === 'walk') u.set('idle'); }
+  else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
 }
 function siegeLogic(u, dt) {
   // dispara a los enemigos entre su alcance mínimo y máximo; si se le pegan, no puede hacer nada
@@ -1769,7 +1882,7 @@ function drawStage(g) {
 
 /* ---- montaje de modos ---- */
 function clearUnits() {
-  units.forEach(u => { u.root.destroy(); u.bar.destroy(); }); units = [];
+  units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); }); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
 }
@@ -1786,7 +1899,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : W / 2;
+    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : animChar === 'centinela' ? W / 2 - 220 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -1847,6 +1960,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
+      L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
       L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
@@ -1900,11 +2014,14 @@ $('anim-controls').addEventListener('click', e => {
     $('shade-btn').hidden = animChar !== 'muerte';
     $('spin-btn').hidden = animChar !== 'muerte';
     $('graves-btn').hidden = animChar !== 'muerte';
+    $('burst-btn').hidden = animChar !== 'centinela';
     if (scene) buildMode();
     return;
   }
   const act = b.dataset.act, u = units[0];
   if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock'].includes(u.state)) return;
+  if (act === 'burst') { if (u.type === 'centinela') { u.sentMode = 'burst'; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'centinela') u.sentMode = 'snipe';
   if (act === 'graves') { if (u.type === 'muerte') [1, 2, 3].forEach(i => addGrave(u, { x: u.x + i * 95, gy: u.gy, lane: 0 })); return; }
   if (act === 'spin') { if (u.type === 'muerte') { u.forceSpin = true; u.atkChosen = false; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'attack' && u.type === 'muerte') u.atkChosen = false;
