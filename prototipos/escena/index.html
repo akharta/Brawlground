@@ -247,7 +247,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Fraile</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>18 cada 2 s</dd><dt>Habilidad</dt><dd>No ataca; cura al aliado más herido</dd></dl>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>15 en área cada 4 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -298,7 +298,7 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Curandero: no ataca; se queda atrás y lanza luz curativa desde el farolillo al aliado más herido (o a sí mismo).
-  fraile: { hp: 60, heal: 18, speed: 46, cd: [1.7, 2.1], range: H * 3.2, keepBack: H * 2.7, ranged: true, h: 1.05,
+  fraile: { hp: 60, heal: 15, speed: 46, cd: [4, 4], range: H * 2.2, keepBack: H * 2.7, ranged: true, h: 1.05,
     rest: { st: 0.07, bh: [-0.243, -0.275], fh: [0.321, -0.363] } },
   // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
   acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
@@ -815,18 +815,28 @@ class Unit {
   }
   attackHeal(o, t) {
     // alza el farolillo, la luz se intensifica y sale una bola dorada hacia el aliado
-    const r = this.cfg.rest, up = [0.36, -0.55];
+    const r = this.cfg.rest, up = [0.28, -0.72];
     if (t < 0.35) { const e = ease(t / 0.35); o.fh = lerp2(r.fh, up, e); o.st = lerp(r.st, -0.25, e); o.glow = e; o.rot = -0.05 * e; o.sy = 1 + 0.03 * e; }
-    else if (t < 0.6) { o.fh = up; o.st = -0.25 + 0.15 * Math.sin((t - 0.35) * 30) * (1 - (t - 0.35) / 0.25); o.glow = 1; o.rot = -0.05; }
-    else { const e = ease((t - 0.6) / 0.35); o.fh = lerp2(up, r.fh, e); o.st = lerp(-0.25, r.st, e); o.glow = 1 - e; o.rot = lerp(-0.05, 0, e); }
+    else if (t < 0.75) { o.fh = up; o.st = -0.25 + 0.08 * Math.sin((t - 0.35) * 22); o.glow = 1; o.rot = -0.05; o.hop = H * 0.04 * Math.sin(Math.min(1, (t - 0.35) / 0.4) * Math.PI); }
+    else { const e = ease((t - 0.75) / 0.35); o.fh = lerp2(up, r.fh, e); o.st = lerp(-0.25, r.st, e); o.glow = 1 - e; o.rot = lerp(-0.05, 0, e); }
     if (t >= 0.4 && !this.fired) { this.fired = true; this.castNext = true; }
-    if (t >= 0.95) this.set('idle');
+    if (t >= 1.1) this.set('idle');
   }
   healBy(n) {
     if (!this.alive || this.state === 'die') return;
     const before = this.hp; this.hp = Math.min(this.max, this.hp + n);
     floatText(this.x, this.gy - H * this.cfg.h * (this.bigK || 1) - 18, '+' + Math.max(1, Math.round(this.hp - before)), '#7dffa0');
-    for (let i = 0; i < 12; i++) fx.push({ x: this.x + rand(-H * 0.3, H * 0.3), y: this.gy - rand(0, H * 0.9), vx: rand(-15, 15), vy: -rand(40, 90), g: 0, r: rand(2, 4), life: 0.7, t: 0.7, color: i % 3 ? 0x7dffa0 : 0xffe9a8 });
+    // aura dorada que envuelve al curado
+    const h = H * this.cfg.h * (this.bigK || 1);
+    const glow = scene.add.image(this.x, this.gy - h * 0.45, 'auraFlame').setTint(0xffd36b).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.gy + 2)
+      .setScale(H * 1.3 / 48, h * 1.35 / 96).setAlpha(0);
+    scene.tweens.add({ targets: glow, alpha: { from: 1, to: 0 }, scaleX: glow.scaleX * 1.2, duration: 1100 / timeScale, ease: 'Quad.easeOut', onComplete: () => glow.destroy() });
+    for (let i = 0; i < 8; i++) fx.push({ x: this.x + rand(-H * 0.35, H * 0.35), y: this.gy - rand(0, h * 0.9), vx: rand(-10, 10), vy: -rand(30, 70), g: 0, r: rand(2, 3.5), life: 0.8, t: 0.8, color: 0xffe27a });
+    // iconos de «+» verdes que suben
+    for (let i = 0; i < 5; i++) {
+      const pl = scene.add.image(this.x + rand(-H * 0.45, H * 0.45), this.gy - rand(h * 0.15, h * 0.85), 'plusIcon').setDepth(990).setScale(rand(0.9, 1.3)).setAlpha(0);
+      scene.tweens.add({ targets: pl, y: pl.y - rand(40, 70), alpha: { from: 1, to: 0 }, delay: i * 80 / timeScale, duration: 1000 / timeScale, ease: 'Sine.easeOut', onComplete: () => pl.destroy() });
+    }
   }
   attackMace(o, t) {
     // mazazo: alza la maza por encima del yelmo y la descarga hacia delante contra el suelo; el escudo se queda delante
@@ -1060,11 +1070,7 @@ class Unit {
       const px = o.fh[0] * H + lx * Math.cos(a) - ly * Math.sin(a), py = o.fh[1] * H + lx * Math.sin(a) + ly * Math.cos(a);
       const pulse = 0.5 + 0.5 * Math.sin(this.sc.time.now / 1000 * 3 + this.homeX);
       this.lamp.setPosition(px, py).setScale(1.6 + 0.4 * pulse + 2.2 * o.glow).setAlpha(this.state === 'die' ? 0 : 0.45 + 0.15 * pulse + 0.4 * o.glow);
-      if (this.castNext) {
-        this.castNext = false;
-        const m = this.rig.getWorldTransformMatrix(), w = m.transformPoint(px, py);
-        castHeal(this, w.x, w.y);
-      }
+      if (this.castNext) { this.castNext = false; healPulse(this); }
     } else if (this.type === 'acorazado') {
       this.blockT = Math.max(0, (this.blockT || 0) - dt);
       const b = this.blockT / 0.25;               // al bloquear, empuja el escudo hacia delante
@@ -1493,6 +1499,18 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+function healPulse(u) {
+  // onda de luz dorada desde el Fraile; cura a todos los aliados dentro del aura (incluido él)
+  const R = u.cfg.range;
+  const g = scene.add.graphics().setDepth(u.gy - 3).setPosition(u.x, u.gy);
+  g.fillStyle(0xffd36b, 0.35).fillEllipse(0, 0, R * 2, R * 0.5);
+  g.lineStyle(6, 0xffd36b, 1).strokeEllipse(0, 0, R * 2, R * 0.5);
+  g.lineStyle(2, 0xffffff, 0.7).strokeEllipse(0, 0, R * 1.9, R * 0.46);
+  scene.tweens.add({ targets: g, scale: { from: 0.15, to: 1 }, alpha: { from: 1, to: 0 }, duration: 1000 / timeScale, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
+  for (let i = 0; i < 18; i++) { const a = Math.random() * Math.PI * 2; fx.push({ x: u.x + Math.cos(a) * R * rand(0.2, 1), y: u.gy + Math.sin(a) * R * 0.25, vx: 0, vy: -rand(40, 90), g: 0, r: rand(2, 3.5), life: 0.9, t: 0.9, color: 0xffe27a }); }
+  units.filter(v => v.team === u.team && v.alive && !['die', 'spawn'].includes(v.state) && Math.abs(v.x - u.x) <= R)
+    .forEach(v => { if (v.hp < v.max) v.healBy(u.cfg.heal); else v.healGlow && v.healGlow(); });
+}
 function castHeal(u, sx, sy) {
   // bola de luz dorada que vuela en arco hasta el aliado y lo cura al llegar
   const tg = u.healTarget && u.healTarget.alive ? u.healTarget : null;
@@ -1582,7 +1600,6 @@ function friarLogic(u, dt) {
   u.cd -= dt;
   if (u.state === 'attack') return;
   if (hurt.length && u.cd <= 0) {
-    u.healTarget = hurt[0]; if (hurt[0] !== u) u.dir = Math.sign(hurt[0].x - u.x) || u.teamDir;
     u.set('attack'); u.cd = rand(...u.cfg.cd); return;
   }
   // se mantiene detrás: no se acerca al enemigo más de su distancia de seguridad ni adelanta al aliado más avanzado
@@ -1676,6 +1693,11 @@ function makeAuraTextures(sc) {
   const dot = sc.textures.createCanvas('auraDot', 24, 24), d = dot.getContext();
   gr = d.createRadialGradient(12, 12, 0, 12, 12, 12); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
   d.fillStyle = gr; d.fillRect(0, 0, 24, 24); dot.refresh();
+  const pc = sc.textures.createCanvas('plusIcon', 30, 30), q = pc.getContext();
+  const plus = (w, col) => { q.fillStyle = col; q.fillRect(15 - w / 2, 3 + (12 - w / 2) * 0, w, 24); q.fillRect(3, 15 - w / 2, 24, w); };
+  q.lineJoin = 'round'; q.fillStyle = '#1e2235'; q.fillRect(10, 1, 10, 28); q.fillRect(1, 10, 28, 10);
+  q.fillStyle = '#5ee68a'; q.fillRect(12, 4, 6, 22); q.fillRect(4, 12, 22, 6);
+  q.fillStyle = '#b8ffcc'; q.fillRect(12, 4, 3, 10); pc.refresh();
   const fl = sc.textures.createCanvas('auraFlake', 16, 16), e = fl.getContext();
   e.fillStyle = '#ffffff'; e.beginPath(); e.moveTo(2, 6); e.lineTo(9, 1); e.lineTo(15, 7); e.lineTo(10, 15); e.lineTo(4, 12); e.closePath(); e.fill(); fl.refresh();
 }
