@@ -1,0 +1,197 @@
+<title>Personajes de Brawlground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Hoja de trabajo: filtros arriba, tabla editable debajo; se guarda cada celda al cambiarla. */
+:root {
+  --bg: #eef0f4; --panel: #ffffff; --ink: #1e2235; --muted: #5d6276; --line: #d6d9e3; --soft: #f5f6fa;
+  --accent: #7c4ddb; --accent-ink: #ffffff; --ok: #1f7a43; --ok-bg: #e3f4e8; --err: #a52a24; --err-bg: #fde4e2;
+  --r-comun: #8a8fa3; --r-poco: #2f9e5b; --r-rara: #3b82f6; --r-epica: #a855f7; --r-legendaria: #c98a0b; --r-ascendida: #e0393f;
+  --display: 'Lilita One', 'Trebuchet MS', sans-serif; --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f; --soft: #252a40;
+  --accent: #a98bff; --accent-ink: #151826; --ok: #9be3b5; --ok-bg: #1d3d2a; --err: #ffb3ad; --err-bg: #4a2224;
+  --r-comun: #a3a8bd; --r-poco: #5fd08f; --r-rara: #6ea5ff; --r-epica: #c48bff; --r-legendaria: #f2b84b; --r-ascendida: #ff6b70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f; --soft: #252a40;
+  --accent: #a98bff; --accent-ink: #151826; --ok: #9be3b5; --ok-bg: #1d3d2a; --err: #ffb3ad; --err-bg: #4a2224;
+  --r-comun: #a3a8bd; --r-poco: #5fd08f; --r-rara: #6ea5ff; --r-epica: #c48bff; --r-legendaria: #f2b84b; --r-ascendida: #ff6b70; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(28px, 4.5vw, 40px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lead { color: var(--muted); margin: 0; max-width: 72ch; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 14px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: var(--muted); }
+input, select, button { font: inherit; color: inherit; }
+.search { width: min(260px, 100%); padding: 7px 10px; border: 2px solid var(--line); border-radius: 10px; background: var(--soft); }
+.num-in { width: 64px; padding: 7px 8px; border: 2px solid var(--line); border-radius: 10px; background: var(--soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 2px solid var(--line); background: var(--soft); border-radius: 999px; padding: 4px 11px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.btn { border: 2px solid var(--line); background: var(--panel); border-radius: 10px; padding: 6px 12px; font-weight: 700; cursor: pointer; }
+.btn:hover, .chip:hover { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
+.status { font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.status.ok { background: var(--ok-bg); color: var(--ok); } .status.err { background: var(--err-bg); color: var(--err); }
+.scroll { overflow-x: auto; border: 2px solid var(--line); border-radius: 14px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 1240px; font-variant-numeric: tabular-nums; font-size: 14px; }
+th, td { border-bottom: 1px solid var(--line); padding: 0; text-align: left; vertical-align: middle; }
+thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
+thead button { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 10px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 800; color: var(--muted); cursor: pointer; white-space: nowrap; }
+thead button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+thead th[aria-sort="ascending"] button::after { content: " ▲"; color: var(--accent); }
+thead th[aria-sort="descending"] button::after { content: " ▼"; color: var(--accent); }
+th.num button, td.num input { text-align: right; }
+td input, td select { width: 100%; box-sizing: border-box; border: 2px solid transparent; background: transparent; padding: 8px; border-radius: 8px; }
+td input:hover, td select:hover { border-color: var(--line); }
+td input:focus, td select:focus { border-color: var(--accent); background: var(--soft); outline: none; }
+td.num { width: 74px; } td.name { min-width: 200px; } td.hab { min-width: 320px; }
+td.name input { font-weight: 800; }
+td.calc { padding: 8px; text-align: right; color: var(--muted); white-space: nowrap; }
+tbody tr:hover { background: var(--soft); }
+.rar-sel { font-weight: 800; }
+.r-comun { color: var(--r-comun); } .r-poco { color: var(--r-poco); } .r-rara { color: var(--r-rara); } .r-epica { color: var(--r-epica); } .r-legendaria { color: var(--r-legendaria); } .r-ascendida { color: var(--r-ascendida); }
+.empty { padding: 28px 16px; color: var(--muted); text-align: center; }
+.foot { font-size: 13px; color: var(--muted); margin: 0; max-width: 80ch; }
+@media (max-width: 600px) { .filters { gap: 10px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brawlground · tabla de trabajo</span>
+    <h1>Estadísticas de los personajes</h1>
+    <p class="lead">Edita cualquier celda: se guarda sola al salir de ella. Pulsa una cabecera para ordenar y usa los filtros para ver solo lo que te interesa. Cuando termines, avísame y paso los cambios al juego.</p>
+  </header>
+
+  <div class="filters" role="search">
+    <label class="field"><span>Buscar</span><input id="q" class="search" type="search" placeholder="Nombre, clase o habilidad"></label>
+    <div class="field"><span>Rareza</span><div class="chips" id="f-rar"></div></div>
+    <div class="field"><span>Tipo</span><div class="chips" id="f-tipo"></div></div>
+    <div class="field"><span>Coste</span><div class="chips"><input id="cmin" class="num-in" type="number" min="0" max="10" placeholder="mín" aria-label="Coste mínimo"><input id="cmax" class="num-in" type="number" min="0" max="10" placeholder="máx" aria-label="Coste máximo"></div></div>
+    <button class="btn" id="reset" type="button">Quitar filtros</button>
+  </div>
+
+  <div class="bar"><span id="count">Cargando personajes…</span><span id="status" class="status" aria-live="polite"></span></div>
+
+  <div class="scroll">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="body"><tr><td class="empty" colspan="15">Cargando personajes…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="foot">«Daño/s» se calcula solo: daño medio entre cadencia media. «Duelos» es el porcentaje de duelos ganados en la última simulación y no cambia hasta que vuelva a lanzarla. El alcance va en alturas de personaje y la velocidad en píxeles por segundo.</p>
+</div>
+
+<script>
+(() => {
+  const RAR = [['comun', 'Común'], ['poco', 'Poco común'], ['rara', 'Rara'], ['epica', 'Épica'], ['legendaria', 'Legendaria'], ['ascendida', 'Ascendida']];
+  const RAR_I = Object.fromEntries(RAR.map(([k], i) => [k, i]));
+  const TIPOS = [['cuerpo', 'Cuerpo a cuerpo'], ['distancia', 'A distancia'], ['apoyo', 'Apoyo y asedio']];
+  // columnas: clave, cabecera, tipo de dato (text | num | rar | tipo | calc)
+  const COLS = [
+    ['nombre', 'Personaje', 'text', 'name'], ['clase', 'Clase', 'text'], ['rareza', 'Rareza', 'rar'], ['tipo', 'Tipo', 'tipo'],
+    ['coste', 'Coste', 'num'], ['vida', 'Vida', 'num'], ['danoMin', 'Daño mín', 'num'], ['danoMax', 'Daño máx', 'num'],
+    ['cadMin', 'Cadencia mín (s)', 'num'], ['cadMax', 'Cadencia máx (s)', 'num'], ['alcance', 'Alcance', 'num'], ['velocidad', 'Velocidad', 'num'],
+    ['dps', 'Daño/s', 'calc'], ['duelos', 'Duelos', 'calc'], ['habilidad', 'Habilidad y notas', 'text', 'hab']
+  ];
+  const $ = id => document.getElementById(id);
+  let rows = [], db = null, sort = { k: 'coste', dir: 1 }, pending = false;
+  const filt = { q: '', rar: new Set(), tipo: new Set(), cmin: null, cmax: null };
+  const fmt = n => (n === null || n === undefined || n === '' || isNaN(n)) ? '' : String(Math.round(n * 100) / 100).replace('.', ',');
+  const parse = s => { const v = parseFloat(String(s).replace(',', '.')); return isNaN(v) ? null : v; };
+  const dps = r => { const d = ((r.danoMin ?? 0) + (r.danoMax ?? r.danoMin ?? 0)) / 2, c = ((r.cadMin ?? 0) + (r.cadMax ?? r.cadMin ?? 0)) / 2; return d && c ? d / c : null; };
+  const val = (r, k) => k === 'dps' ? dps(r) : k === 'duelos' ? r.duelos : k === 'rareza' ? RAR_I[r.rareza] : r[k];
+
+  // filtros
+  for (const [k, l] of RAR) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.setAttribute('aria-pressed', 'false'); b.innerHTML = `<span class="dot" style="background:var(--r-${k})"></span>`; b.append(l); $('f-rar').append(b); }
+  for (const [k, l] of TIPOS) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.setAttribute('aria-pressed', 'false'); b.textContent = l; $('f-tipo').append(b); }
+  const toggle = (box, set) => box.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const on = !set.has(b.dataset.k); on ? set.add(b.dataset.k) : set.delete(b.dataset.k); b.setAttribute('aria-pressed', on); render(); });
+  toggle($('f-rar'), filt.rar); toggle($('f-tipo'), filt.tipo);
+  $('q').addEventListener('input', e => { filt.q = e.target.value.trim().toLowerCase(); render(); });
+  $('cmin').addEventListener('input', e => { filt.cmin = parse(e.target.value); render(); });
+  $('cmax').addEventListener('input', e => { filt.cmax = parse(e.target.value); render(); });
+  $('reset').addEventListener('click', () => { filt.q = ''; filt.rar.clear(); filt.tipo.clear(); filt.cmin = filt.cmax = null; $('q').value = $('cmin').value = $('cmax').value = ''; document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false')); render(); });
+
+  // cabecera con orden
+  for (const [k, l, t] of COLS) {
+    const th = document.createElement('th'); th.scope = 'col'; if (t === 'num' || t === 'calc') th.className = 'num'; th.dataset.k = k;
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = l; th.append(b);
+    b.addEventListener('click', () => { sort = { k, dir: sort.k === k ? -sort.dir : (t === 'num' || t === 'calc' ? -1 : 1) }; render(); });
+    $('head').append(th);
+  }
+
+  function visible() {
+    return rows.filter(r => {
+      if (filt.q && !`${r.nombre} ${r.clase} ${r.habilidad}`.toLowerCase().includes(filt.q)) return false;
+      if (filt.rar.size && !filt.rar.has(r.rareza)) return false;
+      if (filt.tipo.size && !filt.tipo.has(r.tipo)) return false;
+      if (filt.cmin !== null && (r.coste ?? 0) < filt.cmin) return false;
+      if (filt.cmax !== null && (r.coste ?? 0) > filt.cmax) return false;
+      return true;
+    }).sort((a, b) => {
+      const x = val(a, sort.k), y = val(b, sort.k);
+      if (x === y) return (a.nombre || '').localeCompare(b.nombre || '');
+      if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1;
+      return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sort.dir;
+    });
+  }
+
+  function render() {
+    if (document.activeElement && document.activeElement.closest('#body')) { pending = true; return; }   // no pisar lo que se está escribiendo
+    pending = false;
+    document.querySelectorAll('#head th').forEach(th => th.dataset.k === sort.k ? th.setAttribute('aria-sort', sort.dir > 0 ? 'ascending' : 'descending') : th.removeAttribute('aria-sort'));
+    const list = visible(), body = $('body'); body.textContent = '';
+    $('count').textContent = rows.length ? `Mostrando ${list.length} de ${rows.length} personajes` : '';
+    if (!list.length) { body.innerHTML = `<tr><td class="empty" colspan="${COLS.length}">${rows.length ? 'Ningún personaje cumple estos filtros.' : 'Todavía no hay personajes guardados.'}</td></tr>`; return; }
+    for (const r of list) {
+      const tr = document.createElement('tr');
+      for (const [k, l, t, cls] of COLS) {
+        const td = document.createElement('td'); if (cls) td.className = cls;
+        if (t === 'calc') { td.className = 'calc'; const v = k === 'dps' ? dps(r) : r.duelos; td.textContent = v === null || v === undefined ? '—' : k === 'duelos' ? Math.round(v) + ' %' : fmt(v); }
+        else if (t === 'rar' || t === 'tipo') {
+          const s = document.createElement('select'); s.setAttribute('aria-label', `${l} de ${r.nombre}`);
+          for (const [ok, ol] of t === 'rar' ? RAR : TIPOS) s.add(new Option(ol, ok, false, r[k] === ok));
+          if (t === 'rar') s.className = 'rar-sel r-' + r[k];
+          s.addEventListener('change', () => save(r.id, k, s.value)); td.append(s);
+        } else {
+          const i = document.createElement('input'); i.type = 'text'; i.value = t === 'num' ? fmt(r[k]) : (r[k] ?? ''); i.setAttribute('aria-label', `${l} de ${r.nombre}`);
+          if (t === 'num') { td.className = 'num'; i.inputMode = 'decimal'; }
+          i.addEventListener('change', () => save(r.id, k, t === 'num' ? parse(i.value) : i.value.trim()));
+          i.addEventListener('keydown', e => { if (e.key === 'Enter') i.blur(); });
+          td.append(i);
+        }
+        tr.append(td);
+      }
+      body.append(tr);
+    }
+  }
+  document.addEventListener('focusout', () => setTimeout(() => { if (pending) render(); }, 0));
+
+  let stT;
+  function status(msg, ok) { const s = $('status'); s.textContent = msg; s.className = 'status ' + (ok ? 'ok' : 'err'); clearTimeout(stT); if (ok) stT = setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 1800); }
+  async function save(id, k, v) {
+    const r = rows.find(x => x.id === id); if (!r || r[k] === v) return;
+    if (!db) { status('No se puede guardar desde aquí', false); return; }
+    try { await db.collection('personajes').doc(id).update({ [k]: v }); status('Guardado', true); }
+    catch (e) { status(e && e.code === 'permission_denied' ? 'No tienes permiso para editar' : 'No se ha podido guardar; inténtalo otra vez', false); }
+  }
+
+  const timer = setTimeout(() => { if (!rows.length) { $('count').textContent = ''; $('body').innerHTML = `<tr><td class="empty" colspan="${COLS.length}">No se han podido cargar los datos. Abre la página en claude.ai con tu cuenta.</td></tr>`; } }, 10000);
+  (async () => {
+    db = await (window.claude?.use?.('db') ?? null);
+    if (!db) return;
+    db.collection('personajes').onSnapshot(snap => {
+      clearTimeout(timer);
+      rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, () => { clearTimeout(timer); $('count').textContent = ''; status('Se ha perdido la conexión con los datos; recarga la página', false); });
+  })();
+})();
+</script>
