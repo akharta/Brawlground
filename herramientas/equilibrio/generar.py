@@ -7,15 +7,9 @@ src = open(os.path.join(D, '../../prototipos/escena/index.html')).read()
 CH, RAR, NAMES, H = d['data']['CH'], d['data']['RARITY'], d['data']['NAMES'], d['data']['H']
 keys = list(NAMES)
 cards = {}
-for m in re.finditer(r'<div class="cardbox">\s*<div class="card[^"]*" aria-label="([^"]+)">\s*<div class="cost">(\d+)</div>.*?<div class="name">([^<]+)</div>.*?<dl>(.*?)</dl>', src, re.S):
-    pairs = re.findall(r'<dt>(.*?)</dt><dd>(.*?)</dd>', m.group(4))
-    cards[m.group(3).strip()] = (int(m.group(2)), pairs)
-alias = {'valkiria': 'Valkiria', 'desencadenado': 'Desencadenado', 'imparable': 'Imparable', 'centinela': 'Centinela X-9'}
-def card(k):
-    n = alias.get(k, NAMES[k])
-    for cn, v in cards.items():
-        if cn == n or cn.startswith(n) or n.startswith(cn): return v
-    return (None, [])
+for m in re.finditer(r'<div class="cost">(\d+)</div>\s*<div class="art"><img src="img/(\w+)_carta.png".*?<dl>(.*?)</dl>', src, re.S):
+    cards[m.group(2)] = (int(m.group(1)), re.findall(r'<dt>(.*?)</dt><dd>(.*?)</dd>', m.group(3)))
+def card(k): return cards.get(k, (None, []))
 RN = {'comun': 'Común', 'rara': 'Rara', 'epica': 'Épica', 'legendaria': 'Legendaria', 'ascendida': 'Ascendida'}
 # duelos
 W = {k: [0, 0] for k in keys}; M = {}

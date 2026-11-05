@@ -143,7 +143,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let castles = {}, scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio' };
+const NAMES = { legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio' };
 const NEWEST = 'tercio';
 let pickBlue = NEWEST, pickPurple = 'legionario';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1043,7 +1043,7 @@ function drawStage(g) {
 
 /* ---- batalla ---- */
 const COST = { legionario: 2, arquera: 2, lobo: 1, tercio: 3, valkiria: 4, ninja: 3, samurai: 3, pistolero: 4, kungfu: 1 };
-const LABEL = { legionario: 'Legionario', arquera: 'Arquera', lobo: 'Lobo', tercio: 'Tercio', valkiria: 'Valkiria', ninja: 'Ninja', samurai: 'Samurái', pistolero: 'Pistolero', kungfu: 'Kung fu' };
+const LABEL = { legionario: 'Tulio', arquera: 'Ailin', lobo: 'Garra', tercio: 'Rodrigo', valkiria: 'Brynja', ninja: 'Kazú', samurai: 'Hayato', pistolero: 'Cole', kungfu: 'Lin' };
 const DECK = ['legionario', 'arquera', 'lobo', 'tercio', 'valkiria', 'ninja', 'samurai', 'pistolero'];
 const EMAX = 10, EREGEN = 0.5, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castleG, flashG;

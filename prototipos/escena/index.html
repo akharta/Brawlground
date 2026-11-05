@@ -84,6 +84,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   font-family: var(--font-display); font-size: 1.4rem; color: #fff; text-shadow: 0 2px 0 var(--outline);
 }
 .card .name { font-family: var(--font-display); font-size: 1.35rem; text-align: center; color: var(--outline); margin: 6px 0 2px; }
+.card .cls { text-align: center; font-size: .82rem; font-weight: 700; color: var(--outline); opacity: .8; margin: -2px 0 4px; }
 .card .rar { text-align: center; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--outline); font-weight: 800; }
 .cardbox dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; background: var(--panel); border: 3px solid var(--outline); border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
 .cardbox dt { color: var(--muted); }
@@ -122,22 +123,22 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   </div>
   <div class="controls" id="anim-controls" hidden>
     <div class="seg" role="group" aria-label="Personaje">
-      <button data-char="legionario" aria-pressed="true">Legionario</button>
-      <button data-char="arquera" aria-pressed="false">Arquera</button>
-      <button data-char="valkiria" aria-pressed="false">Valkiria</button>
-      <button data-char="ninja" aria-pressed="false">Ninja</button>
-      <button data-char="pistolero" aria-pressed="false">Pistolero</button>
-      <button data-char="lobo" aria-pressed="false">Lobo</button>
-      <button data-char="samurai" aria-pressed="false">Samurái</button>
-      <button data-char="kungfu" aria-pressed="false">Kung fu</button>
-      <button data-char="tercio" aria-pressed="false">Tercio</button>
-      <button data-char="muerte" aria-pressed="false">Muerte</button>
-      <button data-char="acorazado" aria-pressed="false">Acorazado</button>
-      <button data-char="fraile" aria-pressed="false">Fraile</button>
-      <button data-char="catapulta" aria-pressed="false">Catapulta</button>
-      <button data-char="centinela" aria-pressed="false">Centinela X-9</button>
-      <button data-char="desencadenado" aria-pressed="false">El Desencadenado</button>
-      <button data-char="imparable" aria-pressed="false">El Imparable</button>
+      <button data-char="legionario" aria-pressed="true">Tulio, el Legionario</button>
+      <button data-char="arquera" aria-pressed="false">Ailin, la Arquera</button>
+      <button data-char="valkiria" aria-pressed="false">Brynja, la Valkiria</button>
+      <button data-char="ninja" aria-pressed="false">Kazú, el Ninja</button>
+      <button data-char="pistolero" aria-pressed="false">Cole, el Pistolero</button>
+      <button data-char="lobo" aria-pressed="false">Garra, el Lobo</button>
+      <button data-char="samurai" aria-pressed="false">Hayato, el Samurái</button>
+      <button data-char="kungfu" aria-pressed="false">Lin, el Monje</button>
+      <button data-char="tercio" aria-pressed="false">Rodrigo, el Tercio</button>
+      <button data-char="muerte" aria-pressed="false">Velkara, la Muerte</button>
+      <button data-char="acorazado" aria-pressed="false">Gustav, el Acorazado</button>
+      <button data-char="fraile" aria-pressed="false">Fray Tomé, el Fraile</button>
+      <button data-char="catapulta" aria-pressed="false">Berta, la Catapulta</button>
+      <button data-char="centinela" aria-pressed="false">Unidad X-9, el Centinela</button>
+      <button data-char="desencadenado" aria-pressed="false">Jhotum, el Desencadenado</button>
+      <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -158,145 +159,161 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   <div class="cards">
     <div class="cardbox">
-      <div class="card" aria-label="Carta del Legionario">
+      <div class="card" aria-label="Carta de Tulio, el Legionario">
         <div class="cost">2</div>
-        <div class="art"><img src="img/legionario_carta.png" alt="Ilustración del Legionario"></div>
-        <div class="name">Legionario</div>
+        <div class="art"><img src="img/legionario_carta.png" alt="Ilustración de Tulio, el Legionario"></div>
+        <div class="name">Tulio</div>
+        <div class="cls">el Legionario</div>
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>12</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card" aria-label="Carta de la Arquera">
+      <div class="card" aria-label="Carta de Ailin, la Arquera">
         <div class="cost">2</div>
-        <div class="art"><img src="img/arquera_carta.png" alt="Ilustración de la Arquera"></div>
-        <div class="name">Arquera</div>
+        <div class="art"><img src="img/arquera_carta.png" alt="Ilustración de Ailin, la Arquera"></div>
+        <div class="name">Ailin</div>
+        <div class="cls">la Arquera</div>
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>55</dd><dt>Daño</dt><dd>12</dd><dt>Alcance</dt><dd>Largo</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta de la Valkiria a caballo">
+      <div class="card rare" aria-label="Carta de Brynja, la Valkiria">
         <div class="cost">4</div>
-        <div class="art"><img src="img/valkiria_carta.png" alt="Ilustración de la Valkiria a caballo"></div>
-        <div class="name">Valkiria</div>
+        <div class="art"><img src="img/valkiria_carta.png" alt="Ilustración de Brynja, la Valkiria"></div>
+        <div class="name">Brynja</div>
+        <div class="cls">la Valkiria</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>20 en área</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta del Ninja">
+      <div class="card rare" aria-label="Carta de Kazú, el Ninja">
         <div class="cost">3</div>
-        <div class="art"><img src="img/ninja_carta.png" alt="Ilustración del Ninja"></div>
-        <div class="name">Ninja</div>
+        <div class="art"><img src="img/ninja_carta.png" alt="Ilustración de Kazú, el Ninja"></div>
+        <div class="name">Kazú</div>
+        <div class="cls">el Ninja</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>17</dd><dt>Habilidad</dt><dd>Teletransporte</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card epic" aria-label="Carta del Pistolero">
+      <div class="card epic" aria-label="Carta de Cole, el Pistolero">
         <div class="cost">4</div>
-        <div class="art"><img src="img/pistolero_carta.png" alt="Ilustración del Pistolero"></div>
-        <div class="name">Pistolero</div>
+        <div class="art"><img src="img/pistolero_carta.png" alt="Ilustración de Cole, el Pistolero"></div>
+        <div class="name">Cole</div>
+        <div class="cls">el Pistolero</div>
         <div class="rar">Épica</div>
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>23 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card" aria-label="Carta del Lobo">
+      <div class="card" aria-label="Carta de Garra, el Lobo">
         <div class="cost">1</div>
-        <div class="art"><img src="img/lobo_carta.png" alt="Ilustración del Lobo"></div>
-        <div class="name">Lobo</div>
+        <div class="art"><img src="img/lobo_carta.png" alt="Ilustración de Garra, el Lobo"></div>
+        <div class="name">Garra</div>
+        <div class="cls">el Lobo</div>
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>50</dd><dt>Daño</dt><dd>20</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta del Samurái">
+      <div class="card rare" aria-label="Carta de Hayato, el Samurái">
         <div class="cost">3</div>
-        <div class="art"><img src="img/samurai_carta.png" alt="Ilustración del Samurái"></div>
-        <div class="name">Samurái</div>
+        <div class="art"><img src="img/samurai_carta.png" alt="Ilustración de Hayato, el Samurái"></div>
+        <div class="name">Hayato</div>
+        <div class="cls">el Samurái</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>19</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card epic" aria-label="Carta del Kung fu">
+      <div class="card epic" aria-label="Carta de Lin, el Monje">
         <div class="cost">1</div>
-        <div class="art"><img src="img/kungfu_carta.png" alt="Ilustración del Kung fu"></div>
-        <div class="name">Kung fu</div>
+        <div class="art"><img src="img/kungfu_carta.png" alt="Ilustración de Lin, el Monje"></div>
+        <div class="name">Lin</div>
+        <div class="cls">el Monje</div>
         <div class="rar">Épica</div>
       </div>
       <dl><dt>Vida</dt><dd>40</dd><dt>Daño</dt><dd>16 (combo)</dd><dt>Ataques</dt><dd>Combo y patada giratoria</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card" aria-label="Carta del Tercio">
+      <div class="card" aria-label="Carta de Rodrigo, el Tercio">
         <div class="cost">3</div>
-        <div class="art"><img src="img/tercio_carta.png" alt="Ilustración del Tercio"></div>
-        <div class="name">Tercio</div>
+        <div class="art"><img src="img/tercio_carta.png" alt="Ilustración de Rodrigo, el Tercio"></div>
+        <div class="name">Rodrigo</div>
+        <div class="cls">el Tercio</div>
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>15 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga, empuja</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card legend" aria-label="Carta de la Muerte">
+      <div class="card legend" aria-label="Carta de Velkara, la Muerte">
         <div class="cost">5</div>
-        <div class="art"><img src="img/muerte_carta.png" alt="Ilustración de la Muerte"></div>
-        <div class="name">Muerte</div>
+        <div class="art"><img src="img/muerte_carta.png" alt="Ilustración de Velkara, la Muerte"></div>
+        <div class="name">Velkara</div>
+        <div class="cls">la Muerte</div>
         <div class="rar">Legendaria</div>
       </div>
       <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>30 en área</dd><dt>Habilidades</dt><dd>Corte giratorio, corte de oscuridad y tumbas</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta del Acorazado">
+      <div class="card rare" aria-label="Carta de Gustav, el Acorazado">
         <div class="cost">4</div>
-        <div class="art"><img src="img/acorazado_carta.png" alt="Ilustración del Acorazado"></div>
-        <div class="name">Acorazado</div>
+        <div class="art"><img src="img/acorazado_carta.png" alt="Ilustración de Gustav, el Acorazado"></div>
+        <div class="name">Gustav</div>
+        <div class="cls">el Acorazado</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta del Fraile">
+      <div class="card rare" aria-label="Carta de Fray Tomé, el Fraile">
         <div class="cost">4</div>
-        <div class="art"><img src="img/fraile_carta.png" alt="Ilustración del Fraile"></div>
-        <div class="name">Fraile</div>
+        <div class="art"><img src="img/fraile_carta.png" alt="Ilustración de Fray Tomé, el Fraile"></div>
+        <div class="name">Fray Tomé</div>
+        <div class="cls">el Fraile</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>15 en área cada 4 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card epic" aria-label="Carta de la Catapulta">
+      <div class="card epic" aria-label="Carta de Berta, la Catapulta">
         <div class="cost">6</div>
-        <div class="art"><img src="img/catapulta_carta.png" alt="Ilustración de la Catapulta"></div>
-        <div class="name">Catapulta</div>
+        <div class="art"><img src="img/catapulta_carta.png" alt="Ilustración de Berta, la Catapulta"></div>
+        <div class="name">Berta</div>
+        <div class="cls">la Catapulta</div>
         <div class="rar">Épica</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card legend" aria-label="Carta del Centinela X-9">
+      <div class="card legend" aria-label="Carta de Unidad X-9, el Centinela">
         <div class="cost">5</div>
-        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración del Centinela X-9"></div>
-        <div class="name">Centinela X-9</div>
+        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Unidad X-9, el Centinela"></div>
+        <div class="name">Unidad X-9</div>
+        <div class="cls">el Centinela</div>
         <div class="rar">Legendaria</div>
       </div>
       <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun continua hasta abatirlo</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card ascended" aria-label="Carta de El Desencadenado">
+      <div class="card ascended" aria-label="Carta de Jhotum, el Desencadenado">
         <div class="cost">7</div>
-        <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de El Desencadenado"></div>
-        <div class="name">Desencadenado</div>
+        <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de Jhotum, el Desencadenado"></div>
+        <div class="name">Jhotum</div>
+        <div class="cls">el Desencadenado</div>
         <div class="rar">Ascendida</div>
       </div>
       <dl><dt>Vida</dt><dd>200</dd><dt>Daño</dt><dd>45</dd><dt>Habilidad</dt><dd>Cada 3 ataques, cadenas hasta el castillo enemigo</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card ascended" aria-label="Carta de El Imparable">
+      <div class="card ascended" aria-label="Carta de Elyss, el Insaciable">
         <div class="cost">7</div>
-        <div class="art"><img src="img/imparable_carta.png" alt="Ilustración de El Imparable"></div>
-        <div class="name">Imparable</div>
+        <div class="art"><img src="img/imparable_carta.png" alt="Ilustración de Elyss, el Insaciable"></div>
+        <div class="name">Elyss</div>
+        <div class="cls">el Insaciable</div>
         <div class="rar">Ascendida</div>
       </div>
       <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 7 bajas se convierte en monstruo; si lo matan implosiona y renace consumido</dd></dl>
@@ -401,7 +418,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Legionario', arquera: 'Arquera', valkiria: 'Valkiria', ninja: 'Ninja', pistolero: 'Pistolero', lobo: 'Lobo', samurai: 'Samurái', kungfu: 'Kung fu', tercio: 'Tercio', muerte: 'Muerte', acorazado: 'Acorazado', fraile: 'Fraile', catapulta: 'Catapulta', centinela: 'Centinela X-9', desencadenado: 'El Desencadenado', imparable: 'El Imparable' };
+const NAMES = { legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
