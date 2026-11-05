@@ -2492,6 +2492,32 @@ window.__testArrow = (targetType, fromX) => {   // prueba: flecha enemiga desde 
   return 'ok';
 };
 window.__units = () => units;
+window.__data = () => ({ CH, RARITY, NAMES, IMP_RULES, H });
+// simulación síncrona para la ficha de equilibrio: duelo a uno contra uno con la lógica real, paso fijo
+function simStep(dt) {
+  fightLogic(dt); units.forEach(u => { if (u.alive && u.root.visible) u.update(dt); }); updateArrows(dt);
+  fx = fx.filter(p => (p.life -= dt) > 0);
+}
+function simReset() { spawnTimers.forEach(clearTimeout); spawnTimers = []; clearUnits(); arrows.forEach(a => a.img && a.img.destroy()); arrows = []; mode = 'fight'; }
+window.__sim = (a, b, maxT = 60, dt = 1 / 30) => {
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, b, 'purple', W - 140); units.push(A, B);
+  const out = u => !u.alive || u.state === 'die';
+  let t = 0;
+  while (t < maxT && !out(A) && !out(B)) { simStep(dt); t += dt; }
+  const r = { a, b, t: +t.toFixed(1), aHp: Math.max(0, A.hp) / A.max, bHp: Math.max(0, B.hp) / B.max, winner: out(A) && !out(B) ? 'b' : out(B) && !out(A) ? 'a' : 'draw' };
+  simReset(); return r;
+};
+window.__dps = (a, T = 30, dt = 1 / 30) => {
+  // daño real por segundo contra un muñeco de entrenamiento (un legionario con vida infinita); el atacante no recibe daño
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, 'legionario', 'purple', W - 140); units.push(A, B);
+  A.damage = () => {}; B.hp = B.max = 1e7;
+  let t = 0, first = null;
+  while (t < T + 15) { simStep(dt); t += dt; if (first === null && B.hp < 1e7) first = t; if (first !== null && t - first >= T) break; if (A.type === 'centinela' || A.type === 'catapulta') B.x = Math.min(B.x, W - 140); }
+  const dmg = 1e7 - B.hp, r = { a, dps: first === null ? 0 : +(dmg / Math.max(1, t - first)).toFixed(1), firstHit: first === null ? null : +first.toFixed(1) };
+  simReset(); return r;
+};
 window.__addUnit = (type, team, x) => { const u = new Unit(scene, type, team, x); units.push(u); return true; };
 window.__debugUnits = () => units.map(u => ({ id: u._id || (u._id = ++__uid), type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x), form: u.form, stacks: u.stacks, max: u.max }));
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);

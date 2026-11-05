@@ -1,0 +1,278 @@
+<title>Equilibrio de Brawlground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Ficha de trabajo: cabecera con la lectura rápida, luego dispersión coste/victorias, tabla completa y matriz de duelos. */
+:root {
+  --bg: #eef0f4; --panel: #ffffff; --ink: #1e2235; --muted: #5d6276; --line: #d6d9e3;
+  --accent: #7c4ddb; --win: #2f9e5b; --lose: #d9473f; --mid: #f1e7c9;
+  --r-comun: #8a8fa3; --r-rara: #3b82f6; --r-epica: #a855f7; --r-legendaria: #c98a0b; --r-ascendida: #e0393f;
+  --hot-bg: #fde4e2; --hot-fg: #a52a24; --cold-bg: #e2ecfd; --cold-fg: #1f56b8; --ok-bg: #e3f4e8; --ok-fg: #1f7a43; --role-bg: #ecebf2; --role-fg: #4d4f63;
+  --display: 'Lilita One', 'Trebuchet MS', sans-serif; --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f;
+  --accent: #a98bff; --win: #3fbf74; --lose: #e2605a; --mid: #4a4430;
+  --hot-bg: #4a2224; --hot-fg: #ffb3ad; --cold-bg: #1f3157; --cold-fg: #a9c6ff; --ok-bg: #1d3d2a; --ok-fg: #9be3b5; --role-bg: #2b2f44; --role-fg: #c7c9d8; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f;
+  --accent: #a98bff; --win: #3fbf74; --lose: #e2605a; --mid: #4a4430;
+  --hot-bg: #4a2224; --hot-fg: #ffb3ad; --cold-bg: #1f3157; --cold-fg: #a9c6ff; --ok-bg: #1d3d2a; --ok-fg: #9be3b5; --role-bg: #2b2f44; --role-fg: #c7c9d8; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.05; }
+h2 { font-size: 24px; }
+p { margin: 0; max-width: 68ch; }
+.lead { color: var(--muted); }
+header { display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; color: var(--accent); }
+section { display: grid; gap: 12px; min-width: 0; }
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.summary .panel { display: grid; gap: 6px; align-content: start; }
+.summary b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.p-hot { background: var(--hot-bg); color: var(--hot-fg); } .p-cold { background: var(--cold-bg); color: var(--cold-fg); }
+.p-ok { background: var(--ok-bg); color: var(--ok-fg); } .p-role { background: var(--role-bg); color: var(--role-fg); }
+.scroll { overflow-x: auto; border: 2px solid var(--line); border-radius: 14px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.stats { min-width: 1080px; font-size: 14px; }
+.stats th, .stats td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.stats thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; position: sticky; top: 0; background: var(--panel); cursor: pointer; user-select: none; white-space: nowrap; }
+.stats thead th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.stats thead th[aria-sort="descending"]::after { content: ' ▼'; } .stats thead th[aria-sort="ascending"]::after { content: ' ▲'; }
+.stats tbody th { font-weight: 800; white-space: nowrap; }
+.nm { display: block; } .rar { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.r-comun { color: var(--r-comun); } .r-rara { color: var(--r-rara); } .r-epica { color: var(--r-epica); } .r-legendaria { color: var(--r-legendaria); } .r-ascendida { color: var(--r-ascendida); }
+.num { text-align: right !important; white-space: nowrap; } .strong { font-weight: 800; }
+.bar { display: inline-block; width: 52px; height: 7px; border-radius: 4px; background: var(--line); margin-right: 8px; vertical-align: middle; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.note { font-size: 13px; min-width: 260px; } .sub { color: var(--muted); }
+svg { width: 100%; height: auto; display: block; }
+.grid { stroke: var(--line); stroke-width: 1; } .ax { fill: var(--muted); font-size: 12px; font-family: var(--body); } .lbl { font-weight: 700; }
+.trend { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
+.dot { stroke: var(--panel); stroke-width: 2; } .d-hot { fill: var(--lose); } .d-cold { fill: var(--r-rara); } .d-ok { fill: var(--win); } .d-role { fill: var(--muted); }
+.dl { fill: var(--ink); font-size: 12px; font-weight: 700; font-family: var(--body); }
+.matrix { font-size: 12px; width: auto; }
+.matrix th, .matrix td { border: 1px solid var(--panel); padding: 0; }
+.matrix thead th { height: 112px; vertical-align: bottom; padding-bottom: 6px; }
+.matrix thead th span { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 700; white-space: nowrap; }
+.matrix tbody th { text-align: right; padding: 0 8px; white-space: nowrap; font-weight: 700; }
+.matrix td.c { width: 40px; height: 32px; text-align: center; font-weight: 800; color: var(--ink);
+  background: color-mix(in oklab, var(--win) calc(var(--v) * 100%), var(--lose)); color: #fff; }
+.matrix td.self { background: var(--line); }
+.notes { display: grid; gap: 10px; padding-left: 20px; margin: 0; } .notes li { max-width: 80ch; }
+.caveat { color: var(--muted); font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width .3s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brawlground · ficha de revisión</span>
+    <h1>Equilibrio de los personajes</h1>
+    <p class="lead">Datos sacados del código del juego. Cada personaje se ha batido en duelo contra todos los demás (720 duelos simulados con la lógica real, 6 por pareja cambiando de lado) y contra un muñeco de vida infinita para medir su daño real por segundo.</p>
+  </header>
+
+  <section class="summary" aria-label="Lectura rápida">
+    <div class="panel"><span class="pill p-hot">Rinde de más</span><b>Muerte, Acorazado, Lobo</b><p class="lead">Ganan muchos más duelos de lo que les toca por su coste.</p></div>
+    <div class="panel"><span class="pill p-cold">Rinde de menos</span><b>Kung fu</b><p class="lead">Pierden más de lo que les toca por su coste.</p></div>
+    <div class="panel"><span class="pill p-role">Otro papel</span><b>Fraile, Catapulta</b><p class="lead">Curar y asediar no se mide en un duelo; se juzgan en la batalla.</p></div>
+  </section>
+
+  <section>
+    <h2>Victorias frente a coste</h2>
+    <p class="lead">La línea discontinua es lo que «toca» ganar por cada coste. Lo que queda muy por encima es demasiado bueno para lo que cuesta; lo que queda muy por debajo, demasiado flojo.</p>
+    <div class="panel"><svg viewBox="0 0 640 340" role="img" aria-label="Victorias en duelos frente al coste en energía"><line class="grid" x1="46" x2="624" y1="300.0" y2="300.0"/><text class="ax" x="38" y="304.0" text-anchor="end">0 %</text><line class="grid" x1="46" x2="624" y1="229.0" y2="229.0"/><text class="ax" x="38" y="233.0" text-anchor="end">25 %</text><line class="grid" x1="46" x2="624" y1="158.0" y2="158.0"/><text class="ax" x="38" y="162.0" text-anchor="end">50 %</text><line class="grid" x1="46" x2="624" y1="87.0" y2="87.0"/><text class="ax" x="38" y="91.0" text-anchor="end">75 %</text><line class="grid" x1="46" x2="624" y1="16.0" y2="16.0"/><text class="ax" x="38" y="20.0" text-anchor="end">100 %</text><text class="ax" x="87.3" y="318" text-anchor="middle">1</text><text class="ax" x="169.9" y="318" text-anchor="middle">2</text><text class="ax" x="252.4" y="318" text-anchor="middle">3</text><text class="ax" x="335.0" y="318" text-anchor="middle">4</text><text class="ax" x="417.6" y="318" text-anchor="middle">5</text><text class="ax" x="500.1" y="318" text-anchor="middle">6</text><text class="ax" x="582.7" y="318" text-anchor="middle">7</text><text class="ax lbl" x="343" y="336" text-anchor="middle">Coste en energía</text><line class="trend" x1="54.3" y1="249.5" x2="615.7" y2="39.9"/><circle class="dot d-ok" cx="169.9" cy="214.8" r="6"/><text class="dl" x="178.9" y="218.8" text-anchor="start">Legionario</text><circle class="dot d-ok" cx="169.9" cy="243.2" r="6"/><text class="dl" x="178.9" y="247.2" text-anchor="start">Arquera</text><circle class="dot d-ok" cx="335.0" cy="129.6" r="6"/><text class="dl" x="344.0" y="133.6" text-anchor="start">Valkiria</text><circle class="dot d-ok" cx="252.4" cy="164.3" r="6"/><text class="dl" x="261.4" y="168.3" text-anchor="start">Ninja</text><circle class="dot d-ok" cx="335.0" cy="186.4" r="6"/><text class="dl" x="344.0" y="190.4" text-anchor="start">Pistolero</text><circle class="dot d-hot" cx="87.3" cy="161.2" r="6"/><text class="dl" x="96.3" y="165.2" text-anchor="start">Lobo</text><circle class="dot d-ok" cx="252.4" cy="199.0" r="6"/><text class="dl" x="261.4" y="208.6" text-anchor="start">Samurái</text><circle class="dot d-cold" cx="87.3" cy="281.1" r="6"/><text class="dl" x="96.3" y="285.1" text-anchor="start">Kung fu</text><circle class="dot d-ok" cx="252.4" cy="189.6" r="6"/><text class="dl" x="261.4" y="193.6" text-anchor="start">Tercio</text><circle class="dot d-hot" cx="417.6" cy="50.7" r="6"/><text class="dl" x="426.6" y="54.7" text-anchor="start">Muerte</text><circle class="dot d-hot" cx="335.0" cy="91.7" r="6"/><text class="dl" x="344.0" y="95.7" text-anchor="start">Acorazado</text><circle class="dot d-role" cx="335.0" cy="300.0" r="6"/><text class="dl" x="344.0" y="304.0" text-anchor="start">Fraile</text><circle class="dot d-role" cx="500.1" cy="186.4" r="6"/><text class="dl" x="491.1" y="190.4" text-anchor="end">Catapulta</text><circle class="dot d-ok" cx="417.6" cy="94.9" r="6"/><text class="dl" x="426.6" y="98.9" text-anchor="start">Centinela X-9</text><circle class="dot d-ok" cx="582.7" cy="31.8" r="6"/><text class="dl" x="573.7" y="35.8" text-anchor="end">El Desencadenado</text><circle class="dot d-ok" cx="582.7" cy="38.1" r="6"/><text class="dl" x="573.7" y="50.8" text-anchor="end">El Imparable</text></svg></div>
+  </section>
+
+  <section>
+    <h2>Todos los personajes</h2>
+    <p class="lead">Pulsa una cabecera para ordenar. Daño y cadencia son los del código (por golpe y segundos entre ataques); el alcance va en alturas de personaje. «Daño/s real» es lo medido contra el muñeco.</p>
+    <div class="scroll">
+      <table class="stats" id="stats">
+        <thead><tr>
+          <th scope="col" tabindex="0" data-t="s">Personaje</th><th scope="col" tabindex="0" class="num">Coste</th><th scope="col" tabindex="0" class="num">Vida</th>
+          <th scope="col" tabindex="0" class="num">Daño</th><th scope="col" tabindex="0" class="num">Cadencia</th><th scope="col" tabindex="0" class="num">Alcance</th>
+          <th scope="col" tabindex="0" class="num">Velocidad</th><th scope="col" tabindex="0" class="num">Daño/s real</th><th scope="col" tabindex="0" class="num">Daño/s por energía</th>
+          <th scope="col" tabindex="0" class="num">Vida por energía</th><th scope="col" tabindex="0" class="num" aria-sort="descending">Duelos ganados</th><th scope="col" tabindex="0" data-t="s">Veredicto</th><th scope="col" data-t="none">Carta y notas</th>
+        </tr></thead>
+        <tbody>
+<tr data-k="desencadenado">
+<th scope="row"><span class="nm">El Desencadenado</span><span class="rar r-ascendida">Ascendida</span></th>
+<td class="num">7</td><td class="num">200</td><td class="num">45,0</td><td class="num">1,8 s</td><td class="num">1,3</td><td class="num">40</td>
+<td class="num strong">24,9</td><td class="num">3,6</td><td class="num">28,6</td>
+<td class="num"><span class="bar"><i style="width:94%"></i></span>94 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 45; Habilidad: Cada 3 ataques, cadenas hasta el castillo enemigo<br><span class="sub">Cada 3 ataques golpea a todo el carril y al castillo.</span></td></tr>
+<tr data-k="imparable">
+<th scope="row"><span class="nm">El Imparable</span><span class="rar r-ascendida">Ascendida</span></th>
+<td class="num">7</td><td class="num">150</td><td class="num">35,0</td><td class="num">1,2 s</td><td class="num">1,1</td><td class="num">60</td>
+<td class="num strong">28,7</td><td class="num">4,1</td><td class="num">21,4</td>
+<td class="num"><span class="bar"><i style="width:92%"></i></span>92 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 35; Habilidad: A las 7 bajas se convierte en monstruo; si lo matan implosiona y renace consumido<br><span class="sub">En un duelo no llega a 7 bajas: solo se ve su primera forma.</span></td></tr>
+<tr data-k="muerte">
+<th scope="row"><span class="nm">Muerte</span><span class="rar r-legendaria">Legendaria</span></th>
+<td class="num">5</td><td class="num">180</td><td class="num">30,0</td><td class="num">1,8 s</td><td class="num">1,3</td><td class="num">50</td>
+<td class="num strong">19,1</td><td class="num">3,8</td><td class="num">36,0</td>
+<td class="num"><span class="bar"><i style="width:88%"></i></span>88 %</td>
+<td><span class="pill p-hot">Rinde de más</span></td>
+<td class="note">Daño: 30 en área; Habilidades: Corte giratorio, corte de oscuridad y tumbas<br><span class="sub">Sus tumbas sacan esqueletos que también pelean.</span></td></tr>
+<tr data-k="acorazado">
+<th scope="row"><span class="nm">Acorazado</span><span class="rar r-rara">Rara</span></th>
+<td class="num">4</td><td class="num">260</td><td class="num">11,5</td><td class="num">1,8 s</td><td class="num">1,1</td><td class="num">36</td>
+<td class="num strong">6,7</td><td class="num">1,7</td><td class="num">65,0</td>
+<td class="num"><span class="bar"><i style="width:73%"></i></span>73 %</td>
+<td><span class="pill p-hot">Rinde de más</span></td>
+<td class="note">Daño: 11; Habilidad: Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s<br><span class="sub">Escudo frontal −30 %; refuerzo −60 % por debajo de la mitad de vida.</span></td></tr>
+<tr data-k="centinela">
+<th scope="row"><span class="nm">Centinela X-9</span><span class="rar r-legendaria">Legendaria</span></th>
+<td class="num">5</td><td class="num">100</td><td class="num">—</td><td class="num">3,0 s</td><td class="num">3,6</td><td class="num">34</td>
+<td class="num strong">19,2</td><td class="num">3,8</td><td class="num">20,0</td>
+<td class="num"><span class="bar"><i style="width:72%"></i></span>72 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">De lejos: Francotirador, 30; De cerca: Minigun continua hasta abatirlo<br><span class="sub">Alterna francotirador y minigun según la distancia.</span></td></tr>
+<tr data-k="valkiria">
+<th scope="row"><span class="nm">Valkiria</span><span class="rar r-rara">Rara</span></th>
+<td class="num">4</td><td class="num">120</td><td class="num">20,0</td><td class="num">1,4 s</td><td class="num">1,4</td><td class="num">84</td>
+<td class="num strong">14,6</td><td class="num">3,6</td><td class="num">30,0</td>
+<td class="num"><span class="bar"><i style="width:60%"></i></span>60 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 20 en área; Alcance: Cuerpo a cuerpo<br><span class="sub">Daño en área: un duelo no lo aprovecha.</span></td></tr>
+<tr data-k="lobo">
+<th scope="row"><span class="nm">Lobo</span><span class="rar r-comun">Común</span></th>
+<td class="num">1</td><td class="num">50</td><td class="num">20,0</td><td class="num">0,8 s</td><td class="num">0,8</td><td class="num">108</td>
+<td class="num strong">22,0</td><td class="num">22,0</td><td class="num">50,0</td>
+<td class="num"><span class="bar"><i style="width:49%"></i></span>49 %</td>
+<td><span class="pill p-hot">Rinde de más</span></td>
+<td class="note">Daño: 20; Habilidad: Embestida<br><span class="sub">Embestida al acercarse.</span></td></tr>
+<tr data-k="ninja">
+<th scope="row"><span class="nm">Ninja</span><span class="rar r-rara">Rara</span></th>
+<td class="num">3</td><td class="num">60</td><td class="num">17,0</td><td class="num">0,6 s</td><td class="num">0,9</td><td class="num">74</td>
+<td class="num strong">21,1</td><td class="num">7,0</td><td class="num">20,0</td>
+<td class="num"><span class="bar"><i style="width:48%"></i></span>48 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 17; Habilidad: Teletransporte<br><span class="sub">Se teletransporta junto a los tiradores.</span></td></tr>
+<tr data-k="pistolero">
+<th scope="row"><span class="nm">Pistolero</span><span class="rar r-epica">Épica</span></th>
+<td class="num">4</td><td class="num">60</td><td class="num">12,0</td><td class="num">1,6 s</td><td class="num">2,7</td><td class="num">56</td>
+<td class="num strong">14,5</td><td class="num">3,6</td><td class="num">15,0</td>
+<td class="num"><span class="bar"><i style="width:40%"></i></span>40 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 23 (2 disparos); Alcance: Medio<br><span class="sub"></span></td></tr>
+<tr data-k="catapulta">
+<th scope="row"><span class="nm">Catapulta</span><span class="rar r-epica">Épica</span></th>
+<td class="num">6</td><td class="num">120</td><td class="num">35,0</td><td class="num">3,6 s</td><td class="num">4,3</td><td class="num">26</td>
+<td class="num strong">2,2</td><td class="num">0,4</td><td class="num">20,0</td>
+<td class="num"><span class="bar"><i style="width:40%"></i></span>40 %</td>
+<td><span class="pill p-role">Otro papel</span></td>
+<td class="note">Daño: 35 en área (×3 a castillos); Alcance: Muy largo; indefensa de cerca<br><span class="sub">Asedio: rinde contra castillos y grupos, no en duelo.</span></td></tr>
+<tr data-k="tercio">
+<th scope="row"><span class="nm">Tercio</span><span class="rar r-comun">Común</span></th>
+<td class="num">3</td><td class="num">100</td><td class="num">15,0</td><td class="num">2,4 s</td><td class="num">2,0</td><td class="num">34</td>
+<td class="num strong">6,4</td><td class="num">2,1</td><td class="num">33,3</td>
+<td class="num"><span class="bar"><i style="width:39%"></i></span>39 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 15 (×1,8 a grandes y rápidos); Alcance: Pica larga, empuja<br><span class="sub">Bonus ×1,8 contra Valkiria y Lobo; empuja.</span></td></tr>
+<tr data-k="samurai">
+<th scope="row"><span class="nm">Samurái</span><span class="rar r-rara">Rara</span></th>
+<td class="num">3</td><td class="num">140</td><td class="num">19,0</td><td class="num">1,5 s</td><td class="num">1,2</td><td class="num">52</td>
+<td class="num strong">7,5</td><td class="num">2,5</td><td class="num">46,7</td>
+<td class="num"><span class="bar"><i style="width:36%"></i></span>36 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 19; Ataque: Iaido<br><span class="sub">Un solo tajo de iaido por ataque.</span></td></tr>
+<tr data-k="legionario">
+<th scope="row"><span class="nm">Legionario</span><span class="rar r-comun">Común</span></th>
+<td class="num">2</td><td class="num">100</td><td class="num">12,0</td><td class="num">1,2 s</td><td class="num">1,1</td><td class="num">58</td>
+<td class="num strong">10,2</td><td class="num">5,1</td><td class="num">50,0</td>
+<td class="num"><span class="bar"><i style="width:30%"></i></span>30 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 12; Alcance: Cuerpo a cuerpo<br><span class="sub"></span></td></tr>
+<tr data-k="arquera">
+<th scope="row"><span class="nm">Arquera</span><span class="rar r-comun">Común</span></th>
+<td class="num">2</td><td class="num">55</td><td class="num">12,0</td><td class="num">1,6 s</td><td class="num">4,3</td><td class="num">54</td>
+<td class="num strong">7,7</td><td class="num">3,9</td><td class="num">27,5</td>
+<td class="num"><span class="bar"><i style="width:20%"></i></span>20 %</td>
+<td><span class="pill p-ok">En su sitio</span></td>
+<td class="note">Daño: 12; Alcance: Largo<br><span class="sub"></span></td></tr>
+<tr data-k="kungfu">
+<th scope="row"><span class="nm">Kung fu</span><span class="rar r-epica">Épica</span></th>
+<td class="num">1</td><td class="num">40</td><td class="num">3,5</td><td class="num">1,5 s</td><td class="num">0,8</td><td class="num">76</td>
+<td class="num strong">6,1</td><td class="num">6,1</td><td class="num">40,0</td>
+<td class="num"><span class="bar"><i style="width:7%"></i></span>7 %</td>
+<td><span class="pill p-cold">Rinde de menos</span></td>
+<td class="note">Daño: 16 (combo); Ataques: Combo y patada giratoria<br><span class="sub">Combo de 3 golpes, palma que empuja y patada giratoria.</span></td></tr>
+<tr data-k="fraile">
+<th scope="row"><span class="nm">Fraile</span><span class="rar r-rara">Rara</span></th>
+<td class="num">4</td><td class="num">60</td><td class="num">—</td><td class="num">4,0 s</td><td class="num">2,2</td><td class="num">46</td>
+<td class="num strong">0,0</td><td class="num">0,0</td><td class="num">15,0</td>
+<td class="num"><span class="bar"><i style="width:0%"></i></span>0 %</td>
+<td><span class="pill p-role">Otro papel</span></td>
+<td class="note">Cura: 15 en área cada 4 s; Habilidad: No ataca; aura dorada que cura a los aliados cercanos<br><span class="sub">No ataca: cura. Un duelo no mide su papel.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Quién gana a quién</h2>
+    <p class="lead">Cada fila es un personaje y el número son los duelos que gana de 6 contra el de esa columna. Verde: casi siempre gana. Rojo: casi siempre pierde. Pasa el dedo o el ratón por una casilla para ver el tiempo medio.</p>
+    <div class="scroll">
+      <table class="matrix"><thead><tr><th></th><th scope="col"><span>El Desencadenado</span></th><th scope="col"><span>El Imparable</span></th><th scope="col"><span>Muerte</span></th><th scope="col"><span>Acorazado</span></th><th scope="col"><span>Centinela X-9</span></th><th scope="col"><span>Valkiria</span></th><th scope="col"><span>Lobo</span></th><th scope="col"><span>Ninja</span></th><th scope="col"><span>Pistolero</span></th><th scope="col"><span>Catapulta</span></th><th scope="col"><span>Tercio</span></th><th scope="col"><span>Samurái</span></th><th scope="col"><span>Legionario</span></th><th scope="col"><span>Arquera</span></th><th scope="col"><span>Kung fu</span></th><th scope="col"><span>Fraile</span></th></tr></thead><tbody>
+<tr><th scope="row">El Desencadenado</th><td class="self"></td><td class="c" style="--v:1.00" title="El Desencadenado contra El Imparable: gana 6 de 6 · 10,8 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Muerte: gana 6 de 6 · 10,0 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Acorazado: gana 6 de 6 · 24,4 s de media">6</td><td class="c" style="--v:0.17" title="El Desencadenado contra Centinela X-9: gana 1 de 6 · 16,7 s de media">1</td><td class="c" style="--v:1.00" title="El Desencadenado contra Valkiria: gana 6 de 6 · 11,4 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Lobo: gana 6 de 6 · 5,6 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Ninja: gana 6 de 6 · 7,6 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Pistolero: gana 6 de 6 · 12,0 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Catapulta: gana 6 de 6 · 18,4 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Tercio: gana 6 de 6 · 21,5 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Samurái: gana 6 de 6 · 14,2 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Legionario: gana 6 de 6 · 10,2 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Arquera: gana 6 de 6 · 14,8 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Kung fu: gana 6 de 6 · 5,9 s de media">6</td><td class="c" style="--v:1.00" title="El Desencadenado contra Fraile: gana 6 de 6 · 12,5 s de media">6</td></tr>
+<tr><th scope="row">El Imparable</th><td class="c" style="--v:0.00" title="El Imparable contra El Desencadenado: gana 0 de 6 · 10,8 s de media">0</td><td class="self"></td><td class="c" style="--v:0.83" title="El Imparable contra Muerte: gana 5 de 6 · 10,1 s de media">5</td><td class="c" style="--v:1.00" title="El Imparable contra Acorazado: gana 6 de 6 · 19,3 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Centinela X-9: gana 6 de 6 · 8,0 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Valkiria: gana 6 de 6 · 7,2 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Lobo: gana 6 de 6 · 4,2 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Ninja: gana 6 de 6 · 4,9 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Pistolero: gana 6 de 6 · 5,4 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Catapulta: gana 6 de 6 · 10,0 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Tercio: gana 6 de 6 · 8,2 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Samurái: gana 6 de 6 · 8,7 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Legionario: gana 6 de 6 · 6,5 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Arquera: gana 6 de 6 · 7,0 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Kung fu: gana 6 de 6 · 4,9 s de media">6</td><td class="c" style="--v:1.00" title="El Imparable contra Fraile: gana 6 de 6 · 7,0 s de media">6</td></tr>
+<tr><th scope="row">Muerte</th><td class="c" style="--v:0.00" title="Muerte contra El Desencadenado: gana 0 de 6 · 10,0 s de media">0</td><td class="c" style="--v:0.17" title="Muerte contra El Imparable: gana 1 de 6 · 10,1 s de media">1</td><td class="self"></td><td class="c" style="--v:1.00" title="Muerte contra Acorazado: gana 6 de 6 · 25,2 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Centinela X-9: gana 6 de 6 · 9,2 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Valkiria: gana 6 de 6 · 9,1 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Lobo: gana 6 de 6 · 5,4 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Ninja: gana 6 de 6 · 5,1 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Pistolero: gana 6 de 6 · 5,1 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Catapulta: gana 6 de 6 · 9,8 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Tercio: gana 6 de 6 · 13,7 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Samurái: gana 6 de 6 · 10,5 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Legionario: gana 6 de 6 · 8,6 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Arquera: gana 6 de 6 · 5,4 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Kung fu: gana 6 de 6 · 5,0 s de media">6</td><td class="c" style="--v:1.00" title="Muerte contra Fraile: gana 6 de 6 · 6,8 s de media">6</td></tr>
+<tr><th scope="row">Acorazado</th><td class="c" style="--v:0.00" title="Acorazado contra El Desencadenado: gana 0 de 6 · 24,4 s de media">0</td><td class="c" style="--v:0.00" title="Acorazado contra El Imparable: gana 0 de 6 · 19,3 s de media">0</td><td class="c" style="--v:0.00" title="Acorazado contra Muerte: gana 0 de 6 · 25,2 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Acorazado contra Centinela X-9: gana 6 de 6 · 27,7 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Valkiria: gana 6 de 6 · 24,3 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Lobo: gana 6 de 6 · 11,0 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Ninja: gana 6 de 6 · 14,7 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Pistolero: gana 6 de 6 · 19,3 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Catapulta: gana 6 de 6 · 32,6 s de media">6</td><td class="c" style="--v:0.00" title="Acorazado contra Tercio: gana 0 de 6 · 60,0 s de media">0</td><td class="c" style="--v:1.00" title="Acorazado contra Samurái: gana 6 de 6 · 28,9 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Legionario: gana 6 de 6 · 21,9 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Arquera: gana 6 de 6 · 21,3 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Kung fu: gana 6 de 6 · 13,9 s de media">6</td><td class="c" style="--v:1.00" title="Acorazado contra Fraile: gana 6 de 6 · 28,7 s de media">6</td></tr>
+<tr><th scope="row">Centinela X-9</th><td class="c" style="--v:0.83" title="Centinela X-9 contra El Desencadenado: gana 5 de 6 · 16,7 s de media">5</td><td class="c" style="--v:0.00" title="Centinela X-9 contra El Imparable: gana 0 de 6 · 8,0 s de media">0</td><td class="c" style="--v:0.00" title="Centinela X-9 contra Muerte: gana 0 de 6 · 9,2 s de media">0</td><td class="c" style="--v:0.00" title="Centinela X-9 contra Acorazado: gana 0 de 6 · 27,7 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Centinela X-9 contra Valkiria: gana 6 de 6 · 10,1 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Lobo: gana 6 de 6 · 6,3 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Ninja: gana 6 de 6 · 4,7 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Pistolero: gana 6 de 6 · 8,3 s de media">6</td><td class="c" style="--v:0.00" title="Centinela X-9 contra Catapulta: gana 0 de 6 · 13,7 s de media">0</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Tercio: gana 6 de 6 · 14,1 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Samurái: gana 6 de 6 · 13,3 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Legionario: gana 6 de 6 · 11,2 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Arquera: gana 6 de 6 · 8,8 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Kung fu: gana 6 de 6 · 6,5 s de media">6</td><td class="c" style="--v:1.00" title="Centinela X-9 contra Fraile: gana 6 de 6 · 12,1 s de media">6</td></tr>
+<tr><th scope="row">Valkiria</th><td class="c" style="--v:0.00" title="Valkiria contra El Desencadenado: gana 0 de 6 · 11,4 s de media">0</td><td class="c" style="--v:0.00" title="Valkiria contra El Imparable: gana 0 de 6 · 7,2 s de media">0</td><td class="c" style="--v:0.00" title="Valkiria contra Muerte: gana 0 de 6 · 9,1 s de media">0</td><td class="c" style="--v:0.00" title="Valkiria contra Acorazado: gana 0 de 6 · 24,3 s de media">0</td><td class="c" style="--v:0.00" title="Valkiria contra Centinela X-9: gana 0 de 6 · 10,1 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Valkiria contra Lobo: gana 6 de 6 · 6,0 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Ninja: gana 6 de 6 · 8,5 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Pistolero: gana 6 de 6 · 8,3 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Catapulta: gana 6 de 6 · 14,6 s de media">6</td><td class="c" style="--v:0.00" title="Valkiria contra Tercio: gana 0 de 6 · 14,5 s de media">0</td><td class="c" style="--v:1.00" title="Valkiria contra Samurái: gana 6 de 6 · 14,5 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Legionario: gana 6 de 6 · 10,7 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Arquera: gana 6 de 6 · 9,3 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Kung fu: gana 6 de 6 · 7,2 s de media">6</td><td class="c" style="--v:1.00" title="Valkiria contra Fraile: gana 6 de 6 · 9,9 s de media">6</td></tr>
+<tr><th scope="row">Lobo</th><td class="c" style="--v:0.00" title="Lobo contra El Desencadenado: gana 0 de 6 · 5,6 s de media">0</td><td class="c" style="--v:0.00" title="Lobo contra El Imparable: gana 0 de 6 · 4,2 s de media">0</td><td class="c" style="--v:0.00" title="Lobo contra Muerte: gana 0 de 6 · 5,4 s de media">0</td><td class="c" style="--v:0.00" title="Lobo contra Acorazado: gana 0 de 6 · 11,0 s de media">0</td><td class="c" style="--v:0.00" title="Lobo contra Centinela X-9: gana 0 de 6 · 6,3 s de media">0</td><td class="c" style="--v:0.00" title="Lobo contra Valkiria: gana 0 de 6 · 6,0 s de media">0</td><td class="self"></td><td class="c" style="--v:0.83" title="Lobo contra Ninja: gana 5 de 6 · 4,8 s de media">5</td><td class="c" style="--v:1.00" title="Lobo contra Pistolero: gana 6 de 6 · 5,0 s de media">6</td><td class="c" style="--v:1.00" title="Lobo contra Catapulta: gana 6 de 6 · 9,0 s de media">6</td><td class="c" style="--v:0.00" title="Lobo contra Tercio: gana 0 de 6 · 6,3 s de media">0</td><td class="c" style="--v:0.67" title="Lobo contra Samurái: gana 4 de 6 · 8,7 s de media">4</td><td class="c" style="--v:0.83" title="Lobo contra Legionario: gana 5 de 6 · 6,9 s de media">5</td><td class="c" style="--v:1.00" title="Lobo contra Arquera: gana 6 de 6 · 5,4 s de media">6</td><td class="c" style="--v:1.00" title="Lobo contra Kung fu: gana 6 de 6 · 4,0 s de media">6</td><td class="c" style="--v:1.00" title="Lobo contra Fraile: gana 6 de 6 · 5,9 s de media">6</td></tr>
+<tr><th scope="row">Ninja</th><td class="c" style="--v:0.00" title="Ninja contra El Desencadenado: gana 0 de 6 · 7,6 s de media">0</td><td class="c" style="--v:0.00" title="Ninja contra El Imparable: gana 0 de 6 · 4,9 s de media">0</td><td class="c" style="--v:0.00" title="Ninja contra Muerte: gana 0 de 6 · 5,1 s de media">0</td><td class="c" style="--v:0.00" title="Ninja contra Acorazado: gana 0 de 6 · 14,7 s de media">0</td><td class="c" style="--v:0.00" title="Ninja contra Centinela X-9: gana 0 de 6 · 4,7 s de media">0</td><td class="c" style="--v:0.00" title="Ninja contra Valkiria: gana 0 de 6 · 8,5 s de media">0</td><td class="c" style="--v:0.17" title="Ninja contra Lobo: gana 1 de 6 · 4,8 s de media">1</td><td class="self"></td><td class="c" style="--v:1.00" title="Ninja contra Pistolero: gana 6 de 6 · 4,8 s de media">6</td><td class="c" style="--v:1.00" title="Ninja contra Catapulta: gana 6 de 6 · 7,5 s de media">6</td><td class="c" style="--v:0.33" title="Ninja contra Tercio: gana 2 de 6 · 12,7 s de media">2</td><td class="c" style="--v:0.83" title="Ninja contra Samurái: gana 5 de 6 · 11,4 s de media">5</td><td class="c" style="--v:0.83" title="Ninja contra Legionario: gana 5 de 6 · 9,7 s de media">5</td><td class="c" style="--v:1.00" title="Ninja contra Arquera: gana 6 de 6 · 4,2 s de media">6</td><td class="c" style="--v:1.00" title="Ninja contra Kung fu: gana 6 de 6 · 6,4 s de media">6</td><td class="c" style="--v:1.00" title="Ninja contra Fraile: gana 6 de 6 · 5,0 s de media">6</td></tr>
+<tr><th scope="row">Pistolero</th><td class="c" style="--v:0.00" title="Pistolero contra El Desencadenado: gana 0 de 6 · 12,0 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra El Imparable: gana 0 de 6 · 5,4 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Muerte: gana 0 de 6 · 5,1 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Acorazado: gana 0 de 6 · 19,3 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Centinela X-9: gana 0 de 6 · 8,3 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Valkiria: gana 0 de 6 · 8,3 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Lobo: gana 0 de 6 · 5,0 s de media">0</td><td class="c" style="--v:0.00" title="Pistolero contra Ninja: gana 0 de 6 · 4,8 s de media">0</td><td class="self"></td><td class="c" style="--v:0.00" title="Pistolero contra Catapulta: gana 0 de 6 · 7,6 s de media">0</td><td class="c" style="--v:1.00" title="Pistolero contra Tercio: gana 6 de 6 · 11,8 s de media">6</td><td class="c" style="--v:1.00" title="Pistolero contra Samurái: gana 6 de 6 · 12,9 s de media">6</td><td class="c" style="--v:1.00" title="Pistolero contra Legionario: gana 6 de 6 · 10,9 s de media">6</td><td class="c" style="--v:1.00" title="Pistolero contra Arquera: gana 6 de 6 · 9,3 s de media">6</td><td class="c" style="--v:1.00" title="Pistolero contra Kung fu: gana 6 de 6 · 5,6 s de media">6</td><td class="c" style="--v:1.00" title="Pistolero contra Fraile: gana 6 de 6 · 9,8 s de media">6</td></tr>
+<tr><th scope="row">Catapulta</th><td class="c" style="--v:0.00" title="Catapulta contra El Desencadenado: gana 0 de 6 · 18,4 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra El Imparable: gana 0 de 6 · 10,0 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra Muerte: gana 0 de 6 · 9,8 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra Acorazado: gana 0 de 6 · 32,6 s de media">0</td><td class="c" style="--v:1.00" title="Catapulta contra Centinela X-9: gana 6 de 6 · 13,7 s de media">6</td><td class="c" style="--v:0.00" title="Catapulta contra Valkiria: gana 0 de 6 · 14,6 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra Lobo: gana 0 de 6 · 9,0 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra Ninja: gana 0 de 6 · 7,5 s de media">0</td><td class="c" style="--v:1.00" title="Catapulta contra Pistolero: gana 6 de 6 · 7,6 s de media">6</td><td class="self"></td><td class="c" style="--v:1.00" title="Catapulta contra Tercio: gana 6 de 6 · 13,3 s de media">6</td><td class="c" style="--v:0.00" title="Catapulta contra Samurái: gana 0 de 6 · 26,4 s de media">0</td><td class="c" style="--v:0.00" title="Catapulta contra Legionario: gana 0 de 6 · 21,6 s de media">0</td><td class="c" style="--v:1.00" title="Catapulta contra Arquera: gana 6 de 6 · 7,9 s de media">6</td><td class="c" style="--v:1.00" title="Catapulta contra Kung fu: gana 6 de 6 · 7,3 s de media">6</td><td class="c" style="--v:1.00" title="Catapulta contra Fraile: gana 6 de 6 · 11,0 s de media">6</td></tr>
+<tr><th scope="row">Tercio</th><td class="c" style="--v:0.00" title="Tercio contra El Desencadenado: gana 0 de 6 · 21,5 s de media">0</td><td class="c" style="--v:0.00" title="Tercio contra El Imparable: gana 0 de 6 · 8,2 s de media">0</td><td class="c" style="--v:0.00" title="Tercio contra Muerte: gana 0 de 6 · 13,7 s de media">0</td><td class="c" style="--v:0.00" title="Tercio contra Acorazado: gana 0 de 6 · 60,0 s de media">0</td><td class="c" style="--v:0.00" title="Tercio contra Centinela X-9: gana 0 de 6 · 14,1 s de media">0</td><td class="c" style="--v:1.00" title="Tercio contra Valkiria: gana 6 de 6 · 14,5 s de media">6</td><td class="c" style="--v:1.00" title="Tercio contra Lobo: gana 6 de 6 · 6,3 s de media">6</td><td class="c" style="--v:0.67" title="Tercio contra Ninja: gana 4 de 6 · 12,7 s de media">4</td><td class="c" style="--v:0.00" title="Tercio contra Pistolero: gana 0 de 6 · 11,8 s de media">0</td><td class="c" style="--v:0.00" title="Tercio contra Catapulta: gana 0 de 6 · 13,3 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Tercio contra Samurái: gana 6 de 6 · 28,2 s de media">6</td><td class="c" style="--v:1.00" title="Tercio contra Legionario: gana 6 de 6 · 20,6 s de media">6</td><td class="c" style="--v:0.00" title="Tercio contra Arquera: gana 0 de 6 · 16,5 s de media">0</td><td class="c" style="--v:1.00" title="Tercio contra Kung fu: gana 6 de 6 · 11,8 s de media">6</td><td class="c" style="--v:0.17" title="Tercio contra Fraile: gana 1 de 6 · 60,0 s de media">1</td></tr>
+<tr><th scope="row">Samurái</th><td class="c" style="--v:0.00" title="Samurái contra El Desencadenado: gana 0 de 6 · 14,2 s de media">0</td><td class="c" style="--v:0.00" title="Samurái contra El Imparable: gana 0 de 6 · 8,7 s de media">0</td><td class="c" style="--v:0.00" title="Samurái contra Muerte: gana 0 de 6 · 10,5 s de media">0</td><td class="c" style="--v:0.00" title="Samurái contra Acorazado: gana 0 de 6 · 28,9 s de media">0</td><td class="c" style="--v:0.00" title="Samurái contra Centinela X-9: gana 0 de 6 · 13,3 s de media">0</td><td class="c" style="--v:0.00" title="Samurái contra Valkiria: gana 0 de 6 · 14,5 s de media">0</td><td class="c" style="--v:0.33" title="Samurái contra Lobo: gana 2 de 6 · 8,7 s de media">2</td><td class="c" style="--v:0.17" title="Samurái contra Ninja: gana 1 de 6 · 11,4 s de media">1</td><td class="c" style="--v:0.00" title="Samurái contra Pistolero: gana 0 de 6 · 12,9 s de media">0</td><td class="c" style="--v:1.00" title="Samurái contra Catapulta: gana 6 de 6 · 26,4 s de media">6</td><td class="c" style="--v:0.00" title="Samurái contra Tercio: gana 0 de 6 · 28,2 s de media">0</td><td class="self"></td><td class="c" style="--v:0.83" title="Samurái contra Legionario: gana 5 de 6 · 19,0 s de media">5</td><td class="c" style="--v:1.00" title="Samurái contra Arquera: gana 6 de 6 · 15,1 s de media">6</td><td class="c" style="--v:1.00" title="Samurái contra Kung fu: gana 6 de 6 · 11,3 s de media">6</td><td class="c" style="--v:1.00" title="Samurái contra Fraile: gana 6 de 6 · 23,8 s de media">6</td></tr>
+<tr><th scope="row">Legionario</th><td class="c" style="--v:0.00" title="Legionario contra El Desencadenado: gana 0 de 6 · 10,2 s de media">0</td><td class="c" style="--v:0.00" title="Legionario contra El Imparable: gana 0 de 6 · 6,5 s de media">0</td><td class="c" style="--v:0.00" title="Legionario contra Muerte: gana 0 de 6 · 8,6 s de media">0</td><td class="c" style="--v:0.00" title="Legionario contra Acorazado: gana 0 de 6 · 21,9 s de media">0</td><td class="c" style="--v:0.00" title="Legionario contra Centinela X-9: gana 0 de 6 · 11,2 s de media">0</td><td class="c" style="--v:0.00" title="Legionario contra Valkiria: gana 0 de 6 · 10,7 s de media">0</td><td class="c" style="--v:0.17" title="Legionario contra Lobo: gana 1 de 6 · 6,9 s de media">1</td><td class="c" style="--v:0.17" title="Legionario contra Ninja: gana 1 de 6 · 9,7 s de media">1</td><td class="c" style="--v:0.00" title="Legionario contra Pistolero: gana 0 de 6 · 10,9 s de media">0</td><td class="c" style="--v:1.00" title="Legionario contra Catapulta: gana 6 de 6 · 21,6 s de media">6</td><td class="c" style="--v:0.00" title="Legionario contra Tercio: gana 0 de 6 · 20,6 s de media">0</td><td class="c" style="--v:0.17" title="Legionario contra Samurái: gana 1 de 6 · 19,0 s de media">1</td><td class="self"></td><td class="c" style="--v:1.00" title="Legionario contra Arquera: gana 6 de 6 · 14,1 s de media">6</td><td class="c" style="--v:1.00" title="Legionario contra Kung fu: gana 6 de 6 · 9,8 s de media">6</td><td class="c" style="--v:1.00" title="Legionario contra Fraile: gana 6 de 6 · 16,2 s de media">6</td></tr>
+<tr><th scope="row">Arquera</th><td class="c" style="--v:0.00" title="Arquera contra El Desencadenado: gana 0 de 6 · 14,8 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra El Imparable: gana 0 de 6 · 7,0 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Muerte: gana 0 de 6 · 5,4 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Acorazado: gana 0 de 6 · 21,3 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Centinela X-9: gana 0 de 6 · 8,8 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Valkiria: gana 0 de 6 · 9,3 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Lobo: gana 0 de 6 · 5,4 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Ninja: gana 0 de 6 · 4,2 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Pistolero: gana 0 de 6 · 9,3 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Catapulta: gana 0 de 6 · 7,9 s de media">0</td><td class="c" style="--v:1.00" title="Arquera contra Tercio: gana 6 de 6 · 16,5 s de media">6</td><td class="c" style="--v:0.00" title="Arquera contra Samurái: gana 0 de 6 · 15,1 s de media">0</td><td class="c" style="--v:0.00" title="Arquera contra Legionario: gana 0 de 6 · 14,1 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Arquera contra Kung fu: gana 6 de 6 · 7,7 s de media">6</td><td class="c" style="--v:1.00" title="Arquera contra Fraile: gana 6 de 6 · 18,5 s de media">6</td></tr>
+<tr><th scope="row">Kung fu</th><td class="c" style="--v:0.00" title="Kung fu contra El Desencadenado: gana 0 de 6 · 5,9 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra El Imparable: gana 0 de 6 · 4,9 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Muerte: gana 0 de 6 · 5,0 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Acorazado: gana 0 de 6 · 13,9 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Centinela X-9: gana 0 de 6 · 6,5 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Valkiria: gana 0 de 6 · 7,2 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Lobo: gana 0 de 6 · 4,0 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Ninja: gana 0 de 6 · 6,4 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Pistolero: gana 0 de 6 · 5,6 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Catapulta: gana 0 de 6 · 7,3 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Tercio: gana 0 de 6 · 11,8 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Samurái: gana 0 de 6 · 11,3 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Legionario: gana 0 de 6 · 9,8 s de media">0</td><td class="c" style="--v:0.00" title="Kung fu contra Arquera: gana 0 de 6 · 7,7 s de media">0</td><td class="self"></td><td class="c" style="--v:1.00" title="Kung fu contra Fraile: gana 6 de 6 · 27,4 s de media">6</td></tr>
+<tr><th scope="row">Fraile</th><td class="c" style="--v:0.00" title="Fraile contra El Desencadenado: gana 0 de 6 · 12,5 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra El Imparable: gana 0 de 6 · 7,0 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Muerte: gana 0 de 6 · 6,8 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Acorazado: gana 0 de 6 · 28,7 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Centinela X-9: gana 0 de 6 · 12,1 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Valkiria: gana 0 de 6 · 9,9 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Lobo: gana 0 de 6 · 5,9 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Ninja: gana 0 de 6 · 5,0 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Pistolero: gana 0 de 6 · 9,8 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Catapulta: gana 0 de 6 · 11,0 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Tercio: gana 0 de 6 · 60,0 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Samurái: gana 0 de 6 · 23,8 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Legionario: gana 0 de 6 · 16,2 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Arquera: gana 0 de 6 · 18,5 s de media">0</td><td class="c" style="--v:0.00" title="Fraile contra Kung fu: gana 0 de 6 · 27,4 s de media">0</td><td class="self"></td></tr>
+      </tbody></table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Lo que veo en esta ronda</h2>
+    <div class="panel">
+      <ul class="notes">
+        <li><b>Los tres caros mandan, y El Desencadenado casi no pierde</b> (94 % de duelos). Es lógico que una ascendida gane, pero su única mala pareja es el Centinela, que lo abate desde lejos antes de que llegue.</li>
+        <li><b>El Lobo, con coste 1, gana la mitad de sus duelos.</b> Es la carta más rentable del juego por energía: mucho daño, embestida y llega el primero.</li>
+        <li><b>Kung fu está roto hacia abajo:</b> su carta dice coste 1 aunque ya es épica, tiene 40 de vida y gana el 7 %. Hay que rehacerle los números, como quedamos.</li>
+        <li><b>El Samurái tiene mucha vida (140) pero poco daño real</b> (7,5 por segundo): un solo tajo por ataque y cadencia lenta. Gana el 36 % con coste 3.</li>
+        <li><b>El Acorazado casi no hace daño (6,7 por segundo) y aun así gana el 73 %:</b> es un muro. Puede que esté barato a coste 4. Solo el Tercio, con su pica larga, lo gana siempre.</li>
+        <li><b>El Pistolero (coste 4) gana solo el 40 %:</b> con 60 de vida cae rápido en cuanto le alcanzan.</li>
+        <li><b>El Centinela gana el 72 % con solo 100 de vida:</b> el francotirador desde lejos castiga mucho a los que tienen que acercarse.</li>
+        <li><b>Arquera y Tercio salen flojos en duelo,</b> pero su papel es ir detrás de un tanque. Conviene juzgarlos en batalla antes de tocarlos.</li>
+        <li><b>El Imparable</b> no llega a transformarse en un duelo (necesita 7 bajas), así que aquí solo se mide su forma humana, que ya gana el 92 %.</li>
+      </ul>
+    </div>
+    <p class="caveat">Ojo: son duelos uno contra uno sin energía, torres ni castillos. No miden el daño en área, la curación ni el asedio, y los números de daño por energía solo son una referencia.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const table = document.getElementById('stats'), body = table.tBodies[0];
+  const ths = [...table.tHead.rows[0].cells];
+  const val = (row, i, t) => { const c = row.cells[i]; const s = c.textContent.trim(); if (t === 's') return s.toLowerCase(); const n = parseFloat(s.replace(/[^0-9,.-]/g, '').replace(',', '.')); return isNaN(n) ? -Infinity : n; };
+  const sort = th => {
+    const i = ths.indexOf(th), t = th.dataset.t; if (t === 'none') return;
+    const dir = th.getAttribute('aria-sort') === 'descending' ? 'ascending' : 'descending';
+    ths.forEach(h => h.removeAttribute('aria-sort')); th.setAttribute('aria-sort', dir);
+    const rows = [...body.rows].sort((a, b) => { const x = val(a, i, t), y = val(b, i, t); return (x < y ? -1 : x > y ? 1 : 0) * (dir === 'ascending' ? 1 : -1); });
+    rows.forEach(r => body.appendChild(r));
+  };
+  ths.forEach(th => { th.addEventListener('click', () => sort(th)); th.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sort(th); } }); });
+})();
+</script>

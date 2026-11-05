@@ -1,0 +1,152 @@
+<title>Equilibrio de Brawlground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Ficha de trabajo: cabecera con la lectura rápida, luego dispersión coste/victorias, tabla completa y matriz de duelos. */
+:root {
+  --bg: #eef0f4; --panel: #ffffff; --ink: #1e2235; --muted: #5d6276; --line: #d6d9e3;
+  --accent: #7c4ddb; --win: #2f9e5b; --lose: #d9473f; --mid: #f1e7c9;
+  --r-comun: #8a8fa3; --r-rara: #3b82f6; --r-epica: #a855f7; --r-legendaria: #c98a0b; --r-ascendida: #e0393f;
+  --hot-bg: #fde4e2; --hot-fg: #a52a24; --cold-bg: #e2ecfd; --cold-fg: #1f56b8; --ok-bg: #e3f4e8; --ok-fg: #1f7a43; --role-bg: #ecebf2; --role-fg: #4d4f63;
+  --display: 'Lilita One', 'Trebuchet MS', sans-serif; --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f;
+  --accent: #a98bff; --win: #3fbf74; --lose: #e2605a; --mid: #4a4430;
+  --hot-bg: #4a2224; --hot-fg: #ffb3ad; --cold-bg: #1f3157; --cold-fg: #a9c6ff; --ok-bg: #1d3d2a; --ok-fg: #9be3b5; --role-bg: #2b2f44; --role-fg: #c7c9d8; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #151826; --panel: #1e2235; --ink: #eceef6; --muted: #a3a8bd; --line: #33384f;
+  --accent: #a98bff; --win: #3fbf74; --lose: #e2605a; --mid: #4a4430;
+  --hot-bg: #4a2224; --hot-fg: #ffb3ad; --cold-bg: #1f3157; --cold-fg: #a9c6ff; --ok-bg: #1d3d2a; --ok-fg: #9be3b5; --role-bg: #2b2f44; --role-fg: #c7c9d8; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.05; }
+h2 { font-size: 24px; }
+p { margin: 0; max-width: 68ch; }
+.lead { color: var(--muted); }
+header { display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; color: var(--accent); }
+section { display: grid; gap: 12px; min-width: 0; }
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.summary .panel { display: grid; gap: 6px; align-content: start; }
+.summary b { font-family: var(--display); font-weight: 400; font-size: 18px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.p-hot { background: var(--hot-bg); color: var(--hot-fg); } .p-cold { background: var(--cold-bg); color: var(--cold-fg); }
+.p-ok { background: var(--ok-bg); color: var(--ok-fg); } .p-role { background: var(--role-bg); color: var(--role-fg); }
+.scroll { overflow-x: auto; border: 2px solid var(--line); border-radius: 14px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.stats { min-width: 1080px; font-size: 14px; }
+.stats th, .stats td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.stats thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; position: sticky; top: 0; background: var(--panel); cursor: pointer; user-select: none; white-space: nowrap; }
+.stats thead th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.stats thead th[aria-sort="descending"]::after { content: ' ▼'; } .stats thead th[aria-sort="ascending"]::after { content: ' ▲'; }
+.stats tbody th { font-weight: 800; white-space: nowrap; }
+.nm { display: block; } .rar { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.r-comun { color: var(--r-comun); } .r-rara { color: var(--r-rara); } .r-epica { color: var(--r-epica); } .r-legendaria { color: var(--r-legendaria); } .r-ascendida { color: var(--r-ascendida); }
+.num { text-align: right !important; white-space: nowrap; } .strong { font-weight: 800; }
+.bar { display: inline-block; width: 52px; height: 7px; border-radius: 4px; background: var(--line); margin-right: 8px; vertical-align: middle; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.note { font-size: 13px; min-width: 260px; } .sub { color: var(--muted); }
+svg { width: 100%; height: auto; display: block; }
+.grid { stroke: var(--line); stroke-width: 1; } .ax { fill: var(--muted); font-size: 12px; font-family: var(--body); } .lbl { font-weight: 700; }
+.trend { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
+.dot { stroke: var(--panel); stroke-width: 2; } .d-hot { fill: var(--lose); } .d-cold { fill: var(--r-rara); } .d-ok { fill: var(--win); } .d-role { fill: var(--muted); }
+.dl { fill: var(--ink); font-size: 12px; font-weight: 700; font-family: var(--body); }
+.matrix { font-size: 12px; width: auto; }
+.matrix th, .matrix td { border: 1px solid var(--panel); padding: 0; }
+.matrix thead th { height: 112px; vertical-align: bottom; padding-bottom: 6px; }
+.matrix thead th span { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); font-weight: 700; white-space: nowrap; }
+.matrix tbody th { text-align: right; padding: 0 8px; white-space: nowrap; font-weight: 700; }
+.matrix td.c { width: 40px; height: 32px; text-align: center; font-weight: 800; color: var(--ink);
+  background: color-mix(in oklab, var(--win) calc(var(--v) * 100%), var(--lose)); color: #fff; }
+.matrix td.self { background: var(--line); }
+.notes { display: grid; gap: 10px; padding-left: 20px; margin: 0; } .notes li { max-width: 80ch; }
+.caveat { color: var(--muted); font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width .3s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brawlground · ficha de revisión</span>
+    <h1>Equilibrio de los personajes</h1>
+    <p class="lead">Datos sacados del código del juego. Cada personaje se ha batido en duelo contra todos los demás ({{TOTAL}} duelos simulados con la lógica real, 6 por pareja cambiando de lado) y contra un muñeco de vida infinita para medir su daño real por segundo.</p>
+  </header>
+
+  <section class="summary" aria-label="Lectura rápida">
+    <div class="panel"><span class="pill p-hot">Rinde de más</span><b>{{HOT}}</b><p class="lead">Ganan muchos más duelos de lo que les toca por su coste.</p></div>
+    <div class="panel"><span class="pill p-cold">Rinde de menos</span><b>{{COLD}}</b><p class="lead">Pierden más de lo que les toca por su coste.</p></div>
+    <div class="panel"><span class="pill p-role">Otro papel</span><b>Fraile, Catapulta</b><p class="lead">Curar y asediar no se mide en un duelo; se juzgan en la batalla.</p></div>
+  </section>
+
+  <section>
+    <h2>Victorias frente a coste</h2>
+    <p class="lead">La línea discontinua es lo que «toca» ganar por cada coste. Lo que queda muy por encima es demasiado bueno para lo que cuesta; lo que queda muy por debajo, demasiado flojo.</p>
+    <div class="panel">{{SVG}}</div>
+  </section>
+
+  <section>
+    <h2>Todos los personajes</h2>
+    <p class="lead">Pulsa una cabecera para ordenar. Daño y cadencia son los del código (por golpe y segundos entre ataques); el alcance va en alturas de personaje. «Daño/s real» es lo medido contra el muñeco.</p>
+    <div class="scroll">
+      <table class="stats" id="stats">
+        <thead><tr>
+          <th scope="col" tabindex="0" data-t="s">Personaje</th><th scope="col" tabindex="0" class="num">Coste</th><th scope="col" tabindex="0" class="num">Vida</th>
+          <th scope="col" tabindex="0" class="num">Daño</th><th scope="col" tabindex="0" class="num">Cadencia</th><th scope="col" tabindex="0" class="num">Alcance</th>
+          <th scope="col" tabindex="0" class="num">Velocidad</th><th scope="col" tabindex="0" class="num">Daño/s real</th><th scope="col" tabindex="0" class="num">Daño/s por energía</th>
+          <th scope="col" tabindex="0" class="num">Vida por energía</th><th scope="col" tabindex="0" class="num" aria-sort="descending">Duelos ganados</th><th scope="col" tabindex="0" data-t="s">Veredicto</th><th scope="col" data-t="none">Carta y notas</th>
+        </tr></thead>
+        <tbody>
+{{ROWS}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Quién gana a quién</h2>
+    <p class="lead">Cada fila es un personaje y el número son los duelos que gana de 6 contra el de esa columna. Verde: casi siempre gana. Rojo: casi siempre pierde. Pasa el dedo o el ratón por una casilla para ver el tiempo medio.</p>
+    <div class="scroll">
+      <table class="matrix"><thead><tr><th></th>{{MHEAD}}</tr></thead><tbody>
+{{MROWS}}
+      </tbody></table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Lo que veo en esta ronda</h2>
+    <div class="panel">
+      <ul class="notes">
+        <li><b>Los tres caros mandan, y El Desencadenado casi no pierde</b> (94 % de duelos). Es lógico que una ascendida gane, pero su única mala pareja es el Centinela, que lo abate desde lejos antes de que llegue.</li>
+        <li><b>El Lobo, con coste 1, gana la mitad de sus duelos.</b> Es la carta más rentable del juego por energía: mucho daño, embestida y llega el primero.</li>
+        <li><b>Kung fu está roto hacia abajo:</b> su carta dice coste 1 aunque ya es épica, tiene 40 de vida y gana el 7 %. Hay que rehacerle los números, como quedamos.</li>
+        <li><b>El Samurái tiene mucha vida (140) pero poco daño real</b> (7,5 por segundo): un solo tajo por ataque y cadencia lenta. Gana el 36 % con coste 3.</li>
+        <li><b>El Acorazado casi no hace daño (6,7 por segundo) y aun así gana el 73 %:</b> es un muro. Puede que esté barato a coste 4. Solo el Tercio, con su pica larga, lo gana siempre.</li>
+        <li><b>El Pistolero (coste 4) gana solo el 40 %:</b> con 60 de vida cae rápido en cuanto le alcanzan.</li>
+        <li><b>El Centinela gana el 72 % con solo 100 de vida:</b> el francotirador desde lejos castiga mucho a los que tienen que acercarse.</li>
+        <li><b>Arquera y Tercio salen flojos en duelo,</b> pero su papel es ir detrás de un tanque. Conviene juzgarlos en batalla antes de tocarlos.</li>
+        <li><b>El Imparable</b> no llega a transformarse en un duelo (necesita 7 bajas), así que aquí solo se mide su forma humana, que ya gana el 92 %.</li>
+      </ul>
+    </div>
+    <p class="caveat">Ojo: son duelos uno contra uno sin energía, torres ni castillos. No miden el daño en área, la curación ni el asedio, y los números de daño por energía solo son una referencia.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const table = document.getElementById('stats'), body = table.tBodies[0];
+  const ths = [...table.tHead.rows[0].cells];
+  const val = (row, i, t) => { const c = row.cells[i]; const s = c.textContent.trim(); if (t === 's') return s.toLowerCase(); const n = parseFloat(s.replace(/[^0-9,.-]/g, '').replace(',', '.')); return isNaN(n) ? -Infinity : n; };
+  const sort = th => {
+    const i = ths.indexOf(th), t = th.dataset.t; if (t === 'none') return;
+    const dir = th.getAttribute('aria-sort') === 'descending' ? 'ascending' : 'descending';
+    ths.forEach(h => h.removeAttribute('aria-sort')); th.setAttribute('aria-sort', dir);
+    const rows = [...body.rows].sort((a, b) => { const x = val(a, i, t), y = val(b, i, t); return (x < y ? -1 : x > y ? 1 : 0) * (dir === 'ascending' ? 1 : -1); });
+    rows.forEach(r => body.appendChild(r));
+  };
+  ths.forEach(th => { th.addEventListener('click', () => sort(th)); th.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sort(th); } }); });
+})();
+</script>
