@@ -954,16 +954,22 @@ class Unit {
   layChains(o, dt) {
     // cadena física: cada eslabón es un punto con peso (verlet) unido al siguiente; el puño tira de un extremo
     // y, al atacar, la punta se lleva hacia su objetivo mientras el resto cuelga, se retrasa y se curva por su propio peso
-    const L = LINK.step, g = 1500, d = Math.min(dt, 0.033);
-    const moveX = (this.x - (this.lastCX ?? this.x)) * this.dir; this.lastCX = this.x;
+    // la física va en el marco del suelo (sin el bote, el giro ni la escala del cuerpo) para que las cadenas
+    // no floten ni se balanceen rígidas con él: se pasa al marco del cuerpo sólo para dibujar
+    const S = 1.2, L = LINK.step * S, g = 1500, d = Math.min(dt, 0.033);
+    let moveX = (this.x - (this.lastCX ?? this.x)) * this.dir; this.lastCX = this.x;
+    if (this.state === 'walk' && Math.abs(moveX) < 0.01) moveX = this.cfg.speed * d;   // caminando en el sitio (modo animación): el suelo pasa igual
+    const rg = this.rig, c = Math.cos(rg.rotation), sn = Math.sin(rg.rotation), dir = this.dir;
+    const toF = (x, y) => { const X = x * rg.scaleX, Y = y * rg.scaleY; return [(X * c - Y * sn + rg.x) * dir, X * sn + Y * c + rg.y]; };
+    const fromF = (fx, fy) => { const px = fx * dir - rg.x, py = fy - rg.y; return [(px * c + py * sn) / rg.scaleX, (-px * sn + py * c) / rg.scaleY]; };
     for (const [ch, hand, whip] of [[this.chB, o.bh, o.whipB], [this.chF, o.fh, o.whipF]]) {
-      const ax = hand[0] * H, ay = hand[1] * H + 0.13 * H;
+      const [ax, ay] = toF(hand[0] * H, hand[1] * H + 0.13 * H);
       let T = null;
       if (whip && whip.tip) {
-        T = [...whip.tip]; const dx = T[0] - ax, dy = T[1] - ay, dd = Math.hypot(dx, dy), max = LINK.hang * L * 0.97;
+        T = toF(...whip.tip); const dx = T[0] - ax, dy = T[1] - ay, dd = Math.hypot(dx, dy), max = LINK.hang * L * 0.97;
         if (dd > max) { T[0] = ax + dx / dd * max; T[1] = ay + dy / dd * max; }
       }
-      else if (whip && whip.k > 0.01) T = [ax + Math.max(L * LINK.hang, whip.k * whip.reach), ay];   // recto, a la altura del puño
+      else if (whip && whip.k > 0.01) T = [ax + Math.max(L * LINK.hang, whip.k * whip.reach * S), ay];   // recto, a la altura del puño
       // número de eslabones según la distancia a cubrir (un poco de holgura para que cuelgue)
       const want = !(whip && whip.k > 0.01) ? LINK.hang : Math.max(LINK.hang, Math.min(ch.links.length, Math.ceil(Math.hypot(T[0] - ax, T[1] - ay) / L)));
       if (!ch.pts.length) { for (let i = 0; i <= LINK.hang; i++) ch.pts.push([ax - i * L * 0.9, Math.min(ay + i * L, -4)]); ch.prev = ch.pts.map(p => [...p]); }
@@ -991,16 +997,16 @@ class Unit {
           else if (!pinA && !pinB) { a[0] += dx * k * 0.5; a[1] += dy * k * 0.5; b[0] -= dx * k * 0.5; b[1] -= dy * k * 0.5; }
         }
         pts[0][0] = ax; pts[0][1] = ay;
-        for (let i = 1; i <= n; i++) if (pts[i][1] > -4) { pts[i][1] = -4; ch.prev[i][0] = lerp(ch.prev[i][0], pts[i][0], 0.3); if (!T) pts[i][0] -= 0.25; }   // suelo con rozamiento; se tiende hacia atrás
+        for (let i = 1; i <= n; i++) if (pts[i][1] > -4) { pts[i][1] = -4; ch.prev[i][0] = lerp(ch.prev[i][0], pts[i][0], 0.85); ch.prev[i][1] = -4; }   // suelo con mucho rozamiento: los eslabones se quedan donde caen y se arrastran
       }
       }
       ch.links.forEach((l, i) => {
         if (i >= n) { l.setVisible(false); return; }
-        const a = pts[i], b = pts[i + 1];
+        const a = fromF(...pts[i]), b = fromF(...pts[i + 1]);
         l.setVisible(true).setPosition((a[0] + b[0]) / 2, (a[1] + b[1]) / 2).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]))
           .setScale(LINK.w / 512, i % 2 ? LINK.hgt * 0.7 / 150 : LINK.hgt / 246);
       });
-      const a = pts[n - 1], b = pts[n];
+      const a = fromF(...pts[n - 1]), b = fromF(...pts[n]);
       ch.tip.setPosition(b[0], b[1]).setRotation(Math.atan2(b[1] - a[1], b[0] - a[0]));
     }
   }
