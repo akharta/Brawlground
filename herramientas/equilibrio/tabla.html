@@ -75,6 +75,12 @@ tbody tr:hover { background: var(--soft); }
     <div class="field"><span>Rareza</span><div class="chips" id="f-rar"></div></div>
     <div class="field"><span>Tipo</span><div class="chips" id="f-tipo"></div></div>
     <div class="field"><span>Coste</span><div class="chips"><input id="cmin" class="num-in" type="number" min="0" max="10" placeholder="mín" aria-label="Coste mínimo"><input id="cmax" class="num-in" type="number" min="0" max="10" placeholder="máx" aria-label="Coste máximo"></div></div>
+    <label class="field"><span>Ordenar por</span><select id="sortsel" class="search">
+      <option value="rareza:1">Rareza: de común a ascendida</option><option value="rareza:-1">Rareza: de ascendida a común</option>
+      <option value="coste:1">Coste: de menor a mayor</option><option value="coste:-1">Coste: de mayor a menor</option>
+      <option value="vida:-1">Vida: de mayor a menor</option><option value="dps:-1">Daño/s: de mayor a menor</option>
+      <option value="duelos:-1">Duelos ganados: de más a menos</option><option value="nombre:1">Nombre: de la A a la Z</option>
+      <option value="" hidden>Por columna</option></select></label>
     <button class="btn" id="reset" type="button">Quitar filtros</button>
   </div>
 
@@ -102,7 +108,7 @@ tbody tr:hover { background: var(--soft); }
     ['dps', 'Daño/s', 'calc'], ['duelos', 'Duelos', 'calc'], ['habilidad', 'Habilidad y notas', 'text', 'hab']
   ];
   const $ = id => document.getElementById(id);
-  let rows = [], db = null, sort = { k: 'coste', dir: 1 }, pending = false;
+  let rows = [], db = null, sort = { k: 'rareza', dir: 1 }, pending = false;
   const filt = { q: '', rar: new Set(), tipo: new Set(), cmin: null, cmax: null };
   const fmt = n => (n === null || n === undefined || n === '' || isNaN(n)) ? '' : String(Math.round(n * 100) / 100).replace('.', ',');
   const parse = s => { const v = parseFloat(String(s).replace(',', '.')); return isNaN(v) ? null : v; };
@@ -123,10 +129,14 @@ tbody tr:hover { background: var(--soft); }
   for (const [k, l, t] of COLS) {
     const th = document.createElement('th'); th.scope = 'col'; if (t === 'num' || t === 'calc') th.className = 'num'; th.dataset.k = k;
     const b = document.createElement('button'); b.type = 'button'; b.textContent = l; th.append(b);
-    b.addEventListener('click', () => { sort = { k, dir: sort.k === k ? -sort.dir : (t === 'num' || t === 'calc' ? -1 : 1) }; render(); });
+    b.addEventListener('click', () => { sort = { k, dir: sort.k === k ? -sort.dir : (t === 'num' || t === 'calc' ? -1 : 1) }; syncSel(); render(); });
     $('head').append(th);
   }
 
+  const sel = $('sortsel');
+  function syncSel() { const v = sort.k + ':' + sort.dir; sel.value = [...sel.options].some(o => o.value === v) ? v : ''; }
+  sel.addEventListener('change', () => { if (!sel.value) return; const [k, d] = sel.value.split(':'); sort = { k, dir: +d }; render(); });
+  syncSel();
   function visible() {
     return rows.filter(r => {
       if (filt.q && !`${r.nombre} ${r.clase} ${r.habilidad}`.toLowerCase().includes(filt.q)) return false;
@@ -137,7 +147,7 @@ tbody tr:hover { background: var(--soft); }
       return true;
     }).sort((a, b) => {
       const x = val(a, sort.k), y = val(b, sort.k);
-      if (x === y) return (a.nombre || '').localeCompare(b.nombre || '');
+      if (x === y) return ((a.coste ?? 0) - (b.coste ?? 0)) || (a.nombre || '').localeCompare(b.nombre || '');
       if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1;
       return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sort.dir;
     });
