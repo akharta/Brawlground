@@ -422,7 +422,7 @@ class Unit {
       };
       this.chB = mk(); this.chF = mk();
       this.body = sc.add.image(0, 0, 'de_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
-      this.bh = sc.add.image(0, 0, 'de_mano').setFlipX(true).setFlipY(true).setScale(0.332 * H / 512);   // puño derecho del personaje, dedos hacia dentro
+      this.bh = sc.add.image(0, 0, 'de_mano_der').setScale(0.332 * H / 512);   // puño derecho del personaje
       this.fh = sc.add.image(0, 0, 'de_mano').setScale(0.332 * H / 512);
       this.parts = [this.bh, this.body, this.fh];
       this.rig.add([this.chB.g, this.bh, this.body, this.chF.g, this.fh]);
@@ -2152,7 +2152,7 @@ function start() {
       L('kf_torso', 'kungfu_torso'); L('kf_torso_esp', 'kungfu_torso_espalda');
       ['tumba1', 'tumba2', 'tumba3'].forEach(k => { L(k, k); L(k + '_rota', k + '_rota'); });
       L('esq_cuerpo', 'esqueleto_cuerpo'); L('esq_arma', 'esqueleto_arma'); L('esq_mano', 'esqueleto_mano');
-      L('de_cuerpo', 'desencadenado_cuerpo'); L('de_mano', 'desencadenado_mano'); L('de_eslabon', 'desencadenado_eslabon'); L('de_punta', 'desencadenado_punta');
+      L('de_cuerpo', 'desencadenado_cuerpo'); L('de_mano', 'desencadenado_mano'); L('de_mano_der', 'desencadenado_mano_der'); L('de_eslabon', 'desencadenado_eslabon'); L('de_punta', 'desencadenado_punta');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
