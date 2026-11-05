@@ -275,7 +275,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Centinela X-9</div>
         <div class="rar">Legendaria</div>
       </div>
-      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun, ráfaga de 10 × 3–4</dd></dl>
+      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun continua hasta abatirlo</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -326,8 +326,8 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
-  centinela: { hp: 100, snipe: [28, 32], burst: [3, 4], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
-    rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.325, -0.686], mg: [0.104, -0.151] } },
+  centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
+    rest: { bh: [-0.228, -0.284], fh: [0.149, -0.264], rf: -2.0, rp: [-0.36, -0.72], mg: [0.104, -0.151] } },
   // Asedio: dispara rocas en parábola desde muy lejos; daño en área, triple a castillos; indefensa de cerca.
   catapulta: { hp: 120, dmg: [30, 40], speed: 26, cd: [3.4, 3.8], range: H * 4.3, minRange: H * 1.7, ranged: true, h: 1.8, siege: 3, splash: H * 0.85,
     rest: { arm: -2.415, bh: [0, 0], fh: [0, 0] } },
@@ -397,14 +397,16 @@ class Unit {
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.5, -480, 9]];
     } else if (type === 'centinela') {
-      this.rifle = sc.add.image(0, 0, 'ce_rifle').setFlipY(true).setScale(0.595 * H / 1024);
+      this.rifle = sc.add.image(0, 0, 'ce_rifle').setFlipY(true).setScale(0.82 * H / 1024);
       this.body = sc.add.image(0, 0, 'ce_cuerpo_v').setOrigin(0.5, 1).setScale(H / 512);
       this.bh = sc.add.image(0, 0, 'ce_mano').setScale(0.145 * H / 512);
       this.weapon = sc.add.image(0, 0, 'ce_arma').setScale(0.755 * H / 512);
       this.fh = sc.add.image(0, 0, 'ce_mano').setScale(0.145 * H / 512);
+      this.barrelG = sc.add.graphics();               // cilindros de la minigun que giran
       this.parts = [this.rifle, this.body, this.bh, this.weapon, this.fh];
-      this.rig.add(this.parts);
+      this.rig.add([this.rifle, this.body, this.bh, this.weapon, this.barrelG, this.fh]);
       this.drops = [[this.weapon, 0.6, -420, -6], [this.rifle, -0.5, -500, 8]];
+      this.spinA = 0; this.spinV = 0;
     } else if (type === 'catapulta') {
       this.rock = sc.add.image(0, 0, 'ca_roca').setScale(0.345 * H / 512);
       this.arm = sc.add.image(0, 0, 'ca_arma').setFlipY(true).setOrigin(0.0646, 0.489).setScale(0.957 * H / 512);
@@ -873,7 +875,7 @@ class Unit {
   }
   attackSnipe(o, t) {
     // baja el rifle de la espalda al hombro, mira láser, disparo devastador con retroceso y lo vuelve a colgar
-    const r = this.cfg.rest, aimP = [0.06, -0.47], grip = [-0.12, -0.44];
+    const r = this.cfg.rest, aimP = [0.12, -0.47], grip = [-0.16, -0.44];
     const T = [0.4, 1.05, 1.15, 1.45, 1.85];
     const pose = e => { o.rf = lerp(r.rf, 0, e); o.rp = lerp2(r.rp, aimP, e); o.bh = lerp2(r.bh, grip, e); };
     if (t < T[0]) { pose(ease(t / T[0])); o.aim = t > T[0] * 0.5; }
@@ -885,13 +887,17 @@ class Unit {
     if (t >= T[4]) this.set('idle');
   }
   attackBurst(o, t) {
-    // la minigun gira, vibra y suelta una ráfaga continua
-    const D = 1.3, n = 10, spin = Math.min(1, t / 0.25);
-    o.mg[0] += Math.sin(t * 80) * 0.006 * spin; o.mg[1] += Math.cos(t * 70) * 0.006 * spin; o.mgR = Math.sin(t * 90) * 0.02 * spin;
-    o.fh = [o.fh[0] + o.mg[0] - this.cfg.rest.mg[0], o.fh[1] + o.mg[1] - this.cfg.rest.mg[1]];
-    o.rot = -0.03 * spin; o.sx = 1 - 0.02 * spin;
-    if (t > 0.25) { const k = Math.floor((t - 0.25) / ((D - 0.25) / n)); while ((this.shots || 0) <= Math.min(k, n - 1)) { this.shots = (this.shots || 0) + 1; this.shotNext = 'burst'; } }
-    if (t >= D + 0.2) { this.shots = 0; this.set('idle'); }
+    // ráfaga ininterrumpida: los cilindros giran, se dispara sin pausa mientras haya un enemigo cerca y vivo
+    const r = this.cfg.rest, rate = 0.12;
+    const o2 = nearestEnemy(this), keep = mode === 'fight' ? !!o2 && Math.abs(o2.x - this.x) <= this.cfg.close * 1.3 : t < 2.4;
+    if (!keep && !this.stopT) this.stopT = t;
+    const spinUp = Math.min(1, t / 0.25), spinDown = this.stopT ? Math.max(0, 1 - (t - this.stopT) / 0.35) : 1, k = spinUp * spinDown;
+    this.spinTarget = k;
+    o.mg[0] += Math.sin(t * 80) * 0.006 * k; o.mg[1] += Math.cos(t * 70) * 0.006 * k; o.mgR = Math.sin(t * 90) * 0.02 * k;
+    o.fh = [r.fh[0] + o.mg[0] - r.mg[0], r.fh[1] + o.mg[1] - r.mg[1]];
+    o.rot = -0.03 * k; o.sx = 1 - 0.02 * k;
+    if (!this.stopT && t > 0.25) { this.burstAcc = (this.burstAcc || 0); const n = Math.floor((t - 0.25) / rate); while (this.burstAcc <= n) { this.burstAcc++; this.shotNext = 'burst'; } }
+    if (this.stopT && t - this.stopT >= 0.35) { this.burstAcc = 0; this.stopT = 0; this.spinTarget = 0; this.set('idle'); }
   }
   attackThrow(o, t) {
     // tensa el brazo hacia atrás, lo suelta de golpe, la roca sale volando y después recarga
@@ -1157,6 +1163,25 @@ class Unit {
     if (this.type === 'centinela') {
       this.rifle.setPosition(o.rp[0] * H, o.rp[1] * H).setRotation(o.rf);
       this.weapon.setPosition(o.mg[0] * H, o.mg[1] * H).setRotation(o.mgR);
+      // giro de los cilindros: la cara del cañón rota y las barras del tambor se desplazan
+      this.spinV += ((this.spinTarget || 0) * 38 - this.spinV) * Math.min(1, dt * 4); this.spinA += this.spinV * dt;
+      const bg = this.barrelG; bg.clear(); bg.setPosition(this.weapon.x, this.weapon.y).setRotation(this.weapon.rotation).setScale(this.weapon.scaleX, this.weapon.scaleY);
+      if (this.weapon.visible && this.state !== 'die') {
+        const fcx = 213, fcy = 5, rx = 34, ry = 50;
+        bg.fillStyle(0x1e2235, 1).fillEllipse(fcx, fcy, rx * 2, ry * 2);
+        for (let i = 0; i < 6; i++) {
+          const a = this.spinA + i * Math.PI / 3, hx = fcx + Math.cos(a) * rx * 0.58, hy = fcy + Math.sin(a) * ry * 0.6;
+          bg.fillStyle(0x1e2235, 1).fillEllipse(hx, hy, 26, 34);
+          bg.fillStyle(0x8a8d9e, 1).fillEllipse(hx, hy, 18, 25);
+          bg.fillStyle(0x15182a, 1).fillEllipse(hx, hy, 9, 13);
+        }
+        if (this.spinV > 1) for (let k2 = 0; k2 < 3; k2++) {          // barras del tambor rodando
+          const a = this.spinA + k2 * Math.PI * 2 / 3, y = Math.sin(a) * 38, front = Math.cos(a);
+          if (front < 0) continue;
+          bg.lineStyle(6, 0x1e2235, 0.85 * front).beginPath(); bg.moveTo(48, y); bg.lineTo(166, y); bg.strokePath();
+          bg.lineStyle(3, 0xc7cad6, 0.6 * front).beginPath(); bg.moveTo(52, y - 6); bg.lineTo(162, y - 6); bg.strokePath();
+        }
+      }
       if (o.aim !== this.aimLayer) { this.aimLayer = o.aim; if (o.aim) this.rig.moveAbove(this.rifle, this.body); else this.rig.moveBelow(this.rifle, this.body); }
       const firing = this.state === 'attack' && this.state !== 'die';
       const key = firing ? 'ce_cuerpo' : 'ce_cuerpo_v';
