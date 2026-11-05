@@ -423,7 +423,7 @@ class Unit {
       this.chB = mk(); this.chF = mk();
       this.body = sc.add.image(0, 0, 'de_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.bh = sc.add.image(0, 0, 'de_mano').setScale(0.332 * H / 512);
-      this.fh = sc.add.image(0, 0, 'de_mano').setScale(0.332 * H / 512);
+      this.fh = sc.add.image(0, 0, 'de_mano').setFlipX(true).setScale(0.332 * H / 512);   // dedos hacia dentro
       this.parts = [this.bh, this.body, this.fh];
       this.rig.add([this.chB.g, this.bh, this.body, this.chF.g, this.fh]);
       this.drops = [];
@@ -1294,7 +1294,7 @@ class Unit {
     if (this.type === 'desencadenado') {
       this.rig.scaleX *= 1.2; this.rig.scaleY *= 1.2;            // ascendido: más grande que el resto
       // cuanto más bajo va el puño, más cae hacia delante (pesado, sin guardia)
-      for (const [img, hnd] of [[this.bh, o.bh], [this.fh, o.fh]]) img.setRotation(0.45 * Math.max(0, Math.min(1, (hnd[1] + 0.42) / 0.23)));
+      for (const [img, hnd, sg] of [[this.bh, o.bh, 1], [this.fh, o.fh, -1]]) img.setRotation(sg * 0.45 * Math.max(0, Math.min(1, (hnd[1] + 0.42) / 0.23)));
       this.layChains(o, dt);
       if (this.state !== 'die' && Math.random() < 0.05) fx.push({ x: this.x + rand(-0.25, 0.25) * H, y: this.gy - rand(0.3, 0.95) * H, vx: 0, vy: -20, g: 0, r: rand(2, 3), life: 0.5, t: 0.5, color: 0xff3a2a });
     } else if (this.type === 'centinela') {
