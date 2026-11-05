@@ -299,7 +299,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Imparable</div>
         <div class="rar">Ascendida</div>
       </div>
-      <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 7 bajas se convierte en monstruo; si muere así, renace una vez consumido</dd></dl>
+      <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 7 bajas se convierte en monstruo; si lo matan implosiona y renace consumido</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -352,10 +352,11 @@ const CH = {
   // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
   desencadenado: { hp: 200, dmg: [42, 48], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
     rest: { bh: [-0.3, -0.22], fh: [0.33, -0.22] } },      // puños caídos, arrastrando las cadenas
-  // Ascendido de tres formas: humano maldito (combos de tajos y embestida; cada baja es una marca); a las 7 marcas,
-  // monstruo (vida completa y doble, doble daño y velocidad de ataque, tajos en área, se cura al matar);
-  // si muere siendo monstruo, renace una vez consumido (rápido, se desgasta). Al morir del todo implosiona.
-  imparable: { hp: 150, dmg: [16, 19], speed: 60, cd: [0.8, 1.0], range: H * 1.05, ranged: false, h: 1.1, lunge: H * 2.6, lungeCd: 5,
+  // Ascendido de tres formas: humano maldito (un tajo cada vez, alternando espadas; embestida; cada baja es una marca);
+  // a las 7 marcas, monstruo (vida completa y doble, triple daño, mitad de velocidad de ataque, tajo en X en área, robo de vida);
+  // si matan al monstruo implosiona y de la explosión sale la forma consumida (doble daño, triple velocidad de ataque,
+  // tajos desquiciados, se desgasta). Al morir la forma consumida muere del todo.
+  imparable: { hp: 150, dmg: [32, 38], speed: 60, cd: [1.1, 1.4], range: H * 1.05, ranged: false, h: 1.1, lunge: H * 2.6, lungeCd: 5,
     rest: { bh: [-0.28, -0.24], fh: [0.3, -0.24] } },
   // Dos modos: francotirador de lejos (mira láser y tiro devastador) y minigun de cerca (ráfaga). Visor verde en reposo, rojo al disparar.
   centinela: { hp: 100, snipe: [28, 32], burst: [2, 3], speed: 34, cd: [2.8, 3.2], burstCd: [1.5, 1.8], range: H * 3.6, close: H * 1.7, ranged: true, h: 1.05,
@@ -378,14 +379,14 @@ const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang
 // y pose de reposo medida sobre cada imagen completa (las espadas en alto, a cada lado). k = tamaño de la forma.
 const IMP = {
   1: { body: 'imp_cuerpo', o: [0.5428, 1.0], sw: 'imp_espada', so: [0.1278, 0.4924], sa: -0.154, sl: 606.2, len: 0.763, hand: 'imp_mano', hh: 0.134, k: 1.1,
-       rest: { bh: [-0.266, -0.235], fh: [0.301, -0.235], bs: -1.689, fs: -1.365 }, arc: 0xd7ff3a, mul: { dmg: 1, cd: 1, spd: 1, anim: 1 } },
+       rest: { bh: [-0.266, -0.235], fh: [0.301, -0.235], bs: -1.689, fs: -1.365 }, arc: null, mul: { dmg: 1, cd: 1, spd: 1, anim: 1, steal: 0 } },
   2: { body: 'imp_mon_cuerpo', o: [0.4791, 1.0059], sw: 'imp_mon_espada', so: [0.1278, 0.4491], sa: -0.1143, sl: 602.9, len: 0.76, hand: 'imp_mon_mano', hh: 0.168, k: 1.5,
-       rest: { bh: [-0.305, -0.235], fh: [0.312, -0.235], bs: -1.645, fs: -1.409 }, arc: 0xff2a3a, mul: { dmg: 2, cd: 0.5, spd: 0.9, anim: 1.25 } },
+       rest: { bh: [-0.305, -0.235], fh: [0.312, -0.235], bs: -1.645, fs: -1.409 }, arc: 0xff2a3a, mul: { dmg: 3, cd: 2, spd: 0.9, anim: 1.25, steal: 0.3 } },
   3: { body: 'imp_esp_cuerpo', o: [0.4754, 1.0048], sw: 'imp_esp_espada', so: [0.1278, 0.4695], sa: -0.1213, sl: 603.4, len: 0.736, hand: 'imp_esp_mano', hh: 0.123, k: 1.1,
-       rest: { bh: [-0.266, -0.268], fh: [0.3, -0.268], bs: -1.701, fs: -1.359 }, arc: 0xe9ff7a, mul: { dmg: 0.8, cd: 0.5, spd: 1.35, anim: 1.45 } }
+       rest: { bh: [-0.266, -0.268], fh: [0.3, -0.268], bs: -1.701, fs: -1.359 }, arc: 0xd7ff3a, mul: { dmg: 2, cd: 1 / 3, spd: 1.35, anim: 1, steal: 0 } }
 };
 const IMP_BODY = 1 / 621;            // escala de los cuerpos (px de la pieza guardada → alturas H)
-const IMP_RULES = { stacks: 7, killHeal: 0.2, rebornHp: 0.5, drain: 3, implode: 40, implodeR: H * 1.8 };
+const IMP_RULES = { stacks: 7, rebornHp: 0.5, drain: 3, implode: 40, implodeR: H * 2.6 };
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
@@ -625,7 +626,7 @@ class Unit {
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     this.set('spawn');
   }
-  set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -658,7 +659,7 @@ class Unit {
     for (const h of [this.bh, this.fh]) h.setTexture(F.hand).setScale(F.hh * H / 256);
     this.bigK = F.k / 1.1;
     this.shadow.setSize(H * 0.62 * F.k, H * 0.15 * Math.sqrt(F.k));
-    const M = F.mul; this.dmgK = M.dmg; this.cdK = M.cd; this.spdK = M.spd; this.animK = M.anim;
+    const M = F.mul; this.dmgK = M.dmg; this.cdK = M.cd; this.spdK = M.spd; this.animK = M.anim; this.steal = M.steal;
   }
   restPose() {
     const r = this.type === 'imparable' ? this.F.rest : this.cfg.rest;
@@ -869,24 +870,26 @@ class Unit {
         if (t >= 1.15) this.set(mode === 'fight' ? 'walk' : 'idle');
         break;
       }
-      case 'reborn': {               // muere siendo monstruo: se desploma, se consume y se levanta en los huesos
-        if (t < 0.45) { const e = ease(t / 0.45); o.rot = -1.45 * e; o.dx = -0.3 * e; o.hop = Math.sin(e * Math.PI) * H * 0.25; }
-        else if (t < 1.05) {
-          o.rot = -1.45; o.dx = -0.3;
-          if (Math.random() < 0.5) fx.push({ x: this.x - this.dir * H * 0.3 + rand(-0.4, 0.4) * H, y: this.gy - rand(0, 0.3) * H, vx: 0, vy: -rand(20, 60), g: 0, r: rand(3, 6), life: 0.8, t: 0.8, color: 0x2a2340 });
-          if (t >= 0.8 && this.form !== 3) {
-            this.setForm(3); this.reborn = true; this.max = Math.round(this.cfg.hp * IMP_RULES.rebornHp); this.hp = this.max;
-            darkPuff(this.x - this.dir * H * 0.3, this.gy - H * 0.2, 26); burst(this.x - this.dir * H * 0.3, this.gy - H * 0.2, 0xe9ff7a, 16, 180);
-          }
+      case 'reborn': {               // matan al monstruo: se hunde hacia dentro, implosiona y de la explosión sale la forma consumida
+        if (!this.fired) { this.fired = true; implode(this); }
+        const B = IMPLODE_T;
+        if (t < B) {
+          const e = easeIn(t / B);
+          o.dx = Math.sin(t * 80) * 0.03; o.sx = lerp(1, 0.15, e); o.sy = lerp(1, 0.25, e); o.rot = Math.sin(t * 50) * 0.08 * e;
+          this.parts.forEach(pt => pt.setTint(0x8a5aa8));
         } else {
-          const e = ease((t - 1.05) / 0.5);
-          o.rot = lerp(-1.45, 0, e); o.dx = lerp(-0.3, 0, e); o.sy = 1 + 0.15 * Math.sin(e * Math.PI); o.hop = Math.sin(e * Math.PI) * H * 0.1;
+          if (this.form !== 3) {
+            this.parts.forEach(pt => pt.clearTint());
+            this.setForm(3); this.reborn = true; this.max = Math.round(this.cfg.hp * IMP_RULES.rebornHp); this.hp = this.max;
+          }
+          const e = Math.min(1, (t - B) / 0.5), over = Math.sin(e * Math.PI) * 0.18;
+          o.sx = lerp(0.2, 1, ease(e)) + over * 0.5; o.sy = lerp(0.2, 1, ease(e)) + over; o.hop = Math.sin(e * Math.PI) * H * 0.25;
         }
-        if (t >= 1.55) { floatText(this.x, this.gy - H * 1.5, '¡Renace!', '#e9ff7a'); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        if (t >= B + 0.6) { floatText(this.x, this.gy - H * 1.5, '¡Renace!', '#e9ff7a'); this.set(mode === 'fight' ? 'walk' : 'idle'); }
         break;
       }
       case 'die': {
-        if (t < dt * 1.5) { this.detach(); if (this.type === 'muerte') raiseGraves(this); if (this.type === 'imparable') implode(this); }
+        if (t < dt * 1.5) { this.detach(); if (this.type === 'muerte') raiseGraves(this); }
         o.hop = Math.sin(Math.min(1, t / 0.45) * Math.PI) * H * 0.35;
         o.rot = -ease(t / 0.45) * 1.45;
         o.dx = -ease(t / 0.45) * 0.35;
@@ -970,14 +973,14 @@ class Unit {
       hitAt(0, 0.34);
       if (tt >= 0.9) { this.hits = 0; this.set('idle'); }
     } else {
-      const n = this.form === 3 ? 4 : 2, gap = 0.2;
-      for (let i = 0; i < n; i++) {
-        const back = i % 2 === 0;
-        slash(back ? 'bh' : 'fh', back ? 'bs' : 'fs', i * gap, 0.3, back ? -2.4 : -2.1, back ? 0.5 : 0.8, back ? [0.45, -0.2] : [0.5, -0.24]);
-        hitAt(i, i * gap + 0.17);
-      }
-      const q = tt / (gap * (n - 1) + 0.3); o.rot = 0.08 * Math.sin(Math.min(1, q) * Math.PI); o.dx = 0.06 * Math.sin(Math.min(1, q) * Math.PI);
-      if (tt >= gap * (n - 1) + 0.5) { this.hits = 0; this.set('idle'); }
+      // un tajo cada vez alternando espadas; el consumido, rapidísimo y desquiciado (ángulos y cuerpo a tirones)
+      const crazy = this.form === 3, d = crazy ? 0.2 : 0.42, back = (this.atkN || 0) % 2 === 0;
+      if (!this.atkChosen) { this.atkChosen = true; this.jit = crazy ? rand(-0.4, 0.4) : 0; }
+      slash(back ? 'bh' : 'fh', back ? 'bs' : 'fs', 0, d, (back ? -2.4 : -2.1) + this.jit, (back ? 0.5 : 0.8) + this.jit * 0.5, back ? [0.45, -0.2] : [0.5, -0.24]);
+      hitAt(0, d * 0.55);
+      const q = Math.min(1, tt / d); o.rot = (crazy ? 0.16 + 0.08 * Math.sin(t * 60) : 0.08) * Math.sin(q * Math.PI); o.dx = (crazy ? 0.1 : 0.06) * Math.sin(q * Math.PI);
+      if (crazy) o.hop = Math.abs(Math.sin(q * Math.PI)) * H * 0.04;
+      if (tt >= d * 1.6) { this.hits = 0; this.atkChosen = false; this.atkN = (this.atkN || 0) + 1; this.set('idle'); }
     }
   }
   attackKunai(o, t) {
@@ -1953,18 +1956,20 @@ function slashArc(u) {
 }
 function impHit(u, i) {
   // tajo de El Imparable: uno a uno de humano y consumido; en área de monstruo. Cada baja suma una marca (o cura al monstruo)
-  impArc(u, i);
-  if (mode === 'anim') { burst(u.x + u.dir * H * 0.6, u.gy - H * 0.4, u.F.arc, 6, 140); return; }
+  if (u.F.arc) impArc(u, u.form === 3 ? u.atkN || 0 : i);
+  if (mode === 'anim') { burst(u.x + u.dir * H * 0.6, u.gy - H * 0.4, u.F.arc || 0xffffff, 6, 140); return; }
   const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range * (u.form === 2 ? 1.35 : 1) + H * 0.25);
   const targets = u.form === 2 ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
+  let dealt = 0;
   targets.forEach(v => {
-    v.damage(Math.round(rand(...u.cfg.dmg) * u.dmgK), u);
+    const before = v.hp, d = Math.round(rand(...u.cfg.dmg) * u.dmgK);
+    v.damage(d, u); dealt += Math.max(0, before - Math.max(0, v.hp));
     if (v.hp <= 0 && v.state === 'die') addStack(u);
   });
+  if (u.steal && dealt > 0) u.healBy(Math.round(dealt * u.steal));   // robo de vida del monstruo
 }
 function addStack(u) {
   if (u.form === 1) { u.stacks = Math.min(IMP_RULES.stacks, (u.stacks || 0) + 1); floatText(u.x, u.gy - H * 1.55, u.stacks + '/' + IMP_RULES.stacks, '#d7ff3a'); }
-  else if (u.form === 2) u.healBy(Math.round(u.max * IMP_RULES.killHeal));
 }
 function impArc(u, i) {
   // estela curva del tajo: verde ácido (humano), roja y oscura y el doble de grande (monstruo), pálida (consumido)
@@ -1988,14 +1993,20 @@ function ring(x, y, color, R) {
   scene.tweens.add({ targets: o, k: 1, duration: 420 / timeScale, ease: 'Cubic.easeOut',
     onUpdate: () => { g.clear().lineStyle(10 * (1 - o.k) + 2, color, 1 - o.k).strokeEllipse(x, y, R * o.k, R * o.k * 0.55); }, onComplete: () => g.destroy() });
 }
+const IMPLODE_T = 0.55;   // lo que tarda en hundirse antes de estallar
 function implode(u) {
-  // al morir del todo: todo se hunde hacia su centro y estalla, dañando a los enemigos de alrededor
-  const x = u.x, y = u.gy - H * 0.5, g = scene.add.graphics().setDepth(965), o = { k: 1 };
-  for (let i = 0; i < 26; i++) { const a = rand(0, Math.PI * 2), d = rand(0.8, 1.6) * H; fx.push({ x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.6, vx: -Math.cos(a) * d * 2.6, vy: -Math.sin(a) * d * 1.6, g: 0, r: rand(3, 6), life: 0.38, t: 0.38, color: i % 3 ? 0x2a1830 : 0xb04cff }); }
-  scene.tweens.add({ targets: o, k: 0, duration: 380 / timeScale, ease: 'Cubic.easeIn',
-    onUpdate: () => { g.clear().fillStyle(0x140a1c, 0.35 * (1 - o.k)).fillCircle(x, y, H * 0.3 * (1 - o.k) + 4).lineStyle(4, 0xb04cff, 0.8).strokeEllipse(x, y, IMP_RULES.implodeR * 2 * o.k, IMP_RULES.implodeR * 1.1 * o.k); },
+  // al caer el monstruo: todo se hunde hacia su centro y estalla en grande, dañando a los enemigos de alrededor
+  const x = u.x, y = u.gy - H * 0.6, R = IMP_RULES.implodeR, g = scene.add.graphics().setDepth(965), o = { k: 1 };
+  for (let i = 0; i < 46; i++) { const a = rand(0, Math.PI * 2), d = rand(0.9, 2.2) * H; fx.push({ x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.6, vx: -Math.cos(a) * d / IMPLODE_T, vy: -Math.sin(a) * d * 0.6 / IMPLODE_T, g: 0, r: rand(4, 8), life: IMPLODE_T, t: IMPLODE_T, color: i % 3 ? 0x2a1830 : 0xff2a3a }); }
+  scene.tweens.add({ targets: o, k: 0, duration: IMPLODE_T * 1000 / timeScale, ease: 'Cubic.easeIn',
+    onUpdate: () => { g.clear().fillStyle(0x140a1c, 0.5 * (1 - o.k)).fillCircle(x, y, H * 0.45 * (1 - o.k) + 4).lineStyle(5, 0xff2a3a, 0.85).strokeEllipse(x, y, R * 2 * o.k, R * 1.1 * o.k); },
     onComplete: () => {
-      g.destroy(); burst(x, y, 0xb04cff, 26, 300); burst(x, y, 0x140a1c, 18, 220); ring(x, y, 0xb04cff, IMP_RULES.implodeR * 2); scene.cameras.main.shake(220, 0.007);
+      g.destroy();
+      burst(x, y, 0xff2a3a, 50, 520); burst(x, y, 0x140a1c, 36, 420); burst(x, y, 0xd7ff3a, 20, 360); burst(x, u.gy, 0xe8d3b0, 22, 260);
+      darkPuff(x, y, 40); ring(x, y, 0xff2a3a, R * 2.4); ring(x, y, 0x2a1830, R * 1.6);
+      const flash = scene.add.circle(x, y, R * 0.9, 0xffe0e0, 0.85).setDepth(966).setBlendMode(Phaser.BlendModes.ADD);
+      scene.tweens.add({ targets: flash, scale: 1.6, alpha: 0, duration: 380 / timeScale, onComplete: () => flash.destroy() });
+      scene.cameras.main.shake(420, 0.014);
       if (mode !== 'fight') return;
       units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && Math.abs(v.x - x) <= IMP_RULES.implodeR).forEach(v => v.damage(IMP_RULES.implode, null, x));
     } });
@@ -2449,6 +2460,7 @@ $('anim-controls').addEventListener('click', e => {
     if (act === 'stack') { addStack(u); if (u.form === 1 && u.stacks >= IMP_RULES.stacks) u.set('transform'); return; }
     if (act === 'dash') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 260 : u.x - 260; u.dir = Math.sign(u.dashTo - u.x); u.set('lunge'); return; }
     if (act === 'die') { u.hp = 0; u.set(u.form === 2 && !u.reborn ? 'reborn' : 'die'); return; }
+    if (act === 'attack') u.atkChosen = false;
   }
   if (act === 'unchain') { if (u.type === 'desencadenado') { u.ultNext = true; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'attack' && u.type === 'desencadenado') u.ultNext = false;
