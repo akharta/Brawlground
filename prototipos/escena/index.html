@@ -237,7 +237,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="name">Acorazado</div>
         <div class="rar">Rara</div>
       </div>
-      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo: −40 % de frente, para proyectiles</dd></dl>
+      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>11</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; por debajo del 50 %, escudo gigante −60 % durante 3 s</dd></dl>
     </div>
   </div>
   <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
@@ -288,7 +288,7 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Tanque: escudo de torre que bloquea el 40 % de lo que le llega de frente e intercepta proyectiles; mazazo lento.
-  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.4,
+  acorazado: { hp: 260, dmg: [10, 13], speed: 36, cd: [1.6, 1.9], range: H * 1.05, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 3,
     rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
   muerte: { hp: 180, dmg: [28, 32], cut: [34, 40], speed: 50, cd: [1.6, 2.0], range: H * 1.3, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
@@ -465,7 +465,7 @@ class Unit {
   get gy() { return GROUND + this.lane; }
   reset(x) {
     this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-18, 16)) : 0;
-    this.dir = this.teamDir; this.tpT = 1.0; this.shadeT = 2.5; this.hem = []; this.atkN = 0; this.tpTarget = null; this.dashed = false;
+    this.dir = this.teamDir; this.tpT = 1.0; this.shadeT = 2.5; this.hem = []; this.atkN = 0; this.tpTarget = null; this.dashed = false; this.fortUsed = false; this.fortT = 0;
     this.root.y = this.gy; this.root.setDepth(this.gy);
     this.hp = this.max = this.cfg.hp; this.alive = true; this.inPlace = false;
     this.cd = rand(0.2, 0.6); this.hurtT = 0; this.fired = false; this.poofed = false; this.vib = 0;
@@ -487,9 +487,11 @@ class Unit {
     if (!this.alive || this.state === 'die') return;
     const fx = fromX !== undefined ? fromX : src ? src.x : undefined;
     if (this.cfg.block && fx !== undefined && (fx - this.x) * this.dir > 0 && !['knock', 'spawn'].includes(this.state)) {
-      d = Math.max(1, Math.round(d * (1 - this.cfg.block))); shieldClang(this);    // golpe frontal: lo para el escudo
+      const blk = this.fortT > 0 ? this.cfg.fortBlock : this.cfg.block;
+      d = Math.max(1, Math.round(d * (1 - blk))); shieldClang(this);    // golpe frontal: lo para el escudo
     }
     this.hp -= d; this.hurtT = 0.32;
+    if (this.cfg.fortTime && !this.fortUsed && this.hp > 0 && this.hp < this.max / 2) { this.fortUsed = true; this.fortT = this.cfg.fortTime; fortify(this); }
     floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
     if (this.hp <= 0) { this.hp = 0; this.set('die'); if (src && src.type === 'muerte' && src.alive && src.state !== 'die') addGrave(src, this); }
@@ -1012,7 +1014,12 @@ class Unit {
     if (this.type === 'acorazado') {
       this.blockT = Math.max(0, (this.blockT || 0) - dt);
       const b = this.blockT / 0.25;               // al bloquear, empuja el escudo hacia delante
-      this.shield.setPosition((o.sh[0] + 0.07 * b) * H, (o.sh[1] - 0.02 * b) * H).setRotation(-0.08 * b);
+      // pasiva: escudo agrandado durante unos segundos (crece rápido y vuelve a su tamaño al final)
+      this.fortT = Math.max(0, (this.fortT || 0) - dt);
+      const ft = this.cfg.fortTime - this.fortT, big = this.fortT > 0 ? Math.min(1, ft / 0.25, this.fortT / 0.35) : 0;
+      this.shield.setScale(0.708 * H / 512 * (1 + 0.55 * ease(big)));
+      this.shield.setPosition((o.sh[0] + 0.07 * b + 0.08 * big) * H, (o.sh[1] - 0.02 * b - 0.06 * big) * H).setRotation(-0.08 * b);
+      if (big > 0.5 && Math.random() < 0.35) fx.push({ x: this.x + this.dir * H * 0.55, y: this.gy - H * rand(0.1, 0.9), vx: this.dir * rand(10, 40), vy: -rand(20, 60), g: 0, r: rand(2, 3.5), life: 0.4, t: 0.4, color: 0x8fd0ff });
       this.fh.setPosition((o.fh[0] + 0.07 * b) * H, o.fh[1] * H);
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.mc);
     } else if (this.type === 'esqueleto') {
@@ -1262,6 +1269,14 @@ function shieldClang(u) {
   u.blockT = 0.25;
   const x = u.x + u.dir * H * 0.45, y = u.gy - H * 0.42;
   for (let i = 0; i < 9; i++) { const a = (u.dir > 0 ? 0 : Math.PI) + rand(-1.1, 1.1); fx.push({ x, y: y + rand(-14, 14), vx: Math.cos(a) * rand(120, 260), vy: Math.sin(a) * rand(120, 220) - 60, r: rand(1.5, 3), life: 0.3, t: 0.3, color: i % 3 ? 0xffe08a : 0xffffff }); }
+}
+function fortify(u) {
+  // el escudo se agranda con un destello azul y un aro de energía
+  floatText(u.x, u.gy - H * 1.35, '¡Fortaleza!');
+  const g = scene.add.graphics().setDepth(965).setPosition(u.x + u.dir * H * 0.45, u.gy - H * 0.45);
+  g.lineStyle(6, 0x8fd0ff, 0.9).strokeEllipse(0, 0, H * 0.7, H * 1.2);
+  scene.tweens.add({ targets: g, alpha: 0, scale: { from: 0.6, to: 1.4 }, duration: 450 / timeScale, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
+  burst(u.x + u.dir * H * 0.45, u.gy - H * 0.45, 0xbfe6ff, 14, 180);
 }
 function maceSlam(u) {
   // el mazazo levanta polvo y piedrecitas delante
