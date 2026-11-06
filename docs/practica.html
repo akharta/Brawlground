@@ -1,156 +1,352 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
-<title>Batalla de Brawlground</title>
+<title>Campo de pruebas de Brawlground</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
+<meta name="theme-color" content="#161b2b">
 <style>
-/* Layout: pantalla de juego: campo arriba, mazo y energía abajo (como en vertical en el móvil). */
+/* Layout: una columna estrecha tipo pantalla de juego: cabecera con logo, escenario, controles, cartas. */
 :root {
   color-scheme: dark;
-  --bg: #161b2b; --panel: #252e48; --panel-hi: #33406a; --ink: #f4f1e8; --muted: #a9b2cc;
-  --outline: #1e2235; --gold: #ffc83d; --energy: #b06bff; --energy-hi: #d8b4ff;
-  --common: #9aa3bd; --uncommon: #3ccf86; --rare: #4da3ff; --epic: #a855f7; --legend: #fbbf24; --ascended: #ef4444;
+  --bg: #161b2b;
+  --panel: #252e48;
+  --panel-hi: #33406a;
+  --ink: #f4f1e8;
+  --muted: #a9b2cc;
+  --outline: #1e2235;
+  --gold: #ffc83d;
+  --blue: #3b82f6;
+  --common: #9aa3bd;
+  --uncommon: #3ccf86;
+  --rare: #4da3ff;
+  --epic: #a855f7;
+  --legend: #fbbf24;
+  --ascended: #ef4444;
   --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
 }
 html, body { height: auto; }
-[hidden] { display: none !important; }
-.dock > *, .wrap > *, .stage { min-width: 0; }
-#game canvas { max-width: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 600; }
-.wrap { max-width: 980px; margin: 0 auto; padding-block: 12px 24px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 12px; }
-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-header img { width: 56px; height: auto; }
-h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; line-height: 1; }
-header p { margin: 3px 0 0; color: var(--muted); font-size: .9rem; }
-header .tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-.btn { font-family: var(--font-display); font-size: 1rem; letter-spacing: .02em; cursor: pointer;
-  background: var(--panel-hi); color: var(--ink); border: 3px solid var(--outline); border-radius: 12px; padding: 7px 12px;
-  box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 3px 0 var(--outline); }
-.btn:active { transform: translateY(2px); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 1px 0 var(--outline); }
-.btn.gold { background: var(--gold); color: var(--outline); }
-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.stage { position: relative; }
-#game { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border: 4px solid var(--outline); border-radius: 18px; overflow: hidden; background: #7fb85a; }
-#game canvas { display: block; }
-#over { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,17,30,.55); border-radius: 18px; }
-#over .panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 18px 26px; text-align: center; box-shadow: 0 6px 0 var(--outline); }
-#over h2 { font-family: var(--font-display); font-weight: 400; font-size: 2.4rem; margin: 0 0 4px; }
-#over p { margin: 0 0 14px; color: var(--muted); }
-.dock { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 12px; }
-.energy { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
-.ebar { position: relative; flex: 1; height: 22px; background: #141826; border: 3px solid var(--outline); border-radius: 12px; overflow: hidden; }
-#efill { position: absolute; inset: 0 auto 0 0; width: 50%; background: linear-gradient(var(--energy-hi), var(--energy)); }
-.eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
-.clock { font-family: var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
-#enum { font-family: var(--font-display); font-size: 1.6rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
-.hand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; max-width: 520px; }
-/* cartas con marco por rareza (img/esc/marco_*.png, 241x402): retrato en la ventana, coste en el círculo, nombre en la barra */
-.hc, .dk { position: relative; aspect-ratio: 241 / 402; padding: 0; border: 0; background: none; cursor: pointer; min-width: 0; display: block; filter: drop-shadow(0 3px 0 rgba(10,12,24,.45)); transition: transform .08s, filter .15s, opacity .12s; }
-.hc::after, .dk::after { content: ''; position: absolute; inset: 0; background: var(--frame) center / 100% 100% no-repeat; pointer-events: none; }
-.hc img, .dk img { position: absolute; left: 10.4%; top: 17.7%; width: 79%; height: 60%; object-fit: cover; border: 0; border-radius: 4%; background: #c7cde0; aspect-ratio: auto; }
-.hc .cost, .dk .cost { position: absolute; z-index: 1; left: 50%; top: 10.4%; transform: translate(-50%, -50%); width: 19%; height: auto; aspect-ratio: 1; border: 0; border-radius: 50%; background: none;
-  display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: 1rem; text-shadow: 0 2px 0 var(--outline); }
-.hc .nm, .dk .nm { position: absolute; z-index: 1; left: 7%; right: 7%; top: 81%; height: 15%; display: grid; place-items: center; font-family: var(--font-display); font-size: .82rem; color: #fff;
-  text-shadow: -1px -1px 0 var(--outline), 1px -1px 0 var(--outline), -1px 1px 0 var(--outline), 1px 1px 0 var(--outline), 0 2px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comun { --frame: url(img/esc/marco_comun.png); } .poco { --frame: url(img/esc/marco_poco.png); } .rara { --frame: url(img/esc/marco_rara.png); }
-.epica { --frame: url(img/esc/marco_epica.png); } .legendaria { --frame: url(img/esc/marco_legendaria.png); } .ascendida { --frame: url(img/esc/marco_ascendida.png); }
-.hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
-.hc:not(.poor):active { transform: translateY(3px); }
-.side { display: grid; gap: 8px; justify-items: center; }
-.next { font-size: .75rem; color: var(--muted); text-align: center; display: grid; gap: 3px; justify-items: center; }
-.next img { width: 52px; height: 52px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
-#hero { font-family: var(--font-display); background: #4a3a1a; color: var(--gold); border: 3px solid var(--outline); border-radius: 12px; padding: 6px 10px; display: grid; gap: 2px; justify-items: center; }
-#hero span { font-family: var(--font-body); font-size: .75rem; color: var(--ink); font-variant-numeric: tabular-nums; }
-#hero:disabled { opacity: .85; cursor: default; }
-#hero img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--outline); background: #3a3f62; }
-#hero.ready { background: var(--gold); color: var(--outline); animation: heroPulse 1s ease-in-out infinite; cursor: pointer; }
-#hero.ready span { color: var(--outline); }
-@keyframes heroPulse { 50% { transform: scale(1.06); box-shadow: 0 0 14px var(--gold); } }
-@media (prefers-reduced-motion: reduce) { #hero.ready { animation: none; } }
-.hint { color: var(--muted); font-size: .85rem; margin: 0; max-width: 70ch; }
-#deck { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,17,30,.72); border-radius: 18px; overflow: auto; padding: 10px; }
-#deck .panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 14px; box-shadow: 0 6px 0 var(--outline); display: grid; gap: 10px; max-width: 900px; width: 100%; }
-#deck h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0; }
-#deck .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
-#deck .count { color: var(--muted); font-variant-numeric: tabular-nums; }
-#deckgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
-.dk { opacity: .5; }
-.dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
-#deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
-#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; }
-#deck .acts #deckrand { margin-left: auto; }
-#deck select { font: inherit; color: var(--outline); background: #f4f1e6; border: 3px solid var(--outline); border-radius: 10px; padding: 4px 6px; }
-.btn:disabled { opacity: .5; cursor: default; }
-#over .panel { max-height: 100%; overflow: auto; max-width: 92%; }
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; text-align: left; }
-.stats h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 0 0 4px; }
-.stats table { border-collapse: collapse; width: 100%; font-size: .78rem; font-variant-numeric: tabular-nums; }
-.stats th, .stats td { padding: 2px 6px; border-bottom: 1px solid #39446a; text-align: right; white-space: nowrap; }
-.stats th:first-child, .stats td:first-child { text-align: left; }
-.stats th { color: var(--muted); font-weight: 800; }
-@media (max-width: 700px) { #deckgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stats { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm, .dk .nm { font-size: .62rem; } .hc .cost, .dk .cost { font-size: .8rem; } }
-
-/* pantalla completa: el campo se ajusta al alto disponible y desaparece lo que no es del juego */
-body.fs .wrap { max-width: none; padding-block: 6px; gap: 6px; }
-body.fs header img, body.fs header h1, body.fs header p, body.fs .hint { display: none; }
-body.fs #game { margin-inline: auto; }
-body.fs .wrap { padding-inline: 8px; }
-body.fs header .btn { font-size: .85rem; padding: 4px 9px; border-radius: 10px; }
-body.fs .dock { grid-template-columns: auto 1fr auto; padding: 6px 8px; gap: 4px 10px; border-radius: 14px; }
-body.fs .energy { grid-column: 1 / -1; }
-body.fs .ebar { height: 14px; } body.fs #enum { font-size: 1.15rem; }
-body.fs .hand { grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px; max-width: none; }
-body.fs .hc { height: min(17dvh, 128px); width: auto; }
-body.fs .side { grid-auto-flow: column; align-items: center; gap: 8px; }
-@media (max-height: 520px) and (orientation: landscape) {   /* móvil en horizontal: cartas a la derecha del campo */
-  body.fs .wrap { grid-template-columns: 1fr auto; align-items: start; }
-  body.fs header { grid-column: 1 / -1; }
-  body.fs .dock { grid-template-columns: 1fr; align-self: stretch; align-content: start; }
-  body.fs .hand { grid-template-columns: repeat(2, auto); }
-  body.fs .hc { height: min(24dvh, 110px); } body.fs .dock { gap: 3px 8px; } body.fs #hero span { display: none; }
-  body.fs .side { justify-content: center; }
-  body.fs .next { display: none; }
-  body.fs .energy { flex-wrap: wrap; justify-content: space-between; row-gap: 2px; } body.fs .ebar { flex-basis: 100%; order: 3; }
+.wrap {
+  max-width: 980px; margin: 0 auto;
+  padding-block: 14px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 14px;
 }
-body.fs .next img { width: 38px; height: 38px; } body.fs #hero { padding: 4px 8px; } body.fs #hero img { width: 30px; height: 30px; }
+header { display: flex; align-items: center; gap: 14px; }
+header img { width: 72px; height: auto; flex: none; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; margin: 0; letter-spacing: .01em; line-height: 1; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); font-size: .95rem; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; flex-wrap: wrap; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 3px; gap: 3px; }
+.seg button, .btn {
+  font-family: var(--font-display); font-size: 1.02rem; letter-spacing: .02em;
+  border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer;
+  background: transparent; color: var(--muted);
+}
+.seg button[aria-pressed="true"] { background: var(--gold); color: var(--outline); }
+.btn {
+  background: var(--panel-hi); color: var(--ink);
+  border: 3px solid var(--outline); border-radius: 12px;
+  box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 3px 0 var(--outline);
+}
+.btn:active { transform: translateY(2px); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 1px 0 var(--outline); }
+.btn.on { background: var(--gold); color: var(--outline); }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+#game {
+  width: 100%; max-width: 100%; aspect-ratio: 16 / 9;
+  border: 4px solid var(--outline); border-radius: 18px; overflow: hidden;
+  background: #7fb85a;
+}
+#game canvas { display: block; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pick { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 3px solid var(--outline); border-radius: 12px; padding: 4px 6px 4px 12px; }
+.pick span { color: var(--muted); font-size: .9rem; }
+.pick select { font-family: var(--font-display); font-size: 1rem; background: var(--panel-hi); color: var(--ink); border: 0; border-radius: 8px; padding: 6px 8px; }
+.side-picks { display: grid; gap: 6px; }
+.vs { font-family: var(--font-display); color: var(--gold); }
+.hint { color: var(--muted); font-size: .9rem; margin: 0; max-width: 65ch; }
+.cards { display: flex; flex-wrap: wrap; gap: 26px 22px; padding-top: 10px; }
+.cardbox { display: grid; gap: 10px; width: 200px; }
+.card {
+  background: var(--common); border: 4px solid var(--outline); border-radius: 16px;
+  padding: 8px; position: relative; box-shadow: 0 5px 0 var(--outline);
+}
+.card.uncommon { background: var(--uncommon); }
+.card.rare { background: var(--rare); }
+.card.epic { background: var(--epic); }
+.card.legend { background: var(--legend); }
+.card.ascended { background: var(--ascended); }
+.card .art { background: #c7cde0; border: 3px solid var(--outline); border-radius: 10px; aspect-ratio: 1; overflow: hidden; }
+.card .art img { width: 100%; height: 100%; object-fit: cover; }
+.card .cost {
+  position: absolute; top: -12px; left: -12px; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--blue); border: 4px solid var(--outline); display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 1.4rem; color: #fff; text-shadow: 0 2px 0 var(--outline);
+}
+.card .name { font-family: var(--font-display); font-size: 1.35rem; text-align: center; color: var(--outline); margin: 6px 0 2px; }
+.card .cls { text-align: center; font-size: .82rem; font-weight: 700; color: var(--outline); opacity: .8; margin: -2px 0 4px; }
+.card .rar { text-align: center; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--outline); font-weight: 800; }
+.cardbox dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; background: var(--panel); border: 3px solid var(--outline); border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
+.cardbox dt { color: var(--muted); }
+.cardbox dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 800; }
+
 </style>
 
 <div class="wrap">
   <header>
     <img src="img/logo.png" alt="Brawlground">
-    <div><h1>Batalla</h1><p>Partida contra la IA con las 16 unidades.</p></div>
-    <div class="tools"><button class="btn" id="fsbtn" aria-pressed="false">Pantalla completa</button><button class="btn" id="speed" aria-pressed="false">x1</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="decked">Mazo</button></div>
+    <div>
+      <h1>Escena de prueba</h1>
+      <p>Personajes generados por piezas y animados por código: Legionario, Arquera, Valkiria, Ninja, Pistolero, Lobo, Samurái, Kung fu, Tercio, Muerte, Acorazado, Fraile, Catapulta, Centinela X-9 y El Desencadenado.</p>
+    </div>
   </header>
-  <div class="stage">
-    <div id="game"></div>
-    <div id="over" hidden><div class="panel"><h2 id="over-title"></h2><p id="over-text"></p><div class="stats" id="stats"></div><button class="btn" id="redeck">Cambiar mazo</button> <button class="btn gold" id="again">Jugar otra vez</button></div></div>
-    <div id="deck" hidden><div class="panel">
-      <div class="top"><h2>Elige tu mazo</h2><span class="count" id="deckcount">0/8</span></div>
-      <div id="deckgrid"></div>
-      <div class="acts"><label class="esc">Héroe <select id="selhero"></select></label><label class="esc">Escenario <select id="selfondo"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
-    </div></div>
+
+  <div class="bar">
+    <a class="btn" href="index.html#menu" style="text-decoration:none">← Menú</a>
+    <div class="seg" role="group" aria-label="Modo">
+      <button id="mode-fight" aria-pressed="true">Combate</button>
+      <button id="mode-anim" aria-pressed="false">Animaciones</button>
+    </div>
+    <button class="btn" id="slow" aria-pressed="false">Cámara lenta</button>
   </div>
-  <div class="dock">
-    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span><span id="clock" class="clock">0:00</span></div>
-    <div class="hand" id="hand"></div>
-    <div class="side">
-      <div class="next">Siguiente<img id="next" alt=""></div>
-      <button id="hero" disabled>Rey Aldric<span>0/15 bajas</span></button>
+
+  <div id="game"></div>
+
+  <div class="controls" id="fight-controls">
+    <div class="side-picks">
+      <label class="pick"><span>Bando azul</span><select id="pick-blue"></select></label>
+      <label class="pick"><span>Acompañante</span><select id="pick-blue2"></select></label>
+    </div>
+    <span class="vs">contra</span>
+    <div class="side-picks">
+      <label class="pick"><span>Bando morado</span><select id="pick-purple"></select></label>
+      <label class="pick"><span>Acompañante</span><select id="pick-purple2"></select></label>
     </div>
   </div>
-  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Elige héroe en la pantalla del mazo: el Rey Aldric (Golpe sísmico) o Lyra, Ojo de Halcón (flechas que atraviesan a 3 enemigos y Tormenta de plumas, que barre el carril hasta el castillo rival). Al llegar a 15 bajas, tu héroe salta de su trono: tócalo para mandarlo al campo y luego para su habilidad. La IA lleva uno al azar. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
+  <div class="controls" id="anim-controls" hidden>
+    <div class="seg" role="group" aria-label="Personaje">
+      <button data-char="legionario" aria-pressed="true">Tulio, el Legionario</button>
+      <button data-char="arquera" aria-pressed="false">Ailin, la Arquera</button>
+      <button data-char="valkiria" aria-pressed="false">Brynja, la Valkiria</button>
+      <button data-char="ninja" aria-pressed="false">Kazú, el Ninja</button>
+      <button data-char="pistolero" aria-pressed="false">Cole, el Pistolero</button>
+      <button data-char="lobo" aria-pressed="false">Garra, el Lobo</button>
+      <button data-char="samurai" aria-pressed="false">Hayato, el Samurái</button>
+      <button data-char="kungfu" aria-pressed="false">Lin, el Monje</button>
+      <button data-char="tercio" aria-pressed="false">Rodrigo, el Tercio</button>
+      <button data-char="muerte" aria-pressed="false">Velkara, la Muerte</button>
+      <button data-char="acorazado" aria-pressed="false">Gustav, el Acorazado</button>
+      <button data-char="fraile" aria-pressed="false">Fray Tomé, el Fraile</button>
+      <button data-char="catapulta" aria-pressed="false">Berta, la Catapulta</button>
+      <button data-char="centinela" aria-pressed="false">Unidad X-9, el Centinela</button>
+      <button data-char="desencadenado" aria-pressed="false">Jhotum, el Desencadenado</button>
+      <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
+      <button data-char="aldric" aria-pressed="false">Rey Aldric (héroe)</button>
+      <button data-char="lyra" aria-pressed="false">Lyra, Ojo de Halcón (heroína)</button>
+      <button data-char="guardia" aria-pressed="false">Guardián del martillo</button>
+    </div>
+    <button class="btn" data-act="idle">Quieto</button>
+    <button class="btn" data-act="walk">Andar</button>
+    <button class="btn" data-act="attack">Atacar</button>
+    <button class="btn" data-act="hurt">Recibir golpe</button>
+    <button class="btn" data-act="die">Morir</button>
+    <button class="btn" data-act="tp" id="tp-btn" hidden>Teletransporte</button>
+    <button class="btn" data-act="dash" id="dash-btn" hidden>Embestida</button>
+    <button class="btn" data-act="kick" id="kick-btn" hidden>Patada giratoria</button>
+    <button class="btn" data-act="shade" id="shade-btn" hidden>Corte de oscuridad</button>
+    <button class="btn" data-act="spin" id="spin-btn" hidden>Corte giratorio</button>
+    <button class="btn" data-act="graves" id="graves-btn" hidden>Poner 3 tumbas</button>
+    <button class="btn" data-act="burst" id="burst-btn" hidden>Ráfaga de minigun</button>
+    <button class="btn" data-act="unchain" id="unchain-btn" hidden>Cadenas hasta el castillo</button>
+    <button class="btn" data-act="stack" id="stack-btn" hidden>Sumar una baja</button>
+    <button class="btn" data-act="flip" id="flip-btn" hidden>Mortal hacia atrás</button>
+    <button class="btn" data-act="dome" id="dome-btn" hidden>Escudo energético</button>
+    <button class="btn" data-act="missiles" id="missiles-btn" hidden>Salva de misiles</button>
+    <button class="btn" data-act="heat" id="heat-btn" hidden>Sobrecalentar</button>
+    <button class="btn" data-act="ult" id="ult-btn" hidden>Definitiva</button>
+    <button class="btn" data-act="seismic" id="seismic-btn" hidden>Golpe sísmico</button>
+    <button class="btn" data-act="herojump" id="herojump-btn" hidden>Salto del trono</button>
+    <button class="btn" data-act="storm" id="storm-btn" hidden>Tormenta de plumas</button>
+  </div>
+  <p class="hint" id="hint"></p>
+
+  <div class="cards">
+    <div class="cardbox">
+      <div class="card" aria-label="Carta de Tulio, el Legionario">
+        <div class="cost">1</div>
+        <div class="art"><img src="img/legionario_carta.png" alt="Ilustración de Tulio, el Legionario"></div>
+        <div class="name">Tulio</div>
+        <div class="cls">el Legionario</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>11</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta de Ailin, la Arquera">
+        <div class="cost">2</div>
+        <div class="art"><img src="img/arquera_carta.png" alt="Ilustración de Ailin, la Arquera"></div>
+        <div class="name">Ailin</div>
+        <div class="cls">la Arquera</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Daño</dt><dd>13</dd><dt>Alcance</dt><dd>Largo</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card uncommon" aria-label="Carta de Brynja, la Valkiria">
+        <div class="cost">3</div>
+        <div class="art"><img src="img/valkiria_carta.png" alt="Ilustración de Brynja, la Valkiria"></div>
+        <div class="name">Brynja</div>
+        <div class="cls">la Valkiria</div>
+        <div class="rar">Poco común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>17 en área</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Kazú, el Ninja">
+        <div class="cost">2</div>
+        <div class="art"><img src="img/ninja_carta.png" alt="Ilustración de Kazú, el Ninja"></div>
+        <div class="name">Kazú</div>
+        <div class="cls">el Ninja</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>90</dd><dt>Daño</dt><dd>17</dd><dt>Habilidad</dt><dd>Teletransporte</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card epic" aria-label="Carta de Cole, el Pistolero">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/pistolero_carta.png" alt="Ilustración de Cole, el Pistolero"></div>
+        <div class="name">Cole</div>
+        <div class="cls">el Pistolero</div>
+        <div class="rar">Épica</div>
+      </div>
+      <dl><dt>Vida</dt><dd>70</dd><dt>Daño</dt><dd>14 (2 disparos)</dd><dt>Alcance</dt><dd>Medio</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card uncommon" aria-label="Carta de Garra, el Lobo">
+        <div class="cost">1</div>
+        <div class="art"><img src="img/lobo_carta.png" alt="Ilustración de Garra, el Lobo"></div>
+        <div class="name">Garra</div>
+        <div class="cls">el Lobo</div>
+        <div class="rar">Poco común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>50</dd><dt>Daño</dt><dd>22</dd><dt>Habilidad</dt><dd>Embestida</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Hayato, el Samurái">
+        <div class="cost">3</div>
+        <div class="art"><img src="img/samurai_carta.png" alt="Ilustración de Hayato, el Samurái"></div>
+        <div class="name">Hayato</div>
+        <div class="cls">el Samurái</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>20 (siempre crítico)</dd><dt>Ataque</dt><dd>Iaido</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta de Lin, el Monje">
+        <div class="cost">5</div>
+        <div class="art"><img src="img/kungfu_carta.png" alt="Ilustración de Lin, el Monje"></div>
+        <div class="name">Lin</div>
+        <div class="cls">el Monje</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>130</dd><dt>Daño</dt><dd>18 por puñetazo</dd><dt>Ataques</dt><dd>Combo y patada giratoria</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta de Rodrigo, el Tercio">
+        <div class="cost">2</div>
+        <div class="art"><img src="img/tercio_carta.png" alt="Ilustración de Rodrigo, el Tercio"></div>
+        <div class="name">Rodrigo</div>
+        <div class="cls">el Tercio</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>100</dd><dt>Daño</dt><dd>14 (×1,8 a grandes y rápidos)</dd><dt>Alcance</dt><dd>Pica larga, empuja</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta de Velkara, la Muerte">
+        <div class="cost">6</div>
+        <div class="art"><img src="img/muerte_carta.png" alt="Ilustración de Velkara, la Muerte"></div>
+        <div class="name">Velkara</div>
+        <div class="cls">la Muerte</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>160</dd><dt>Daño</dt><dd>28 en área</dd><dt>Habilidades</dt><dd>Corte giratorio, corte de oscuridad y tumbas</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Gustav, el Acorazado">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/acorazado_carta.png" alt="Ilustración de Gustav, el Acorazado"></div>
+        <div class="name">Gustav</div>
+        <div class="cls">el Acorazado</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>260</dd><dt>Daño</dt><dd>10</dd><dt>Habilidad</dt><dd>Escudo −30 % de frente; Refuerzo por debajo del 50 %: crece un 30 %, escudo gigante y −60 % durante 4 s</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Fray Tomé, el Fraile">
+        <div class="cost">4</div>
+        <div class="art"><img src="img/fraile_carta.png" alt="Ilustración de Fray Tomé, el Fraile"></div>
+        <div class="name">Fray Tomé</div>
+        <div class="cls">el Fraile</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>60</dd><dt>Cura</dt><dd>20–25 en área cada 3–4,5 s</dd><dt>Habilidad</dt><dd>No ataca; aura dorada que cura a los aliados cercanos</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card epic" aria-label="Carta de Berta, la Catapulta">
+        <div class="cost">6</div>
+        <div class="art"><img src="img/catapulta_carta.png" alt="Ilustración de Berta, la Catapulta"></div>
+        <div class="name">Berta</div>
+        <div class="cls">la Catapulta</div>
+        <div class="rar">Épica</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card ascended" aria-label="Carta de Unidad X-9, el Centinela">
+        <div class="cost">7</div>
+        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Unidad X-9, el Centinela"></div>
+        <div class="name">Unidad X-9</div>
+        <div class="cls">el Centinela</div>
+        <div class="rar">Ascendida</div>
+      </div>
+      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun hasta abatirlo</dd><dt>Habilidades</dt><dd>Misiles cada 12 s, dron que repara, escudo a media vida y sobrecalentamiento (×1,7)</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta de Jhotum, el Desencadenado">
+        <div class="cost">5</div>
+        <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de Jhotum, el Desencadenado"></div>
+        <div class="name">Jhotum</div>
+        <div class="cls">el Desencadenado</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>200</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>Cada 3 ataques, cadenas hasta el castillo enemigo</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card ascended" aria-label="Carta de Elyss, el Insaciable">
+        <div class="cost">7</div>
+        <div class="art"><img src="img/imparable_carta.png" alt="Ilustración de Elyss, el Insaciable"></div>
+        <div class="name">Elyss</div>
+        <div class="cls">el Insaciable</div>
+        <div class="rar">Ascendida</div>
+      </div>
+      <dl><dt>Vida</dt><dd>180</dd><dt>Daño</dt><dd>35</dd><dt>Habilidad</dt><dd>A las 5 bajas se convierte en monstruo; si lo matan implosiona y renace consumido</dd></dl>
+    </div>
+  </div>
+  <p class="hint">El escenario y los castillos son provisionales, dibujados por código. Lo que se evalúa aquí son los personajes y sus animaciones.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
 <script>
 (() => {
 'use strict';
-const W = 2160, VW = 960, HGT = 540, GROUND = 410, H = 120;
+const W = 960, HGT = 540, GROUND = 410, H = 120;
 const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
@@ -519,7 +715,7 @@ class Unit {
   }
   get gy() { return GROUND + this.lane; }
   reset(x) {
-    this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-34, 30)) : 0;
+    this.x = x; this.lane = mode === 'fight' ? Math.round(rand(-18, 16)) : 0;
     this.dir = this.teamDir; this.tpT = 1.0; this.shadeT = 2.5; this.hem = []; this.atkN = 0; this.tpTarget = null; this.dashed = false; this.fortUsed = false; this.fortT = 0; this.thrown = false; this.reloadT = 0;
     this.root.y = this.gy; this.root.setDepth(this.gy);
     this.hp = this.max = this.cfg.hp; this.alive = true; this.inPlace = false;
@@ -2116,7 +2312,7 @@ function throwShuriken(u) {
   else { tx = u.x + u.dir * 330; ty = u.gy - H * 0.45; }
   const sx = u.x + u.dir * H * 0.2, sy = u.gy - H * 0.45, T = Math.max(0.2, Math.abs(tx - sx) / 950);
   const img = scene.add.image(sx, sy, 'nin_shuriken').setScale(0.22 * H / 512).setDepth(950);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: Math.round(rand(...u.cfg.star)), stuck: 0, spin: 22, team: u.team, fromX: u.x, src: u });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target, dmg: Math.round(rand(...u.cfg.star)), stuck: 0, spin: 22, team: u.team, fromX: u.x });
 }
 function slashArc(u) {
   // media luna blanca que marca toda la zona barrida, por delante de la jinete
@@ -2424,7 +2620,7 @@ function floatText(x, y, txt, color) {
 }
 
 /* ---- combate ---- */
-const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn').concat(enemyCastle(u));
+const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn');
 function nearestEnemy(u) {
   // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo
   let best = null, bd = Infinity;
@@ -2448,12 +2644,17 @@ function onShoot(u, sx, sy) {
   else { target = nearestEnemy(u); if (!target) return; tx = target.x; ty = target.gy - H * 0.42; }
   if (u.cfg.pierce) {   // Lyra: flecha recta y rápida que atraviesa hasta 3 enemigos
     const v = u.cfg.arrowV, img = scene.add.image(sx, sy, 'ly_flecha').setOrigin(0.85, 0.5).setScale(0.72 * H / 512).setDepth(950);
-    arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: 0, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xffe27a, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, src: u });
+    arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: 0, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xffe27a, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x });
     return;
   }
   const dist = Math.abs(tx - sx), T = Math.max(0.35, dist / 720), g = 900;
   const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
-  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x, src: u });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x });
+}
+function onDead(u) {
+  if (u.type === 'esqueleto') { units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); return; }
+  if (mode === 'anim') { setTimeout(() => { if (mode === 'anim' && units[0] === u) u.reset(u.homeX); }, 500); return; }
+  setTimeout(() => { if (mode === 'fight' && units.includes(u)) u.reset(u.homeX); }, 1600);
 }
 function fightLogic(dt) {
   for (const u of units) {
@@ -2597,7 +2798,7 @@ function updateArrows(dt) {
     if (a.t >= a.T) {
       if (a.boom) { rockBoom(a.boom, a.x, a.y); a.img.destroy(); return false; }
       if (a.heal) { if (a.target) a.target.healBy(a.heal); else burst(a.x, a.y, 0xffe9a8, 10, 110); a.img.destroy(); return false; }
-      if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg, a.src || null, a.fromX); a.img.destroy(); return false; }
+      if (a.target && a.target.alive && a.target.state !== 'die') { a.target.damage(a.dmg, null, a.fromX); a.img.destroy(); return false; }
       burst(a.x, a.y, 0xe8d3b0, 6, 90); a.stuck = 0.6; return true;
     }
     return true;
@@ -2686,266 +2887,18 @@ function makeAuraTextures(sc) {
   const fl = sc.textures.createCanvas('auraFlake', 16, 16), e = fl.getContext();
   e.fillStyle = '#ffffff'; e.beginPath(); e.moveTo(2, 6); e.lineTo(9, 1); e.lineTo(15, 7); e.lineTo(10, 15); e.lineTo(4, 12); e.closePath(); e.fill(); fl.refresh();
 }
-/* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
-   Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
-const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
-const ALL = Object.keys(NAMES);
-const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
-let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
-const THRONE = { x: 140, y: 200, w: 140 };
-// héroes que se pueden llevar a la batalla
-const HEROES = {
-  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'trono_aldric', empty: 'trono_vacio', portrait: 'aldric_retrato' },
-  lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: 'trono_lyra_vacio', portrait: 'lyra_retrato' },
-};
-let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
-// castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
-const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.47;   // frente de la muralla
-// el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
-const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
-const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
-let castleImg = {};
-const ZOOM = VW / W, CAM_Y = 15;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
-let cam, db = null;
-(async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
-const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const $ = id => document.getElementById(id);
-
-// mazo del jugador: se recuerda en este navegador
-let myDeck = (() => { try { const d = JSON.parse(localStorage.getItem('bg-deck') || 'null'); if (Array.isArray(d) && d.length === 8 && d.every(k => COST[k])) return d; } catch (e) {} return ['legionario', 'arquera', 'lobo', 'tercio', 'valkiria', 'ninja', 'samurai', 'pistolero']; })();
-function aiDeck() {
-  // la IA arma un mazo variado: dos cartas baratas, cuatro medias y dos caras
-  const by = (lo, hi) => shuffle(ALL.filter(k => COST[k] >= lo && COST[k] <= hi));
-  const d = [...by(1, 2).slice(0, 2), ...by(3, 4).slice(0, 4), ...by(5, 7).slice(0, 2)];
-  return d.length === 8 ? d : shuffle(ALL.slice()).slice(0, 8);
-}
-function newSide(deck) { const q = shuffle(deck.slice()); return { energy: 5, hand: q.splice(0, 4), queue: q, kills: 0, towerT: 1, deck: deck.slice() }; }
-
-function makeCastle(team) {
-  return { isCastle: true, type: 'castle', team, x: team === 'blue' ? CASTLE_FRONT - H * 0.2 : W - CASTLE_FRONT + H * 0.2, lane: 0,   // como objetivo, un poco detrás del frente: todos los de cuerpo a cuerpo llegan a golpearlo desde FIELD_L
-     get gy() { return GROUND; }, alive: true, state: 'idle',
-    hp: CASTLE_HP, max: CASTLE_HP, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0, bigK: 1,
-    knock() { return false; }, shove() {}, healBy() {},
-    damage(d, src) {
-      if (!this.alive || !B || B.over) return;
-      const dealt = Math.min(this.hp, d); this.hp -= d; this.flash = 0.12;
-      if (src && src.team && src.type) stat(src.team, src.type).castle += dealt;
-      floatText(this.x + this.dir * 20, GROUND - H * 1.7, '-' + d);
-      burst(this.x + this.dir * 40, GROUND - H * 0.8, 0xbfc4d4, 5, 120);
-      if (this.hp <= 0) { this.hp = 0; this.alive = false; endGame(this.team === 'purple'); }
-    } };
-}
-
-// estadísticas por bando y carta
-function stat(team, type) {
-  const t = B.stats[team]; return t[type] || (t[type] = { played: 0, dmg: 0, castle: 0, kills: 0, deaths: 0, heal: 0, firstDeath: null });
-}
-const _damage = Unit.prototype.damage;
-Unit.prototype.damage = function (d, src, fromX, crit) {
-  const before = this.hp, wasAlive = this.state !== 'die';
-  _damage.call(this, d, src, fromX, crit);
-  if (!B || !src || !src.team || !src.type || src.team === this.team) return;
-  stat(src.team, src.type).dmg += Math.max(0, before - Math.max(0, this.hp));
-  if (wasAlive && this.state === 'die') stat(src.team, src.type).kills++;
-};
-const _heal = Unit.prototype.healBy;
-Unit.prototype.healBy = function (n) {
-  const before = this.hp; _heal.call(this, n);
-  if (B) { const got = this.hp - before; if (got > 0 && units.some(v => v.team === this.team && v.type === 'fraile' && v.alive)) stat(this.team, 'fraile').heal += got; }
-};
-
-function onKill(u) {
-  const other = u.team === 'blue' ? 'purple' : 'blue';
-  B[other].kills++;   // las bajas ya no dan energía: solo se recarga con el tiempo
-  if (u.type !== 'esqueleto') { const s = stat(u.team, u.type); s.deaths++; if (s.firstDeath === null) s.firstDeath = B.t; }
-}
-function onDead(u) {            // en batalla las bajas no vuelven
-  if (B && !B.over) onKill(u);
-  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
-}
-function play(team, idx) {
-  const side = B[team], type = side.hand[idx];
-  if (!type || B.over || side.energy < COST[type]) return false;
-  side.energy -= COST[type];
-  side.hand[idx] = side.queue.shift(); side.queue.push(type);
-  units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
-  stat(team, type).played++;
-  if (team === 'blue') renderHand();
-  return true;
-}
-function aiLogic(dt) {
-  // juega lo que puede pagar; a veces ahorra para la carta más cara de su mano
-  B.aiT -= dt; if (B.aiT > 0) return;
-  const s = B.purple, ok = s.hand.map((t, i) => [t, i]).filter(([t]) => COST[t] <= s.energy);
-  const priciest = Math.max(...s.hand.map(t => COST[t]));
-  const saving = priciest > s.energy && priciest >= 5 && Math.random() < 0.6;
-  if (ok.length && !saving && (s.energy >= 7 || Math.random() < 0.55)) {
-    ok.sort((a, b) => COST[b[0]] - COST[a[0]]);
-    const [, i] = Math.random() < 0.6 ? ok[0] : ok[Math.floor(Math.random() * ok.length)];
-    play('purple', i); B.aiT = rand(1.2, 3.2);
-  } else B.aiT = 0.5;
-}
-function towers(dt) {
-  for (const team of ['blue', 'purple']) {
-    const c = castles[team]; if (!c.alive) continue;
-    const s = B[team]; s.towerT -= dt; if (s.towerT > 0) continue;
-    const foes = units.filter(v => v.team !== team && v.alive && v.state !== 'die' && v.state !== 'spawn' && Math.abs(v.x - c.x) <= TOWER.range);
-    if (!foes.length) { s.towerT = 0.2; continue; }
-    const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
-    const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
-    const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
-    const img = scene.add.image(sx, sy, team === 'blue' ? 'flecha_azul' : 'flecha_morada').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
-    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
-    s.towerT = TOWER.cd;
-  }
-}
-function drawCastleUI(dt) {
-  castleG.clear(); flashG.clear();
-  for (const team of ['blue', 'purple']) {
-    const c = castles[team], bw = 120, by = THRONE.y - 158, x0 = (team === 'blue' ? CASTLE_VX : W - CASTLE_VX) - bw / 2;
-    const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
-    if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
-      if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(CASTLE_ART[team].key + st);
-      const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
-      if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
-    }
-    if (c.flash > 0) { c.flash -= dt; ci.setTint(0xffd0d0); } else if (ci.isTinted) ci.clearTint();
-    castleG.fillStyle(OUT, 1).fillRoundedRect(x0 - 3, by - 3, bw + 6, 18, 7);
-    castleG.fillStyle(0x3a3f55, 1).fillRoundedRect(x0, by, bw, 12, 5);
-    castleG.fillStyle(team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(x0, by, Math.max(4, bw * c.hp / c.max), 12, 5);
-  }
-}
-function statsTable(team, title) {
-  const rows = Object.entries(B.stats[team]).filter(([, s]) => s.played).sort((a, b) => (b[1].dmg + b[1].castle + b[1].heal) - (a[1].dmg + a[1].castle + a[1].heal));
-  const tr = rows.map(([k, s]) => `<tr><td>${LABEL[k]}</td><td>${s.played}</td><td>${Math.round(s.dmg)}</td><td>${Math.round(s.castle)}</td><td>${s.kills}</td><td>${s.deaths}${s.firstDeath !== null ? ' (' + Math.round(s.firstDeath) + ' s)' : ''}</td>${s.heal ? `<td>+${Math.round(s.heal)}</td>` : '<td></td>'}</tr>`).join('');
-  return `<div><h3>${title}</h3><table><thead><tr><th>Carta</th><th>Jugadas</th><th>Daño</th><th>Al castillo</th><th>Bajas</th><th>Caídas (1.ª)</th><th>Cura</th></tr></thead><tbody>${tr || '<tr><td colspan="7">Sin cartas jugadas</td></tr>'}</tbody></table></div>`;
-}
-function endGame(win) {
-  B.over = true;
-  $('over-title').textContent = win ? '¡Victoria!' : 'Derrota';
-  $('over-text').textContent = (win ? 'Has derribado el castillo rival' : 'Han derribado tu castillo') + ' en ' + Math.round(B.t) + ' s. Enemigos abatidos: ' + B.blue.kills + '.';
-  $('stats').innerHTML = statsTable('blue', 'Tu bando') + statsTable('purple', 'Rival');
-  window.__lastStats = JSON.parse(JSON.stringify({ win, t: B.t, stats: B.stats, decks: { blue: B.blue.deck, purple: B.purple.deck } }));
-  if (db && !B.saved) { B.saved = true; db.collection('partidas').add({ ...window.__lastStats, t: Math.round(B.t), fecha: new Date().toISOString(), castillos: { azul: Math.max(0, Math.round(castles.blue.hp)), morado: Math.max(0, Math.round(castles.purple.hp)) } }).catch(() => {}); }
-  $('over').hidden = false;
-}
-function resetBattle() {
-  clearUnits();
-  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { type: myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
-  if (throneImg) { setThrone(throneImg, HEROES[B.hero.type].throne); setThrone(throneImgP, HEROES[B.heroP.type].throne); }
-  castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
-  $('over').hidden = true; renderHand();
-}
-const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
-
-/* ---- héroe ---- */
-function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
-function heroAct(team) {
-  // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
-  const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
-  if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
-    const blue = team === 'blue', x = blue ? FIELD_L + H * 0.3 : FIELD_R - H * 0.3, tx = blue ? THRONE.x : W - THRONE.x;
-    const u = new Unit(scene, hr.type, team, x); units.push(u);
-    u.jumpFromX = tx; u.jumpToX = x; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
-    hr.unit = u; hr.state = 'field'; hr.skillT = 3; setThrone(blue ? throneImg : throneImgP, HEROES[hr.type].empty); stat(team, hr.type).played++;
-    return true;
-  } else if (hr.state === 'field' && hr.skillT <= 0 && ['idle', 'walk', 'attack'].includes(hr.unit.state)) {
-    hr.unit.inPlace = false; hr.unit.set(HEROES[hr.type].skill); hr.skillT = CH[hr.type].skillCd; return true;
-  }
-  return false;
-}
-function heroClick() { heroAct('blue'); }
-function heroAI() {
-  // la IA: salta en cuanto puede y usa el Golpe sísmico cuando tiene al menos dos enemigos a su alcance
-  const hr = B.heroP;
-  if (hr.state === 'throne') heroAct('purple');
-  else if (hr.state === 'field' && hr.skillT <= 0) {
-    const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
-    if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
-      const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
-      if (ahead >= 2 || nearCastle) heroAct('purple');
-    } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct('purple');
-  }
-}
-function heroUI() {
-  const hr = B.hero, btn = $('hero'), k = B.blue.kills;
-  let title, sub, on = false, ready = false;
-  const HD = HEROES[hr.type];
-  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡' + HD.name + '!' : HD.name; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
-  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = HD.skillName; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
-  else { title = HD.name; sub = 'Ha caído'; }
-  btn.disabled = !on; btn.classList.toggle('ready', ready);
-  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/' + HD.portrait + '.png" alt="">' + title + '<span>' + sub + '</span>'; }
-}
-$('hero').onclick = () => heroClick();
-window.__heroClick = () => heroClick();
-window.__hero = () => B.hero && { state: B.hero.state, skillT: B.hero.skillT, kills: B.blue.kills, hp: B.hero.unit && Math.round(B.hero.unit.hp) };
-window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
-window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
-
-/* ---- escenario del campo largo: fondo + camino + decoración (arte en img/esc, datos en esc.json) ---- */
-const ESC = {"escena_01": {"t": 0.7832, "b": 0.9326, "w": 1536, "h": 1024, "top": "#788bf9", "bot": "#6db64f"}, "escena_02": {"t": 0.7451, "b": 0.9316, "w": 1536, "h": 1024, "top": "#51b7fd", "bot": "#8bcd3f"}, "escena_03": {"t": 0.7461, "b": 0.9189, "w": 1536, "h": 1024, "top": "#92b9f2", "bot": "#6ec231"}, "escena_04": {"t": 0.7441, "b": 0.9277, "w": 1536, "h": 1024, "top": "#99c1fd", "bot": "#8bc13a"}, "escena_05": {"t": 0.7734, "b": 0.9355, "w": 1536, "h": 1024, "top": "#54bcfd", "bot": "#5ca62c"}, "escena_06": {"t": 0.7471, "b": 0.9287, "w": 1536, "h": 1024, "top": "#5ec2fd", "bot": "#67cb40"}, "escena_07": {"t": 0.7754, "b": 0.9365, "w": 1536, "h": 1024, "top": "#3db7fe", "bot": "#7cc833"}, "escena_08": {"t": 0.7295, "b": 0.9092, "w": 1536, "h": 1024, "top": "#4ebefd", "bot": "#90db28"}, "escena_09": {"t": 0.7178, "b": 0.9287, "w": 1536, "h": 1024, "top": "#4ac0fe", "bot": "#76c74c"}, "escena_10": {"t": 0.7637, "b": 0.9404, "w": 1536, "h": 1024, "top": "#65c9fd", "bot": "#82d94f"}};   // escenas completas: fondo, camino y objetos en una sola imagen; t/b = franja de tierra (fracción del alto)
-let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return ESC[v] ? v : 'escena_07'; } catch (e) { return 'escena_07'; } })(), escObjs = [];
-function escPreload(L) {
-  L.image(escena, 'img/esc/' + escena + '.jpg');
-  for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
-  L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
-}
-function drawScenery(sc) {
-  escObjs.forEach(o => o.destroy()); escObjs = [];
-  const f = ESC[escena], top = CAM_Y - HGT / ZOOM / 2 - 12, bot = CAM_Y + HGT / ZOOM / 2 + 12;
-  // la escena ocupa el ancho del campo y su camino queda bajo los pies de las unidades
-  const tw = sc.textures.get(escena).getSourceImage().width, s = (W + 8) / tw, ih = f.h * tw / f.w * s, y0 = GROUND + 2 - (f.t + f.b) / 2 * ih;
-  const col = h => Phaser.Display.Color.HexStringToColor(h).color;
-  escObjs.push(sc.add.rectangle(W / 2, (top + y0) / 2, W + 40, y0 - top + 4, col(f.top)).setDepth(-31));          // cielo por encima
-  escObjs.push(sc.add.rectangle(W / 2, (y0 + ih + bot) / 2, W + 40, bot - y0 - ih + 4, col(f.bot)).setDepth(-31)); // prado por debajo
-  escObjs.push(sc.add.image(W / 2, y0, escena).setOrigin(0.5, 0).setScale(s).setDepth(-30));
-}
-function setScenery(e) {
-  escena = e || escena;
-  try { localStorage.setItem('bg-escena', escena); } catch (er) {}
-  if (scene.textures.exists(escena)) return drawScenery(scene);
-  scene.load.image(escena, 'img/esc/' + escena + '.jpg'); scene.load.once('complete', () => drawScenery(scene)); scene.load.start();
-}
-window.__setScenery = setScenery;
-/* ---- Phaser ---- */
 function create() {
-  scene = this; mode = 'fight';
-  drawScenery(this);
-  cam = this.cameras.main; cam.setZoom(ZOOM); cam.centerOn(W / 2, CAM_Y);
-  makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
-  flashG = this.add.graphics().setDepth(5);
-  for (const team of ['blue', 'purple']) {
-    const A = CASTLE_ART[team], im = this.add.image(team === 'blue' ? CASTLE_VX : W - CASTLE_VX, THRONE.y - 4, A.key);
-    im.setOrigin(A.plat[0] / im.width, A.plat[1] / im.height).setScale(CASTLE_W / im.width).setDepth(300); castleImg[team] = im;
-  }
-  throneImg = this.add.image(THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302); throneImg.setScale(THRONE.w / throneImg.width);
-  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302).setFlipX(true); throneImgP.setScale(THRONE.w / throneImgP.width);
-  castleG = this.add.graphics().setDepth(990);
-  for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? CASTLE_VX : W - CASTLE_VX, THRONE.y - 152, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
+  scene = this;
+  drawStage(this.add.graphics());
+  makeAuraTextures(this); makeChainEdge(this);
   fxG = this.add.graphics().setDepth(980);
-  resetBattle(); B.over = true; openDeck();
+  hookUltInput(this);
+  buildMode();
 }
 function update(_, deltaMs) {
   const dt = Math.min(0.05, deltaMs / 1000) * timeScale;
-  if (B && !B.over) {
-    B.t += dt;
-    const rate = EREGEN * (B.t >= DOUBLE_AT ? 2 : 1);   // a partir de los 2 minutos, energía doble
-    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; floatText(W / 2, 120, '¡Energía doble!', '#d8b4ff'); }
-    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt);
-    aiLogic(dt); towers(dt); fightLogic(dt);
-    for (const hr of [B.hero, B.heroP]) if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
-    heroAI();
-  }
-  units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
-  // nadie se sube al castillo rival: se queda delante de su muralla (embestidas, saltos y empujones incluidos)
-  for (const u of units) {
-    if (!u.alive || u.state === 'heroJump') continue;
-    if (u.x < FIELD_L) u.x = FIELD_L; else if (u.x > FIELD_R) u.x = FIELD_R;
-  }
+  if (mode === 'fight') fightLogic(dt);
+  units.forEach(u => { if (u.alive && u.root.visible) u.update(dt); });
   updateArrows(dt);
   fxG.clear();
   fx = fx.filter(p => (p.life -= dt) > 0);
@@ -2956,11 +2909,10 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); for (const t of ['blue', 'purple']) hpText[t].setText(Math.ceil(castles[t].hp)); uiTick(); }
 }
 function start() {
   window.__game = new Phaser.Game({
-    type: Phaser.AUTO, parent: 'game', width: VW, height: HGT, backgroundColor: '#7fb85a',
+    type: Phaser.AUTO, parent: 'game', width: W, height: HGT, backgroundColor: '#7fb85a',
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: { preload() {
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
@@ -2987,101 +2939,164 @@ function start() {
       L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
       L('mu_cuerpo', 'muerte_cuerpo'); L('mu_arma', 'muerte_arma'); L('mu_mano', 'muerte_mano');
       L('ter_cuerpo', 'tercio_cuerpo'); L('ter_pica', 'tercio_arma'); L('ter_mano', 'tercio_mano'); L('kf_pierna', 'kungfu_pierna'); L('kf_trenza', 'kungfu_trenza'); L('kf_puno', 'kungfu_puno'); L('kf_palma', 'kungfu_palma');
-      escPreload(this.load);
     }, create, update }
   });
 }
 
-/* ---- interfaz ---- */
-function renderHand() {
-  const h = $('hand'); h.innerHTML = '';
-  B.blue.hand.forEach((t, i) => {
-    const b = document.createElement('button');
-    b.className = 'hc ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
-    b.innerHTML = '<span class="cost">' + COST[t] + '</span><img src="img/' + t + '_carta.png" alt=""><span class="nm">' + LABEL[t] + '</span>';
-    b.onclick = () => play('blue', i);
-    h.appendChild(b);
-  });
-  $('next').src = 'img/' + B.blue.queue[0] + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[B.blue.queue[0]];
-}
-let lastUI = 0;
-function uiTick() {
-  const now = performance.now(); if (now - lastUI < 80) return; lastUI = now;
-  const e = B.blue.energy;
-  $('efill').style.width = (e / EMAX * 100) + '%'; $('enum').textContent = Math.floor(e);
-  document.querySelectorAll('.hc').forEach(b => b.classList.toggle('poor', COST[B.blue.hand[+b.dataset.i]] > e));
-  $('clock').textContent = (B.doubled ? '×2 · ' : '') + Math.floor(B.t / 60) + ':' + String(Math.floor(B.t % 60)).padStart(2, '0');
-  heroUI();
-}
-// selector de mazo
-let picking = [];
-function openDeck() {
-  picking = myDeck.slice();
-  const g = $('deckgrid'); g.innerHTML = '';
-  ALL.slice().sort((a, b) => COST[a] - COST[b] || LABEL[a].localeCompare(LABEL[b])).forEach(k => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'dk ' + (RARITY[k] || 'comun'); b.dataset.k = k;
-    b.setAttribute('aria-label', NAMES[k] + ', coste ' + COST[k]);
-    b.innerHTML = '<span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span>';
-    b.onclick = () => { const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck(); };
-    g.appendChild(b);
-  });
-  syncDeck(); $('over').hidden = true; $('deck').hidden = false; if (B) B.over = true;
-}
-function syncDeck() {
-  document.querySelectorAll('.dk').forEach(b => b.setAttribute('aria-pressed', picking.includes(b.dataset.k)));
-  const avg = picking.length ? picking.reduce((s, k) => s + COST[k], 0) / picking.length : 0;
-  $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
-  $('deckgo').disabled = picking.length !== 8;
-}
-$('selhero').innerHTML = Object.entries(HEROES).map(([k, h]) => '<option value="' + k + '">' + h.name + '</option>').join('');
-$('selhero').value = myHero;
-$('selhero').onchange = e => { myHero = e.target.value; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} if (B && scene) { B.hero.type = myHero; if (B.hero.state === 'throne') setThrone(throneImg, HEROES[myHero].throne); } };
-$('selfondo').innerHTML = Object.keys(ESC).map((k, i) => '<option value="' + k + '">' + (i + 1) + '</option>').join('');
-$('selfondo').value = escena;
-$('selfondo').onchange = e => { if (scene) setScenery(e.target.value); };
-$('deckrand').onclick = () => { picking = shuffle(ALL.slice()).slice(0, 8); syncDeck(); };
-$('deckgo').onclick = () => { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} $('deck').hidden = true; resetBattle(); };
-$('decked').onclick = () => { if (scene) openDeck(); };
-$('redeck').onclick = () => { if (scene) openDeck(); };
-$('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };
-$('restart').onclick = () => { if (scene) { $('deck').hidden = true; resetBattle(); } };
-$('again').onclick = () => { if (scene) resetBattle(); };
-window.__debugBattle = () => ({ t: B.t, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, deck: B.purple.deck }, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over });
-window.__startBattle = deck => { if (deck) myDeck = deck; $('deck').hidden = true; resetBattle(); };
-window.__play = (team, i) => play(team, i);
-window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, x)); };
-window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
-})();
-
-/* ---- pantalla completa (con o sin la API del navegador: en iPhone se ajusta igualmente) ---- */
-function fitGame() {
-  const g = document.getElementById('game'); if (!g) return;
-  g.style.width = '';
-  if (document.body.classList.contains('fs')) {
-    // alto libre: lo que queda de pantalla menos lo que hay debajo del campo en su misma columna
-    const r = g.getBoundingClientRect(), below = [...document.querySelectorAll('.wrap > *')].filter(el => el.classList.contains('dock') && el.offsetParent && el.getBoundingClientRect().top >= r.bottom - 2 && el.getBoundingClientRect().left < r.right - 10)
-      .reduce((s, el) => s + el.getBoundingClientRect().height + 6, 0);
-    const avail = window.innerHeight - (r.top + window.scrollY) - below - 6;
-    g.style.width = Math.max(240, Math.min(g.parentElement.clientWidth, avail * 16 / 9)) + 'px';
-  }
-  if (window.__game && window.__game.scale) window.__game.scale.refresh();
-}
-function setFs(on) {
-  document.body.classList.toggle('fs', on);
-  const b = document.getElementById('fsbtn'); if (b) { b.setAttribute('aria-pressed', on); b.textContent = on ? 'Salir de pantalla completa' : 'Pantalla completa'; }
-  requestAnimationFrame(fitGame); setTimeout(fitGame, 300);
-}
-document.getElementById('fsbtn').onclick = () => {
-  const on = !document.body.classList.contains('fs'), el = document.documentElement;
-  try {
-    if (on && el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if (on && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (!on && document.fullscreenElement) document.exitFullscreen();
-    else if (!on && document.webkitFullscreenElement) document.webkitExitFullscreen();
-  } catch (e) {}
-  setFs(on);
+/* ---- controles ---- */
+const $ = id => document.getElementById(id);
+const HINTS = {
+  fight: 'Elige qué personaje lleva cada bando y, si quieres, un acompañante (por ejemplo, un aliado para que el Fraile lo cure). Quien cae vuelve a salir de su castillo.',
+  anim: 'Un solo personaje. Elige cuál y pulsa cada botón para ver esa animación; con «Cámara lenta» se aprecia el detalle.'
 };
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('fs')) setFs(false); });
-window.addEventListener('resize', () => { if (document.body.classList.contains('fs')) fitGame(); });
+function setMode(m) {
+  mode = m;
+  $('mode-fight').setAttribute('aria-pressed', m === 'fight');
+  $('mode-anim').setAttribute('aria-pressed', m === 'anim');
+  $('anim-controls').hidden = m !== 'anim';
+  $('fight-controls').hidden = m !== 'fight';
+  $('hint').textContent = HINTS[m];
+  if (scene) buildMode();
+}
+$('hint').textContent = HINTS.fight;
+for (const [id, val] of [['pick-blue', pickBlue], ['pick-purple', pickPurple], ['pick-blue2', pickBlue2], ['pick-purple2', pickPurple2]]) {
+  const sel = $(id);
+  if (id.endsWith('2')) sel.add(new Option('Sin acompañante', '', false, val === ''));
+  for (const k of Object.keys(NAMES)) sel.add(new Option(NAMES[k] + (k === NEWEST ? ' (nuevo)' : ''), k, false, k === val));
+  sel.onchange = () => {
+    if (id === 'pick-blue') pickBlue = sel.value; else if (id === 'pick-purple') pickPurple = sel.value;
+    else if (id === 'pick-blue2') pickBlue2 = sel.value; else pickPurple2 = sel.value;
+    if (scene && mode === 'fight') buildMode();
+  };
+}
+$('mode-fight').onclick = () => setMode('fight');
+$('mode-anim').onclick = () => setMode('anim');
+$('slow').onclick = e => {
+  timeScale = timeScale === 1 ? 0.3 : 1;
+  e.currentTarget.classList.toggle('on', timeScale !== 1);
+  e.currentTarget.setAttribute('aria-pressed', timeScale !== 1);
+};
+$('anim-controls').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.char) {
+    animChar = b.dataset.char;
+    document.querySelectorAll('[data-char]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('tp-btn').hidden = animChar !== 'ninja';
+    $('dash-btn').hidden = animChar !== 'lobo' && animChar !== 'imparable' && animChar !== 'kungfu';
+    $('stack-btn').hidden = animChar !== 'imparable';
+    $('flip-btn').hidden = animChar !== 'pistolero';
+    $('dome-btn').hidden = animChar !== 'centinela';
+    $('missiles-btn').hidden = animChar !== 'centinela';
+    $('heat-btn').hidden = animChar !== 'centinela';
+    $('ult-btn').hidden = animChar !== 'centinela' && animChar !== 'imparable';
+    $('seismic-btn').hidden = animChar !== 'aldric';
+    $('herojump-btn').hidden = animChar !== 'aldric' && animChar !== 'lyra';
+    $('storm-btn').hidden = animChar !== 'lyra';
+    $('kick-btn').hidden = animChar !== 'kungfu';
+    $('shade-btn').hidden = animChar !== 'muerte';
+    $('spin-btn').hidden = animChar !== 'muerte';
+    $('graves-btn').hidden = animChar !== 'muerte';
+    $('burst-btn').hidden = animChar !== 'centinela';
+    $('unchain-btn').hidden = animChar !== 'desencadenado';
+    if (scene) buildMode();
+    return;
+  }
+  const act = b.dataset.act, u = units[0];
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm'].includes(u.state)) return;
+  if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
+  if (act === 'storm') { if (u.type === 'lyra') { u.inPlace = false; u.set('storm'); } return; }
+  if (act === 'herojump') { if (u.type === 'aldric' || u.type === 'lyra') { u.jumpFromX = 60; u.jumpToX = u.homeX; u.jumpFromY = H * 2.2; u.set('heroJump'); } return; }
+  if (act === 'ult') { if (RARITY[u.type] === 'ascendida') { u.ultT = 0; u.ultUsed = false; u.castUlt(); } return; }
+  if (act === 'missiles') { if (u.type === 'centinela') { u.inPlace = false; u.set('missiles'); } return; }
+  if (act === 'heat') { if (u.type === 'centinela') { u.heat = u.heat >= 1 ? 0 : 1; floatText(u.x, u.gy - H * 1.6, u.heat ? '¡Sobrecalentado!' : 'Enfriado', '#ff8a5a'); } return; }
+  if (act === 'dome') { if (u.type === 'centinela') { u.domeT = DOME.time; floatText(u.x, u.gy - H * 1.6, '¡Escudo!', '#7fe8ff'); } return; }
+  if (u.type === 'imparable') {
+    if (act === 'stack') { addStack(u); if (u.form === 1 && u.stacks >= IMP_RULES.stacks) u.set('transform'); return; }
+    if (act === 'dash') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 260 : u.x - 260; u.dir = Math.sign(u.dashTo - u.x); u.set('lunge'); return; }
+    if (act === 'die') { u.hp = 0; u.set(u.form === 2 && !u.reborn ? 'reborn' : 'die'); return; }
+    if (act === 'attack') u.atkChosen = false;
+  }
+  if (act === 'unchain') { if (u.type === 'desencadenado') { u.ultNext = true; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'desencadenado') u.ultNext = false;
+  if (act === 'burst') { if (u.type === 'centinela') { u.sentMode = 'burst'; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'centinela') u.sentMode = 'snipe';
+  if (act === 'graves') { if (u.type === 'muerte') [1, 2, 3].forEach(i => addGrave(u, { x: u.x + i * 95, gy: u.gy, lane: 0 })); return; }
+  if (act === 'spin') { if (u.type === 'muerte') { u.forceSpin = true; u.atkChosen = false; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'muerte') u.atkChosen = false;
+  if (act === 'shade') { if (u.type === 'muerte') { u.shadeTarget = null; u.dir = u.x < W / 2 ? 1 : -1; u.set('shadeOut'); } return; }
+  if (act === 'tp') { if (u.type === 'ninja') { u.tpTarget = null; u.set('tpOut'); } return; }
+  if (act === 'kick') { if (u.type === 'kungfu') { u.kickNext = true; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'attack' && u.type === 'kungfu') u.kickNext = false;
+  if (act === 'dash' && u.type === 'kungfu') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 240 : u.x - 240; u.dir = Math.sign(u.dashTo - u.x); u.set('kfdash'); return; }
+  if (act === 'dash') {
+    if (u.type === 'lobo') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 260 : u.x - 260; u.dir = Math.sign(u.dashTo - u.x); u.set('dash'); }
+    return;
+  }
+  if (act === 'hurt') { u.hurtT = 0.32; floatText(u.x, u.gy - H * u.cfg.h - 18, '-12'); burst(u.x - H * 0.15, u.gy - H * 0.45, 0xffffff, 7, 170); return; }
+  u.inPlace = act === 'walk';
+  if (act === 'die') u.hp = 0;
+  u.set(act);
+});
+
+let __uid = 0;
+window.__testArrow = (targetType, fromX) => {   // prueba: flecha enemiga desde fromX hacia una unidad concreta
+  const target = units.find(u => u.type === targetType); if (!target) return 'no target';
+  const sx = fromX, sy = target.gy - H * 0.45, T = Math.abs(target.x - sx) / 720;
+  const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
+  arrows.push({ img, x: sx, y: sy, vx: (target.x - sx) / T, vy: 0, g: 0, t: 0, T, target, dmg: 12, stuck: 0, team: target.team === 'blue' ? 'purple' : 'blue', fromX: sx });
+  return 'ok';
+};
+window.__units = () => units;
+window.__data = () => ({ CH, RARITY, NAMES, IMP_RULES, H });
+// simulación síncrona para la ficha de equilibrio: duelo a uno contra uno con la lógica real, paso fijo
+function simStep(dt) {
+  fightLogic(dt); units.forEach(u => { if (u.alive && u.root.visible) u.update(dt); }); updateArrows(dt);
+  fx = fx.filter(p => (p.life -= dt) > 0);
+}
+function simReset() { spawnTimers.forEach(clearTimeout); spawnTimers = []; clearUnits(); arrows.forEach(a => a.img && a.img.destroy()); arrows = []; mode = 'fight'; }
+window.__sim = (a, b, maxT = 60, dt = 1 / 30) => {
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, b, 'purple', W - 140); units.push(A, B);
+  const out = u => !u.alive || u.state === 'die';
+  let t = 0;
+  while (t < maxT && !out(A) && !out(B)) { simStep(dt); t += dt; }
+  const r = { a, b, t: +t.toFixed(1), aHp: Math.max(0, A.hp) / A.max, bHp: Math.max(0, B.hp) / B.max, winner: out(A) && !out(B) ? 'b' : out(B) && !out(A) ? 'a' : 'draw' };
+  simReset(); return r;
+};
+window.__simTrace = (a, b, maxT = 60, dt = 1 / 30) => {
+  // duelo con traza: daño que recibe cada uno según quién lo hace, curaciones y momentos clave
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, b, 'purple', W - 140); units.push(A, B);
+  const tr = { dmg: {}, heal: {}, ev: [] }; let t = 0;
+  for (const u of [A, B]) {
+    const f = u.damage.bind(u); u.damage = (d, s, x, c) => { const h = u.hp; f(d, s, x, c); const k = u.type + '<-' + (s ? s.type + (s.state === 'missiles' ? ':misil' : '') : '?'); tr.dmg[k] = (tr.dmg[k] || 0) + Math.max(0, h - u.hp); };
+    const g = u.healBy.bind(u); u.healBy = n => { const h = u.hp; g(n); tr.heal[u.type] = (tr.heal[u.type] || 0) + Math.max(0, u.hp - h); };
+  }
+  let lastForm = 1, met = false;
+  while (t < maxT && A.alive && A.state !== 'die' && B.alive && B.state !== 'die') {
+    simStep(dt); t += dt;
+    if (!met && Math.abs(A.x - B.x) < H * 1.4) { met = true; tr.ev.push('contacto ' + t.toFixed(1) + 's hp ' + Math.round(A.hp) + '/' + Math.round(B.hp)); }
+    for (const u of [A, B]) if (u.type === 'centinela' && u.domeT > 0 && !u._d) { u._d = 1; tr.ev.push('escudo ' + t.toFixed(1)); }
+  }
+  tr.ev.push('fin ' + t.toFixed(1) + ' ' + a + ' ' + Math.round(A.hp) + ' ' + b + ' ' + Math.round(B.hp));
+  simReset(); return tr;
+};
+window.__dps = (a, T = 30, dt = 1 / 30) => {
+  // daño real por segundo contra un muñeco de entrenamiento (un legionario con vida infinita); el atacante no recibe daño
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, 'legionario', 'purple', W - 140); units.push(A, B);
+  A.damage = () => {}; B.hp = B.max = 1e7;
+  let t = 0, first = null;
+  while (t < T + 15) { simStep(dt); t += dt; if (first === null && B.hp < 1e7) first = t; if (first !== null && t - first >= T) break; if (A.type === 'centinela' || A.type === 'catapulta') B.x = Math.min(B.x, W - 140); }
+  const dmg = 1e7 - B.hp, r = { a, dps: first === null ? 0 : +(dmg / Math.max(1, t - first)).toFixed(1), firstHit: first === null ? null : +first.toFixed(1) };
+  simReset(); return r;
+};
+window.__addUnit = (type, team, x) => { const u = new Unit(scene, type, team, x); units.push(u); return true; };
+window.__debugUnits = () => units.map(u => ({ id: u._id || (u._id = ++__uid), type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x), form: u.form, stacks: u.stacks, max: u.max }));
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
+
+})();
 </script>
+
+</html>

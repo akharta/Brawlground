@@ -1,149 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
 <meta charset="utf-8">
-<title>Batalla de Brawlground</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!--APP-->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#161b2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brawlground">
+<link rel="apple-touch-icon" href="icono-180.png">
+<link rel="icon" href="icono-192.png">
+<!--/APP-->
+<title>Brawlground</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
 <style>
-/* Layout: pantalla de juego: campo arriba, mazo y energía abajo (como en vertical en el móvil). */
+/* Layout: app de juego a pantalla completa. El lienzo ocupa todo; encima, capas HTML:
+   carga → menú → mazo; en batalla, marcador arriba y panel de cartas abajo (vertical: a lo ancho; horizontal: centrado). */
 :root {
   color-scheme: dark;
   --bg: #161b2b; --panel: #252e48; --panel-hi: #33406a; --ink: #f4f1e8; --muted: #a9b2cc;
   --outline: #1e2235; --gold: #ffc83d; --energy: #b06bff; --energy-hi: #d8b4ff;
-  --common: #9aa3bd; --uncommon: #3ccf86; --rare: #4da3ff; --epic: #a855f7; --legend: #fbbf24; --ascended: #ef4444;
+  --blue: #3b82f6; --purple: #8b5cf6; --hp: #7ee04a;
   --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  --sl: max(10px, env(safe-area-inset-left, 0px)); --sr: max(10px, env(safe-area-inset-right, 0px));
+  --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
 }
-html, body { height: auto; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 600; overflow: hidden;
+  overscroll-behavior: none; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-.dock > *, .wrap > *, .stage { min-width: 0; }
-#game canvas { max-width: 100%; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 600; }
-.wrap { max-width: 980px; margin: 0 auto; padding-block: 12px 24px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 12px; }
-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-header img { width: 56px; height: auto; }
-h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; line-height: 1; }
-header p { margin: 3px 0 0; color: var(--muted); font-size: .9rem; }
-header .tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-.btn { font-family: var(--font-display); font-size: 1rem; letter-spacing: .02em; cursor: pointer;
-  background: var(--panel-hi); color: var(--ink); border: 3px solid var(--outline); border-radius: 12px; padding: 7px 12px;
-  box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 3px 0 var(--outline); }
-.btn:active { transform: translateY(2px); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 1px 0 var(--outline); }
-.btn.gold { background: var(--gold); color: var(--outline); }
-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.stage { position: relative; }
-#game { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border: 4px solid var(--outline); border-radius: 18px; overflow: hidden; background: #7fb85a; }
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+#game { position: fixed; inset: 0; background: var(--bg); }
 #game canvas { display: block; }
-#over { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,17,30,.55); border-radius: 18px; }
-#over .panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 18px 26px; text-align: center; box-shadow: 0 6px 0 var(--outline); }
-#over h2 { font-family: var(--font-display); font-weight: 400; font-size: 2.4rem; margin: 0 0 4px; }
-#over p { margin: 0 0 14px; color: var(--muted); }
-.dock { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 12px; }
-.energy { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
-.ebar { position: relative; flex: 1; height: 22px; background: #141826; border: 3px solid var(--outline); border-radius: 12px; overflow: hidden; }
-#efill { position: absolute; inset: 0 auto 0 0; width: 50%; background: linear-gradient(var(--energy-hi), var(--energy)); }
-.eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
-.clock { font-family: var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
-#enum { font-family: var(--font-display); font-size: 1.6rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
-.hand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; max-width: 520px; }
+
+.btn { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: .02em; text-decoration: none; text-align: center;
+  background: var(--panel-hi); color: var(--ink); border: 3px solid var(--outline); border-radius: 14px; padding: 9px 16px;
+  box-shadow: inset 0 3px 0 rgba(255,255,255,.14), 0 4px 0 var(--outline); display: inline-block; }
+.btn:active { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255,255,255,.14), 0 1px 0 var(--outline); }
+.btn.gold { background: var(--gold); color: var(--outline); }
+.btn.big { font-size: 1.6rem; padding: 12px 22px; border-radius: 18px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* ---- pantallas a toda la ventana ---- */
+.screen { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; overflow: auto;
+  padding: calc(var(--st) + 14px) var(--sr) calc(var(--sb) + 14px) var(--sl); }
+.screen.dim { background: rgba(12,15,28,.6); }
+#carga { background: radial-gradient(120% 80% at 50% 35%, #2b3560, var(--bg) 70%); z-index: 40; }
+.stack { display: grid; gap: 14px; justify-items: center; text-align: center; width: min(340px, 100%); }
+.logo { width: min(220px, 52vw, 34vh); height: auto; filter: drop-shadow(0 6px 0 rgba(0,0,0,.35)); }
+.loadbar { width: 100%; height: 18px; background: #0f1322; border: 3px solid var(--outline); border-radius: 10px; overflow: hidden; }
+#loadfill { height: 100%; width: 0; background: linear-gradient(var(--energy-hi), var(--energy)); transition: width .15s; }
+#loadtxt { margin: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tip { margin: 0; color: var(--muted); font-size: .9rem; min-height: 2.6em; max-width: 30ch; }
+#tap { animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.05); } }
+
+#menu { background: rgba(12,15,28,.35); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+#menu .stack { gap: 12px; }
+#menu .btn { width: 100%; }
+#menu .ver { margin: 6px 0 0; font-size: .8rem; color: var(--ink); opacity: .8; text-shadow: 0 1px 2px #000; }
+
+/* ---- mazo y héroe ---- */
+#deck { background: rgba(12,15,28,.82); place-items: start center; }
+.sheet { width: min(900px, 100%); display: grid; gap: 12px; padding-bottom: 12px; }
+.sheet-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; }
+.sheet h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; margin: 6px 0 0; }
+.sheet h3 small { font-family: var(--font-body); font-size: .85rem; color: var(--muted); }
+#deckcount { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.heroes { display: flex; gap: 10px; flex-wrap: wrap; }
+.hpick { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 6px 14px 6px 6px; text-align: left; }
+.hpick img { width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); background: #3a3f62; }
+.hpick b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; }
+.hpick span { font-size: .8rem; color: var(--muted); }
+.hpick[aria-pressed="true"] { background: #4a3a1a; box-shadow: 0 0 0 3px var(--gold); }
+#deckgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 700px) { #deckgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.escrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--outline); border-radius: 10px; padding: 6px 8px; font-weight: 800; }
+.acts { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
 /* cartas con marco por rareza (img/esc/marco_*.png, 241x402): retrato en la ventana, coste en el círculo, nombre en la barra */
-.hc, .dk { position: relative; aspect-ratio: 241 / 402; padding: 0; border: 0; background: none; cursor: pointer; min-width: 0; display: block; filter: drop-shadow(0 3px 0 rgba(10,12,24,.45)); transition: transform .08s, filter .15s, opacity .12s; }
+.hc, .dk { position: relative; aspect-ratio: 241 / 402; padding: 0; border: 0; background: none; min-width: 0; display: block; flex: none;
+  filter: drop-shadow(0 3px 0 rgba(10,12,24,.45)); transition: transform .08s, filter .15s, opacity .12s; }
 .hc::after, .dk::after { content: ''; position: absolute; inset: 0; background: var(--frame) center / 100% 100% no-repeat; pointer-events: none; }
-.hc img, .dk img { position: absolute; left: 10.4%; top: 17.7%; width: 79%; height: 60%; object-fit: cover; border: 0; border-radius: 4%; background: #c7cde0; aspect-ratio: auto; }
-.hc .cost, .dk .cost { position: absolute; z-index: 1; left: 50%; top: 10.4%; transform: translate(-50%, -50%); width: 19%; height: auto; aspect-ratio: 1; border: 0; border-radius: 50%; background: none;
-  display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: 1rem; text-shadow: 0 2px 0 var(--outline); }
-.hc .nm, .dk .nm { position: absolute; z-index: 1; left: 7%; right: 7%; top: 81%; height: 15%; display: grid; place-items: center; font-family: var(--font-display); font-size: .82rem; color: #fff;
+.hc img, .dk img { position: absolute; left: 10.4%; top: 17.7%; width: 79%; height: 60%; object-fit: cover; border-radius: 4%; background: #c7cde0; }
+.hc .cost, .dk .cost { position: absolute; z-index: 1; left: 50%; top: 10.4%; transform: translate(-50%, -50%); width: 19%; aspect-ratio: 1; display: grid; place-items: center;
+  font-family: var(--font-display); color: #fff; font-size: 1rem; text-shadow: 0 2px 0 var(--outline); }
+.hc .nm, .dk .nm { position: absolute; z-index: 1; left: 7%; right: 7%; top: 81%; height: 15%; display: grid; place-items: center; font-family: var(--font-display); font-size: .8rem; color: #fff;
   text-shadow: -1px -1px 0 var(--outline), 1px -1px 0 var(--outline), -1px 1px 0 var(--outline), 1px 1px 0 var(--outline), 0 2px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comun { --frame: url(img/esc/marco_comun.png); } .poco { --frame: url(img/esc/marco_poco.png); } .rara { --frame: url(img/esc/marco_rara.png); }
 .epica { --frame: url(img/esc/marco_epica.png); } .legendaria { --frame: url(img/esc/marco_legendaria.png); } .ascendida { --frame: url(img/esc/marco_ascendida.png); }
+.dk { opacity: .5; width: 100%; }
+.dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 .hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
 .hc:not(.poor):active { transform: translateY(3px); }
-.side { display: grid; gap: 8px; justify-items: center; }
-.next { font-size: .75rem; color: var(--muted); text-align: center; display: grid; gap: 3px; justify-items: center; }
-.next img { width: 52px; height: 52px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
-#hero { font-family: var(--font-display); background: #4a3a1a; color: var(--gold); border: 3px solid var(--outline); border-radius: 12px; padding: 6px 10px; display: grid; gap: 2px; justify-items: center; }
-#hero span { font-family: var(--font-body); font-size: .75rem; color: var(--ink); font-variant-numeric: tabular-nums; }
-#hero:disabled { opacity: .85; cursor: default; }
-#hero img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--outline); background: #3a3f62; }
-#hero.ready { background: var(--gold); color: var(--outline); animation: heroPulse 1s ease-in-out infinite; cursor: pointer; }
-#hero.ready span { color: var(--outline); }
-@keyframes heroPulse { 50% { transform: scale(1.06); box-shadow: 0 0 14px var(--gold); } }
-@media (prefers-reduced-motion: reduce) { #hero.ready { animation: none; } }
-.hint { color: var(--muted); font-size: .85rem; margin: 0; max-width: 70ch; }
-#deck { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,17,30,.72); border-radius: 18px; overflow: auto; padding: 10px; }
-#deck .panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 18px; padding: 14px; box-shadow: 0 6px 0 var(--outline); display: grid; gap: 10px; max-width: 900px; width: 100%; }
-#deck h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0; }
-#deck .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
-#deck .count { color: var(--muted); font-variant-numeric: tabular-nums; }
-#deckgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
-.dk { opacity: .5; }
-.dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
-#deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
-#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; }
-#deck .acts #deckrand { margin-left: auto; }
-#deck select { font: inherit; color: var(--outline); background: #f4f1e6; border: 3px solid var(--outline); border-radius: 10px; padding: 4px 6px; }
-.btn:disabled { opacity: .5; cursor: default; }
-#over .panel { max-height: 100%; overflow: auto; max-width: 92%; }
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; text-align: left; }
+
+/* ---- batalla: marcador arriba ---- */
+#hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+#hud > * { pointer-events: auto; }
+.top { position: absolute; top: 0; left: 0; right: 0; display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 8px;
+  padding: calc(var(--st) + 8px) var(--sr) 0 var(--sl); }
+.ibtn { width: 44px; height: 44px; border-radius: 12px; border: 3px solid var(--outline); background: #e9edf7; color: var(--outline);
+  font-family: var(--font-display); font-size: 1.1rem; box-shadow: inset 0 -4px 0 rgba(0,0,0,.15), 0 3px 0 var(--outline); display: grid; place-items: center; padding: 0; }
+.ibtn:active { transform: translateY(2px); }
+.ibtn[aria-pressed="true"] { background: var(--gold); }
+.cst { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 6px; min-width: 0; max-width: 220px; }
+.cst.p { justify-self: end; }
+.cst b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; color: #fff; text-shadow: 0 2px 0 var(--outline), 0 0 4px rgba(0,0,0,.4); font-variant-numeric: tabular-nums; grid-column: 2; }
+.cst i { grid-row: 1 / 3; width: 26px; height: 26px; border: 3px solid var(--outline); border-radius: 7px 7px 12px 12px; background: var(--blue); }
+.cst.p i { background: var(--purple); }
+.cst .bar { grid-column: 2; height: 10px; background: #0f1322; border: 2px solid var(--outline); border-radius: 6px; overflow: hidden; }
+.cst .bar span { display: block; height: 100%; width: 100%; background: var(--blue); transition: width .2s; }
+.cst.p .bar span { background: var(--purple); }
+#clock { font-family: var(--font-display); font-size: 1.05rem; background: rgba(15,19,34,.75); border: 3px solid var(--outline); border-radius: 12px; padding: 4px 10px; font-variant-numeric: tabular-nums; }
+#clock.x2 { color: var(--energy-hi); }
+
+/* ---- batalla: panel de cartas abajo ---- */
+.dock { position: absolute; left: 0; right: 0; bottom: 0; margin-inline: auto; max-width: 760px; background: var(--panel); border: 4px solid var(--outline); border-bottom: 0;
+  border-radius: 22px 22px 0 0; padding: 10px var(--sr) calc(var(--sb) + 10px) var(--sl); display: grid; gap: 8px; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
+.energy { display: flex; align-items: center; gap: 8px; }
+.ebar { position: relative; flex: 1; height: 20px; background: #141826; border: 3px solid var(--outline); border-radius: 12px; overflow: hidden; }
+#efill { position: absolute; inset: 0 auto 0 0; width: 50%; background: linear-gradient(var(--energy-hi), var(--energy)); }
+.eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
+#enum { font-family: var(--font-display); font-size: 1.4rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
+.row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.hand { display: flex; gap: 8px; }
+.hc { height: min(120px, 16vh, calc((100vw - 170px) / 4 * 1.668)); }
+.nextc { display: grid; gap: 2px; justify-items: center; font-size: .7rem; color: var(--muted); }
+.nextc img { width: 40px; height: 40px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
+#hero { display: grid; justify-items: center; gap: 3px; background: none; border: 0; padding: 0; width: 62px; }
+#hero .ring { width: 56px; height: 56px; border-radius: 50%; padding: 4px; background: conic-gradient(var(--gold) calc(var(--p, 0) * 1turn), #141826 0); border: 3px solid var(--outline); }
+#hero img { width: 100%; height: 100%; border-radius: 50%; display: block; background: #3a3f62; border: 2px solid var(--outline); box-sizing: border-box; }
+#hero #herotxt { font-family: var(--font-display); font-size: .78rem; color: var(--gold); text-shadow: 0 2px 0 var(--outline); white-space: nowrap; }
+#hero:disabled { cursor: default; } #hero:disabled img { filter: saturate(.6) brightness(.8); }
+#hero.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 3px var(--gold), 0 0 14px var(--gold); }
+@media (orientation: landscape) {
+  .dock { max-width: min(640px, 78vw); padding-top: 8px; gap: 6px; }
+  .hc { height: min(120px, 21vh); }
+}
+
+/* ---- pausa y final ---- */
+.panel { background: var(--panel); border: 4px solid var(--outline); border-radius: 20px; padding: 18px 22px; box-shadow: 0 6px 0 var(--outline); display: grid; gap: 12px; justify-items: center; text-align: center; max-width: 100%; }
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 2.2rem; margin: 0; }
+.panel p { margin: 0; color: var(--muted); max-width: 40ch; }
+.col { display: grid; gap: 10px; width: min(260px, 70vw); }
+#over .panel { width: min(720px, 100%); }
+details { width: 100%; text-align: left; }
+summary { cursor: pointer; font-family: var(--font-display); color: var(--gold); text-align: center; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; overflow-x: auto; }
+@media (max-width: 700px) { .stats { grid-template-columns: 1fr; } }
 .stats h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 0 0 4px; }
 .stats table { border-collapse: collapse; width: 100%; font-size: .78rem; font-variant-numeric: tabular-nums; }
 .stats th, .stats td { padding: 2px 6px; border-bottom: 1px solid #39446a; text-align: right; white-space: nowrap; }
 .stats th:first-child, .stats td:first-child { text-align: left; }
 .stats th { color: var(--muted); font-weight: 800; }
-@media (max-width: 700px) { #deckgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stats { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm, .dk .nm { font-size: .62rem; } .hc .cost, .dk .cost { font-size: .8rem; } }
-
-/* pantalla completa: el campo se ajusta al alto disponible y desaparece lo que no es del juego */
-body.fs .wrap { max-width: none; padding-block: 6px; gap: 6px; }
-body.fs header img, body.fs header h1, body.fs header p, body.fs .hint { display: none; }
-body.fs #game { margin-inline: auto; }
-body.fs .wrap { padding-inline: 8px; }
-body.fs header .btn { font-size: .85rem; padding: 4px 9px; border-radius: 10px; }
-body.fs .dock { grid-template-columns: auto 1fr auto; padding: 6px 8px; gap: 4px 10px; border-radius: 14px; }
-body.fs .energy { grid-column: 1 / -1; }
-body.fs .ebar { height: 14px; } body.fs #enum { font-size: 1.15rem; }
-body.fs .hand { grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px; max-width: none; }
-body.fs .hc { height: min(17dvh, 128px); width: auto; }
-body.fs .side { grid-auto-flow: column; align-items: center; gap: 8px; }
-@media (max-height: 520px) and (orientation: landscape) {   /* móvil en horizontal: cartas a la derecha del campo */
-  body.fs .wrap { grid-template-columns: 1fr auto; align-items: start; }
-  body.fs header { grid-column: 1 / -1; }
-  body.fs .dock { grid-template-columns: 1fr; align-self: stretch; align-content: start; }
-  body.fs .hand { grid-template-columns: repeat(2, auto); }
-  body.fs .hc { height: min(24dvh, 110px); } body.fs .dock { gap: 3px 8px; } body.fs #hero span { display: none; }
-  body.fs .side { justify-content: center; }
-  body.fs .next { display: none; }
-  body.fs .energy { flex-wrap: wrap; justify-content: space-between; row-gap: 2px; } body.fs .ebar { flex-basis: 100%; order: 3; }
-}
-body.fs .next img { width: 38px; height: 38px; } body.fs #hero { padding: 4px 8px; } body.fs #hero img { width: 30px; height: 30px; }
+@media (prefers-reduced-motion: reduce) { #tap, #hero.ready .ring { animation: none; } }
 </style>
+</head>
+<body>
+<div id="game"></div>
 
-<div class="wrap">
-  <header>
-    <img src="img/logo.png" alt="Brawlground">
-    <div><h1>Batalla</h1><p>Partida contra la IA con las 16 unidades.</p></div>
-    <div class="tools"><button class="btn" id="fsbtn" aria-pressed="false">Pantalla completa</button><button class="btn" id="speed" aria-pressed="false">x1</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="decked">Mazo</button></div>
-  </header>
-  <div class="stage">
-    <div id="game"></div>
-    <div id="over" hidden><div class="panel"><h2 id="over-title"></h2><p id="over-text"></p><div class="stats" id="stats"></div><button class="btn" id="redeck">Cambiar mazo</button> <button class="btn gold" id="again">Jugar otra vez</button></div></div>
-    <div id="deck" hidden><div class="panel">
-      <div class="top"><h2>Elige tu mazo</h2><span class="count" id="deckcount">0/8</span></div>
-      <div id="deckgrid"></div>
-      <div class="acts"><label class="esc">Héroe <select id="selhero"></select></label><label class="esc">Escenario <select id="selfondo"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
-    </div></div>
+<section id="carga" class="screen">
+  <div class="stack">
+    <img class="logo" src="img/logo.png" alt="Brawlground">
+    <div class="loadbar" role="progressbar" aria-label="Cargando"><div id="loadfill"></div></div>
+    <p id="loadtxt">Cargando… 0 %</p>
+    <button class="btn gold big" id="tap" hidden>Toca para jugar</button>
+    <p class="tip" id="tip"></p>
   </div>
-  <div class="dock">
-    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span><span id="clock" class="clock">0:00</span></div>
-    <div class="hand" id="hand"></div>
-    <div class="side">
-      <div class="next">Siguiente<img id="next" alt=""></div>
-      <button id="hero" disabled>Rey Aldric<span>0/15 bajas</span></button>
+</section>
+
+<section id="menu" class="screen" hidden>
+  <div class="stack">
+    <img class="logo" src="img/logo.png" alt="Brawlground">
+    <button class="btn gold big" id="m-batalla">Batalla</button>
+    <button class="btn" id="m-mazo">Mazo y héroe</button>
+    <button class="btn" id="m-practica">Práctica</button>
+    <p class="ver">Prototipo · 16 unidades · 2 héroes</p>
+  </div>
+</section>
+
+<section id="deck" class="screen" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="deckback">← Menú</button><h2>Mazo y héroe</h2><span id="deckcount">0/8</span></div>
+    <h3>Héroe</h3>
+    <div class="heroes" id="heroes"></div>
+    <h3>Cartas <small>elige 8</small></h3>
+    <div id="deckgrid"></div>
+    <h3>Escenario</h3>
+    <div class="escrow"><select id="selfondo" aria-label="Escenario"></select></div>
+    <div class="acts"><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo">¡A luchar!</button></div>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div class="top" id="hudtop">
+    <button class="ibtn" id="pause" aria-label="Pausa">II</button>
+    <div class="cst"><i></i><b id="hpb">1500</b><span class="bar"><span id="hpbf"></span></span></div>
+    <div id="clock">0:00</div>
+    <div class="cst p"><i></i><b id="hpp">1500</b><span class="bar"><span id="hppf"></span></span></div>
+    <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
+  </div>
+  <div class="dock" id="dock">
+    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
+    <div class="row">
+      <button id="hero" disabled aria-label="Héroe"><span class="ring"><img id="heroimg" src="img/aldric_retrato.png" alt=""></span><span id="herotxt">0/15</span></button>
+      <div class="hand" id="hand"></div>
+      <div class="nextc">Sig.<img id="next" alt=""></div>
     </div>
   </div>
-  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Elige héroe en la pantalla del mazo: el Rey Aldric (Golpe sísmico) o Lyra, Ojo de Halcón (flechas que atraviesan a 3 enemigos y Tormenta de plumas, que barre el carril hasta el castillo rival). Al llegar a 15 bajas, tu héroe salta de su trono: tócalo para mandarlo al campo y luego para su habilidad. La IA lleva uno al azar. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
 </div>
 
+<section id="pausa" class="screen dim" hidden>
+  <div class="panel"><h2>Pausa</h2>
+    <div class="col"><button class="btn gold" id="resume">Seguir</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="quit">Salir al menú</button></div>
+  </div>
+</section>
+
+<section id="over" class="screen dim" hidden>
+  <div class="panel"><h2 id="over-title"></h2><p id="over-text"></p>
+    <details><summary>Estadísticas de la partida</summary><div class="stats" id="stats"></div></details>
+    <div class="acts"><button class="btn" id="tomenu">Menú</button><button class="btn gold" id="again">Revancha</button></div>
+  </div>
+</section>
+
 {{SCRIPT}}
+<!--APP-->
+<script>
+if ('serviceWorker' in navigator && window.self === window.top && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+<!--/APP-->
+</body>
+</html>

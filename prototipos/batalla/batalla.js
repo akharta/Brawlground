@@ -5,7 +5,7 @@ const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.spl
 LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
-let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
+let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null, paused = false;
 const THRONE = { x: 140, y: 200, w: 140 };
 // héroes que se pueden llevar a la batalla
 const HEROES = {
@@ -19,7 +19,6 @@ const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.4
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
-const ZOOM = VW / W, CAM_Y = 15;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -84,20 +83,20 @@ function play(team, idx) {
   side.hand[idx] = side.queue.shift(); side.queue.push(type);
   units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
   stat(team, type).played++;
-  if (team === 'blue') renderHand();
+  if (team === 'blue' && !B.demo) renderHand();
   return true;
 }
-function aiLogic(dt) {
+function aiLogic(dt, team = 'purple') {
   // juega lo que puede pagar; a veces ahorra para la carta más cara de su mano
-  B.aiT -= dt; if (B.aiT > 0) return;
-  const s = B.purple, ok = s.hand.map((t, i) => [t, i]).filter(([t]) => COST[t] <= s.energy);
+  const s = B[team]; s.aiT = (s.aiT === undefined ? 2.5 : s.aiT) - dt; if (s.aiT > 0) return;
+  const ok = s.hand.map((t, i) => [t, i]).filter(([t]) => COST[t] <= s.energy);
   const priciest = Math.max(...s.hand.map(t => COST[t]));
   const saving = priciest > s.energy && priciest >= 5 && Math.random() < 0.6;
   if (ok.length && !saving && (s.energy >= 7 || Math.random() < 0.55)) {
     ok.sort((a, b) => COST[b[0]] - COST[a[0]]);
     const [, i] = Math.random() < 0.6 ? ok[0] : ok[Math.floor(Math.random() * ok.length)];
-    play('purple', i); B.aiT = rand(1.2, 3.2);
-  } else B.aiT = 0.5;
+    play(team, i); s.aiT = rand(1.2, 3.2);
+  } else s.aiT = 0.5;
 }
 function towers(dt) {
   for (const team of ['blue', 'purple']) {
@@ -116,7 +115,7 @@ function towers(dt) {
 function drawCastleUI(dt) {
   castleG.clear(); flashG.clear();
   for (const team of ['blue', 'purple']) {
-    const c = castles[team], bw = 120, by = THRONE.y - 158, x0 = (team === 'blue' ? CASTLE_VX : W - CASTLE_VX) - bw / 2;
+    const c = castles[team];
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
@@ -125,9 +124,6 @@ function drawCastleUI(dt) {
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
     if (c.flash > 0) { c.flash -= dt; ci.setTint(0xffd0d0); } else if (ci.isTinted) ci.clearTint();
-    castleG.fillStyle(OUT, 1).fillRoundedRect(x0 - 3, by - 3, bw + 6, 18, 7);
-    castleG.fillStyle(0x3a3f55, 1).fillRoundedRect(x0, by, bw, 12, 5);
-    castleG.fillStyle(team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(x0, by, Math.max(4, bw * c.hp / c.max), 12, 5);
   }
 }
 function statsTable(team, title) {
@@ -137,19 +133,20 @@ function statsTable(team, title) {
 }
 function endGame(win) {
   B.over = true;
+  if (B.demo) { setTimeout(() => { if (B && B.demo) startDemo(); }, 2500); return; }   // la partida del menú vuelve a empezar sola
   $('over-title').textContent = win ? '¡Victoria!' : 'Derrota';
   $('over-text').textContent = (win ? 'Has derribado el castillo rival' : 'Han derribado tu castillo') + ' en ' + Math.round(B.t) + ' s. Enemigos abatidos: ' + B.blue.kills + '.';
   $('stats').innerHTML = statsTable('blue', 'Tu bando') + statsTable('purple', 'Rival');
   window.__lastStats = JSON.parse(JSON.stringify({ win, t: B.t, stats: B.stats, decks: { blue: B.blue.deck, purple: B.purple.deck } }));
   if (db && !B.saved) { B.saved = true; db.collection('partidas').add({ ...window.__lastStats, t: Math.round(B.t), fecha: new Date().toISOString(), castillos: { azul: Math.max(0, Math.round(castles.blue.hp)), morado: Math.max(0, Math.round(castles.purple.hp)) } }).catch(() => {}); }
-  $('over').hidden = false;
+  setTimeout(() => { if (B && B.over && !B.demo) show('over'); }, 900);
 }
-function resetBattle() {
-  clearUnits();
-  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { type: myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
+function resetBattle(demo = false) {
+  clearUnits(); paused = false; if (scene) scene.tweens.resumeAll();
+  B = { demo, blue: newSide(demo ? aiDeck() : myDeck), purple: newSide(aiDeck()), over: false, t: 0, stats: { blue: {}, purple: {} }, hero: { type: demo ? (Math.random() < 0.5 ? 'aldric' : 'lyra') : myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
   if (throneImg) { setThrone(throneImg, HEROES[B.hero.type].throne); setThrone(throneImgP, HEROES[B.heroP.type].throne); }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
-  $('over').hidden = true; renderHand();
+  if (!demo) renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
@@ -170,27 +167,27 @@ function heroAct(team) {
   return false;
 }
 function heroClick() { heroAct('blue'); }
-function heroAI() {
-  // la IA: salta en cuanto puede y usa el Golpe sísmico cuando tiene al menos dos enemigos a su alcance
-  const hr = B.heroP;
-  if (hr.state === 'throne') heroAct('purple');
+function heroAI(team = 'purple') {
+  // la IA: salta en cuanto puede y usa la habilidad cuando le compensa
+  const hr = team === 'blue' ? B.hero : B.heroP;
+  if (hr.state === 'throne') heroAct(team);
   else if (hr.state === 'field' && hr.skillT <= 0) {
     const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
     if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
       const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
-      if (ahead >= 2 || nearCastle) heroAct('purple');
-    } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct('purple');
+      if (ahead >= 2 || nearCastle) heroAct(team);
+    } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct(team);
   }
 }
 function heroUI() {
-  const hr = B.hero, btn = $('hero'), k = B.blue.kills;
-  let title, sub, on = false, ready = false;
-  const HD = HEROES[hr.type];
-  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡' + HD.name + '!' : HD.name; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
-  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = HD.skillName; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
-  else { title = HD.name; sub = 'Ha caído'; }
-  btn.disabled = !on; btn.classList.toggle('ready', ready);
-  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/' + HD.portrait + '.png" alt="">' + title + '<span>' + sub + '</span>'; }
+  // botón redondo con el retrato: el aro dorado se llena con las bajas y luego con la recarga de la habilidad
+  const hr = B.hero, btn = $('hero'), k = B.blue.kills, HD = HEROES[hr.type];
+  let txt, p, ready = false, label;
+  if (hr.state === 'throne') { ready = k >= HERO_GOAL; p = Math.min(1, k / HERO_GOAL); txt = ready ? '¡Salta!' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL; label = HD.name + (ready ? ': toca para que salte del trono' : ': ' + txt + ' bajas'); }
+  else if (hr.state === 'field') { ready = hr.skillT <= 0; p = 1 - hr.skillT / CH[hr.type].skillCd; txt = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; label = HD.skillName + (ready ? ': lista' : ': ' + txt); }
+  else { p = 0; txt = 'Ha caído'; label = HD.name + ' ha caído'; }
+  btn.disabled = !ready; btn.classList.toggle('ready', ready); btn.style.setProperty('--p', p.toFixed(3));
+  if (btn.dataset.t !== txt + hr.type) { btn.dataset.t = txt + hr.type; $('herotxt').textContent = txt; $('heroimg').src = 'img/' + HD.portrait + '.png'; btn.setAttribute('aria-label', label); }
 }
 $('hero').onclick = () => heroClick();
 window.__heroClick = () => heroClick();
@@ -198,23 +195,49 @@ window.__hero = () => B.hero && { state: B.hero.state, skillT: B.hero.skillT, ki
 window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
 window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
 
-/* ---- escenario del campo largo: fondo + camino + decoración (arte en img/esc, datos en esc.json) ---- */
-const ESC = __ESC__;   // escenas completas: fondo, camino y objetos en una sola imagen; t/b = franja de tierra (fracción del alto)
-let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return ESC[v] ? v : 'escena_07'; } catch (e) { return 'escena_07'; } })(), escObjs = [];
+/* ---- escenario: escenas completas (fondo, camino y objetos en una sola imagen); t/b = franja de tierra (fracción del alto) ---- */
+const ESC = __ESC__;
+const ESC_NAME = { escena_01: 'Noche', escena_02: 'Cerezos', escena_03: 'Atardecer', escena_04: 'Amanecer', escena_05: 'Otoño', escena_06: 'Prado', escena_07: 'Montañas', escena_08: 'Molino', escena_09: 'Lago', escena_10: 'Pinos' };
+let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return ESC[v] ? v : 'escena_07'; } catch (e) { return 'escena_07'; } })(), escObjs = [], clouds = [];
 function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
   L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
 }
+function makeCloud(sc) {
+  // nube dibujada al estilo del arte: borde oscuro, cuerpo blanco y sombra azulada abajo
+  if (sc.textures.exists('nube')) return;
+  const g = sc.make.graphics({ x: 0, y: 0, add: false }), bl = [[62, 70, 40], [112, 52, 54], [168, 62, 46], [214, 80, 32], [36, 88, 26]];
+  g.fillStyle(OUT, 1); bl.forEach(([x, y, r]) => g.fillCircle(x, y, r + 5)); g.fillRoundedRect(14, 72, 228, 44, 22);
+  g.fillStyle(0xdfe9fb, 1); bl.forEach(([x, y, r]) => g.fillCircle(x, y, r)); g.fillRoundedRect(19, 77, 218, 34, 17);
+  g.fillStyle(0xffffff, 1); bl.forEach(([x, y, r]) => g.fillCircle(x - 3, y - 5, r * 0.88)); g.fillStyle(0xffffff, 0.9).fillEllipse(110, 34, 30, 12);
+  g.generateTexture('nube', 260, 124); g.destroy();
+}
 function drawScenery(sc) {
-  escObjs.forEach(o => o.destroy()); escObjs = [];
-  const f = ESC[escena], top = CAM_Y - HGT / ZOOM / 2 - 12, bot = CAM_Y + HGT / ZOOM / 2 + 12;
-  // la escena ocupa el ancho del campo y su camino queda bajo los pies de las unidades
-  const tw = sc.textures.get(escena).getSourceImage().width, s = (W + 8) / tw, ih = f.h * tw / f.w * s, y0 = GROUND + 2 - (f.t + f.b) / 2 * ih;
-  const col = h => Phaser.Display.Color.HexStringToColor(h).color;
-  escObjs.push(sc.add.rectangle(W / 2, (top + y0) / 2, W + 40, y0 - top + 4, col(f.top)).setDepth(-31));          // cielo por encima
-  escObjs.push(sc.add.rectangle(W / 2, (y0 + ih + bot) / 2, W + 40, bot - y0 - ih + 4, col(f.bot)).setDepth(-31)); // prado por debajo
-  escObjs.push(sc.add.image(W / 2, y0, escena).setOrigin(0.5, 0).setScale(s).setDepth(-30));
+  // la escena se coloca con su camino bajo los pies de las unidades y cubre todo lo que enseña la cámara:
+  // se completa en espejo a los lados y, si sobra cielo (móvil en vertical), con el color del cielo y nubes que pasan
+  escObjs.forEach(o => o.destroy()); escObjs = []; clouds = [];
+  const f = ESC[escena], tw = sc.textures.get(escena).getSourceImage().width, base = (W + 8) / tw, pc = (f.t + f.b) / 2;
+  const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
+  const ih0 = f.h * tw / f.w * base, k = Math.max(1, Math.min(1.25, (GROUND - top) / pc / ih0)), s = base * k, ih = ih0 * k, iw = tw * s, y0 = GROUND + 2 - pc * ih;
+  const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
+  add(sc.add.rectangle(cx, (top - 60 + y0) / 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-31));
+  add(sc.add.rectangle(cx, (y0 + ih + bot + 60) / 2, vw + 200, bot - y0 - ih + 64, col(f.bot)).setDepth(-31));
+  for (let i = -3; i <= 3; i++) {
+    const x = W / 2 + i * iw; if (x + iw / 2 < cx - vw / 2 - 10 || x - iw / 2 > cx + vw / 2 + 10) continue;
+    add(sc.add.image(x, y0, escena).setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-30));
+  }
+  const free = y0 + ih * 0.12 - top;   // cielo que no cubre la imagen: nubes que pasan despacio
+  if (free > 200) {
+    makeCloud(sc);
+    const tint = Phaser.Display.Color.Interpolate.ColorWithColor(Phaser.Display.Color.ValueToColor(0xffffff), Phaser.Display.Color.ValueToColor(col(f.top)), 100, 18);
+    const n = Math.max(2, Math.round(vw * free / 900000));
+    for (let i = 0; i < n; i++) {
+      const sz = rand(2.2, 3.6), img = add(sc.add.image(cx - vw / 2 + rand(0, vw), top + 90 + rand(0, Math.max(10, free - 260)), 'nube').setScale(sz).setDepth(-29)
+        .setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b)).setFlipX(Math.random() < 0.5));
+      clouds.push({ img, v: rand(8, 18), x0: cx - vw / 2 - 400, x1: cx + vw / 2 + 400 });
+    }
+  }
 }
 function setScenery(e) {
   escena = e || escena;
@@ -223,11 +246,36 @@ function setScenery(e) {
   scene.load.image(escena, 'img/esc/' + escena + '.jpg'); scene.load.once('complete', () => drawScenery(scene)); scene.load.start();
 }
 window.__setScenery = setScenery;
+
+/* ---- cámara: el campo entero cabe entre el marcador y el panel de cartas, en vertical y en horizontal ---- */
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+let zoomCss = 0.5, TXT_K = 1;
+function frameCamera() {
+  if (!cam) return;
+  const gm = window.__game, cw = gm.scale.width, ch = gm.scale.height, battle = !$('hud').hidden;
+  const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
+  const X0 = 20, X1 = W - 20, Y0 = THRONE.y - 150, Y1 = GROUND + 120;   // de los tronos al borde del camino
+  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
+  cam.setZoom(z); cam.centerOn(W / 2, Y1 - (botCss * DPR - ch / 2) / z);
+  zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss));
+  drawScenery(scene);
+}
+// los números de daño y los avisos se agrandan cuando la cámara se aleja (móvil en vertical)
+floatText = function (x, y, txt, color) {
+  const k = TXT_K, t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: Math.round(30 * k) + 'px', color: color || '#ffffff', stroke: '#1e2235', strokeThickness: Math.round(7 * k) }).setOrigin(0.5).setDepth(1000);
+  scene.tweens.add({ targets: t, y: y - 46 * k, alpha: { from: 1, to: 0 }, scale: { from: 1.25, to: 0.9 }, duration: 750 / timeScale, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+};
+function resizeGame() {
+  const gm = window.__game, g = $('game'); if (!gm || !g.clientWidth) return;
+  gm.scale.resize(Math.round(g.clientWidth * DPR), Math.round(g.clientHeight * DPR)); frameCamera();
+}
+let rzT = 0;
+window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(resizeGame, 80); });
+
 /* ---- Phaser ---- */
 function create() {
   scene = this; mode = 'fight';
-  drawScenery(this);
-  cam = this.cameras.main; cam.setZoom(ZOOM); cam.centerOn(W / 2, CAM_Y);
+  cam = this.cameras.main;
   makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
   flashG = this.add.graphics().setDepth(5);
   for (const team of ['blue', 'purple']) {
@@ -237,23 +285,25 @@ function create() {
   throneImg = this.add.image(THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302); throneImg.setScale(THRONE.w / throneImg.width);
   throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302).setFlipX(true); throneImgP.setScale(THRONE.w / throneImgP.width);
   castleG = this.add.graphics().setDepth(990);
-  for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? CASTLE_VX : W - CASTLE_VX, THRONE.y - 152, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
   fxG = this.add.graphics().setDepth(980);
-  resetBattle(); B.over = true; openDeck();
+  frameCamera(); startDemo();
+  loaded();
 }
 function update(_, deltaMs) {
-  const dt = Math.min(0.05, deltaMs / 1000) * timeScale;
-  if (B && !B.over) {
+  const dt = paused ? 0 : Math.min(0.05, deltaMs / 1000) * timeScale;
+  for (const c of clouds) { c.img.x += c.v * deltaMs / 1000; if (c.img.x > c.x1) c.img.x = c.x0; }
+  if (B && !B.over && !paused) {
     B.t += dt;
     const rate = EREGEN * (B.t >= DOUBLE_AT ? 2 : 1);   // a partir de los 2 minutos, energía doble
-    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; floatText(W / 2, 120, '¡Energía doble!', '#d8b4ff'); }
+    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; if (!B.demo) floatText(W / 2, GROUND - H * 2.4, '¡Energía doble!', '#d8b4ff'); }
     for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt);
-    aiLogic(dt); towers(dt); fightLogic(dt);
+    aiLogic(dt, 'purple'); if (B.demo) aiLogic(dt, 'blue');
+    towers(dt); fightLogic(dt);
     for (const hr of [B.hero, B.heroP]) if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
-    heroAI();
+    heroAI('purple'); if (B.demo) heroAI('blue');
   }
   units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
-  // nadie se sube al castillo rival: se queda delante de su muralla (embestidas, saltos y empujones incluidos)
+  // nadie pisa un castillo: todos se quedan en el tramo entre las dos murallas (embestidas, saltos y empujones incluidos)
   for (const u of units) {
     if (!u.alive || u.state === 'heroJump') continue;
     if (u.x < FIELD_L) u.x = FIELD_L; else if (u.x > FIELD_R) u.x = FIELD_R;
@@ -268,20 +318,64 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); for (const t of ['blue', 'purple']) hpText[t].setText(Math.ceil(castles[t].hp)); uiTick(); }
+  if (B) { drawCastleUI(dt); if (!B.demo) uiTick(); }
 }
 function start() {
+  const g = $('game');
   window.__game = new Phaser.Game({
-    type: Phaser.AUTO, parent: 'game', width: VW, height: HGT, backgroundColor: '#7fb85a',
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    type: Phaser.AUTO, parent: 'game', width: Math.round(g.clientWidth * DPR), height: Math.round(g.clientHeight * DPR), backgroundColor: '#161b2b',
+    scale: { mode: Phaser.Scale.NONE, zoom: 1 / DPR },
     scene: { preload() {
+      this.load.on('progress', v => { $('loadfill').style.width = (v * 100) + '%'; $('loadtxt').textContent = 'Cargando… ' + Math.round(v * 100) + ' %'; });
 __PRELOAD__
       escPreload(this.load);
     }, create, update }
   });
 }
 
-/* ---- interfaz ---- */
+/* ---- pantallas: carga → menú (con una partida de la IA contra sí misma de fondo) → mazo → batalla → pausa / final ---- */
+const SCREENS = ['carga', 'menu', 'deck', 'pausa', 'over'];
+function show(id) {
+  SCREENS.forEach(s => { $(s).hidden = s !== id; });
+  const hud = id === null || id === 'pausa' || id === 'over', changed = $('hud').hidden === hud;
+  $('hud').hidden = !hud;
+  if (changed) requestAnimationFrame(frameCamera);
+}
+function startDemo() { resetBattle(true); }
+function startBattle() { show(null); resetBattle(false); timeScale = 1; $('speed').textContent = 'x1'; $('speed').setAttribute('aria-pressed', 'false'); }
+function setPaused(on) { paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
+const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
+  'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.'];
+let tipI = Math.floor(Math.random() * TIPS.length);
+$('tip').textContent = TIPS[tipI];
+const tipTimer = setInterval(() => { tipI = (tipI + 1) % TIPS.length; $('tip').textContent = TIPS[tipI]; }, 3500);
+function loaded() {
+  $('loadfill').style.width = '100%'; $('loadtxt').textContent = '¡Listo!';
+  if (location.hash === '#menu') { clearInterval(tipTimer); show('menu'); return; }   // vuelta desde la práctica
+  $('tap').hidden = false; $('tap').focus();
+}
+function fullscreen() {
+  // en el navegador del móvil, a pantalla completa; instalada en la pantalla de inicio ya se abre así
+  const inApp = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+  const el = document.documentElement;
+  if (inApp || document.fullscreenElement) return;
+  try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+$('tap').onclick = () => { clearInterval(tipTimer); fullscreen(); show('menu'); };
+$('m-batalla').onclick = startBattle;
+$('m-mazo').onclick = () => openDeck();
+$('m-practica').onclick = () => { location.href = 'practica.html'; };
+$('pause').onclick = () => { if (B && !B.over) setPaused(true); };
+$('resume').onclick = () => setPaused(false);
+$('restart').onclick = () => { setPaused(false); startBattle(); };
+$('quit').onclick = () => { setPaused(false); show('menu'); startDemo(); };
+$('again').onclick = startBattle;
+$('tomenu').onclick = () => { show('menu'); startDemo(); };
+$('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };
+$('hero').onclick = () => heroClick();
+document.addEventListener('visibilitychange', () => { if (document.hidden && B && !B.over && !B.demo && !paused) setPaused(true); });
+
+/* ---- panel de cartas ---- */
 function renderHand() {
   const h = $('hand'); h.innerHTML = '';
   B.blue.hand.forEach((t, i) => {
@@ -299,10 +393,13 @@ function uiTick() {
   const e = B.blue.energy;
   $('efill').style.width = (e / EMAX * 100) + '%'; $('enum').textContent = Math.floor(e);
   document.querySelectorAll('.hc').forEach(b => b.classList.toggle('poor', COST[B.blue.hand[+b.dataset.i]] > e));
-  $('clock').textContent = (B.doubled ? '×2 · ' : '') + Math.floor(B.t / 60) + ':' + String(Math.floor(B.t % 60)).padStart(2, '0');
+  $('clock').textContent = (B.doubled ? '×2 ' : '') + Math.floor(B.t / 60) + ':' + String(Math.floor(B.t % 60)).padStart(2, '0');
+  $('clock').classList.toggle('x2', !!B.doubled);
+  for (const [t, id] of [['blue', 'hpb'], ['purple', 'hpp']]) { const c = castles[t]; $(id).textContent = Math.max(0, Math.ceil(c.hp)); $(id + 'f').style.width = Math.max(0, c.hp / c.max * 100) + '%'; }
   heroUI();
 }
-// selector de mazo
+
+/* ---- mazo y héroe ---- */
 let picking = [];
 function openDeck() {
   picking = myDeck.slice();
@@ -314,62 +411,31 @@ function openDeck() {
     b.onclick = () => { const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck(); };
     g.appendChild(b);
   });
-  syncDeck(); $('over').hidden = true; $('deck').hidden = false; if (B) B.over = true;
+  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => '<button type="button" class="hpick" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + h.skillName + '</span></span></button>').join('');
+  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
+  syncDeck(); show('deck');
 }
 function syncDeck() {
   document.querySelectorAll('.dk').forEach(b => b.setAttribute('aria-pressed', picking.includes(b.dataset.k)));
+  document.querySelectorAll('.hpick').forEach(b => b.setAttribute('aria-pressed', b.dataset.h === myHero));
   const avg = picking.length ? picking.reduce((s, k) => s + COST[k], 0) / picking.length : 0;
   $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
   $('deckgo').disabled = picking.length !== 8;
 }
-$('selhero').innerHTML = Object.entries(HEROES).map(([k, h]) => '<option value="' + k + '">' + h.name + '</option>').join('');
-$('selhero').value = myHero;
-$('selhero').onchange = e => { myHero = e.target.value; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} if (B && scene) { B.hero.type = myHero; if (B.hero.state === 'throne') setThrone(throneImg, HEROES[myHero].throne); } };
-$('selfondo').innerHTML = Object.keys(ESC).map((k, i) => '<option value="' + k + '">' + (i + 1) + '</option>').join('');
+function keepDeck() { if (picking.length === 8) { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} } }
+$('selfondo').innerHTML = Object.keys(ESC).map((k, i) => '<option value="' + k + '">' + (i + 1) + '. ' + (ESC_NAME[k] || k) + '</option>').join('');
 $('selfondo').value = escena;
 $('selfondo').onchange = e => { if (scene) setScenery(e.target.value); };
 $('deckrand').onclick = () => { picking = shuffle(ALL.slice()).slice(0, 8); syncDeck(); };
-$('deckgo').onclick = () => { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} $('deck').hidden = true; resetBattle(); };
-$('decked').onclick = () => { if (scene) openDeck(); };
-$('redeck').onclick = () => { if (scene) openDeck(); };
-$('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };
-$('restart').onclick = () => { if (scene) { $('deck').hidden = true; resetBattle(); } };
-$('again').onclick = () => { if (scene) resetBattle(); };
-window.__debugBattle = () => ({ t: B.t, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, deck: B.purple.deck }, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over });
-window.__startBattle = deck => { if (deck) myDeck = deck; $('deck').hidden = true; resetBattle(); };
+$('deckgo').onclick = () => { keepDeck(); startBattle(); };
+$('deckback').onclick = () => { keepDeck(); show('menu'); };
+
+/* ---- ganchos para las pruebas ---- */
+window.__debugBattle = () => ({ t: B.t, demo: B.demo, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, deck: B.purple.deck }, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over, zoom: zoomCss });
+window.__startBattle = deck => { if (deck) myDeck = deck; startBattle(); };
 window.__play = (team, i) => play(team, i);
 window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, x)); };
 window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
+window.__show = show;
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
-
-/* ---- pantalla completa (con o sin la API del navegador: en iPhone se ajusta igualmente) ---- */
-function fitGame() {
-  const g = document.getElementById('game'); if (!g) return;
-  g.style.width = '';
-  if (document.body.classList.contains('fs')) {
-    // alto libre: lo que queda de pantalla menos lo que hay debajo del campo en su misma columna
-    const r = g.getBoundingClientRect(), below = [...document.querySelectorAll('.wrap > *')].filter(el => el.classList.contains('dock') && el.offsetParent && el.getBoundingClientRect().top >= r.bottom - 2 && el.getBoundingClientRect().left < r.right - 10)
-      .reduce((s, el) => s + el.getBoundingClientRect().height + 6, 0);
-    const avail = window.innerHeight - (r.top + window.scrollY) - below - 6;
-    g.style.width = Math.max(240, Math.min(g.parentElement.clientWidth, avail * 16 / 9)) + 'px';
-  }
-  if (window.__game && window.__game.scale) window.__game.scale.refresh();
-}
-function setFs(on) {
-  document.body.classList.toggle('fs', on);
-  const b = document.getElementById('fsbtn'); if (b) { b.setAttribute('aria-pressed', on); b.textContent = on ? 'Salir de pantalla completa' : 'Pantalla completa'; }
-  requestAnimationFrame(fitGame); setTimeout(fitGame, 300);
-}
-document.getElementById('fsbtn').onclick = () => {
-  const on = !document.body.classList.contains('fs'), el = document.documentElement;
-  try {
-    if (on && el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if (on && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (!on && document.fullscreenElement) document.exitFullscreen();
-    else if (!on && document.webkitFullscreenElement) document.webkitExitFullscreen();
-  } catch (e) {}
-  setFs(on);
-};
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('fs')) setFs(false); });
-window.addEventListener('resize', () => { if (document.body.classList.contains('fs')) fitGame(); });

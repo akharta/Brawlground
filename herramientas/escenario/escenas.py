@@ -4,7 +4,7 @@ Mide la franja de tierra del camino de cada una y escribe prototipos/batalla/img
 import os, json, numpy as np
 from PIL import Image
 R = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-A = R + '/assets/escenario/escenas'; O = R + '/prototipos/batalla/img/esc'; os.makedirs(O, exist_ok=True)
+A = R + '/assets/escenario/escenas'; O = R + '/docs/img/esc'; os.makedirs(O, exist_ok=True)
 info = {}
 for f in sorted(os.listdir(A)):
     if not f.endswith('.png'): continue

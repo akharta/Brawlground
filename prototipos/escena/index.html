@@ -92,10 +92,6 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .cardbox dt { color: var(--muted); }
 .cardbox dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 800; }
 
-/* pantalla completa: el campo se ajusta al alto disponible y desaparece lo que no es del juego */
-body.fs .wrap { max-width: none; padding-block: 6px; gap: 6px; }
-body.fs header img, body.fs header h1, body.fs header p, body.fs .hint { display: none; }
-body.fs #game { margin-inline: auto; }
 </style>
 
 <div class="wrap">
@@ -113,7 +109,6 @@ body.fs #game { margin-inline: auto; }
       <button id="mode-anim" aria-pressed="false">Animaciones</button>
     </div>
     <button class="btn" id="slow" aria-pressed="false">Cámara lenta</button>
-    <button class="btn" id="fsbtn" aria-pressed="false">Pantalla completa</button>
   </div>
 
   <div id="game"></div>
@@ -3095,35 +3090,5 @@ window.__addUnit = (type, team, x) => { const u = new Unit(scene, type, team, x)
 window.__debugUnits = () => units.map(u => ({ id: u._id || (u._id = ++__uid), type: u.type, team: u.team, hp: u.hp, state: u.state, x: Math.round(u.x), form: u.form, stacks: u.stacks, max: u.max }));
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 
-/* ---- pantalla completa (con o sin la API del navegador: en iPhone se ajusta igualmente) ---- */
-function fitGame() {
-  const g = document.getElementById('game'); if (!g) return;
-  g.style.width = '';
-  if (document.body.classList.contains('fs')) {
-    // alto libre: lo que queda de pantalla menos lo que hay debajo del campo en su misma columna
-    const r = g.getBoundingClientRect(), below = [...document.querySelectorAll('.wrap > *')].filter(el => el.classList.contains('dock') && el.offsetParent && el.getBoundingClientRect().top >= r.bottom - 2 && el.getBoundingClientRect().left < r.right - 10)
-      .reduce((s, el) => s + el.getBoundingClientRect().height + 6, 0);
-    const avail = window.innerHeight - (r.top + window.scrollY) - below - 6;
-    g.style.width = Math.max(240, Math.min(g.parentElement.clientWidth, avail * 16 / 9)) + 'px';
-  }
-  if (window.__game && window.__game.scale) window.__game.scale.refresh();
-}
-function setFs(on) {
-  document.body.classList.toggle('fs', on);
-  const b = document.getElementById('fsbtn'); if (b) { b.setAttribute('aria-pressed', on); b.textContent = on ? 'Salir de pantalla completa' : 'Pantalla completa'; }
-  requestAnimationFrame(fitGame); setTimeout(fitGame, 300);
-}
-document.getElementById('fsbtn').onclick = () => {
-  const on = !document.body.classList.contains('fs'), el = document.documentElement;
-  try {
-    if (on && el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if (on && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (!on && document.fullscreenElement) document.exitFullscreen();
-    else if (!on && document.webkitFullscreenElement) document.webkitExitFullscreen();
-  } catch (e) {}
-  setFs(on);
-};
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('fs')) setFs(false); });
-window.addEventListener('resize', () => { if (document.body.classList.contains('fs')) fitGame(); });
 })();
 </script>

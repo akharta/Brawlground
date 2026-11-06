@@ -5,7 +5,7 @@ import os, json, glob, numpy as np
 from PIL import Image
 from scipy import ndimage as nd
 R = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-A = R + '/assets/escenario'; O = R + '/prototipos/batalla/img/esc'; os.makedirs(O, exist_ok=True)
+A = R + '/assets/escenario'; O = R + '/docs/img/esc'; os.makedirs(O, exist_ok=True)
 info = {'fondos': {}, 'caminos': {}, 'deco': {}}
 for f in sorted(glob.glob(A + '/fondos/*.png')):
     n = os.path.basename(f)[:-4]; im = Image.open(f).convert('RGB'); a = np.asarray(im).astype(int)

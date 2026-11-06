@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Monta batalla/index.html: código de unidades del campo de pruebas (escena) + capa de batalla (batalla.js) + plantilla.
-Uso: python3 construir.py   (copia también las imágenes de escena/img a batalla/img)"""
+"""Monta la app en docs/ (lo que se publica en GitHub Pages):
+  docs/index.html    = código de unidades del campo de pruebas (escena) + capa de batalla (batalla.js) + plantilla.html
+  docs/practica.html = el campo de pruebas con un botón para volver al menú
+  docs/img/          = imágenes de escena/img (las del escenario ya viven en docs/img/esc)
+También deja build/artefacto.html: la misma app sin cabecera de documento, para publicarla como artifact.
+Uso: python3 construir.py"""
 import os, re, shutil, json
 D = os.path.dirname(os.path.abspath(__file__))
+R = os.path.abspath(os.path.join(D, '../..')); OUT = os.path.join(R, 'docs'); os.makedirs(os.path.join(OUT, 'img'), exist_ok=True)
 esc = open(os.path.join(D, '../escena/index.html')).read()
 script = esc[esc.index("<script>\n(() => {") + len('<script>\n'):]
 core = script[:script.index('/* ---- Phaser ---- */')]
@@ -25,9 +30,18 @@ core = core.replace('team: u.team, fromX: u.x }', 'team: u.team, fromX: u.x, src
 rep("a.target.damage(a.dmg, null, a.fromX)", "a.target.damage(a.dmg, a.src || null, a.fromX)")
 # costes desde las cartas de la escena
 cost = {m.group(2): int(m.group(1)) for m in re.finditer(r'<div class="cost">(\d+)</div>\s*<div class="art"><img src="img/(\w+)_carta\.png"', esc)}
-bat = open(os.path.join(D, 'batalla.js')).read().replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ESC__', json.dumps(json.load(open(os.path.join(D, 'img/esc/escenas.json')))))
+bat = open(os.path.join(D, 'batalla.js')).read().replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ESC__', json.dumps(json.load(open(os.path.join(OUT, 'img/esc/escenas.json')))))
 html = open(os.path.join(D, 'plantilla.html')).read().replace('{{SCRIPT}}', '<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>\n<script>\n' + core + phaser + bat + '</script>')
-open(os.path.join(D, 'index.html'), 'w').write(html)
-src = os.path.join(D, '../escena/img'); dst = os.path.join(D, 'img')
+open(os.path.join(OUT, 'index.html'), 'w').write(html)
+# versión para el artifact: sin doctype/html/head/body (el visor la envuelve) y sin lo propio de la app instalable
+art = re.sub(r'<!--APP-->.*?<!--/APP-->\n?', '', html, flags=re.S)
+for tag in ['<!doctype html>\n', '<html lang="es">\n', '<head>\n', '</head>\n', '<body>\n', '</body>\n', '</html>\n']: art = art.replace(tag, '', 1)
+art = re.sub(r'<meta charset="utf-8">\n<meta name="viewport"[^>]*>\n', '', art, count=1)
+os.makedirs(os.path.join(R, 'build'), exist_ok=True); open(os.path.join(R, 'build/artefacto.html'), 'w').write(art)
+# práctica: el campo de pruebas tal cual, con su cabecera de documento y un botón de vuelta al menú
+pr = esc.replace('<div class="seg" role="group" aria-label="Modo">', '<a class="btn" href="index.html#menu" style="text-decoration:none">← Menú</a>\n    <div class="seg" role="group" aria-label="Modo">', 1)
+pr = '<!doctype html>\n<html lang="es">\n<head>\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' + pr.replace('<style>', '<meta name="theme-color" content="#161b2b">\n<style>', 1) + '\n</html>\n'
+open(os.path.join(OUT, 'practica.html'), 'w').write(pr)
+src = os.path.join(D, '../escena/img'); dst = os.path.join(OUT, 'img')
 for f in os.listdir(src): shutil.copy(os.path.join(src, f), os.path.join(dst, f))
 print('ok', len(cost), 'cartas')
