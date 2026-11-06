@@ -23,7 +23,7 @@ core = core.replace('team: u.team, fromX: u.x }', 'team: u.team, fromX: u.x, src
 rep("a.target.damage(a.dmg, null, a.fromX)", "a.target.damage(a.dmg, a.src || null, a.fromX)")
 # costes desde las cartas de la escena
 cost = {m.group(2): int(m.group(1)) for m in re.finditer(r'<div class="cost">(\d+)</div>\s*<div class="art"><img src="img/(\w+)_carta\.png"', esc)}
-bat = open(os.path.join(D, 'batalla.js')).read().replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ESC__', json.dumps(json.load(open(os.path.join(D, 'img/esc/esc.json')))))
+bat = open(os.path.join(D, 'batalla.js')).read().replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ESC__', json.dumps(json.load(open(os.path.join(D, 'img/esc/escenas.json')))))
 html = open(os.path.join(D, 'plantilla.html')).read().replace('{{SCRIPT}}', '<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>\n<script>\n' + core + phaser + bat + '</script>')
 open(os.path.join(D, 'index.html'), 'w').write(html)
 src = os.path.join(D, '../escena/img'); dst = os.path.join(D, 'img')
