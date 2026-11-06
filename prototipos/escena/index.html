@@ -398,7 +398,7 @@ const CH = {
 };
 const CRIT = 1.5;   // multiplicador de los golpes críticos
 const DASH_K = 1.5;  // daño de la embestida de Garra respecto a su daño base
-const DOME = { r: H * 1.35, time: 5, cut: 0.6 };   // escudo energético de X-9: radio, duración y daño que absorbe
+const DOME = { r: H * 1.35, time: 5, cutRanged: 0.6, cutMelee: 0.3 };   // escudo energético de X-9: radio, duración y daño que absorbe (a distancia / cuerpo a cuerpo)
 const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
 // Unidad X-9 (ascendida): salva de misiles, dron de reparación y sobrecalentamiento
 const MISSILES = { cd: 12, n: 6, dmg: [12, 15], r: H * 0.6 };
@@ -720,7 +720,7 @@ class Unit {
       const blk = this.fortT > 0 ? this.cfg.fortBlock : this.cfg.block;
       d = Math.max(1, Math.round(d * (1 - blk))); shieldClang(this);    // golpe frontal: lo para el escudo
     }
-    if (domeCovers(this)) { d = Math.max(1, Math.round(d * (1 - DOME.cut))); domeSpark(this); }   // dentro del escudo de X-9
+    if (domeCovers(this)) { const melee = src && src.cfg && !src.cfg.ranged && !src.isCastle; d = Math.max(1, Math.round(d * (1 - (melee ? DOME.cutMelee : DOME.cutRanged)))); domeSpark(this); }   // dentro del escudo de X-9
     this.hp -= d; this.hurtT = 0.32;
     if (this.type === 'centinela' && !this.domeUsed && this.hp > 0 && this.hp < this.max / 2) { this.domeUsed = true; this.domeT = DOME.time; floatText(this.x, this.gy - H * 1.6, '¡Escudo!', '#7fe8ff'); }
     if (this.cfg.fortTime && !this.fortUsed && this.hp > 0 && this.hp < this.max / 2) { this.fortUsed = true; this.fortT = this.cfg.fortTime; fortify(this); }
