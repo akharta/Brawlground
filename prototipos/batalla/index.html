@@ -1848,7 +1848,7 @@ function kungfuHit(u, dmg, push, hand, at, knock, crit) {
   if (push) { g.lineStyle(4, 0xffe9a8, 0.9).strokeCircle(sx, py, R * 1.6); }
   scene.tweens.add({ targets: g, alpha: 0, duration: (push ? 260 : 150) / timeScale, onComplete: () => g.destroy() });
   if (mode === 'anim') return;
-  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+  const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
   const dd = Math.round(rand(...dmg) * (crit ? CRIT : 1));
   o.damage(dd, u, undefined, !!crit);
@@ -2020,7 +2020,7 @@ function impHit(u, i) {
   if (u.F.arc) impArc(u, u.form === 3 ? u.atkN || 0 : i);
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.6, u.gy - H * 0.4, u.F.arc || 0xffffff, 6, 140); return; }
   const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range * (u.form === 2 ? 1.35 : 1) + H * 0.25);
-  const targets = u.form === 2 ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
+  const targets = u.form === 2 ? inReach : inReach.sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
   let dealt = 0;
   targets.forEach(v => {
     const before = v.hp, d = Math.round(rand(...u.cfg.dmg) * u.dmgK);
@@ -2213,14 +2213,16 @@ function floatText(x, y, txt, color) {
 /* ---- combate ---- */
 const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn').concat(enemyCastle(u));
 function nearestEnemy(u) {
+  // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo
   let best = null, bd = Infinity;
-  for (const v of enemiesOf(u)) { const d = Math.abs(v.x - u.x); if (d < bd) { bd = d; best = v; } }
+  const all = enemiesOf(u), foes = all.some(v => !v.isCastle) ? all.filter(v => !v.isCastle) : all;
+  for (const v of foes) { const d = Math.abs(v.x - u.x); if (d < bd) { bd = d; best = v; } }
   return best;
 }
 function onMelee(u) {
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
   const inReach = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.25);
-  const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
+  const targets = u.cfg.aoe ? inReach : inReach.sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x)).slice(0, 1);
   if (u.cfg.aoe && targets.length) burst(u.x + u.dir * H * 0.9, u.gy - H * 0.2, 0xe8d3b0, 10, 160);
   targets.forEach(v => {
     v.damage(Math.round(rand(...u.cfg.dmg) * ((u.cfg.bonusVs && u.cfg.bonusVs[v.type]) || 1) * (u.cfg.crit ? CRIT : 1)), u, undefined, !!u.cfg.crit);
@@ -2268,7 +2270,7 @@ function fightLogic(dt) {
       let prey = enemiesOf(u).filter(v => !v.isCastle && v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
       if (!prey.length) { const far = enemiesOf(u).filter(v => !v.isCastle && Math.abs(v.x - u.x) > H * 1.6).sort((a, b) => Math.abs(b.x - u.x) - Math.abs(a.x - u.x)); prey = far.slice(0, 1); }   // sin tiradores: a la unidad más alejada
       if (u.tpT <= 0 && prey.length && (u.state === 'idle' || u.state === 'walk')) {
-        u.tpTarget = prey.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
+        u.tpTarget = prey.sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
         u.set('tpOut'); continue;
       }
     }
@@ -2309,7 +2311,7 @@ function sentinelLogic(u, dt) {
 function siegeLogic(u, dt) {
   // dispara a los enemigos entre su alcance mínimo y máximo; si se le pegan, no puede hacer nada
   const foes = enemiesOf(u), near = foes.filter(v => Math.abs(v.x - u.x) <= u.cfg.range);
-  const shootable = near.filter(v => Math.abs(v.x - u.x) >= u.cfg.minRange).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x));
+  const shootable = near.filter(v => Math.abs(v.x - u.x) >= u.cfg.minRange).sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x));
   u.cd -= dt;
   if (u.state === 'attack') return;
   if (near.length) {
