@@ -424,7 +424,7 @@ const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, a
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
 const RARITY = { ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
-const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
+const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.65 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.65 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.65 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.65 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.65 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
 const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
@@ -1816,19 +1816,21 @@ class Unit {
     if (this.type === 'imparable' && this.form === 1 && this.alive && this.state !== 'die') drawSkulls(this);
   }
   buildAura(sc) {
-    // aura de energía: llamas que suben por detrás, chispas y motitas oscuras delante, y contorno brillante en la silueta
+    // aura de energía: llamas pequeñas que suben alrededor del personaje, chispas y motitas oscuras
     const A = this.aura, w = this.shadow.width * 1.05, h = H * this.cfg.h * 0.9, f = 1 / A.rate;
-    const zone = new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.48, w, h);
+    // las llamas nacen en el borde de una elipse algo más ancha que el personaje: asoman alrededor de su silueta sin taparlo
+    const ring = (cx, cy, rx, ry) => ({ getRandomPoint(v) { const a = Math.random() * Math.PI * 2, k = 0.85 + Math.random() * 0.15; v.x = cx + Math.cos(a) * rx * k; v.y = cy + Math.sin(a) * ry * k; return v; } });
+    const zone = ring(this.shadow.x, -h * 0.47, w * 0.72, h * 0.51);
     this.flameBack = sc.add.particles(0, 0, 'auraFlame', {
-      emitZone: { type: 'random', source: zone }, frequency: 230 * f, quantity: 1,
-      speedY: { min: -120, max: -60 }, speedX: { min: -12, max: 12 }, lifespan: { min: 600, max: 1000 },
+      emitZone: { type: 'random', source: zone }, frequency: 160 * f, quantity: 1,
+      speedY: { min: -85, max: -45 }, speedX: { min: -10, max: 10 }, lifespan: { min: 450, max: 750 },
       scaleX: { start: 0.75 * A.big, end: 0.2 }, scaleY: { start: 0.8 * A.big, end: 1.7 * A.big },
-      alpha: { start: 0.28, end: 0 }, tint: A.c });
+      alpha: { start: 0.42, end: 0 }, tint: A.c });
     this.flameCore = sc.add.particles(0, 0, 'auraFlame', {
-      emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 0.95, h * 0.95) }, frequency: 300 * f, quantity: 1,
-      speedY: { min: -130, max: -70 }, lifespan: { min: 380, max: 650 },
+      emitZone: { type: 'random', source: ring(this.shadow.x, -h * 0.48, w * 0.65, h * 0.49) }, frequency: 220 * f, quantity: 1,
+      speedY: { min: -90, max: -50 }, lifespan: { min: 300, max: 520 },
       scaleX: { start: 0.35 * A.big, end: 0.08 }, scaleY: { start: 0.5 * A.big, end: 1.2 * A.big },
-      alpha: { start: 0.32, end: 0 }, tint: A.c, blendMode: 'ADD' });
+      alpha: { start: 0.45, end: 0 }, tint: A.c, blendMode: 'ADD' });
     this.flameFront = sc.add.container(0, 0);
     this.sparks = sc.add.particles(0, 0, 'auraDot', {
       emitZone: { type: 'random', source: new Phaser.Geom.Ellipse(this.shadow.x, -h * 0.5, w * 1.3, h) }, frequency: 1400 * f, quantity: 1,
@@ -1841,11 +1843,7 @@ class Unit {
     this.root.add([this.flameBack, this.flameCore]);
     this.flameFront.add([this.sparks, this.flakes]);
     this.auraFx = [this.flameBack, this.flameCore, this.sparks, this.flakes];
-    // contorno de energía ligero: copia teñida y algo mayor de cada pieza, detrás del personaje
-    this.halo = this.parts.map(pt => {
-      const h = sc.add.image(0, 0, pt.texture.key, pt.frame.name).setOrigin(pt.originX, pt.originY).setTintFill(A.c);
-      this.rig.addAt(h, 0); return h;
-    });
+    this.halo = null;   // sin silueta de color: el aura son solo las llamas, el humo y las partículas
   }
   drawAura(dt) {
     // humillo de color que sube ondulando alrededor del personaje; volutas finas que se difuminan por la cola
