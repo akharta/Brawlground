@@ -672,7 +672,7 @@ class Unit {
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
   sentinelExtras(o, dt) {
-    // dron que repara, sobrecalentamiento (color y daño) y su humo
+    // dron que repara y sobrecalentamiento (color del metal y daño)
     const dead = this.state === 'die', now = this.sc.time.now / 1000, k = this.bigK || 1;
     if (!this.drone.parentContainer) this.root.add(this.drone);
     this.drone.setVisible(!dead).setPosition(-this.dir * H * 0.5 * k, -H * 1.3 * k + Math.sin(now * 3) * 5).setFlipX(this.dir < 0).setRotation(Math.sin(now * 2.2) * 0.08);
@@ -695,7 +695,7 @@ class Unit {
       }
       this.heat = Math.min(1, this.heat + dt / HEAT.time);
     }
-    // color: de su tono normal a rojo incandescente; al máximo, late y echa humo y chispas
+    // color: el metal pasa de su tono normal a rojo incandescente (sin partículas: el aura es solo la de la rareza)
     if (dead && this.heatGlow) this.heatGlow.forEach(([gl]) => gl.setVisible(false));
     if (this.hurtT > 0.22 || dead) return;
     const h = this.heat, full = h >= 1, pulse = full ? 0.5 + 0.5 * Math.sin(now * 7) : 0;
@@ -710,7 +710,6 @@ class Unit {
       gl.setOrigin(pt.originX, pt.originY).setPosition(pt.x, pt.y).setRotation(pt.rotation).setScale(pt.scaleX, pt.scaleY).setFlip(pt.flipX, pt.flipY)
         .setVisible(pt.visible && ga > 0).setAlpha(ga).setTintFill(full ? 0xff4a1a : 0xff6a3a);
     });
-    if (full && Math.random() < 0.3) fx.push({ x: this.x + rand(-0.3, 0.3) * H, y: this.gy - rand(0.4, 1.1) * H * k, vx: rand(-10, 10), vy: -rand(30, 70), g: 0, r: rand(2, 4), life: 0.6, t: 0.6, color: Math.random() < 0.5 ? 0xffb060 : 0x8a8f9e });
   }
   launch(dir) { if (!['idle', 'walk', 'attack'].includes(this.state)) return; this.launchDir = dir; this.set('launched'); burst(this.x, this.gy - H * 0.3, 0xffe066, 8, 140); }
   damage(d, src, fromX, crit) {
