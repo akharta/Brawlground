@@ -151,7 +151,7 @@ const CH = {
   samurai: { hp: 140, dmg: [18, 23], speed: 52, cd: [1, 1.3], range: H * 1.2, ranged: false, crit: true, h: 1,
     rest: { bh: [-0.087, -0.202], fh: [0.229, -0.222] }, saya: [0.02, -0.19], sayaR: -0.22 },
   // Combo de tres puñetazos y golpe de palma que empuja; trenza con física de muelle.
-  kungfu: { hp: 130, dmg: [12, 15], palm: [5, 7], speed: 76, cd: [0.8, 1.1], range: H * 0.85, ranged: false, h: 1,
+  kungfu: { hp: 130, dmg: [16, 20], palm: [5, 7], speed: 76, cd: [0.8, 1.1], range: H * 0.85, kdash: H * 2.6, kdashCd: 6, ranged: false, h: 1,
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
@@ -160,7 +160,7 @@ const CH = {
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
   // Ascendido: azota con las cadenas; cada tercer ataque las estira por todo el camino hasta el castillo enemigo.
-  desencadenado: { hp: 200, dmg: [24, 28], speed: 40, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
+  desencadenado: { hp: 200, dmg: [32, 38], speed: 50, cd: [1.6, 1.9], range: H * 1.3, ranged: false, h: 1.3,
     rest: { bh: [-0.3, -0.22], fh: [0.33, -0.22] } },      // puños caídos, arrastrando las cadenas
   // Ascendido de tres formas: humano maldito (un tajo cada vez, alternando espadas; embestida; cada baja es una marca);
   // a las 7 marcas, monstruo (vida completa y doble, triple daño, mitad de velocidad de ataque, tajo en X en área, robo de vida);
@@ -184,6 +184,7 @@ const CH = {
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
 const CRIT = 1.5;   // multiplicador de los golpes críticos
+const JHOTUM_AOE = H * 0.75;   // radio del cadenazo de Jhotum alrededor del punto de impacto
 const DASH_K = 1.5;  // daño de la embestida de Garra respecto a su daño base
 const DOME = { r: H * 1.35, time: 5, cutRanged: 0.6, cutMelee: 0.3 };   // escudo energético de X-9: radio, duración y daño que absorbe (a distancia / cuerpo a cuerpo)
 const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
@@ -769,6 +770,15 @@ class Unit {
           o.hop = H * 0.02;
         }
         if (t >= 1.3) { this.fired = 0; this.set('idle'); }
+        break;
+      }
+      case 'kfdash': {               // Lin se lanza a ras de suelo hacia el enemigo y empieza el combo
+        const D = 0.28, e = Math.min(1, t / D);
+        this.x = lerp(this.dashFrom, this.dashTo, easeInOut(e));
+        o.rot = 0.28 * Math.sin(e * Math.PI); o.hop = Math.sin(e * Math.PI) * H * 0.08; o.dx = 0.05 * Math.sin(e * Math.PI);
+        o.bh = [this.cfg.rest.bh[0] - 0.12, this.cfg.rest.bh[1] + 0.05]; o.fh = [this.cfg.rest.fh[0] + 0.15, this.cfg.rest.fh[1]];
+        if (Math.random() < 0.7) fx.push({ x: this.x - this.dir * H * 0.3, y: this.gy - rand(0.2, 0.8) * H, vx: -this.dir * 160, vy: 0, g: 0, r: rand(2, 3), life: 0.18, t: 0.18, color: 0xffffff });
+        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 8, 100); this.kickNext = false; this.set('attack'); }
         break;
       }
       case 'flip': {                 // mortal hacia atrás: gana distancia y vuelve a apuntar
@@ -2121,9 +2131,12 @@ function whipHit(u, tg, reach) {
   const ring = scene.add.graphics().setDepth(965).setPosition(px, u.gy);
   ring.lineStyle(4, 0xffe9c2, 0.8).strokeEllipse(0, 0, H * 0.9, H * 0.22);
   scene.tweens.add({ targets: ring, alpha: 0, scale: { from: 0.4, to: 1.1 }, duration: 320 / timeScale, onComplete: () => ring.destroy() });
-  if (mode !== 'fight' || !tg || !tg.alive) return;
-  tg.damage(Math.round(rand(...u.cfg.dmg)), u);
-  if (tg.shove) tg.shove(u.dir * 18);
+  if (mode !== 'fight') return;
+  // el cadenazo golpea a todos los enemigos que alcanza la zona del impacto
+  enemiesOf(u).filter(v => Math.abs(v.x - px) <= JHOTUM_AOE || v === tg).forEach(v => {
+    v.damage(Math.round(rand(...u.cfg.dmg)), u, px);
+    if (v.shove && !v.isCastle) v.shove(u.dir * 18);
+  });
 }
 function unchainSweep(u, tipX) {
   // la punta de las cadenas avanza por el suelo: golpea a cada enemigo que alcanza (y al castillo al llegar)
@@ -2240,7 +2253,7 @@ function onShoot(u, sx, sy) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -2262,6 +2275,10 @@ function fightLogic(dt) {
     if (u.type === 'lobo' && o && !u.dashed && u.state === 'walk' && dist > u.cfg.range && dist < H * 2.8) {
       u.dashed = true; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.85; u.set('dash'); continue;
     }
+    if (u.type === 'kungfu' && o && !o.isCastle && (u.kdT || 0) <= 0 && (u.state === 'walk' || u.state === 'idle') && dist > u.cfg.range && dist < u.cfg.kdash) {
+      u.kdT = u.cfg.kdashCd; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.8; u.set('kfdash'); continue;
+    }
+    if (u.type === 'kungfu') u.kdT = (u.kdT || 0) - dt;
     if (u.type === 'imparable' && o && u.lungeT <= 0 && (u.state === 'walk' || u.state === 'idle') && dist > u.cfg.range && dist < u.cfg.lunge) {
       u.lungeT = u.cfg.lungeCd; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.8; u.set('lunge'); continue;
     }
