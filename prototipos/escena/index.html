@@ -160,6 +160,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="dome" id="dome-btn" hidden>Escudo energético</button>
     <button class="btn" data-act="missiles" id="missiles-btn" hidden>Salva de misiles</button>
     <button class="btn" data-act="heat" id="heat-btn" hidden>Sobrecalentar</button>
+    <button class="btn" data-act="ult" id="ult-btn" hidden>Definitiva</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -405,6 +406,8 @@ const MISSILES = { cd: 12, n: 6, dmg: [12, 15], r: H * 0.6 };
 const DRONE = { heal: 6, every: 2.5, r: H * 2.5 };
 const HEAT = { time: 30, k: 1.7 };   // se sobrecalienta siempre a los 30 s de salir al campo; entonces hace ×1,7
 let rockets = [];
+// definitivas de las ascendidas: listas a los 10 s de salir, un solo uso por unidad; el jugador la lanza tocando a la unidad
+const ULT = { wait: 10, feast: 4, slamK: 2.5, plasma: 150 };
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
@@ -657,6 +660,8 @@ class Unit {
     this.root.setVisible(true).setAlpha(1);
     this.parts.forEach(p => { p.setVisible(true).clearTint(); });
     if (this.arrow) this.arrow.setVisible(false);
+    this.ultT = ULT.wait; this.ultUsed = false; this.feastT = 0; this.ultTg = null;
+    if (this.ultSword) { this.ultSword.destroy(); this.ultSword = null; } if (this.plasmaG) this.plasmaG.clear();
     this.heat = 0; this.misT = 4; this.droneT = 0; this.beamT = 0;
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
@@ -670,6 +675,21 @@ class Unit {
     if (!['idle', 'walk', 'attack'].includes(this.state)) return false;   // no interrumpe habilidades (teletransporte, embestida…)
     this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
+  }
+  get ultReady() { return RARITY[this.type] === 'ascendida' && !this.ultUsed && this.ultT <= 0 && this.alive && ['idle', 'walk', 'attack'].includes(this.state) && (this.type !== 'imparable' || this.form !== 3 || true); }
+  castUlt() {
+    if (!this.ultReady) return false;
+    if (mode === 'fight' && !enemiesOf(this).length) return false;
+    this.ultUsed = true; this.inPlace = false;
+    this.set(this.type === 'imparable' ? 'ultE' : 'ultX'); return true;
+  }
+  drawUltReady() {
+    // lista: anillo dorado que late a sus pies y un rombo sobre la cabeza (tócala para lanzarla)
+    if (!this.ultReady) return;
+    const now = this.sc.time.now / 1000, k = this.bigK || 1, p = 0.5 + 0.5 * Math.sin(now * 6), g = this.bar, top = this.gy - H * this.cfg.h * k - (mode === 'fight' ? 46 : 26);
+    g.lineStyle(4, 0xffd84a, 0.55 + 0.4 * p).strokeEllipse(this.x, this.gy, H * 0.9 * k * (1 + 0.08 * p), H * 0.24 * k);
+    g.fillStyle(OUT, 1).fillTriangle(this.x - 10, top, this.x + 10, top, this.x, top + 13).fillTriangle(this.x - 10, top, this.x + 10, top, this.x, top - 13);
+    g.fillStyle(0xffd84a, 1).fillTriangle(this.x - 6, top, this.x + 6, top, this.x, top + 8).fillTriangle(this.x - 6, top, this.x + 6, top, this.x, top - 8);
   }
   sentinelExtras(o, dt) {
     // dron que repara y sobrecalentamiento (color del metal y daño)
@@ -725,6 +745,7 @@ class Unit {
     if (this.cfg.fortTime && !this.fortUsed && this.hp > 0 && this.hp < this.max / 2) { this.fortUsed = true; this.fortT = this.cfg.fortTime; fortify(this); }
     if (crit) floatText(this.x, this.gy - H * this.cfg.h * (this.bigK || 1) - 22, '¡-' + d + '!', '#ffd84a'); else floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
+    if (this.hp <= 0 && this.feastT > 0) this.hp = 1;   // Festín: no puede morir mientras dure
     if (this.hp <= 0 && this.type === 'imparable' && this.form === 2 && !this.reborn) { this.hp = 0; this.set('reborn'); return; }
     if (this.hp <= 0 && this.impMark && this.impMark.u !== src && this.sc.time.now - this.impMark.t < 3000 && this.impMark.u.alive) addStack(this.impMark.u);   // asistencia de Elyss
     if (this.hp <= 0) { this.hp = 0; this.set('die'); if (src && src.type === 'muerte' && src.alive && src.state !== 'die') addGrave(src, this); }
@@ -764,6 +785,7 @@ class Unit {
   }
   update(dt) {
     this.t += dt; if (this.knockImm > 0) this.knockImm -= dt; if (this.flipT > 0) this.flipT -= dt;
+    if (this.ultT > 0 && mode === 'fight') this.ultT -= dt; if (this.feastT > 0) this.feastT -= dt;
     if (this.pushLeft) {                       // empujón suave: se desliza hacia atrás en unas décimas
       const step = Math.abs(this.pushLeft) < 0.5 ? this.pushLeft : this.pushLeft * Math.min(1, dt * 12);
       this.x = Math.max(60, Math.min(W - 60, this.x + step)); this.pushLeft -= step;
@@ -871,6 +893,75 @@ class Unit {
           }
           this.set('attack'); this.t = 0.18;
         }
+        break;
+      }
+      case 'ultE': {                 // definitiva de Elyss: lanza una espada que se clava, salta con un tajo vertical, la recupera y entra en Festín
+        const F = this.F, r = F.rest, k = this.bigK || 1;
+        if (t < dt * 1.5 && !this.ultSword) {
+          const foes = mode === 'fight' ? enemiesOf(this).filter(v => (v.x - this.x) * this.dir > -H * 0.3).sort((a, b) => Math.abs(a.x - this.x) - Math.abs(b.x - this.x)) : [];
+          this.ultTg = foes[0] || null; this.ultFrom = this.x;
+          this.ultTx = this.ultTg ? this.ultTg.x : Math.max(80, Math.min(W - 80, this.x + this.dir * 280));
+          const sc = F.len * H / F.sl * F.k;
+          this.ultSword = scene.add.image(this.x + this.dir * H * 0.3, this.gy - H * 0.5 * k, F.sw).setOrigin(F.so[0], F.so[1]).setScale(sc).setFlipX(this.dir < 0).setDepth(this.gy + 2);
+          this.ultSwordY = this.gy - H * 0.5 * k;
+        }
+        const tgx = this.ultTg && this.ultTg.alive && this.ultTg.state !== 'die' ? this.ultTg.x : this.ultTx;
+        this.bs.setVisible(t >= 1.0);
+        if (t < 0.3) {                      // lanzamiento: la espada vuela recta y se clava
+          const e = ease(t / 0.3), sx = this.ultFrom + this.dir * H * 0.3;
+          o.bh = lerp2(r.bh, [0.5, -0.4], Math.min(1, t / 0.12)); o.rot = 0.1 * Math.sin(e * Math.PI);
+          this.ultSword.setPosition(lerp(sx, tgx - this.dir * H * 0.25, e), this.ultSwordY).setRotation(-F.sa * this.dir);
+          if (t + dt >= 0.3 && !this.fired) { this.fired = 1; if (this.ultTg) this.ultTg.damage(Math.round(rand(...this.cfg.dmg) * this.dmgK), this); burst(tgx, this.ultSwordY, F.arc || 0xffffff, 10, 160); }
+        } else if (t < 0.8) {               // salto hacia delante con la otra espada en alto y tajo vertical descendente
+          const e = (t - 0.3) / 0.5, land = tgx - this.dir * H * 0.6 * k;
+          this.x = lerp(this.ultFrom, land, easeInOut(Math.min(1, e / 0.85)));
+          o.hop = Math.sin(Math.min(1, e / 0.85) * Math.PI) * H * 0.55;
+          const sw = e < 0.6 ? 0 : easeIn((e - 0.6) / 0.25);
+          o.fh = e < 0.6 ? lerp2(r.fh, [0.05, -0.85], ease(e / 0.6)) : lerp2([0.05, -0.85], [0.5, -0.12], sw);
+          o.fs = e < 0.6 ? lerp(r.fs, -2.6, ease(e / 0.6)) : lerp(-2.6, 1.3, sw);
+          o.rot = e < 0.6 ? -0.15 : 0.2;
+          if (this.ultTg) this.ultSword.setPosition(tgx - this.dir * H * 0.25, this.ultSwordY);
+          if (e >= 0.85 && this.fired === 1) {
+            this.fired = 2; scene.cameras.main.shake(160, 0.006); burst(tgx, this.gy - H * 0.3, F.arc || 0xffffff, 18, 240); burst(tgx, this.gy, 0xe8d3b0, 12, 160);
+            if (this.ultTg && this.ultTg.alive) impHitOn(this, this.ultTg, ULT.slamK);
+          }
+        } else if (t < 1.0) {               // recupera la espada clavada
+          const e = ease((t - 0.8) / 0.2), hx = this.x + this.dir * H * 0.25, hy = this.gy - H * 0.45 * k;
+          this.ultSword.setPosition(lerp(tgx - this.dir * H * 0.25, hx, e), lerp(this.ultSwordY, hy, e)).setRotation(-F.sa * this.dir - this.dir * e * Math.PI * 2);
+          o.fh = lerp2([0.5, -0.12], r.fh, e); o.fs = lerp(1.3, r.fs, e);
+        } else {
+          if (this.ultSword) { this.ultSword.destroy(); this.ultSword = null; }
+          this.feastT = ULT.feast; floatText(this.x, this.gy - H * 1.6 * k, '¡Festín!', '#ff5a7a'); darkPuff(this.x, this.gy - H * 0.5, 14);
+          this.set(mode === 'fight' ? 'walk' : 'idle');
+        }
+        break;
+      }
+      case 'ultX': {                 // definitiva de X-9: carga el cañón de plasma en la boca y dispara un rayo que arrasa todo lo que tiene delante
+        const k = this.bigK || 1, mx = this.x + this.dir * H * 0.2 * k, my = this.gy - H * 0.92 * k;
+        if (!this.plasmaG) this.plasmaG = scene.add.graphics().setDepth(958);
+        const g = this.plasmaG; g.clear();
+        const end = this.dir > 0 ? W + 40 : -40;
+        if (t < 0.7) {                      // carga: esfera de plasma que crece temblando
+          const e = t / 0.7, R = 4 + 22 * e;
+          o.dx = -0.03 * e + Math.sin(t * 60) * 0.008; o.sy = 1 - 0.04 * e;
+          g.fillStyle(0xb06bff, 0.35 * e).fillCircle(mx, my, R * 1.8).fillStyle(0x6fe8ff, 0.8).fillCircle(mx, my, R).fillStyle(0xffffff, 0.9).fillCircle(mx, my, R * 0.45);
+          if (Math.random() < 0.6) { const a = Math.random() * Math.PI * 2; fx.push({ x: mx + Math.cos(a) * 40, y: my + Math.sin(a) * 40, vx: -Math.cos(a) * 90, vy: -Math.sin(a) * 90, g: 0, r: 2.5, life: 0.4, t: 0.4, color: 0x9ff0ff }); }
+        } else if (t < 1.6) {               // disparo: rayo a lo largo de todo el carril, delante de X-9
+          const e = (t - 0.7) / 0.9, a = e < 0.15 ? e / 0.15 : 1 - Math.max(0, (e - 0.55) / 0.45), hh = 34 * a;
+          o.dx = -0.06 * a; o.rot = -0.05 * a;
+          const x0 = Math.min(mx, end), w = Math.abs(end - mx);
+          g.fillStyle(0xb06bff, 0.3 * a).fillRect(x0, my - hh * 1.6, w, hh * 3.2);
+          g.fillStyle(0x6fe8ff, 0.75 * a).fillRect(x0, my - hh * 0.75, w, hh * 1.5);
+          g.fillStyle(0xffffff, 0.95 * a).fillRect(x0, my - hh * 0.28, w, hh * 0.56);
+          g.fillStyle(0xffffff, a).fillCircle(mx, my, hh * 1.1);
+          if (!this.fired) {
+            this.fired = true; scene.cameras.main.shake(400, 0.012);
+            const dmg = Math.round(ULT.plasma * heatK(this));
+            if (mode === 'fight') units.concat(typeof enemyCastle === 'function' ? enemyCastle(this) : []).filter(v => v !== this && v.alive && v.state !== 'die' && (v.x - this.x) * this.dir > -H * 0.2)
+              .forEach(v => { v.damage(dmg, this, mx); burst(v.x, v.gy - H * 0.5, 0x9ff0ff, 12, 200); });
+          }
+          if (Math.random() < 0.8) fx.push({ x: lerp(mx, end, Math.random()), y: my + rand(-hh, hh), vx: this.dir * rand(100, 300), vy: rand(-40, 40), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: Math.random() < 0.5 ? 0x9ff0ff : 0xd8b4ff });
+        } else { g.clear(); this.fired = false; this.set('idle'); }
         break;
       }
       case 'missiles': {             // salva de misiles: alza la cabeza, abre los tubos y dispara hacia el cielo
@@ -1009,7 +1100,7 @@ class Unit {
         break;
       }
       case 'die': {
-        if (t < dt * 1.5) { this.detach(); if (this.type === 'muerte') raiseGraves(this); }
+        if (t < dt * 1.5) { this.detach(); if (this.type === 'muerte') raiseGraves(this); if (this.ultSword) { this.ultSword.destroy(); this.ultSword = null; } if (this.plasmaG) this.plasmaG.clear(); }
         o.hop = Math.sin(Math.min(1, t / 0.45) * Math.PI) * H * 0.35;
         o.rot = -ease(t / 0.45) * 1.45;
         o.dx = -ease(t / 0.45) * 0.35;
@@ -1571,6 +1662,9 @@ class Unit {
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
     if (this.type === 'imparable') {
       const F = this.F;
+      if (this.feastT > 0 && this.hurtT <= 0.22) { const q = 0.5 + 0.5 * Math.sin(this.sc.time.now / 90); this.parts.forEach(pt => pt.setTint(q > 0.5 ? 0xff7a8a : 0xffb0bc)); }
+      else if (this.feastT <= 0 && this.feastTint) this.parts.forEach(pt => pt.clearTint());
+      this.feastTint = this.feastT > 0;
       this.rig.scaleX *= F.k; this.rig.scaleY *= F.k;
       this.bs.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bs - F.sa);
       this.fs.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fs + F.sa);
@@ -1814,6 +1908,7 @@ class Unit {
       this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
     }
     if (this.type === 'imparable' && this.form === 1 && this.alive && this.state !== 'die') drawSkulls(this);
+    this.drawUltReady();
   }
   buildAura(sc) {
     // aura de energía: llamas pequeñas que suben alrededor del personaje, chispas y motitas oscuras
@@ -2136,7 +2231,25 @@ function impHit(u, i) {
     v.damage(d, u); dealt += Math.max(0, before - Math.max(0, v.hp));
     if (v.hp <= 0 && v.state === 'die') addStack(u);
   });
-  if (u.steal && dealt > 0) u.healBy(Math.round(dealt * u.steal));   // robo de vida del monstruo
+  const steal = u.feastT > 0 ? 1 : u.steal;   // en Festín se cura todo lo que hace
+  if (steal && dealt > 0) u.healBy(Math.round(dealt * steal));   // robo de vida
+}
+function impHitOn(u, v, k) {
+  // golpe directo de Elyss a un objetivo (la definitiva); cuenta para marcas, asistencias y robo de vida
+  if (!v.isCastle) v.impMark = { u, t: scene.time.now };
+  const before = v.hp; v.damage(Math.round(rand(...u.cfg.dmg) * u.dmgK * k), u);
+  if (v.hp <= 0 && v.state === 'die') addStack(u);
+  const steal = u.feastT > 0 ? 1 : u.steal, dealt = Math.max(0, before - Math.max(0, v.hp));
+  if (steal && dealt > 0) u.healBy(Math.round(dealt * steal));
+}
+function hookUltInput(sc) {
+  // tocar a una ascendida tuya con la definitiva lista la lanza
+  sc.input.on('pointerdown', p => {
+    const x = p.worldX, y = p.worldY;
+    const u = units.filter(v => v.team === 'blue' && v.ultReady && Math.abs(v.x - x) < H * 0.55 * (v.bigK || 1) && y > v.gy - H * 1.5 * (v.bigK || 1) && y < v.gy + 20)
+      .sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+    if (u) u.castUlt();
+  });
 }
 function addStack(u) {
   if (u.form === 1) { u.stacks = Math.min(IMP_RULES.stacks, (u.stacks || 0) + 1); floatText(u.x, u.gy - H * 1.55, u.stacks + '/' + IMP_RULES.stacks, '#d7ff3a'); }
@@ -2319,7 +2432,11 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX'].includes(u.state)) continue;
+    if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
+      const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
+      if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
+    }
     if (u.type === 'imparable') {
       if (u.form === 3) { u.hp -= IMP_RULES.drain * dt; if (u.hp <= 0) { u.hp = 0; u.set('die'); continue; } }   // se consume
       if (u.form === 1 && u.stacks >= IMP_RULES.stacks && (u.state === 'idle' || u.state === 'walk')) { u.set('transform'); continue; }
@@ -2534,6 +2651,7 @@ function create() {
   drawStage(this.add.graphics());
   makeAuraTextures(this); makeChainEdge(this);
   fxG = this.add.graphics().setDepth(980);
+  hookUltInput(this);
   buildMode();
 }
 function update(_, deltaMs) {
@@ -2626,6 +2744,7 @@ $('anim-controls').addEventListener('click', e => {
     $('dome-btn').hidden = animChar !== 'centinela';
     $('missiles-btn').hidden = animChar !== 'centinela';
     $('heat-btn').hidden = animChar !== 'centinela';
+    $('ult-btn').hidden = animChar !== 'centinela' && animChar !== 'imparable';
     $('kick-btn').hidden = animChar !== 'kungfu';
     $('shade-btn').hidden = animChar !== 'muerte';
     $('spin-btn').hidden = animChar !== 'muerte';
@@ -2636,8 +2755,9 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'ult') { if (RARITY[u.type] === 'ascendida') { u.ultT = 0; u.ultUsed = false; u.castUlt(); } return; }
   if (act === 'missiles') { if (u.type === 'centinela') { u.inPlace = false; u.set('missiles'); } return; }
   if (act === 'heat') { if (u.type === 'centinela') { u.heat = u.heat >= 1 ? 0 : 1; floatText(u.x, u.gy - H * 1.6, u.heat ? '¡Sobrecalentado!' : 'Enfriado', '#ff8a5a'); } return; }
   if (act === 'dome') { if (u.type === 'centinela') { u.domeT = DOME.time; floatText(u.x, u.gy - H * 1.6, '¡Escudo!', '#7fe8ff'); } return; }

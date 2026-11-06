@@ -162,7 +162,7 @@ function create() {
   scene = this; mode = 'fight';
   drawField(this.add.graphics());
   cam = this.cameras.main; cam.setZoom(ZOOM); cam.centerOn(W / 2, CAM_Y);
-  makeAuraTextures(this); makeChainEdge(this);
+  makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
   flashG = this.add.graphics().setDepth(5);
   castleG = this.add.graphics().setDepth(990);
   for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? 66 : W - 66, 140, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
