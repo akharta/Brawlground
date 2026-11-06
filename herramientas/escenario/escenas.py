@@ -12,7 +12,7 @@ for f in sorted(os.listdir(A)):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     dirt = (r > 190) & (g > 130) & (g < 225) & (b < 190) & (r - g > 25)
     frac = dirt[:, 100:-100].mean(1); rows = [y for y in range(int(h * 0.6), h) if frac[y] > 0.6]
-    im.resize((1440, round(h * 1440 / w)), Image.LANCZOS).save(f'{O}/{n}.jpg', quality=88)
+    im.save(f'{O}/{n}.jpg', quality=88)   # a tamaño original: el campo es largo y la imagen se amplía
     info[n] = {'t': round(min(rows) / h, 4), 'b': round(max(rows) / h, 4), 'w': w, 'h': h,
                'top': '#%02x%02x%02x' % tuple(a[2, w // 2]), 'bot': '#%02x%02x%02x' % tuple(a[-2, w // 2])}
 json.dump(info, open(O + '/escenas.json', 'w'), indent=1)

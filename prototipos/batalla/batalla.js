@@ -15,9 +15,11 @@ const HEROES = {
 let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 // castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
 const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.47;   // frente de la muralla
+// el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
+const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
-const ZOOM = VW / W, CAM_Y = 175;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
+const ZOOM = VW / W, CAM_Y = 15;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -34,7 +36,7 @@ function aiDeck() {
 function newSide(deck) { const q = shuffle(deck.slice()); return { energy: 5, hand: q.splice(0, 4), queue: q, kills: 0, towerT: 1, deck: deck.slice() }; }
 
 function makeCastle(team) {
-  return { isCastle: true, type: 'castle', team, x: team === 'blue' ? CASTLE_FRONT - H * 0.8 : W - CASTLE_FRONT + H * 0.8, lane: 0,   // como objetivo, 0,8 H detrás del frente: los de cuerpo a cuerpo se plantan ante la muralla
+  return { isCastle: true, type: 'castle', team, x: team === 'blue' ? CASTLE_FRONT - H * 0.2 : W - CASTLE_FRONT + H * 0.2, lane: 0,   // como objetivo, un poco detrás del frente: todos los de cuerpo a cuerpo llegan a golpearlo desde FIELD_L
      get gy() { return GROUND; }, alive: true, state: 'idle',
     hp: CASTLE_HP, max: CASTLE_HP, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0, bigK: 1,
     knock() { return false; }, shove() {}, healBy() {},
@@ -80,7 +82,7 @@ function play(team, idx) {
   if (!type || B.over || side.energy < COST[type]) return false;
   side.energy -= COST[type];
   side.hand[idx] = side.queue.shift(); side.queue.push(type);
-  units.push(new Unit(scene, type, team, team === 'blue' ? 195 : W - 200));   // salen por la puerta
+  units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
   stat(team, type).played++;
   if (team === 'blue') renderHand();
   return true;
@@ -157,7 +159,7 @@ function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
   const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
   if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
-    const blue = team === 'blue', x = blue ? CASTLE_FRONT + H * 0.5 : W - CASTLE_FRONT - H * 0.5, tx = blue ? THRONE.x : W - THRONE.x;
+    const blue = team === 'blue', x = blue ? FIELD_L + H * 0.3 : FIELD_R - H * 0.3, tx = blue ? THRONE.x : W - THRONE.x;
     const u = new Unit(scene, hr.type, team, x); units.push(u);
     u.jumpFromX = tx; u.jumpToX = x; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
     hr.unit = u; hr.state = 'field'; hr.skillT = 3; setThrone(blue ? throneImg : throneImgP, HEROES[hr.type].empty); stat(team, hr.type).played++;
@@ -253,9 +255,8 @@ function update(_, deltaMs) {
   units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
   // nadie se sube al castillo rival: se queda delante de su muralla (embestidas, saltos y empujones incluidos)
   for (const u of units) {
-    if (!u.alive || !castles.blue || !castles[u.team === 'blue' ? 'purple' : 'blue'].alive) continue;
-    const lim = CASTLE_FRONT + H * 0.3;
-    if (u.team === 'blue' && u.x > W - lim) u.x = W - lim; else if (u.team === 'purple' && u.x < lim) u.x = lim;
+    if (!u.alive || u.state === 'heroJump') continue;
+    if (u.x < FIELD_L) u.x = FIELD_L; else if (u.x > FIELD_R) u.x = FIELD_R;
   }
   updateArrows(dt);
   fxG.clear();
@@ -341,3 +342,34 @@ window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, 
 window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
+
+/* ---- pantalla completa (con o sin la API del navegador: en iPhone se ajusta igualmente) ---- */
+function fitGame() {
+  const g = document.getElementById('game'); if (!g) return;
+  g.style.width = '';
+  if (document.body.classList.contains('fs')) {
+    // alto libre: lo que queda de pantalla menos lo que hay debajo del campo en su misma columna
+    const r = g.getBoundingClientRect(), below = [...document.querySelectorAll('.wrap > *')].filter(el => el.classList.contains('dock') && el.offsetParent && el.getBoundingClientRect().top >= r.bottom - 2 && el.getBoundingClientRect().left < r.right - 10)
+      .reduce((s, el) => s + el.getBoundingClientRect().height + 6, 0);
+    const avail = window.innerHeight - (r.top + window.scrollY) - below - 6;
+    g.style.width = Math.max(240, Math.min(g.parentElement.clientWidth, avail * 16 / 9)) + 'px';
+  }
+  if (window.__game && window.__game.scale) window.__game.scale.refresh();
+}
+function setFs(on) {
+  document.body.classList.toggle('fs', on);
+  const b = document.getElementById('fsbtn'); if (b) { b.setAttribute('aria-pressed', on); b.textContent = on ? 'Salir de pantalla completa' : 'Pantalla completa'; }
+  requestAnimationFrame(fitGame); setTimeout(fitGame, 300);
+}
+document.getElementById('fsbtn').onclick = () => {
+  const on = !document.body.classList.contains('fs'), el = document.documentElement;
+  try {
+    if (on && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (on && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (!on && document.fullscreenElement) document.exitFullscreen();
+    else if (!on && document.webkitFullscreenElement) document.webkitExitFullscreen();
+  } catch (e) {}
+  setFs(on);
+};
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('fs')) setFs(false); });
+window.addEventListener('resize', () => { if (document.body.classList.contains('fs')) fitGame(); });

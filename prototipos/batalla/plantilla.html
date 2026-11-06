@@ -94,13 +94,37 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .stats th { color: var(--muted); font-weight: 800; }
 @media (max-width: 700px) { #deckgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stats { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm, .dk .nm { font-size: .62rem; } .hc .cost, .dk .cost { font-size: .8rem; } }
+
+/* pantalla completa: el campo se ajusta al alto disponible y desaparece lo que no es del juego */
+body.fs .wrap { max-width: none; padding-block: 6px; gap: 6px; }
+body.fs header img, body.fs header h1, body.fs header p, body.fs .hint { display: none; }
+body.fs #game { margin-inline: auto; }
+body.fs .wrap { padding-inline: 8px; }
+body.fs header .btn { font-size: .85rem; padding: 4px 9px; border-radius: 10px; }
+body.fs .dock { grid-template-columns: auto 1fr auto; padding: 6px 8px; gap: 4px 10px; border-radius: 14px; }
+body.fs .energy { grid-column: 1 / -1; }
+body.fs .ebar { height: 14px; } body.fs #enum { font-size: 1.15rem; }
+body.fs .hand { grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px; max-width: none; }
+body.fs .hc { height: min(17dvh, 128px); width: auto; }
+body.fs .side { grid-auto-flow: column; align-items: center; gap: 8px; }
+@media (max-height: 520px) and (orientation: landscape) {   /* móvil en horizontal: cartas a la derecha del campo */
+  body.fs .wrap { grid-template-columns: 1fr auto; align-items: start; }
+  body.fs header { grid-column: 1 / -1; }
+  body.fs .dock { grid-template-columns: 1fr; align-self: stretch; align-content: start; }
+  body.fs .hand { grid-template-columns: repeat(2, auto); }
+  body.fs .hc { height: min(24dvh, 110px); } body.fs .dock { gap: 3px 8px; } body.fs #hero span { display: none; }
+  body.fs .side { justify-content: center; }
+  body.fs .next { display: none; }
+  body.fs .energy { flex-wrap: wrap; justify-content: space-between; row-gap: 2px; } body.fs .ebar { flex-basis: 100%; order: 3; }
+}
+body.fs .next img { width: 38px; height: 38px; } body.fs #hero { padding: 4px 8px; } body.fs #hero img { width: 30px; height: 30px; }
 </style>
 
 <div class="wrap">
   <header>
     <img src="img/logo.png" alt="Brawlground">
     <div><h1>Batalla</h1><p>Partida contra la IA con las 16 unidades.</p></div>
-    <div class="tools"><button class="btn" id="speed" aria-pressed="false">x1</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="decked">Mazo</button></div>
+    <div class="tools"><button class="btn" id="fsbtn" aria-pressed="false">Pantalla completa</button><button class="btn" id="speed" aria-pressed="false">x1</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="decked">Mazo</button></div>
   </header>
   <div class="stage">
     <div id="game"></div>
