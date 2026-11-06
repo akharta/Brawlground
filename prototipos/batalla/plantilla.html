@@ -45,6 +45,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .ebar { position: relative; flex: 1; height: 22px; background: #141826; border: 3px solid var(--outline); border-radius: 12px; overflow: hidden; }
 #efill { position: absolute; inset: 0 auto 0 0; width: 50%; background: linear-gradient(var(--energy-hi), var(--energy)); }
 .eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
+.clock { font-family: var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
 #enum { font-family: var(--font-display); font-size: 1.6rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
 .hand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; max-width: 520px; }
 .hc { position: relative; padding: 5px 5px 4px; border: 3px solid var(--outline); border-radius: 12px; cursor: pointer; background: var(--common);
@@ -104,14 +105,14 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     </div></div>
   </div>
   <div class="dock">
-    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
+    <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span><span id="clock" class="clock">0:00</span></div>
     <div class="hand" id="hand"></div>
     <div class="side">
       <div class="next">Siguiente<img id="next" alt=""></div>
       <button id="hero" disabled title="El héroe llegará cuando tengamos su arte">Héroe<span id="herok">0/15 bajas</span></button>
     </div>
   </div>
-  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). La energía se recarga sola y con cada enemigo abatido. Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
+  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). La energía se recarga sola, 1 cada 2,8 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
 </div>
 
 {{SCRIPT}}

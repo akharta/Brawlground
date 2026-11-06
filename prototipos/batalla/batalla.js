@@ -3,7 +3,7 @@
 const COST = __COST__;
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 const ALL = Object.keys(NAMES);
-const EMAX = 10, EREGEN = 0.5, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
+const EMAX = 10, EREGEN = 1 / 2.8, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {};
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const $ = id => document.getElementById(id);
@@ -52,7 +52,7 @@ Unit.prototype.healBy = function (n) {
 
 function onKill(u) {
   const other = u.team === 'blue' ? 'purple' : 'blue';
-  B[other].energy = Math.min(EMAX, B[other].energy + 1); B[other].kills++;
+  B[other].kills++;   // las bajas ya no dan energía: solo se recarga con el tiempo
   if (u.type !== 'esqueleto') { const s = stat(u.team, u.type); s.deaths++; if (s.firstDeath === null) s.firstDeath = B.t; }
 }
 function onDead(u) {            // en batalla las bajas no vuelven
@@ -140,7 +140,9 @@ function update(_, deltaMs) {
   const dt = Math.min(0.05, deltaMs / 1000) * timeScale;
   if (B && !B.over) {
     B.t += dt;
-    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + EREGEN * dt);
+    const rate = EREGEN * (B.t >= DOUBLE_AT ? 2 : 1);   // a partir de los 2 minutos, energía doble
+    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; floatText(W / 2, 120, '¡Energía doble!', '#d8b4ff'); }
+    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt);
     aiLogic(dt); towers(dt); fightLogic(dt);
   }
   units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
@@ -184,6 +186,7 @@ function uiTick() {
   const e = B.blue.energy;
   $('efill').style.width = (e / EMAX * 100) + '%'; $('enum').textContent = Math.floor(e);
   document.querySelectorAll('.hc').forEach(b => b.classList.toggle('poor', COST[B.blue.hand[+b.dataset.i]] > e));
+  $('clock').textContent = (B.doubled ? '×2 · ' : '') + Math.floor(B.t / 60) + ':' + String(Math.floor(B.t % 60)).padStart(2, '0');
   $('herok').textContent = Math.min(B.blue.kills, HERO_GOAL) + '/' + HERO_GOAL + ' bajas';
 }
 // selector de mazo
