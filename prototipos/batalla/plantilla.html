@@ -48,14 +48,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .clock { font-family: var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
 #enum { font-family: var(--font-display); font-size: 1.6rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
 .hand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; max-width: 520px; }
-.hc { position: relative; padding: 5px 5px 4px; border: 3px solid var(--outline); border-radius: 12px; cursor: pointer; background: var(--common);
-  box-shadow: 0 4px 0 var(--outline); display: grid; gap: 2px; min-width: 0; transition: transform .08s, filter .15s; }
-.hc.poco, .dk.poco { background: var(--uncommon); } .hc.rara, .dk.rara { background: var(--rare); } .hc.epica, .dk.epica { background: var(--epic); }
-.hc.legendaria, .dk.legendaria { background: var(--legend); } .hc.ascendida, .dk.ascendida { background: var(--ascended); }
-.hc img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--outline); border-radius: 8px; background: #c7cde0; }
-.hc .nm { font-family: var(--font-display); font-size: .9rem; color: var(--outline); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hc .cost { position: absolute; top: -10px; left: -10px; width: 32px; height: 32px; border-radius: 50%; background: var(--energy); border: 3px solid var(--outline);
-  display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: 1.05rem; text-shadow: 0 2px 0 var(--outline); }
+/* cartas con marco por rareza (img/esc/marco_*.png, 241x402): retrato en la ventana, coste en el círculo, nombre en la barra */
+.hc, .dk { position: relative; aspect-ratio: 241 / 402; padding: 0; border: 0; background: none; cursor: pointer; min-width: 0; display: block; filter: drop-shadow(0 3px 0 rgba(10,12,24,.45)); transition: transform .08s, filter .15s, opacity .12s; }
+.hc::after, .dk::after { content: ''; position: absolute; inset: 0; background: var(--frame) center / 100% 100% no-repeat; pointer-events: none; }
+.hc img, .dk img { position: absolute; left: 10.4%; top: 17.7%; width: 79%; height: 60%; object-fit: cover; border: 0; border-radius: 4%; background: #c7cde0; aspect-ratio: auto; }
+.hc .cost, .dk .cost { position: absolute; z-index: 1; left: 50%; top: 10.4%; transform: translate(-50%, -50%); width: 19%; height: auto; aspect-ratio: 1; border: 0; border-radius: 50%; background: none;
+  display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: 1rem; text-shadow: 0 2px 0 var(--outline); }
+.hc .nm, .dk .nm { position: absolute; z-index: 1; left: 7%; right: 7%; top: 81%; height: 15%; display: grid; place-items: center; font-family: var(--font-display); font-size: .82rem; color: #fff;
+  text-shadow: -1px -1px 0 var(--outline), 1px -1px 0 var(--outline), -1px 1px 0 var(--outline), 1px 1px 0 var(--outline), 0 2px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comun { --frame: url(img/esc/marco_comun.png); } .poco { --frame: url(img/esc/marco_poco.png); } .rara { --frame: url(img/esc/marco_rara.png); }
+.epica { --frame: url(img/esc/marco_epica.png); } .legendaria { --frame: url(img/esc/marco_legendaria.png); } .ascendida { --frame: url(img/esc/marco_ascendida.png); }
 .hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
 .hc:not(.poor):active { transform: translateY(3px); }
 .side { display: grid; gap: 8px; justify-items: center; }
@@ -76,11 +78,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 #deck .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
 #deck .count { color: var(--muted); font-variant-numeric: tabular-nums; }
 #deckgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
-.dk { position: relative; border: 3px solid var(--outline); border-radius: 10px; padding: 3px; background: var(--common); cursor: pointer; display: grid; gap: 1px; min-width: 0; opacity: .55; transition: opacity .12s, transform .08s; }
-.dk[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 3px var(--gold); }
-.dk img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--outline); border-radius: 7px; background: #c7cde0; }
-.dk .nm { font-family: var(--font-display); font-size: .78rem; color: var(--outline); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dk .cost { position: absolute; top: -8px; left: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--energy); border: 2px solid var(--outline); display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: .85rem; }
+.dk { opacity: .5; }
+.dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 #deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
 #deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; margin-right: auto; }
 #deck .esc + .esc { margin-right: 8px; }
@@ -94,7 +93,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .stats th:first-child, .stats td:first-child { text-align: left; }
 .stats th { color: var(--muted); font-weight: 800; }
 @media (max-width: 700px) { #deckgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stats { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm { font-size: .75rem; } }
+@media (max-width: 520px) { .dock { grid-template-columns: 1fr; } .side { grid-template-columns: auto auto; justify-content: center; } .hc .nm, .dk .nm { font-size: .62rem; } .hc .cost, .dk .cost { font-size: .8rem; } }
 </style>
 
 <div class="wrap">

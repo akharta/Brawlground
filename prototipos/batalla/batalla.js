@@ -6,7 +6,10 @@ LABEL.aldric = 'Rey Aldric'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esq
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
-const THRONE = { x: 52, y: 192, w: 104 };   // trono sobre tu castillo
+const THRONE = { x: 105, y: 290, w: 92 };   // trono sobre el torreón de tu castillo
+// castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
+const CASTLE_VX = 105, CASTLE_W = 232, CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
+let castleImg = {};
 const ZOOM = VW / W, CAM_Y = 255;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
@@ -93,8 +96,9 @@ function towers(dt) {
     const foes = units.filter(v => v.team !== team && v.alive && v.state !== 'die' && v.state !== 'spawn' && Math.abs(v.x - c.x) <= TOWER.range);
     if (!foes.length) { s.towerT = 0.2; continue; }
     const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
-    const sx = c.x + c.dir * 18, sy = 175, tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
-    const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
+    const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
+    const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
+    const img = scene.add.image(sx, sy, team === 'blue' ? 'flecha_azul' : 'flecha_morada').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
     arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
     s.towerT = TOWER.cd;
   }
@@ -102,11 +106,18 @@ function towers(dt) {
 function drawCastleUI(dt) {
   castleG.clear(); flashG.clear();
   for (const team of ['blue', 'purple']) {
-    const c = castles[team], bw = 120, by = 134, x0 = team === 'blue' ? 6 : W - bw - 6;
+    const c = castles[team], bw = 120, by = 150, x0 = (team === 'blue' ? CASTLE_VX : W - CASTLE_VX) - bw / 2;
+    const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
+    if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
+      if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
+      ci.state = st; ci.setTexture(CASTLE_ART[team].key + st);
+      const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
+      if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
+    }
+    if (c.flash > 0) { c.flash -= dt; ci.setTintFill(0xffffff).setAlpha(0.85); } else if (ci.isTinted) ci.clearTint().setAlpha(1);
     castleG.fillStyle(OUT, 1).fillRoundedRect(x0 - 3, by - 3, bw + 6, 18, 7);
     castleG.fillStyle(0x3a3f55, 1).fillRoundedRect(x0, by, bw, 12, 5);
     castleG.fillStyle(team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(x0, by, Math.max(4, bw * c.hp / c.max), 12, 5);
-    if (c.flash > 0) { c.flash -= dt; const fx0 = team === 'blue' ? -10 : W - 110; flashG.fillStyle(0xffffff, 0.35).fillRect(fx0, 190, 120, 240); }
   }
 }
 function statsTable(team, title) {
@@ -180,6 +191,8 @@ let escFondo = pick('fondo', 'fondo_01'), escCamino = pick('camino', 'camino_02'
 function escPreload(L) {
   L.image(escFondo, 'img/esc/' + escFondo + '.jpg'); L.image(escCamino, 'img/esc/' + escCamino + '.png');
   for (const k in ESC.deco) L.image('d_' + k, 'img/esc/' + k + '.png');
+  for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
+  L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
 }
 // decoración propia de cada fondo: [pieza, x, y del suelo, ancho, animación]. Entre 4 y 7 elementos (DECO_MAX como tope)
 const DECO_MAX = 7;
@@ -236,32 +249,21 @@ function setScenery(fondo, camino) {
   need.forEach(([k, u]) => scene.load.image(k, u)); scene.load.once('complete', () => drawScenery(scene)); scene.load.start();
 }
 window.__setScenery = setScenery;
-function drawField(g) {
-  const castle = (flip, col) => {
-    const w = 120, top = 190, bot = 430, x0 = flip ? W - w + 10 : -10;
-    g.fillStyle(OUT, 1).fillRect(x0 - 4, top - 4, w + 8, bot - top + 8);
-    g.fillStyle(0xa3a9b8, 1).fillRect(x0, top, w, bot - top);
-    g.fillStyle(0x8e94a4, 1);
-    for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) g.fillRect(x0 + 8 + c * 38 + (r % 2) * 14, top + 22 + r * 36, 26, 12);
-    for (let c = 0; c < 5; c++) { g.fillStyle(OUT, 1).fillRect(x0 + c * 26 - 2, top - 24, 20, 24); g.fillStyle(0xa3a9b8, 1).fillRect(x0 + c * 26 + 2, top - 20, 12, 20); }
-    const fx0 = flip ? x0 + 30 : x0 + w - 30;
-    g.fillStyle(OUT, 1).fillRect(fx0 - 3, top - 90, 6, 70);
-    g.fillStyle(col, 1).fillTriangle(fx0 + 2, top - 88, fx0 + 2, top - 58, fx0 + (flip ? -40 : 40), top - 73);
-  };
-  castle(false, BLUE); castle(true, PURPLE);
-}
-
 /* ---- Phaser ---- */
 function create() {
   scene = this; mode = 'fight';
-  drawScenery(this); drawField(this.add.graphics().setDepth(-10));
+  drawScenery(this);
   cam = this.cameras.main; cam.setZoom(ZOOM); cam.centerOn(W / 2, CAM_Y);
   makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
   flashG = this.add.graphics().setDepth(5);
-  throneImg = this.add.image(THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(7); throneImg.setScale(THRONE.w / throneImg.width);
-  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(7).setFlipX(true); throneImgP.setScale(THRONE.w / throneImgP.width);
+  for (const team of ['blue', 'purple']) {
+    const A = CASTLE_ART[team], im = this.add.image(team === 'blue' ? CASTLE_VX : W - CASTLE_VX, THRONE.y - 4, A.key);
+    im.setOrigin(A.plat[0] / im.width, A.plat[1] / im.height).setScale(CASTLE_W / im.width).setDepth(300); castleImg[team] = im;
+  }
+  throneImg = this.add.image(THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302); throneImg.setScale(THRONE.w / throneImg.width);
+  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(302).setFlipX(true); throneImgP.setScale(THRONE.w / throneImgP.width);
   castleG = this.add.graphics().setDepth(990);
-  for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? 66 : W - 66, 140, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
+  for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? CASTLE_VX : W - CASTLE_VX, 156, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
   fxG = this.add.graphics().setDepth(980);
   resetBattle(); B.over = true; openDeck();
 }
@@ -356,5 +358,6 @@ $('again').onclick = () => { if (scene) resetBattle(); };
 window.__debugBattle = () => ({ t: B.t, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, deck: B.purple.deck }, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over });
 window.__startBattle = deck => { if (deck) myDeck = deck; $('deck').hidden = true; resetBattle(); };
 window.__play = (team, i) => play(team, i);
+window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();
