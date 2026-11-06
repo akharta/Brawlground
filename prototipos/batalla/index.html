@@ -81,8 +81,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .dk { opacity: .5; }
 .dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 #deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
-#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; margin-right: auto; }
-#deck .esc + .esc { margin-right: 8px; }
+#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; }
+#deck .acts #deckrand { margin-left: auto; }
 #deck select { font: inherit; color: var(--outline); background: #f4f1e6; border: 3px solid var(--outline); border-radius: 10px; padding: 4px 6px; }
 .btn:disabled { opacity: .5; cursor: default; }
 #over .panel { max-height: 100%; overflow: auto; max-width: 92%; }
@@ -108,7 +108,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <div id="deck" hidden><div class="panel">
       <div class="top"><h2>Elige tu mazo</h2><span class="count" id="deckcount">0/8</span></div>
       <div id="deckgrid"></div>
-      <div class="acts"><label class="esc">Fondo <select id="selfondo"></select></label><label class="esc">Camino <select id="selcamino"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
+      <div class="acts"><label class="esc">Héroe <select id="selhero"></select></label><label class="esc">Fondo <select id="selfondo"></select></label><label class="esc">Camino <select id="selcamino"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
     </div></div>
   </div>
   <div class="dock">
@@ -119,7 +119,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button id="hero" disabled>Rey Aldric<span>0/15 bajas</span></button>
     </div>
   </div>
-  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Al llegar a 15 bajas, el Rey Aldric salta de su trono: tócalo para mandarlo al campo y luego para su Golpe sísmico. La IA también tiene el suyo. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
+  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Elige héroe en la pantalla del mazo: el Rey Aldric (Golpe sísmico) o Lyra, Ojo de Halcón (flechas que atraviesan a 3 enemigos y Tormenta de plumas, que barre el carril hasta el castillo rival). Al llegar a 15 bajas, tu héroe salta de su trono: tócalo para mandarlo al campo y luego para su habilidad. La IA lleva uno al azar. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
@@ -194,6 +194,12 @@ const CH = {
   aldric: { hp: 1800, dmg: [28, 32], speed: 40, cd: [1.6, 1.9], range: H * 1.15, ranged: false, h: 1.0, hero: true, goal: 15, k: 1.3,
     rest: { bh: [0, 0], fh: [0.523, -0.355], hr: 0 }, banner: [-0.248, -0.692], bannerH: 0.38, hammerH: 0.9344,
     skillCd: 12, seismic: { r: H * 2.2, dmg: [45, 55], stun: 1.5 }, auraR: H * 2.6, auraK: 1.2 },
+  // HEROÍNA. Lyra, Ojo de Halcón: arquera. Pasiva: Flechas perforantes (cada flecha atraviesa hasta 3 enemigos).
+  // Activa: Tormenta de plumas (cada 10 s): una ráfaga de flechas doradas barre todo el carril hasta el castillo rival y le hace daño.
+  lyra: { hp: 900, dmg: [30, 36], speed: 45, cd: [1.5, 1.8], range: H * 5.5, ranged: true, h: 1.0, hero: true, goal: 15, k: 1.2, pierce: 3, arrowV: 950,
+    rest: { bh: [-0.2, -0.26], fh: [0.34, -0.4] },
+    bow: { h: 1.1, w: 1.1 * 124 / 512, ox: 0.40, oy: 0.517, tipX: 0.07, tipTop: 0.06, tipBot: 0.94, gripY: 0.517, restX: 0.40 },
+    skillCd: 10, storm: { dmg: [40, 50], castle: 80, v: 1100 } },
   // Guardián del martillo (lo invoca Aldric): las mismas estadísticas que Tulio
   guardia: { hp: 120, dmg: [10, 12], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false, h: 1,
     rest: { bh: [-0.329, -0.313], fh: [0.324, -0.209], hr: 0 } }
@@ -237,7 +243,7 @@ const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
 const BOW = CH.arquera.bow;
 const bowW = BOW.w * H, bowH = BOW.h * H;
 // posición del arco (su origen) para que la mano agarre el punto de agarre en reposo
-const bowRestFromHand = h => [h[0] + (BOW.ox - BOW.tipX) * BOW.w, h[1] + (BOW.oy - BOW.gripY) * BOW.h];
+const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
 const NAMES = { legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
@@ -247,7 +253,7 @@ let units = [], fx = [], loose = [], arrows = [], fxG;
 
 class Unit {
   constructor(sc, type, team, x) {
-    this.sc = sc; this.type = type; this.cfg = CH[type]; this.team = team;
+    this.sc = sc; this.type = type; this.cfg = CH[type]; this.team = team; this.bw = BOW;
     this.teamDir = team === 'blue' ? 1 : -1; this.dir = this.teamDir; this.homeX = x;
     this.root = sc.add.container(x, GROUND);
     const wide = type === 'valkiria';
@@ -454,6 +460,18 @@ class Unit {
       this.parts = [this.body, this.scarf, this.bk, this.bh, this.fk, this.fh];
       this.rig.add(this.parts);
       this.drops = [[this.bk, -0.6, -500, 12], [this.fk, 0.6, -560, -12]];
+    } else if (type === 'lyra') {
+      const c = this.cfg; this.bw = c.bow;
+      this.body = sc.add.image(0, 0, 'ly_cuerpo').setOrigin(0.656, 1).setScale(H / 405);
+      this.weapon = sc.add.image(0, 0, 'ly_arco').setOrigin(c.bow.ox, c.bow.oy).setScale(c.bow.h * H / 512);
+      this.str = sc.add.graphics();
+      this.arrow = sc.add.image(0, 0, 'ly_flecha').setOrigin(0.04, 0.5).setScale(0.72 * H / 512).setVisible(false);
+      this.bh = handScale('ly_mano').setScale(0.115 * H / 256);
+      this.fh = handScale('ly_mano').setScale(0.115 * H / 256);
+      this.parts = [this.body, this.weapon, this.arrow, this.bh, this.fh];
+      this.rig.add([this.body, this.weapon, this.str, this.arrow, this.bh, this.fh]);
+      this.drops = [[this.weapon, 0.7, -480, 7]];
+      this.bigK = c.k; this.shadow.setSize(H * 0.62 * c.k, H * 0.16 * c.k);
     } else {
       this.body = sc.add.image(0, 0, 'arq_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.weapon = sc.add.image(0, 0, 'arq_arma').setOrigin(BOW.ox, BOW.oy).setScale(bowH / 512);
@@ -613,7 +631,7 @@ class Unit {
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
-    else { o.bow = bowRestFromHand(r.fh); o.bowR = 0; o.nock = null; o.arrow = false; }
+    else { o.bow = bowRestFromHand(r.fh, this.bw); o.bowR = 0; o.nock = null; o.arrow = false; }
     return o;
   }
   update(dt) {
@@ -638,7 +656,7 @@ class Unit {
         if (o.fh) o.fh[1] += Math.sin(now * 3.2 + 1.1) * 0.012;
         if (o.mount) { o.mount.y = Math.max(0, Math.sin(now * 2.2)) * 0.01; o.rider.y = 0.012 * breathe; }
         if (o.sw !== undefined) o.sw += 0.04 * breathe;
-        if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = 0.03 * breathe; }
+        if (o.bow) { o.bow = bowRestFromHand(o.fh, this.bw); o.bowR = 0.03 * breathe; }
         if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
         if (o.bs !== undefined) {   // espadas en alto que se mecen; el monstruo jadea, el consumido se balancea
@@ -668,7 +686,7 @@ class Unit {
           o.bh[1] -= Math.abs(Math.sin(g - 0.9)) * 0.06;
         }
         if (o.sh) { o.sh[0] -= Math.sin(ph) * 0.02; o.sw += Math.sin(ph) * 0.08; }
-        if (o.bow) { o.bow = bowRestFromHand(o.fh); o.bowR = Math.sin(ph) * 0.06; }
+        if (o.bow) { o.bow = bowRestFromHand(o.fh, this.bw); o.bowR = Math.sin(ph) * 0.06; }
         if (o.bg !== undefined) { o.bg += Math.sin(ph) * 0.12; o.fg -= Math.sin(ph) * 0.12; }
         if (o.bs !== undefined) {
           o.bs += Math.sin(ph) * 0.1; o.fs -= Math.sin(ph) * 0.1;
@@ -843,11 +861,18 @@ class Unit {
         if (t >= (this.stunT || 1)) this.set('idle');
         break;
       }
+      case 'storm': {                // Tormenta de plumas: tensa el arco al máximo y suelta una ráfaga de flechas doradas
+        this.stormShot = true; this.attackBow(o, t * 0.8);
+        o.rot -= 0.06; if (t < 0.8) { o.sx *= 1 + 0.03 * Math.sin(t * 40); }
+        if (t < 0.75 && Math.random() < 0.6) { const a = rand(0, 6.28), r = H * rand(0.6, 1.1); fx.push({ x: this.x + Math.cos(a) * r, y: this.gy - H * 0.5 + Math.sin(a) * r * 0.6, vx: -Math.cos(a) * 160, vy: -Math.sin(a) * 100, g: 0, r: rand(2, 4), life: 0.35, t: 0.35, color: 0xffe27a }); }
+        if (this.state === 'idle') { this.stormShot = false; if (mode === 'fight') this.set('walk'); }
+        break;
+      }
       case 'heroJump': {             // el héroe salta del trono al campo
         const e = Math.min(1, t / 0.8), fromY = this.jumpFromY || 0;
         this.x = lerp(this.jumpFromX, this.jumpToX, e);
-        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); o.fh = [0.2, -0.9]; o.hr = -0.6;
-        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, '¡Rey Aldric!', '#ffd84a'); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); if (this.type !== 'lyra') { o.fh = [0.2, -0.9]; o.hr = -0.6; }
+        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, this.type === 'lyra' ? '¡Lyra!' : '¡Rey Aldric!', this.type === 'lyra' ? '#8fdcff' : '#ffd84a'); if (this.type === 'lyra') burst(this.x, this.gy - H * 0.6, 0xffe27a, 16, 200); this.set(mode === 'fight' ? 'walk' : 'idle'); }
         break;
       }
       case 'launched': {             // lo ha golpeado un compañero desplazado por la patada de Lin: sale por los aires y queda aturdido
@@ -1508,9 +1533,9 @@ class Unit {
     const r = this.cfg.rest, D = 1.15, p = t / D;
     const aimHand = [0.42, -0.43];
     const bowAim = aimHand;                                  // el origen del arco es su agarre central
-    const nockStart = [aimHand[0] - (BOW.ox - BOW.tipX) * BOW.w, aimHand[1]];
+    const BW = this.bw, nockStart = [aimHand[0] - (BW.ox - BW.tipX) * BW.w, aimHand[1]];
     const nockFull = [0.0, -0.43];
-    const restBow = bowRestFromHand(r.fh);
+    const restBow = bowRestFromHand(r.fh, BW);
     if (p < 0.22) {                 // levantar el arco y llevar la mano a la cuerda
       const e = ease(p / 0.22);
       o.fh = lerp2(r.fh, aimHand, e); o.bow = lerp2(restBow, bowAim, e);
@@ -1530,8 +1555,8 @@ class Unit {
   }
   shoot(nock, aim) {
     // posición mundial de la punta de la flecha en el momento de soltar
-    const sx = this.x + this.dir * nock[0] * H, sy = this.gy + nock[1] * H;
-    onShoot(this, sx, sy);
+    const sx = this.x + this.dir * nock[0] * H * (this.bigK || 1), sy = this.gy + nock[1] * H * (this.bigK || 1);
+    if (this.stormShot) { this.stormShot = false; featherStorm(this, sx, sy); } else onShoot(this, sx, sy);
   }
   apply(o, dt) {
     this.root.x = this.x;
@@ -1547,6 +1572,7 @@ class Unit {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.hr);
       this.banner.setPosition(c.banner[0] * H, c.banner[1] * H + H * 0.27).setRotation(-0.05 + 0.04 * Math.sin(now * 2.6)).setScale(c.bannerH * H / this.banner.height * (1 + 0.05 * Math.sin(now * 5.2)), c.bannerH * H / this.banner.height);
     }
+    if (this.type === 'lyra') { this.rig.scaleX *= this.cfg.k; this.rig.scaleY *= this.cfg.k; }
     if (this.type === 'guardia') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(-Math.PI / 2 + o.hr);
       this.shield.setPosition(o.fh[0] * H, o.fh[1] * H);
@@ -1784,7 +1810,8 @@ class Unit {
     } else {
       const bx = o.bow[0] * H, by = o.bow[1] * H;
       this.weapon.setPosition(bx, by).setRotation(o.bowR || 0);
-      const tx = bx - (BOW.ox - BOW.tipX) * bowW, top = by - (BOW.oy - BOW.tipTop) * bowH, bot = by + (BOW.tipBot - BOW.oy) * bowH;
+      const BW = this.bw, bW = BW.w * H, bH = BW.h * H;
+      const tx = bx - (BW.ox - BW.tipX) * bW, top = by - (BW.oy - BW.tipTop) * bH, bot = by + (BW.tipBot - BW.oy) * bH;
       this.vib = Math.max(0, this.vib - dt * 3.5);
       const g = this.str; g.clear();
       if (this.weapon.visible) {
@@ -1794,7 +1821,7 @@ class Unit {
           g.lineStyle(w, c, 1).beginPath(); g.moveTo(tx, top); g.lineTo(n[0], n[1]); g.lineTo(tx, bot); g.strokePath();
         }
       }
-      this.arrow.setVisible(!!o.arrow && this.state === 'attack');
+      this.arrow.setVisible(!!o.arrow && (this.state === 'attack' || this.state === 'storm'));
       if (o.nock) this.arrow.setPosition(o.nock[0] * H, o.nock[1] * H);
     }
     this.drawAura(dt);
@@ -2181,6 +2208,46 @@ function seismicSlam(u) {
     }
   }
 }
+let storms = [];
+function featherStorm(u, sx, sy) {
+  // ola de flechas doradas y plumas que barre el carril entero; daña una vez a cada enemigo y, al llegar, al castillo rival
+  const c = u.cfg.storm, dir = u.dir, imgs = [];
+  for (let i = 0; i < 5; i++) {
+    const img = scene.add.image(sx, sy, 'ly_flecha').setOrigin(0.85, 0.5).setScale(1.05 * H / 512).setDepth(955).setRotation(dir < 0 ? Math.PI : 0).setTint(0xfff3b0);
+    imgs.push({ img, dy: (i - 2) * 0.17 * H - H * 0.05, lag: Math.abs(i - 2) * 16, ph: rand(0, 6.28) });
+  }
+  const g = scene.add.graphics().setDepth(953).setBlendMode(Phaser.BlendModes.ADD);
+  storms.push({ g, x: sx, x0: sx, dir, gy: u.gy, team: u.team, src: u, hit: new Set(), imgs, t: 0, v: c.v, dmg: c.dmg, castle: c.castle, done: false });
+  ring(sx, sy, 0xffe27a, H * 1.6); scene.cameras.main.shake(180, 0.006); burst(sx, sy, 0xffe27a, 18, 260);
+}
+function updateStorms(dt) {
+  storms = storms.filter(w => {
+    w.t += dt;
+    if (!w.done) {
+      w.x += w.dir * w.v * dt;
+      w.g.clear();
+      for (const p of w.imgs) {
+        const y = w.gy - H * 0.45 + p.dy + Math.sin(w.t * 14 + p.ph) * 5, x = w.x - w.dir * p.lag, len = Math.min(Math.abs(x - w.x0), H * 2.2);
+        p.img.setPosition(x, y);
+        for (let k = 0; k < 4; k++) w.g.lineStyle(10 - k * 2.5, k ? 0xffe27a : 0xfff7d0, 0.12 + k * 0.12).lineBetween(x - w.dir * len * (1 - k * 0.22), y, x - w.dir * H * 0.3, y);
+      }
+      for (let i = 0; i < 3; i++) fx.push({ x: w.x - w.dir * rand(0, 60), y: w.gy - H * rand(0.05, 0.95), vx: -w.dir * rand(40, 120), vy: rand(-30, 30), g: 0, r: rand(2, 4), life: 0.45, t: 0.45, color: Math.random() < 0.5 ? 0xffe27a : 0xffffff });
+      if (Math.random() < 0.35) {   // plumas que se desprenden y caen girando
+        const f = scene.add.image(w.x, w.gy - H * rand(0.1, 0.9), 'ly_pluma').setScale(rand(0.1, 0.16) * H / 200).setDepth(954).setRotation(rand(0, 6.28));
+        scene.tweens.add({ targets: f, y: f.y + H * rand(0.3, 0.6), x: f.x - w.dir * rand(20, 60), angle: rand(-180, 180), alpha: 0, duration: rand(700, 1100) / timeScale, onComplete: () => f.destroy() });
+      }
+      if (mode === 'fight') for (const v of enemiesOf(w.src)) {
+        if (w.hit.has(v) || (v.x - w.x) * w.dir > (v.isCastle ? H * 0.6 : 0)) continue;
+        w.hit.add(v);
+        if (v.isCastle) { v.damage(w.castle, w.src, w.x); burst(w.x, w.gy - H * 0.6, 0xffe27a, 24, 280); w.done = true; break; }
+        v.damage(Math.round(rand(...w.dmg)), w.src, w.x - w.dir * 10); burst(v.x, v.gy - H * 0.5, 0xffe27a, 8, 150);
+      }
+      if (w.x < -40 || w.x > W + 40) w.done = true;
+      if (w.done) { w.imgs.forEach(p => scene.tweens.add({ targets: p.img, alpha: 0, duration: 250, onComplete: () => p.img.destroy() })); scene.tweens.add({ targets: w.g, alpha: 0, duration: 300, onComplete: () => w.g.destroy() }); }
+    }
+    return !w.done;
+  });
+}
 function addStack(u) {
   if (u.form === 1) { u.stacks = Math.min(IMP_RULES.stacks, (u.stacks || 0) + 1); floatText(u.x, u.gy - H * 1.55, u.stacks + '/' + IMP_RULES.stacks, '#d7ff3a'); }
 }
@@ -2355,6 +2422,11 @@ function onShoot(u, sx, sy) {
   let tx, ty, target = null;
   if (mode === 'anim') { tx = u.x + u.dir * H * 4; ty = u.gy - H * 0.35; }
   else { target = nearestEnemy(u); if (!target) return; tx = target.x; ty = target.gy - H * 0.42; }
+  if (u.cfg.pierce) {   // Lyra: flecha recta y rápida que atraviesa hasta 3 enemigos
+    const v = u.cfg.arrowV, img = scene.add.image(sx, sy, 'ly_flecha').setOrigin(0.85, 0.5).setScale(0.72 * H / 512).setDepth(950);
+    arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: 0, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xffe27a, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, src: u });
+    return;
+  }
   const dist = Math.abs(tx - sx), T = Math.max(0.35, dist / 720), g = 900;
   const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
   arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x, src: u });
@@ -2362,7 +2434,7 @@ function onShoot(u, sx, sy) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -2468,7 +2540,7 @@ function friarLogic(u, dt) {
   else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
 }
 function updateArrows(dt) {
-  updateRockets(dt);
+  updateRockets(dt); updateStorms(dt);
   arrows = arrows.filter(a => {
     if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
     const px0 = a.x;
@@ -2488,6 +2560,16 @@ function updateArrows(dt) {
     a.img.setPosition(a.x, a.y);
     if (a.trail && Math.random() < 0.8) fx.push({ x: a.x, y: a.y, vx: rand(-15, 15), vy: rand(-15, 15), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: a.trail });
     if (a.spin) a.img.rotation += a.spin * dt; else a.img.setRotation(Math.atan2(a.vy, a.vx));
+    if (a.pierce) {        // atraviesa: daña a cada enemigo que cruza (hasta 3); el castillo la detiene
+      for (const v of enemiesOf(a.src || { team: a.team })) {
+        if (a.hit.has(v) || Math.abs(v.x - a.x) > H * 0.3) continue;
+        v.damage(a.dmg, a.src || null, a.fromX); burst(a.x, a.y, 0xffe27a, 6, 110);
+        if (v.isCastle) { a.img.destroy(); return false; }
+        a.hit.add(v); if (a.hit.size >= a.pierce) { a.img.destroy(); return false; }
+      }
+      if (a.t >= a.T) { a.img.destroy(); return false; }
+      return true;
+    }
     if (a.t >= a.T) {
       if (a.boom) { rockBoom(a.boom, a.x, a.y); a.img.destroy(); return false; }
       if (a.heal) { if (a.target) a.target.healBy(a.heal); else burst(a.x, a.y, 0xffe9a8, 10, 110); a.img.destroy(); return false; }
@@ -2584,11 +2666,17 @@ function makeAuraTextures(sc) {
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
 const COST = {"legionario": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
-const THRONE = { x: 105, y: 290, w: 92 };   // trono sobre el torreón de tu castillo
+const THRONE = { x: 105, y: 290, w: 92 };
+// héroes que se pueden llevar a la batalla
+const HEROES = {
+  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'trono_aldric', empty: 'trono_vacio', portrait: 'aldric_retrato' },
+  lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: 'trono_lyra_vacio', portrait: 'lyra_retrato' },
+};
+let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 // castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
 const CASTLE_VX = 105, CASTLE_W = 232, CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
@@ -2718,25 +2806,26 @@ function endGame(win) {
 }
 function resetBattle() {
   clearUnits();
-  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { state: 'throne', unit: null, skillT: 0 }, heroP: { state: 'throne', unit: null, skillT: 0 } };
-  if (throneImg) { throneImg.setTexture('trono_aldric'); throneImgP.setTexture('trono_aldric'); }
+  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { type: myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
+  if (throneImg) { setThrone(throneImg, HEROES[B.hero.type].throne); setThrone(throneImgP, HEROES[B.heroP.type].throne); }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
   $('over').hidden = true; renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
 /* ---- héroe ---- */
+function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
 function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
   const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
   if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
     const blue = team === 'blue', x = blue ? 200 : W - 200, tx = blue ? THRONE.x : W - THRONE.x;
-    const u = new Unit(scene, 'aldric', team, x); units.push(u);
+    const u = new Unit(scene, hr.type, team, x); units.push(u);
     u.jumpFromX = tx; u.jumpToX = x; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
-    hr.unit = u; hr.state = 'field'; hr.skillT = 3; (blue ? throneImg : throneImgP).setTexture('trono_vacio'); stat(team, 'aldric').played++;
+    hr.unit = u; hr.state = 'field'; hr.skillT = 3; setThrone(blue ? throneImg : throneImgP, HEROES[hr.type].empty); stat(team, hr.type).played++;
     return true;
   } else if (hr.state === 'field' && hr.skillT <= 0 && ['idle', 'walk', 'attack'].includes(hr.unit.state)) {
-    hr.unit.set('seismic'); hr.skillT = CH.aldric.skillCd; return true;
+    hr.unit.inPlace = false; hr.unit.set(HEROES[hr.type].skill); hr.skillT = CH[hr.type].skillCd; return true;
   }
   return false;
 }
@@ -2746,18 +2835,22 @@ function heroAI() {
   const hr = B.heroP;
   if (hr.state === 'throne') heroAct('purple');
   else if (hr.state === 'field' && hr.skillT <= 0) {
-    const u = hr.unit, r = CH.aldric.seismic.r;
-    if (enemiesOf(u).filter(v => !v.isCastle && Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= r).length >= 2) heroAct('purple');
+    const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
+    if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
+      const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
+      if (ahead >= 2 || nearCastle) heroAct('purple');
+    } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct('purple');
   }
 }
 function heroUI() {
   const hr = B.hero, btn = $('hero'), k = B.blue.kills;
   let title, sub, on = false, ready = false;
-  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡Rey Aldric!' : 'Rey Aldric'; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
-  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = 'Golpe sísmico'; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
-  else { title = 'Rey Aldric'; sub = 'Ha caído'; }
+  const HD = HEROES[hr.type];
+  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡' + HD.name + '!' : HD.name; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
+  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = HD.skillName; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
+  else { title = HD.name; sub = 'Ha caído'; }
   btn.disabled = !on; btn.classList.toggle('ready', ready);
-  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/aldric_retrato.png" alt="">' + title + '<span>' + sub + '</span>'; }
+  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/' + HD.portrait + '.png" alt="">' + title + '<span>' + sub + '</span>'; }
 }
 $('hero').onclick = () => heroClick();
 window.__heroClick = () => heroClick();
@@ -2894,6 +2987,7 @@ function start() {
       L('imp_mon_cuerpo', 'imparable_monstruo_cuerpo'); L('imp_mon_espada', 'imparable_monstruo_espada'); L('imp_mon_mano', 'imparable_monstruo_mano');
       L('imp_esp_cuerpo', 'imparable_espectro_cuerpo'); L('imp_esp_espada', 'imparable_espectro_espada'); L('imp_esp_mano', 'imparable_espectro_mano');
       L('al_cuerpo', 'aldric_cuerpo'); L('al_martillo', 'aldric_martillo'); L('al_mano', 'aldric_mano'); L('al_estandarte', 'aldric_estandarte'); L('al_retrato', 'aldric_retrato');
+      L('ly_cuerpo', 'lyra_cuerpo'); L('ly_arco', 'lyra_arco'); L('ly_flecha', 'lyra_flecha'); L('ly_mano', 'lyra_mano'); L('ly_pluma', 'lyra_pluma'); L('trono_lyra', 'trono_lyra'); L('trono_lyra_vacio', 'trono_lyra_vacio');
       L('trono_vacio', 'trono_vacio'); L('trono_aldric', 'trono_aldric'); L('gu_cuerpo', 'guardian_cuerpo'); L('gu_martillo', 'guardian_martillo'); L('gu_escudo', 'guardian_escudo');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_m', 'centinela_cuerpo_misiles'); L('ce_cuerpo_c', 'centinela_cuerpo_canon'); L('ce_misil', 'centinela_misil'); L('ce_dron', 'centinela_dron'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
@@ -2947,6 +3041,9 @@ function syncDeck() {
   $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
   $('deckgo').disabled = picking.length !== 8;
 }
+$('selhero').innerHTML = Object.entries(HEROES).map(([k, h]) => '<option value="' + k + '">' + h.name + '</option>').join('');
+$('selhero').value = myHero;
+$('selhero').onchange = e => { myHero = e.target.value; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} if (B && scene) { B.hero.type = myHero; if (B.hero.state === 'throne') setThrone(throneImg, HEROES[myHero].throne); } };
 for (const [id, kind] of [['selfondo', 'fondos'], ['selcamino', 'caminos']]) {
   const sel = $(id); sel.innerHTML = Object.keys(ESC[kind]).map((k, i) => '<option value="' + k + '">' + (i + 1) + '</option>').join('');
   sel.value = kind === 'fondos' ? escFondo : escCamino;

@@ -81,8 +81,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .dk { opacity: .5; }
 .dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 #deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
-#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; margin-right: auto; }
-#deck .esc + .esc { margin-right: 8px; }
+#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; }
+#deck .acts #deckrand { margin-left: auto; }
 #deck select { font: inherit; color: var(--outline); background: #f4f1e6; border: 3px solid var(--outline); border-radius: 10px; padding: 4px 6px; }
 .btn:disabled { opacity: .5; cursor: default; }
 #over .panel { max-height: 100%; overflow: auto; max-width: 92%; }
@@ -108,7 +108,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <div id="deck" hidden><div class="panel">
       <div class="top"><h2>Elige tu mazo</h2><span class="count" id="deckcount">0/8</span></div>
       <div id="deckgrid"></div>
-      <div class="acts"><label class="esc">Fondo <select id="selfondo"></select></label><label class="esc">Camino <select id="selcamino"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
+      <div class="acts"><label class="esc">Héroe <select id="selhero"></select></label><label class="esc">Fondo <select id="selfondo"></select></label><label class="esc">Camino <select id="selcamino"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
     </div></div>
   </div>
   <div class="dock">
@@ -119,7 +119,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button id="hero" disabled>Rey Aldric<span>0/15 bajas</span></button>
     </div>
   </div>
-  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Al llegar a 15 bajas, el Rey Aldric salta de su trono: tócalo para mandarlo al campo y luego para su Golpe sísmico. La IA también tiene el suyo. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
+  <p class="hint">Toca una carta para sacar la unidad desde tu castillo (izquierda). Elige héroe en la pantalla del mazo: el Rey Aldric (Golpe sísmico) o Lyra, Ojo de Halcón (flechas que atraviesan a 3 enemigos y Tormenta de plumas, que barre el carril hasta el castillo rival). Al llegar a 15 bajas, tu héroe salta de su trono: tócalo para mandarlo al campo y luego para su habilidad. La IA lleva uno al azar. La energía se recarga sola, 1 cada 3,5 s (el doble a partir de los 2 minutos). Las torres de los castillos disparan a quien se acerca. Gana quien derribe el castillo rival. Al acabar verás quién hizo más daño, quién cayó y qué cartas se jugaron.</p>
 </div>
 
 {{SCRIPT}}

@@ -2,11 +2,17 @@
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
 const COST = __COST__;
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
-const THRONE = { x: 105, y: 290, w: 92 };   // trono sobre el torreón de tu castillo
+const THRONE = { x: 105, y: 290, w: 92 };
+// héroes que se pueden llevar a la batalla
+const HEROES = {
+  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'trono_aldric', empty: 'trono_vacio', portrait: 'aldric_retrato' },
+  lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: 'trono_lyra_vacio', portrait: 'lyra_retrato' },
+};
+let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 // castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
 const CASTLE_VX = 105, CASTLE_W = 232, CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
@@ -136,25 +142,26 @@ function endGame(win) {
 }
 function resetBattle() {
   clearUnits();
-  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { state: 'throne', unit: null, skillT: 0 }, heroP: { state: 'throne', unit: null, skillT: 0 } };
-  if (throneImg) { throneImg.setTexture('trono_aldric'); throneImgP.setTexture('trono_aldric'); }
+  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { type: myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
+  if (throneImg) { setThrone(throneImg, HEROES[B.hero.type].throne); setThrone(throneImgP, HEROES[B.heroP.type].throne); }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
   $('over').hidden = true; renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
 /* ---- héroe ---- */
+function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
 function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
   const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
   if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
     const blue = team === 'blue', x = blue ? 200 : W - 200, tx = blue ? THRONE.x : W - THRONE.x;
-    const u = new Unit(scene, 'aldric', team, x); units.push(u);
+    const u = new Unit(scene, hr.type, team, x); units.push(u);
     u.jumpFromX = tx; u.jumpToX = x; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
-    hr.unit = u; hr.state = 'field'; hr.skillT = 3; (blue ? throneImg : throneImgP).setTexture('trono_vacio'); stat(team, 'aldric').played++;
+    hr.unit = u; hr.state = 'field'; hr.skillT = 3; setThrone(blue ? throneImg : throneImgP, HEROES[hr.type].empty); stat(team, hr.type).played++;
     return true;
   } else if (hr.state === 'field' && hr.skillT <= 0 && ['idle', 'walk', 'attack'].includes(hr.unit.state)) {
-    hr.unit.set('seismic'); hr.skillT = CH.aldric.skillCd; return true;
+    hr.unit.inPlace = false; hr.unit.set(HEROES[hr.type].skill); hr.skillT = CH[hr.type].skillCd; return true;
   }
   return false;
 }
@@ -164,18 +171,22 @@ function heroAI() {
   const hr = B.heroP;
   if (hr.state === 'throne') heroAct('purple');
   else if (hr.state === 'field' && hr.skillT <= 0) {
-    const u = hr.unit, r = CH.aldric.seismic.r;
-    if (enemiesOf(u).filter(v => !v.isCastle && Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= r).length >= 2) heroAct('purple');
+    const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
+    if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
+      const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
+      if (ahead >= 2 || nearCastle) heroAct('purple');
+    } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct('purple');
   }
 }
 function heroUI() {
   const hr = B.hero, btn = $('hero'), k = B.blue.kills;
   let title, sub, on = false, ready = false;
-  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡Rey Aldric!' : 'Rey Aldric'; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
-  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = 'Golpe sísmico'; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
-  else { title = 'Rey Aldric'; sub = 'Ha caído'; }
+  const HD = HEROES[hr.type];
+  if (hr.state === 'throne') { ready = on = k >= HERO_GOAL; title = ready ? '¡' + HD.name + '!' : HD.name; sub = ready ? 'Toca para saltar' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL + ' bajas'; }
+  else if (hr.state === 'field') { ready = on = hr.skillT <= 0; title = HD.skillName; sub = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; }
+  else { title = HD.name; sub = 'Ha caído'; }
   btn.disabled = !on; btn.classList.toggle('ready', ready);
-  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/aldric_retrato.png" alt="">' + title + '<span>' + sub + '</span>'; }
+  if (btn.dataset.t !== title + sub) { btn.dataset.t = title + sub; btn.innerHTML = '<img src="img/' + HD.portrait + '.png" alt="">' + title + '<span>' + sub + '</span>'; }
 }
 $('hero').onclick = () => heroClick();
 window.__heroClick = () => heroClick();
@@ -343,6 +354,9 @@ function syncDeck() {
   $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
   $('deckgo').disabled = picking.length !== 8;
 }
+$('selhero').innerHTML = Object.entries(HEROES).map(([k, h]) => '<option value="' + k + '">' + h.name + '</option>').join('');
+$('selhero').value = myHero;
+$('selhero').onchange = e => { myHero = e.target.value; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} if (B && scene) { B.hero.type = myHero; if (B.hero.state === 'throne') setThrone(throneImg, HEROES[myHero].throne); } };
 for (const [id, kind] of [['selfondo', 'fondos'], ['selcamino', 'caminos']]) {
   const sel = $(id); sel.innerHTML = Object.keys(ESC[kind]).map((k, i) => '<option value="' + k + '">' + (i + 1) + '</option>').join('');
   sel.value = kind === 'fondos' ? escFondo : escCamino;
