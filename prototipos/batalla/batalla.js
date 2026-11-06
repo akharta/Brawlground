@@ -7,7 +7,7 @@ const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
 const THRONE = { x: 52, y: 192, w: 104 };   // trono sobre tu castillo
-const ZOOM = VW / W, CAM_Y = 330;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
+const ZOOM = VW / W, CAM_Y = 255;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -172,20 +172,74 @@ window.__hero = () => B.hero && { state: B.hero.state, skillT: B.hero.skillT, ki
 window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
 window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
 
-/* ---- escenario del campo largo ---- */
+/* ---- escenario del campo largo: fondo + camino + decoración (arte en img/esc, datos en esc.json) ---- */
+const ESC = __ESC__;
+const PATH_T = 345, PATH_B = 478, HZ = 330;   // camino de tierra (franja) y línea del horizonte
+const pick = (k, def) => { try { const v = localStorage.getItem('bg-' + k); return v && ESC[k + 's'][v] ? v : def; } catch (e) { return def; } };
+let escFondo = pick('fondo', 'fondo_01'), escCamino = pick('camino', 'camino_02'), escObjs = [];
+function escPreload(L) {
+  L.image(escFondo, 'img/esc/' + escFondo + '.jpg'); L.image(escCamino, 'img/esc/' + escCamino + '.png');
+  for (const k in ESC.deco) L.image('d_' + k, 'img/esc/' + k + '.png');
+}
+// decoración: [pieza, x, y del suelo, ancho, animación]
+const DECO = [
+  // lejos, sobre el horizonte
+  ['caseta', 330, HZ - 34, 52], ['molino', 1060, HZ - 40, 62], ['pozo', 575, HZ - 26, 30],
+  ['hierba_1', 450, PATH_T - 2, 24], ['roca_1', 880, PATH_T - 3, 30], ['arbusto_1', 1180, PATH_T, 44], ['flores', 690, PATH_T - 2, 34], ['hierba_2', 240, PATH_T - 2, 26],
+  // junto a los castillos
+  ['barril', 165, 520, 40], ['caja', 205, 532, 46], ['cartel', 262, 512, 50],
+  ['caja', 1272, 520, 46], ['barril', 1236, 533, 40], ['raton', 1205, 546, 26, 'breath'],
+  // prado de abajo
+  ['roca_musgo', 330, 600, 88], ['erizo', 395, 612, 38, 'walk'], ['flores', 515, 540, 58], ['mariposa', 520, 500, 24, 'fly'],
+  ['arbusto_1', 455, 652, 84], ['hierba_1', 610, 590, 36], ['conejo', 600, 648, 38, 'hop'],
+  ['valla', 760, 572, 92], ['valla', 850, 572, 92], ['gorrion', 875, 520, 26, 'peck'],
+  ['zorro', 790, 662, 46, 'breath'], ['hierba_2', 700, 545, 42], ['flores', 960, 525, 46], ['abeja', 965, 488, 22, 'fly'],
+  ['arbusto_bayas', 1010, 630, 80], ['rana', 1090, 660, 34, 'hop'], ['roca_1', 1115, 552, 54], ['mariquita', 1110, 532, 16, 'crawl'],
+  ['hierba_2', 1175, 600, 44], ['ardilla', 1290, 640, 40, 'breath'], ['arbusto_2', 200, 665, 90], ['roca_2', 690, 640, 46],
+  ['carreta', 1150, 652, 100], ['banco', 905, 655, 70], ['muro', 105, 610, 84],
+];
+function drawScenery(sc) {
+  escObjs.forEach(o => o.destroy()); escObjs = [];
+  const add = o => (escObjs.push(o), o);
+  const f = ESC.fondos[escFondo], top = CAM_Y - HGT / ZOOM / 2 - 12, bot = CAM_Y + HGT / ZOOM / 2 + 12;
+  // prado: el color de la hierba del propio fondo
+  add(sc.add.rectangle(W / 2, (top + bot) / 2, W + 40, bot - top, Phaser.Display.Color.HexStringToColor(f.grass).color).setDepth(-30));
+  // fondo: escalado para que el horizonte quede en HZ y cubra hasta arriba; los lados se completan en espejo
+  const tex = sc.textures.get(escFondo).getSourceImage(), s = (HZ - top) / (f.hz * tex.height);
+  const bw = tex.width * s, y0 = HZ - f.hz * tex.height * s;
+  for (let k = -2; k <= 2; k++) {
+    const x = W / 2 + k * bw;
+    if (x + bw / 2 < -20 || x - bw / 2 > W + 20) continue;
+    add(sc.add.image(x, y0, escFondo).setOrigin(0.5, 0).setScale(s).setFlipX(k % 2 !== 0).setDepth(-29));
+  }
+  // camino: se repite en horizontal; la franja de tierra ocupa de PATH_T a PATH_B
+  const c = ESC.caminos[escCamino], cs = (PATH_B - PATH_T) / ((c.b - c.t) * c.h), ch = c.h * cs;
+  add(sc.add.tileSprite(W / 2, PATH_T - c.t * ch, W + 40, ch, escCamino).setOrigin(0.5, 0).setTileScale(cs).setDepth(-20));
+  for (const [k, x, y, w, anim] of DECO) {
+    const [iw, ih] = ESC.deco[k], sz = w / iw, far = y < PATH_T + 10;
+    const im = add(sc.add.image(x, y, 'd_' + k).setOrigin(0.5, 0.94).setScale(sz).setDepth(far ? -19 + y / 1000 : y));
+    if (x > W / 2 && /conejo|erizo|zorro|rana|gorrion|ardilla|raton/.test(k)) im.setFlipX(true);
+    const r = () => 0.6 + Math.random() * 0.8;
+    if (anim === 'breath') sc.tweens.add({ targets: im, scaleY: sz * 1.04, duration: 900 * r(), yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    if (anim === 'hop') sc.tweens.add({ targets: im, y: y - 16, duration: 230, yoyo: true, repeat: -1, repeatDelay: 2600 * r(), ease: 'Quad.out' });
+    if (anim === 'peck') sc.tweens.add({ targets: im, angle: 22, duration: 160, yoyo: true, repeat: 1, loop: -1, loopDelay: 1800 * r() });
+    if (anim === 'crawl') sc.tweens.add({ targets: im, x: x + 18, duration: 4000, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    if (anim === 'walk') sc.tweens.add({ targets: im, x: x + 60, duration: 7000, yoyo: true, repeat: -1, ease: 'Sine.inOut', onYoyo: () => im.toggleFlipX(), onRepeat: () => im.toggleFlipX() });
+    if (anim === 'fly') {
+      const t0 = Math.random() * 10, sp = k === 'abeja' ? 1.6 : 1;
+      sc.events.on('update', (_, ms) => { if (!im.active) return; const t = t0 + ms / 1000 * sp; im.x = x + Math.sin(t * 0.7) * 55; im.y = y + Math.sin(t * 1.3) * 18 - Math.abs(Math.sin(t * 6)) * 5; im.setFlipX(Math.cos(t * 0.7) < 0); im.scaleY = sz * (k === 'mariposa' ? 0.75 + Math.abs(Math.sin(t * 9)) * 0.25 : 1); });
+    }
+  }
+}
+function setScenery(fondo, camino) {
+  escFondo = fondo || escFondo; escCamino = camino || escCamino;
+  try { localStorage.setItem('bg-fondo', escFondo); localStorage.setItem('bg-camino', escCamino); } catch (e) {}
+  const need = [[escFondo, 'img/esc/' + escFondo + '.jpg'], [escCamino, 'img/esc/' + escCamino + '.png']].filter(([k]) => !scene.textures.exists(k));
+  if (!need.length) return drawScenery(scene);
+  need.forEach(([k, u]) => scene.load.image(k, u)); scene.load.once('complete', () => drawScenery(scene)); scene.load.start();
+}
+window.__setScenery = setScenery;
 function drawField(g) {
-  const top = CAM_Y - HGT / ZOOM / 2 - 10, bot = CAM_Y + HGT / ZOOM / 2 + 10;
-  g.fillStyle(0x7fb85a, 1).fillRect(0, top, W, bot - top);
-  g.fillStyle(0x8cc465, 1);
-  for (let x = 80; x < W; x += 140) g.fillEllipse(x, 60 + ((x / 140) % 2) * 110, 220, 70);
-  g.fillStyle(0xc39a6b, 1).fillRect(0, 300, W, 160);
-  g.fillStyle(0xdcb588, 1).fillRect(0, 306, W, 148);
-  g.fillStyle(0xcfa77a, 1);
-  for (let i = 0; i * 37 + 30 < W; i++) g.fillEllipse(30 + i * 37, 330 + (i * 53 % 100), 18, 6);
-  const tuft = (x, y) => { g.fillStyle(0x5f9a42, 1).fillTriangle(x - 7, y, x - 2, y - 12, x + 2, y); g.fillTriangle(x, y, x + 5, y - 15, x + 9, y); };
-  for (let x = 200; x < W - 150; x += 130) { tuft(x, 110 + (x * 7 % 160)); tuft(x + 60, 500 + (x % 3) * 30); }
-  const rock = (x, y, s) => { g.fillStyle(OUT, 1).fillEllipse(x, y, 40 * s + 6, 26 * s + 6); g.fillStyle(0x9aa1b3, 1).fillEllipse(x, y, 40 * s, 26 * s); g.fillStyle(0xb8bfcf, 1).fillEllipse(x - 5 * s, y - 4 * s, 18 * s, 9 * s); };
-  rock(300, 170, 1); rock(690, 205, 0.8); rock(520, 520, 0.9); rock(1010, 160, 0.9); rock(1180, 530, 0.8);
   const castle = (flip, col) => {
     const w = 120, top = 190, bot = 430, x0 = flip ? W - w + 10 : -10;
     g.fillStyle(OUT, 1).fillRect(x0 - 4, top - 4, w + 8, bot - top + 8);
@@ -203,7 +257,7 @@ function drawField(g) {
 /* ---- Phaser ---- */
 function create() {
   scene = this; mode = 'fight';
-  drawField(this.add.graphics());
+  drawScenery(this); drawField(this.add.graphics().setDepth(-10));
   cam = this.cameras.main; cam.setZoom(ZOOM); cam.centerOn(W / 2, CAM_Y);
   makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
   flashG = this.add.graphics().setDepth(5);
@@ -244,6 +298,7 @@ function start() {
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: { preload() {
 __PRELOAD__
+      escPreload(this.load);
     }, create, update }
   });
 }
@@ -288,6 +343,11 @@ function syncDeck() {
   const avg = picking.length ? picking.reduce((s, k) => s + COST[k], 0) / picking.length : 0;
   $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
   $('deckgo').disabled = picking.length !== 8;
+}
+for (const [id, kind] of [['selfondo', 'fondos'], ['selcamino', 'caminos']]) {
+  const sel = $(id); sel.innerHTML = Object.keys(ESC[kind]).map((k, i) => '<option value="' + k + '">' + (i + 1) + '</option>').join('');
+  sel.value = kind === 'fondos' ? escFondo : escCamino;
+  sel.onchange = () => { if (scene) kind === 'fondos' ? setScenery(sel.value) : setScenery(null, sel.value); };
 }
 $('deckrand').onclick = () => { picking = shuffle(ALL.slice()).slice(0, 8); syncDeck(); };
 $('deckgo').onclick = () => { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} $('deck').hidden = true; resetBattle(); };

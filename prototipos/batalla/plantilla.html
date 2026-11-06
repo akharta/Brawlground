@@ -22,11 +22,11 @@ body { background: var(--bg); color: var(--ink); font-family: var(--font-body); 
 .wrap { max-width: 980px; margin: 0 auto; padding-block: 12px 24px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 12px; }
-header { display: flex; align-items: center; gap: 12px; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 header img { width: 56px; height: auto; }
 h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; margin: 0; line-height: 1; }
 header p { margin: 3px 0 0; color: var(--muted); font-size: .9rem; }
-header .tools { margin-left: auto; display: flex; gap: 8px; }
+header .tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .btn { font-family: var(--font-display); font-size: 1rem; letter-spacing: .02em; cursor: pointer;
   background: var(--panel-hi); color: var(--ink); border: 3px solid var(--outline); border-radius: 12px; padding: 7px 12px;
   box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 3px 0 var(--outline); }
@@ -81,7 +81,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .dk img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--outline); border-radius: 7px; background: #c7cde0; }
 .dk .nm { font-family: var(--font-display); font-size: .78rem; color: var(--outline); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dk .cost { position: absolute; top: -8px; left: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--energy); border: 2px solid var(--outline); display: grid; place-items: center; font-family: var(--font-display); color: #fff; font-size: .85rem; }
-#deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+#deck .acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+#deck .esc { font-family: var(--font-display); color: var(--muted); display: flex; gap: 6px; align-items: center; margin-right: auto; }
+#deck .esc + .esc { margin-right: 8px; }
+#deck select { font: inherit; color: var(--outline); background: #f4f1e6; border: 3px solid var(--outline); border-radius: 10px; padding: 4px 6px; }
 .btn:disabled { opacity: .5; cursor: default; }
 #over .panel { max-height: 100%; overflow: auto; max-width: 92%; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; text-align: left; }
@@ -106,7 +109,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <div id="deck" hidden><div class="panel">
       <div class="top"><h2>Elige tu mazo</h2><span class="count" id="deckcount">0/8</span></div>
       <div id="deckgrid"></div>
-      <div class="acts"><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
+      <div class="acts"><label class="esc">Fondo <select id="selfondo"></select></label><label class="esc">Camino <select id="selcamino"></select></label><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo" disabled>¡A luchar!</button></div>
     </div></div>
   </div>
   <div class="dock">
