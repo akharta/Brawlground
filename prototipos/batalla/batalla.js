@@ -181,15 +181,20 @@ function escPreload(L) {
   L.image(escFondo, 'img/esc/' + escFondo + '.jpg'); L.image(escCamino, 'img/esc/' + escCamino + '.png');
   for (const k in ESC.deco) L.image('d_' + k, 'img/esc/' + k + '.png');
 }
-// decoración: [pieza, x, y del suelo, ancho, animación]. Regla: como mucho DECO_MAX elementos por escenario
-const DECO_MAX = 5;
-const DECO = [
-  ['molino', 1060, HZ - 40, 62],                       // lejos, sobre las colinas
-  ['roca_musgo', 300, 600, 88],
-  ['conejo', 620, 640, 38, 'hop'],
-  ['mariposa', 860, 520, 24, 'fly'],
-  ['arbusto_bayas', 1110, 630, 80],
-].slice(0, DECO_MAX);
+// decoración propia de cada fondo: [pieza, x, y del suelo, ancho, animación]. Entre 4 y 7 elementos (DECO_MAX como tope)
+const DECO_MAX = 7;
+const DECO = {
+  fondo_01: [['molino', 1060, HZ - 40, 62], ['roca_musgo', 300, 600, 88], ['conejo', 620, 640, 38, 'hop'], ['mariposa', 860, 520, 24, 'fly'], ['arbusto_bayas', 1110, 630, 80]],
+  fondo_02: [['flores', 250, 545, 48], ['rana', 420, 640, 34, 'hop'], ['hierba_2', 480, 600, 40], ['roca_1', 760, 560, 54], ['valla', 1050, 610, 92], ['gorrion', 1072, 554, 26, 'peck']],
+  fondo_03: [['flores', 300, 565, 60], ['abeja', 310, 515, 22, 'fly'], ['hierba_1', 560, 630, 36], ['mariposa', 720, 520, 24, 'fly'], ['flores', 980, 625, 52], ['conejo', 1160, 630, 38, 'hop']],
+  fondo_04: [['ardilla', 230, 640, 40, 'breath'], ['erizo', 640, 620, 38, 'walk'], ['arbusto_1', 920, 645, 90], ['roca_2', 1180, 585, 52]],
+  fondo_05: [['carreta', 360, 625, 104], ['barril', 470, 600, 40], ['zorro', 820, 645, 48, 'breath'], ['roca_1', 1090, 560, 56], ['erizo', 1150, 650, 38, 'walk']],
+  fondo_06: [['pozo', 560, HZ - 26, 30], ['banco', 380, 625, 72], ['gorrion', 450, 640, 26, 'peck'], ['flores', 700, 545, 46], ['raton', 1000, 630, 28, 'breath'], ['arbusto_2', 1180, 625, 86]],
+  fondo_07: [['caseta', 330, HZ - 34, 52], ['hierba_2', 250, 620, 40], ['flores', 600, 560, 50], ['mariposa', 620, 515, 24, 'fly'], ['conejo', 930, 640, 38, 'hop'], ['muro', 1150, 625, 86]],
+  fondo_08: [['muro', 250, 605, 86], ['zorro', 560, 645, 48, 'breath'], ['hierba_1', 740, 560, 34], ['roca_musgo', 920, 625, 86], ['cartel', 1200, 545, 48]],
+  fondo_09: [['rana', 350, 625, 34, 'hop'], ['roca_2', 610, 580, 50], ['erizo', 900, 645, 38, 'walk'], ['arbusto_1', 1150, 625, 84]],
+  fondo_10: [['molino', 1000, HZ - 40, 62], ['valla', 330, 595, 92], ['valla', 420, 595, 92], ['gorrion', 440, 540, 26, 'peck'], ['conejo', 760, 640, 38, 'hop'], ['flores', 1100, 565, 50], ['abeja', 1110, 520, 22, 'fly']],
+};
 function drawScenery(sc) {
   escObjs.forEach(o => o.destroy()); escObjs = [];
   const add = o => (escObjs.push(o), o);
@@ -207,7 +212,7 @@ function drawScenery(sc) {
   // camino: se repite en horizontal; la franja de tierra ocupa de PATH_T a PATH_B
   const c = ESC.caminos[escCamino], cs = (PATH_B - PATH_T) / ((c.b - c.t) * c.h), ch = c.h * cs;
   add(sc.add.tileSprite(W / 2, PATH_T - c.t * ch, W + 40, ch, escCamino).setOrigin(0.5, 0).setTileScale(cs).setDepth(-20));
-  for (const [k, x, y, w, anim] of DECO) {
+  for (const [k, x, y, w, anim] of (DECO[escFondo] || []).slice(0, DECO_MAX)) {
     const [iw, ih] = ESC.deco[k], sz = w / iw, far = y < PATH_T + 10;
     const im = add(sc.add.image(x, y, 'd_' + k).setOrigin(0.5, 0.94).setScale(sz).setDepth(far ? -19 + y / 1000 : y));
     if (x > W / 2 && /conejo|erizo|zorro|rana|gorrion|ardilla|raton/.test(k)) im.setFlipX(true);
