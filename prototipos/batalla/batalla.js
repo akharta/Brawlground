@@ -60,7 +60,7 @@ function onKill(u) {
 }
 function onDead(u) {            // en batalla las bajas no vuelven
   if (B && !B.over) onKill(u);
-  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy();
+  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
 function play(team, idx) {
   const side = B[team], type = side.hand[idx];
