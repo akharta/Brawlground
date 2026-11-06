@@ -141,6 +141,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="centinela" aria-pressed="false">Unidad X-9, el Centinela</button>
       <button data-char="desencadenado" aria-pressed="false">Jhotum, el Desencadenado</button>
       <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
+      <button data-char="aldric" aria-pressed="false">Rey Aldric (héroe)</button>
+      <button data-char="guardia" aria-pressed="false">Guardián del martillo</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
     <button class="btn" data-act="walk">Andar</button>
@@ -161,6 +163,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="missiles" id="missiles-btn" hidden>Salva de misiles</button>
     <button class="btn" data-act="heat" id="heat-btn" hidden>Sobrecalentar</button>
     <button class="btn" data-act="ult" id="ult-btn" hidden>Definitiva</button>
+    <button class="btn" data-act="seismic" id="seismic-btn" hidden>Golpe sísmico</button>
+    <button class="btn" data-act="herojump" id="herojump-btn" hidden>Salto del trono</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -395,7 +399,15 @@ const CH = {
   acorazado: { hp: 260, dmg: [8, 11], speed: 36, cd: [1.8, 2], range: H * 0.9, ranged: false, h: 1.05, block: 0.3, fortBlock: 0.6, fortTime: 4,
     rest: { mc: -1.85, bh: [-0.316, -0.274], fh: [0.199, -0.274], sh: [0.389, -0.37] } },
   muerte: { hp: 160, dmg: [26, 30], cut: [34, 38], speed: 60, cd: [1.6, 2], range: H * 1.6, ranged: false, aoe: true, h: 1.05, shadeCd: 10,
-    rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
+    rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } },
+  // HÉROE. Rey Aldric, el Martillo: espera en el trono; salta al campo al llegar a las bajas. Pasiva: Estandarte real (+20 % de daño a aliados cercanos).
+  // Activa: Golpe sísmico (cada 12 s): daña y aturde a su alrededor y hace aparecer 2 guardianes del martillo.
+  aldric: { hp: 1800, dmg: [28, 32], speed: 40, cd: [1.6, 1.9], range: H * 1.15, ranged: false, h: 1.0, hero: true, goal: 30, k: 1.3,
+    rest: { bh: [0, 0], fh: [0.523, -0.355], hr: 0 }, banner: [-0.248, -0.692], bannerH: 0.38, hammerH: 0.9344,
+    skillCd: 12, seismic: { r: H * 2.2, dmg: [45, 55], stun: 1.5 }, auraR: H * 2.6, auraK: 1.2 },
+  // Guardián del martillo (lo invoca Aldric): las mismas estadísticas que Tulio
+  guardia: { hp: 120, dmg: [10, 12], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false, h: 1,
+    rest: { bh: [-0.329, -0.313], fh: [0.324, -0.209], hr: 0 } }
 };
 const CRIT = 1.5;   // multiplicador de los golpes críticos
 const JHOTUM_AOE = H * 0.75;   // radio del cadenazo de Jhotum alrededor del punto de impacto
@@ -495,6 +507,28 @@ class Unit {
       this.rig.add([this.chB.g, this.bh, this.body, this.chF.g, this.fh]);
       this.drops = [];
       this.shadow.setSize(H * 0.95, H * 0.17);
+    } else if (type === 'aldric') {
+      const c = this.cfg;
+      this.banner = sc.add.image(0, 0, 'al_estandarte').setOrigin(0.88, 1);
+      this.banner.setScale(c.bannerH * H / this.banner.height);
+      this.body = sc.add.image(0, 0, 'al_cuerpo').setOrigin(0.5506, 1);
+      this.body.setScale(H / this.body.height);
+      this.weapon = sc.add.image(0, 0, 'al_martillo').setOrigin(0.5465, 0.633);
+      this.weapon.setScale(c.hammerH * H / this.weapon.height);
+      this.parts = [this.banner, this.body, this.weapon];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, 0.6, -520, -8]];
+      this.bigK = c.k; this.shadow.setSize(H * 0.8 * c.k, H * 0.18 * c.k);
+    } else if (type === 'guardia') {
+      this.body = sc.add.image(0, 0, 'gu_cuerpo').setOrigin(0.4424, 1);
+      this.body.setScale(H / this.body.height);
+      this.weapon = sc.add.image(0, 0, 'gu_martillo').setOrigin(0.12, 0.5);
+      this.weapon.setScale(0.554 * H / this.weapon.width * 1.05);
+      this.bh = sc.add.image(0, 0, 'al_mano'); this.bh.setScale(0.12 * H / this.bh.height);
+      this.shield = sc.add.image(0, 0, 'gu_escudo'); this.shield.setScale(0.432 * H / this.shield.height);
+      this.parts = [this.weapon, this.bh, this.body, this.shield];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.5, -480, 9], [this.shield, 0.8, -380, -5]];
     } else if (type === 'imparable') {
       this.body = sc.add.image(0, 0, 'imp_cuerpo');
       this.bs = sc.add.image(0, 0, 'imp_espada');
@@ -741,6 +775,7 @@ class Unit {
   }
   launch(dir) { if (!['idle', 'walk', 'attack'].includes(this.state)) return; this.launchDir = dir; this.set('launched'); burst(this.x, this.gy - H * 0.3, 0xffe066, 8, 140); }
   damage(d, src, fromX, crit) {
+    if (src && src.team && !src.isCastle && heroBanner(src)) d = Math.round(d * 1.2);   // Estandarte real de Aldric: +20 %
     if (!this.alive || this.state === 'die' || this.state === 'transform' || this.state === 'reborn') return;
     const fx = fromX !== undefined ? fromX : src ? src.x : undefined;
     if (this.cfg.block && fx !== undefined && (fx - this.x) * this.dir > 0 && !['knock', 'spawn'].includes(this.state)) {
@@ -784,6 +819,7 @@ class Unit {
     else if (this.type === 'catapulta') { o.arm = r.arm; o.loaded = !this.thrown; }
     else if (this.type === 'desencadenado') { o.whipF = null; o.whipB = null; }
     else if (this.type === 'imparable') { o.bs = r.bs; o.fs = r.fs; }
+    else if (this.type === 'aldric' || this.type === 'guardia') { o.hr = r.hr; }
     else if (this.type === 'centinela') { o.rf = r.rf; o.rp = [...r.rp]; o.mg = [...r.mg]; o.mgR = 0; o.aim = false; o.laser = 0; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
@@ -882,6 +918,7 @@ class Unit {
         else if (this.type === 'fraile') this.attackHeal(o, t);
         else if (this.type === 'catapulta') this.attackThrow(o, t);
         else if (this.type === 'imparable') this.attackTwin(o, t);
+        else if (this.type === 'aldric' || this.type === 'guardia') this.attackHammer(o, t);
         else if (this.type === 'desencadenado') { if (this.ultNext) this.attackUnchain(o, t); else this.attackWhip(o, t); }
         else if (this.type === 'centinela') { if (this.sentMode === 'burst') this.attackBurst(o, t); else this.attackSnipe(o, t); }
         else if (this.type === 'esqueleto') this.attackBone(o, t);
@@ -1000,6 +1037,28 @@ class Unit {
         this.x = Math.max(60, Math.min(W - 60, this.flipFrom - this.dir * FLIP.dist * easeInOut(e)));
         o.hop = Math.sin(e * Math.PI) * H * 0.55; o.rot = -easeInOut(e) * Math.PI * 2; o.sy = 1 - 0.1 * Math.sin(e * Math.PI);
         if (e >= 1) { this.flipT = FLIP.cd; burst(this.x, this.gy, 0xe8d3b0, 8, 100); this.set('idle'); }
+        break;
+      }
+      case 'seismic': {              // Golpe sísmico: salta, alza el martillo y lo hunde en el suelo
+        const c = this.cfg, k = this.bigK || 1;
+        if (t < 0.45) { const e = ease(t / 0.45); o.hop = Math.sin(e * Math.PI * 0.5) * H * 0.45; o.fh = lerp2(c.rest.fh, [0.1, -1.0], e); o.hr = lerp(0, -2.5, e); o.rot = -0.12 * e; }
+        else if (t < 0.6) { const e = easeIn((t - 0.45) / 0.15); o.hop = (1 - e) * H * 0.45; o.fh = lerp2([0.1, -1.0], [0.75, -0.18], e); o.hr = lerp(-2.5, 1.75, e); o.rot = lerp(-0.12, 0.18, e); }
+        else { const e = ease((t - 0.6) / 0.6); o.fh = lerp2([0.75, -0.18], c.rest.fh, e); o.hr = lerp(1.75, 0, e); o.rot = 0.18 * (1 - e); o.sy = 1 - 0.06 * (1 - e); }
+        if (t >= 0.6 && !this.fired) { this.fired = true; seismicSlam(this); }
+        if (t >= 1.2) { this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        break;
+      }
+      case 'stunned': {
+        o.rot = Math.sin(t * 6) * 0.06; o.sy = 0.96;
+        if (Math.random() < 0.35) fx.push({ x: this.x + Math.cos(t * 8) * 18, y: this.gy - H * this.cfg.h * (this.bigK || 1) - 8 + Math.sin(t * 8) * 6, vx: 0, vy: 0, g: 0, r: 4, life: 0.22, t: 0.22, color: 0xffe066 });
+        if (t >= (this.stunT || 1)) this.set('idle');
+        break;
+      }
+      case 'heroJump': {             // el héroe salta del trono al campo
+        const e = Math.min(1, t / 0.8), fromY = this.jumpFromY || 0;
+        this.x = lerp(this.jumpFromX, this.jumpToX, e);
+        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); o.fh = [0.2, -0.9]; o.hr = -0.6;
+        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, '¡Rey Aldric!', '#ffd84a'); this.set(mode === 'fight' ? 'walk' : 'idle'); }
         break;
       }
       case 'launched': {             // lo ha golpeado un compañero desplazado por la patada de Lin: sale por los aires y queda aturdido
@@ -1182,6 +1241,21 @@ class Unit {
       o.rider.r = lerp(0.1, 0, e); o.mount.r = lerp(0.04, 0, e); o.dx = lerp(0.05, 0, e);
     }
     if (p >= 1) { this.slashed = false; this.set('idle'); }
+  }
+  attackHammer(o, t) {
+    // martillazo: lo alza por detrás de la cabeza y lo descarga hacia delante
+    const r = this.cfg.rest, big = this.type === 'aldric', D = big ? 0.85 : 0.6, p = t / D;
+    const up = big ? [0.15, -0.95] : [-0.1, -0.75], down = big ? [0.7, -0.3] : [0.42, -0.3], hand = big ? 'fh' : 'bh';
+    if (p < 0.45) { const e = ease(p / 0.45); o[hand] = lerp2(r[hand], up, e); o.hr = lerp(r.hr, big ? -2.3 : -2.0, e); o.rot = -0.08 * e; o.sy = 1 + 0.04 * e; }
+    else if (p < 0.62) { const e = easeIn((p - 0.45) / 0.17); o[hand] = lerp2(up, down, e); o.hr = lerp(big ? -2.3 : -2.0, big ? 1.65 : 1.5, e); o.rot = lerp(-0.08, 0.14, e); o.dx = 0.08 * e; }
+    else { const e = ease((p - 0.62) / 0.38); o[hand] = lerp2(down, r[hand], e); o.hr = lerp(big ? 1.65 : 1.5, r.hr, e); o.rot = 0.14 * (1 - e); o.dx = 0.08 * (1 - e); }
+    if (p >= 0.6 && !this.fired) { this.fired = true; onMelee(this); burst(this.x + this.dir * H * 0.75 * (this.bigK || 1), this.gy - 4, 0xe8d3b0, big ? 12 : 6, big ? 160 : 100); if (big) scene.cameras.main.shake(90, 0.003); }
+    if (p >= 1) this.set('idle');
+  }
+  stun(t) {
+    // aturdido: no se mueve ni ataca; estrellitas girando sobre la cabeza
+    if (!this.alive || this.state === 'die' || this.cfg.hero || ['transform', 'reborn', 'ultE', 'ultX'].includes(this.state)) return;
+    this.stunT = t; this.set('stunned');
   }
   attackTwin(o, t) {
     // tajos cruzados con las dos espadas: la trasera baja en diagonal y la delantera la sigue.
@@ -1678,6 +1752,16 @@ class Unit {
     this.shadow.setScale(1 - Math.min(0.5, o.hop / H));
     if (this.bh) this.bh.setPosition(o.bh[0] * H, o.bh[1] * H);
     if (this.fh) this.fh.setPosition(o.fh[0] * H, o.fh[1] * H);
+    if (this.type === 'aldric') {
+      const c = this.cfg, now = this.sc.time.now / 1000;
+      this.rig.scaleX *= c.k; this.rig.scaleY *= c.k;
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.hr);
+      this.banner.setPosition(c.banner[0] * H, c.banner[1] * H + H * 0.27).setRotation(-0.05 + 0.04 * Math.sin(now * 2.6)).setScale(c.bannerH * H / this.banner.height * (1 + 0.05 * Math.sin(now * 5.2)), c.bannerH * H / this.banner.height);
+    }
+    if (this.type === 'guardia') {
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(-Math.PI / 2 + o.hr);
+      this.shield.setPosition(o.fh[0] * H, o.fh[1] * H);
+    }
     if (this.type === 'imparable') {
       const F = this.F;
       if (this.feastT > 0 && this.hurtT <= 0.22) { const q = 0.5 + 0.5 * Math.sin(this.sc.time.now / 90); this.parts.forEach(pt => pt.setTint(q > 0.5 ? 0xff7a8a : 0xffb0bc)); }
@@ -1901,6 +1985,8 @@ class Unit {
       this.bh.y += by;
       this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
       this.weapon.setScale(0.1344 * (H / 120) * (o.wsx === undefined ? 1 : o.wsx), 0.1344 * (H / 120));
+    } else if (this.type === 'aldric' || this.type === 'guardia') {
+      // martillo, estandarte y escudo ya colocados arriba
     } else if (this.type === 'imparable') {
       // espadas y escala ya colocadas arriba
     } else if (this.type === 'legionario') {
@@ -2286,6 +2372,26 @@ function hookUltInput(sc) {
     if (u) u.castUlt();
   });
 }
+function heroBanner(src) {
+  // ¿está src cerca de un Aldric aliado vivo? (no se aplica al propio Aldric)
+  return src.type !== 'aldric' && units.some(h => h.type === 'aldric' && h.team === src.team && h.alive && h.state !== 'die' && h.state !== 'heroJump' && Math.abs(h.x - src.x) <= h.cfg.auraR);
+}
+function seismicSlam(u) {
+  // onda en el suelo: daña y aturde a los enemigos de alrededor y llegan dos guardianes del martillo
+  const c = u.cfg.seismic, k = u.bigK || 1, x = u.x + u.dir * H * 0.7 * k;
+  scene.cameras.main.shake(320, 0.012); ring(x, u.gy - 4, 0xe8d3b0, c.r * 2); ring(x, u.gy - 4, 0xffd84a, c.r * 1.4);
+  burst(x, u.gy - 6, 0xe8d3b0, 30, 300); burst(x, u.gy - 10, 0x8a7a64, 16, 240);
+  const g = scene.add.graphics().setDepth(u.gy - 2); g.lineStyle(4, OUT, 0.8);
+  for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI, len = rand(0.5, 1) * c.r; g.beginPath(); g.moveTo(x, u.gy); g.lineTo(x + Math.cos(a) * len * 0.5, u.gy - Math.sin(a) * 4 + 6); g.lineTo(x + Math.cos(a) * len, u.gy + rand(-6, 10)); g.strokePath(); }
+  scene.tweens.add({ targets: g, alpha: 0, duration: 1400 / timeScale, onComplete: () => g.destroy() });
+  if (mode === 'fight') {
+    enemiesOf(u).filter(v => Math.abs(v.x - x) <= c.r).forEach(v => { v.damage(Math.round(rand(...c.dmg)), u, x); if (v.stun) v.stun(c.stun); });
+    for (const off of [-0.5, 0.9]) {
+      const gx = Math.max(60, Math.min(W - 60, u.x + u.dir * H * off)); const gd = new Unit(scene, 'guardia', u.team, gx);
+      gd.dir = u.dir; units.push(gd); burst(gx, u.gy, 0xffd84a, 10, 140);
+    }
+  }
+}
 function addStack(u) {
   if (u.form === 1) { u.stacks = Math.min(IMP_RULES.stacks, (u.stacks || 0) + 1); floatText(u.x, u.gy - H * 1.55, u.stacks + '/' + IMP_RULES.stacks, '#d7ff3a'); }
 }
@@ -2472,7 +2578,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -2733,6 +2839,8 @@ function start() {
       L('imp_cuerpo', 'imparable_cuerpo'); L('imp_espada', 'imparable_espada'); L('imp_mano', 'imparable_mano');
       L('imp_mon_cuerpo', 'imparable_monstruo_cuerpo'); L('imp_mon_espada', 'imparable_monstruo_espada'); L('imp_mon_mano', 'imparable_monstruo_mano');
       L('imp_esp_cuerpo', 'imparable_espectro_cuerpo'); L('imp_esp_espada', 'imparable_espectro_espada'); L('imp_esp_mano', 'imparable_espectro_mano');
+      L('al_cuerpo', 'aldric_cuerpo'); L('al_martillo', 'aldric_martillo'); L('al_mano', 'aldric_mano'); L('al_estandarte', 'aldric_estandarte'); L('al_retrato', 'aldric_retrato');
+      L('trono_vacio', 'trono_vacio'); L('trono_aldric', 'trono_aldric'); L('gu_cuerpo', 'guardian_cuerpo'); L('gu_martillo', 'guardian_martillo'); L('gu_escudo', 'guardian_escudo');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_m', 'centinela_cuerpo_misiles'); L('ce_cuerpo_c', 'centinela_cuerpo_canon'); L('ce_misil', 'centinela_misil'); L('ce_dron', 'centinela_dron'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
@@ -2789,6 +2897,8 @@ $('anim-controls').addEventListener('click', e => {
     $('missiles-btn').hidden = animChar !== 'centinela';
     $('heat-btn').hidden = animChar !== 'centinela';
     $('ult-btn').hidden = animChar !== 'centinela' && animChar !== 'imparable';
+    $('seismic-btn').hidden = animChar !== 'aldric';
+    $('herojump-btn').hidden = animChar !== 'aldric';
     $('kick-btn').hidden = animChar !== 'kungfu';
     $('shade-btn').hidden = animChar !== 'muerte';
     $('spin-btn').hidden = animChar !== 'muerte';
@@ -2799,8 +2909,10 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
+  if (act === 'herojump') { if (u.type === 'aldric') { u.jumpFromX = 60; u.jumpToX = u.homeX; u.jumpFromY = H * 2.2; u.set('heroJump'); } return; }
   if (act === 'ult') { if (RARITY[u.type] === 'ascendida') { u.ultT = 0; u.ultUsed = false; u.castUlt(); } return; }
   if (act === 'missiles') { if (u.type === 'centinela') { u.inPlace = false; u.set('missiles'); } return; }
   if (act === 'heat') { if (u.type === 'centinela') { u.heat = u.heat >= 1 ? 0 : 1; floatText(u.x, u.gy - H * 1.6, u.heat ? '¡Sobrecalentado!' : 'Enfriado', '#ff8a5a'); } return; }
