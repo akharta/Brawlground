@@ -5,7 +5,7 @@ const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.spl
 LABEL.aldric = 'Rey Aldric'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
-let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null;
+let B = null, castles = {}, castleG, flashG, hpText = {}, throneImg = null, throneImgP = null;
 const THRONE = { x: 52, y: 192, w: 104 };   // trono sobre tu castillo
 const ZOOM = VW / W, CAM_Y = 330;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
@@ -125,22 +125,36 @@ function endGame(win) {
 }
 function resetBattle() {
   clearUnits();
-  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { state: 'throne', unit: null, skillT: 0 } };
-  if (throneImg) throneImg.setTexture('trono_aldric');
+  B = { blue: newSide(myDeck), purple: newSide(aiDeck()), over: false, aiT: 2.5, t: 0, stats: { blue: {}, purple: {} }, hero: { state: 'throne', unit: null, skillT: 0 }, heroP: { state: 'throne', unit: null, skillT: 0 } };
+  if (throneImg) { throneImg.setTexture('trono_aldric'); throneImgP.setTexture('trono_aldric'); }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
   $('over').hidden = true; renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
 /* ---- héroe ---- */
-function heroClick() {
-  const hr = B && B.hero; if (!hr || B.over) return;
-  if (hr.state === 'throne' && B.blue.kills >= HERO_GOAL) {          // salta del trono al campo
-    const u = new Unit(scene, 'aldric', 'blue', 200); units.push(u);
-    u.jumpFromX = THRONE.x; u.jumpToX = 200; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
-    hr.unit = u; hr.state = 'field'; hr.skillT = 3; throneImg.setTexture('trono_vacio'); stat('blue', 'aldric').played++;
+function heroAct(team) {
+  // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
+  const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
+  if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
+    const blue = team === 'blue', x = blue ? 200 : W - 200, tx = blue ? THRONE.x : W - THRONE.x;
+    const u = new Unit(scene, 'aldric', team, x); units.push(u);
+    u.jumpFromX = tx; u.jumpToX = x; u.jumpFromY = GROUND - (THRONE.y - 40); u.set('heroJump');
+    hr.unit = u; hr.state = 'field'; hr.skillT = 3; (blue ? throneImg : throneImgP).setTexture('trono_vacio'); stat(team, 'aldric').played++;
+    return true;
   } else if (hr.state === 'field' && hr.skillT <= 0 && ['idle', 'walk', 'attack'].includes(hr.unit.state)) {
-    hr.unit.set('seismic'); hr.skillT = CH.aldric.skillCd;
+    hr.unit.set('seismic'); hr.skillT = CH.aldric.skillCd; return true;
+  }
+  return false;
+}
+function heroClick() { heroAct('blue'); }
+function heroAI() {
+  // la IA: salta en cuanto puede y usa el Golpe sísmico cuando tiene al menos dos enemigos a su alcance
+  const hr = B.heroP;
+  if (hr.state === 'throne') heroAct('purple');
+  else if (hr.state === 'field' && hr.skillT <= 0) {
+    const u = hr.unit, r = CH.aldric.seismic.r;
+    if (enemiesOf(u).filter(v => !v.isCastle && Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= r).length >= 2) heroAct('purple');
   }
 }
 function heroUI() {
@@ -155,7 +169,8 @@ function heroUI() {
 $('hero').onclick = () => heroClick();
 window.__heroClick = () => heroClick();
 window.__hero = () => B.hero && { state: B.hero.state, skillT: B.hero.skillT, kills: B.blue.kills, hp: B.hero.unit && Math.round(B.hero.unit.hp) };
-window.__setKills = n => { B.blue.kills = n; };
+window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
+window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
 
 /* ---- escenario del campo largo ---- */
 function drawField(g) {
@@ -193,6 +208,7 @@ function create() {
   makeAuraTextures(this); makeChainEdge(this); hookUltInput(this);
   flashG = this.add.graphics().setDepth(5);
   throneImg = this.add.image(THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(7); throneImg.setScale(THRONE.w / throneImg.width);
+  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'trono_aldric').setOrigin(0.5, 0.92).setDepth(7).setFlipX(true); throneImgP.setScale(THRONE.w / throneImgP.width);
   castleG = this.add.graphics().setDepth(990);
   for (const team of ['blue', 'purple']) hpText[team] = this.add.text(team === 'blue' ? 66 : W - 66, 140, '', { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: '13px', color: '#ffffff', stroke: '#1e2235', strokeThickness: 4 }).setOrigin(0.5).setDepth(995);
   fxG = this.add.graphics().setDepth(980);
@@ -206,8 +222,8 @@ function update(_, deltaMs) {
     if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; floatText(W / 2, 120, '¡Energía doble!', '#d8b4ff'); }
     for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt);
     aiLogic(dt); towers(dt); fightLogic(dt);
-    const hr = B.hero;
-    if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
+    for (const hr of [B.hero, B.heroP]) if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
+    heroAI();
   }
   units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
   updateArrows(dt);
