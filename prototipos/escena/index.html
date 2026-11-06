@@ -156,6 +156,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="burst" id="burst-btn" hidden>Ráfaga de minigun</button>
     <button class="btn" data-act="unchain" id="unchain-btn" hidden>Cadenas hasta el castillo</button>
     <button class="btn" data-act="stack" id="stack-btn" hidden>Sumar una baja</button>
+    <button class="btn" data-act="flip" id="flip-btn" hidden>Mortal hacia atrás</button>
+    <button class="btn" data-act="dome" id="dome-btn" hidden>Escudo energético</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -172,7 +174,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     </div>
     <div class="cardbox">
       <div class="card" aria-label="Carta de Ailin, la Arquera">
-        <div class="cost">1</div>
+        <div class="cost">2</div>
         <div class="art"><img src="img/arquera_carta.png" alt="Ilustración de Ailin, la Arquera"></div>
         <div class="name">Ailin</div>
         <div class="cls">la Arquera</div>
@@ -252,7 +254,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     </div>
     <div class="cardbox">
       <div class="card legend" aria-label="Carta de Velkara, la Muerte">
-        <div class="cost">5</div>
+        <div class="cost">6</div>
         <div class="art"><img src="img/muerte_carta.png" alt="Ilustración de Velkara, la Muerte"></div>
         <div class="name">Velkara</div>
         <div class="cls">la Muerte</div>
@@ -291,18 +293,18 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card legend" aria-label="Carta de Unidad X-9, el Centinela">
-        <div class="cost">5</div>
+      <div class="card ascended" aria-label="Carta de Unidad X-9, el Centinela">
+        <div class="cost">7</div>
         <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Unidad X-9, el Centinela"></div>
         <div class="name">Unidad X-9</div>
         <div class="cls">el Centinela</div>
-        <div class="rar">Legendaria</div>
+        <div class="rar">Ascendida</div>
       </div>
-      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun continua hasta abatirlo</dd></dl>
+      <dl><dt>Vida</dt><dd>100</dd><dt>De lejos</dt><dd>Francotirador, 30</dd><dt>De cerca</dt><dd>Minigun hasta abatirlo</dd><dt>Habilidad</dt><dd>Escudo energético al bajar del 50 %</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card legend" aria-label="Carta de Jhotum, el Desencadenado">
-        <div class="cost">6</div>
+        <div class="cost">5</div>
         <div class="art"><img src="img/desencadenado_carta.png" alt="Ilustración de Jhotum, el Desencadenado"></div>
         <div class="name">Jhotum</div>
         <div class="cls">el Desencadenado</div>
@@ -393,6 +395,10 @@ const CH = {
     rest: { hf: [0.389, -0.451], sc: -1.314, bh: [0, 0], fh: [0, 0] } }
 };
 const CRIT = 1.5;   // multiplicador de los golpes críticos
+const DASH_K = 1.5;  // daño de la embestida de Garra respecto a su daño base
+const DOME = { r: H * 1.35, time: 5, cut: 0.6 };   // escudo energético de X-9: radio, duración y daño que absorbe
+const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
+const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
 // formas de El Imparable: pieza, origen (pies en la imagen completa), espada (agarre, ángulo de la hoja en la imagen, largo)
@@ -410,7 +416,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'legendaria', catapulta: 'epica' };
+const RARITY = { ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 3, big: 0.65 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 8, big: 1 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 12, big: 1.2 }, ascendida: { c: 0xef4444, light: 0xffd6d6, rate: 16, big: 1.4 } };
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -643,6 +649,7 @@ class Unit {
     this.root.setVisible(true).setAlpha(1);
     this.parts.forEach(p => { p.setVisible(true).clearTint(); });
     if (this.arrow) this.arrow.setVisible(false);
+    this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     this.set('spawn');
   }
@@ -655,6 +662,7 @@ class Unit {
     this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
   }
+  launch(dir) { if (!['idle', 'walk', 'attack'].includes(this.state)) return; this.launchDir = dir; this.set('launched'); burst(this.x, this.gy - H * 0.3, 0xffe066, 8, 140); }
   damage(d, src, fromX, crit) {
     if (!this.alive || this.state === 'die' || this.state === 'transform' || this.state === 'reborn') return;
     const fx = fromX !== undefined ? fromX : src ? src.x : undefined;
@@ -662,11 +670,14 @@ class Unit {
       const blk = this.fortT > 0 ? this.cfg.fortBlock : this.cfg.block;
       d = Math.max(1, Math.round(d * (1 - blk))); shieldClang(this);    // golpe frontal: lo para el escudo
     }
+    if (domeCovers(this)) { d = Math.max(1, Math.round(d * (1 - DOME.cut))); domeSpark(this); }   // dentro del escudo de X-9
     this.hp -= d; this.hurtT = 0.32;
+    if (this.type === 'centinela' && !this.domeUsed && this.hp > 0 && this.hp < this.max / 2) { this.domeUsed = true; this.domeT = DOME.time; floatText(this.x, this.gy - H * 1.6, '¡Escudo!', '#7fe8ff'); }
     if (this.cfg.fortTime && !this.fortUsed && this.hp > 0 && this.hp < this.max / 2) { this.fortUsed = true; this.fortT = this.cfg.fortTime; fortify(this); }
     if (crit) floatText(this.x, this.gy - H * this.cfg.h * (this.bigK || 1) - 22, '¡-' + d + '!', '#ffd84a'); else floatText(this.x, this.gy - H * this.cfg.h - 18, '-' + d);
     burst(this.x - this.dir * H * 0.15, this.gy - H * 0.45, 0xffffff, 7, 170);
     if (this.hp <= 0 && this.type === 'imparable' && this.form === 2 && !this.reborn) { this.hp = 0; this.set('reborn'); return; }
+    if (this.hp <= 0 && this.impMark && this.impMark.u !== src && this.sc.time.now - this.impMark.t < 3000 && this.impMark.u.alive) addStack(this.impMark.u);   // asistencia de Elyss
     if (this.hp <= 0) { this.hp = 0; this.set('die'); if (src && src.type === 'muerte' && src.alive && src.state !== 'die') addGrave(src, this); }
   }
   setForm(n) {
@@ -703,7 +714,7 @@ class Unit {
     return o;
   }
   update(dt) {
-    this.t += dt; if (this.knockImm > 0) this.knockImm -= dt;
+    this.t += dt; if (this.knockImm > 0) this.knockImm -= dt; if (this.flipT > 0) this.flipT -= dt;
     if (this.pushLeft) {                       // empujón suave: se desliza hacia atrás en unas décimas
       const step = Math.abs(this.pushLeft) < 0.5 ? this.pushLeft : this.pushLeft * Math.min(1, dt * 12);
       this.x = Math.max(60, Math.min(W - 60, this.x + step)); this.pushLeft -= step;
@@ -803,10 +814,37 @@ class Unit {
         this.x = lerp(this.dashFrom, this.dashTo, p);
         o.hop = Math.sin(p * Math.PI) * H * 0.4; o.rot = lerp(-0.22, 0.25, p);
         o.bite = p > 0.35; o.headR = lerp(-0.15, 0.1, p); o.tail = -0.6; o.sx = 1.08; o.sy = 0.94;
-        if (p >= 1) { burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110); this.set('attack'); this.t = 0.18; }
+        if (p >= 1) {
+          burst(this.x + this.dir * H * 0.2, this.gy, 0xe8d3b0, 8, 110);
+          if (mode === 'fight') {         // el impacto de la embestida: 1,5 veces su daño base
+            const tg = enemiesOf(this).filter(v => Math.abs(v.x - this.x) <= this.cfg.range + H * 0.4).sort((a, b) => Math.abs(a.x - this.x) - Math.abs(b.x - this.x))[0];
+            if (tg) { tg.damage(Math.round(rand(...this.cfg.dmg) * DASH_K), this); burst(tg.x, tg.gy - H * 0.4, 0xffffff, 10, 180); }
+          }
+          this.set('attack'); this.t = 0.18;
+        }
+        break;
+      }
+      case 'flip': {                 // mortal hacia atrás: gana distancia y vuelve a apuntar
+        const D = 0.5, e = Math.min(1, t / D);
+        this.x = Math.max(60, Math.min(W - 60, this.flipFrom - this.dir * FLIP.dist * easeInOut(e)));
+        o.hop = Math.sin(e * Math.PI) * H * 0.55; o.rot = -easeInOut(e) * Math.PI * 2; o.sy = 1 - 0.1 * Math.sin(e * Math.PI);
+        if (e >= 1) { this.flipT = FLIP.cd; burst(this.x, this.gy, 0xe8d3b0, 8, 100); this.set('idle'); }
+        break;
+      }
+      case 'launched': {             // lo ha golpeado un compañero desplazado por la patada de Lin: sale por los aires y queda aturdido
+        const up = 0.4;
+        if (t < up) { const e = t / up; o.hop = Math.sin(e * Math.PI) * H * 0.5; o.rot = -0.5 * Math.sin(e * Math.PI); this.x = Math.max(60, Math.min(W - 60, this.x + this.launchDir * 90 * dt)); }
+        else if (Math.random() < 0.25) fx.push({ x: this.x + Math.cos(t * 9) * 16, y: this.gy - H * this.cfg.h - 6 + Math.sin(t * 9) * 5, vx: 0, vy: 0, g: 0, r: 3.5, life: 0.25, t: 0.25, color: 0xffe066 });
+        if (t >= KICK_CHAIN.stun) this.set('idle');
         break;
       }
       case 'knock': {                // derribado: sale despedido, cae de espaldas y se levanta enseguida
+        if (t < 0.3 && this.kickChain && mode === 'fight') {   // si lo lanzó la patada de Lin, arrolla a sus compañeros
+          const kc = this.kickChain;
+          units.filter(v => v !== this && v.team === this.team && v.alive && !kc.hit.has(v) && Math.abs(v.x - this.x) < H * 0.45 && ['idle', 'walk', 'attack'].includes(v.state))
+            .forEach(v => { kc.hit.add(v); v.damage(Math.round(kc.dmg * KICK_CHAIN.k), kc.by); if (v.alive && v.state !== 'die' && v.launch) v.launch(this.knockDir); });
+        }
+        if (t >= 0.3) this.kickChain = null;
         if (t < 0.25) { const e = ease(t / 0.25); this.x = Math.max(60, Math.min(W - 60, this.knockFrom + this.knockDir * 70 * e)); o.rot = -1.1 * e; o.hop = Math.sin(e * Math.PI) * H * 0.15; o.dx = -0.1 * e; }
         else if (t < 0.45) { o.rot = -1.1; o.dx = -0.1; if (!this.landed) { this.landed = true; burst(this.x, this.gy, 0xe8d3b0, 10, 120); } }
         else { const e = ease((t - 0.45) / 0.25); o.rot = lerp(-1.1, 0, e); o.dx = lerp(-0.1, 0, e); o.hop = Math.sin(e * Math.PI) * H * 0.05; }
@@ -1409,7 +1447,12 @@ class Unit {
       const e = ease((p - 0.86) / 0.14);
       o.fh = lerp2([0.3, -0.42], r.fh, e); o.fg = r.fg; o.bh = r.bh; o.bg = r.bg;
     }
-    if (p >= 1) { this.shotsDone = 0; this.set('idle'); }
+    if (p >= 1) {
+      this.shotsDone = 0;
+      const foe = mode === 'fight' ? enemiesOf(this).filter(v => !v.isCastle && Math.abs(v.x - this.x) < FLIP.near).length : 0;
+      if ((foe || this.forceFlip) && this.flipT <= 0) { this.forceFlip = false; this.flipFrom = this.x; this.set('flip'); }
+      else this.set('idle');
+    }
   }
   teleport() {
     const old = this.x;
@@ -1477,6 +1520,16 @@ class Unit {
       this.layChains(o, dt);
       if (this.state !== 'die' && Math.random() < 0.05) fx.push({ x: this.x + rand(-0.25, 0.25) * H, y: this.gy - rand(0.3, 0.95) * H, vx: 0, vy: -20, g: 0, r: rand(2, 3), life: 0.5, t: 0.5, color: 0xff3a2a });
     } else if (this.type === 'centinela') {
+      if (!this.domeG) { this.domeG = this.sc.add.graphics(); this.root.addAt(this.domeG, 0); }
+      this.domeG.clear();
+      if (this.domeT > 0 && this.state !== 'die') {
+        this.domeT -= dt; const now = this.sc.time.now / 1000, fade = Math.min(1, this.domeT / 0.4, (DOME.time - this.domeT) / 0.25);
+        const R = DOME.r, ry = R * 0.62, pulse = 1 + 0.03 * Math.sin(now * 8);
+        this.domeG.fillStyle(0x6fdcff, 0.16 * fade).fillEllipse(0, -ry * 0.55, R * 2 * pulse, ry * 2 * pulse);
+        this.domeG.lineStyle(4, 0x9ff0ff, 0.85 * fade).strokeEllipse(0, -ry * 0.55, R * 2 * pulse, ry * 2 * pulse);
+        this.domeG.lineStyle(2, 0xffffff, 0.35 * fade);
+        for (let i = 0; i < 5; i++) { const a = now * 1.4 + i * 1.26; this.domeG.strokeEllipse(0, -ry * 0.55, R * 2 * Math.abs(Math.cos(a)), ry * 2); }
+      }
       this.rifle.setPosition(o.rp[0] * H, o.rp[1] * H).setRotation(o.rf);
       this.weapon.setPosition(o.mg[0] * H, o.mg[1] * H).setRotation(o.mgR);
       // giro de los cilindros: la cara del cañón rota y las barras del tambor se desplazan
@@ -1843,9 +1896,10 @@ function kungfuHit(u, dmg, push, hand, at, knock, crit) {
   if (mode === 'anim') return;
   const o = enemiesOf(u).filter(v => Math.abs(v.x - u.x) <= u.cfg.range + H * 0.35).sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
   if (!o) return;
-  o.damage(Math.round(rand(...dmg) * (crit ? CRIT : 1)), u, undefined, !!crit);
+  const dd = Math.round(rand(...dmg) * (crit ? CRIT : 1));
+  o.damage(dd, u, undefined, !!crit);
   if (knock) {
-    if (o.knock(u.dir)) return o;
+    if (o.knock(u.dir)) { o.kickChain = { by: u, dmg: dd, hit: new Set() }; return o; }
     if (o.alive) o.shove(u.dir * 25);
     return null;
   }
@@ -1974,6 +2028,11 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+function domeCovers(v) {
+  // ¿está v dentro del escudo energético de un X-9 aliado?
+  return units.some(c => c.type === 'centinela' && c.team === v.team && c.domeT > 0 && c.alive && c.state !== 'die' && Math.abs(c.x - v.x) <= DOME.r);
+}
+function domeSpark(v) { burst(v.x, v.gy - H * 0.5, 0x9ff0ff, 6, 120); }
 function impHit(u, i) {
   // tajo de El Imparable: uno a uno de humano y consumido; en área de monstruo. Cada baja suma una marca (o cura al monstruo)
   if (u.F.arc) impArc(u, u.form === 3 ? u.atkN || 0 : i);
@@ -1983,6 +2042,7 @@ function impHit(u, i) {
   let dealt = 0;
   targets.forEach(v => {
     const before = v.hp, d = Math.round(rand(...u.cfg.dmg) * u.dmgK);
+    if (!v.isCastle) v.impMark = { u, t: scene.time.now };
     v.damage(d, u); dealt += Math.max(0, before - Math.max(0, v.hp));
     if (v.hp <= 0 && v.state === 'die') addStack(u);
   });
@@ -2169,7 +2229,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched'].includes(u.state)) continue;
     if (u.type === 'imparable') {
       if (u.form === 3) { u.hp -= IMP_RULES.drain * dt; if (u.hp <= 0) { u.hp = 0; u.set('die'); continue; } }   // se consume
       if (u.form === 1 && u.stacks >= IMP_RULES.stacks && (u.state === 'idle' || u.state === 'walk')) { u.set('transform'); continue; }
@@ -2192,8 +2252,8 @@ function fightLogic(dt) {
     }
     if (u.type === 'ninja') {
       u.tpT -= dt;
-      let prey = enemiesOf(u).filter(v => v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
-      if (!prey.length) { const far = enemiesOf(u).filter(v => Math.abs(v.x - u.x) > H * 1.6).sort((a, b) => Math.abs(b.x - u.x) - Math.abs(a.x - u.x)); prey = far.slice(0, 1); }   // sin tiradores: a la unidad más alejada
+      let prey = enemiesOf(u).filter(v => !v.isCastle && v.cfg.ranged && Math.abs(v.x - u.x) > H * 1.6);
+      if (!prey.length) { const far = enemiesOf(u).filter(v => !v.isCastle && Math.abs(v.x - u.x) > H * 1.6).sort((a, b) => Math.abs(b.x - u.x) - Math.abs(a.x - u.x)); prey = far.slice(0, 1); }   // sin tiradores: a la unidad más alejada
       if (u.tpT <= 0 && prey.length && (u.state === 'idle' || u.state === 'walk')) {
         u.tpTarget = prey.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x))[0];
         u.set('tpOut'); continue;
@@ -2278,6 +2338,9 @@ function updateArrows(dt) {
         wall.damage(a.dmg, null, a.fromX);
         a.img.destroy(); return false;
       }
+    }
+    if (a.team && !a.heal && !a.boom && units.some(c => c.type === 'centinela' && c.team !== a.team && c.domeT > 0 && c.alive && c.state !== 'die' && Math.abs(c.x - a.x) <= DOME.r && a.y > c.gy - DOME.r * 1.2)) {
+      burst(a.x, a.y, 0x9ff0ff, 8, 120); a.img.destroy(); return false;   // el escudo de X-9 desintegra el proyectil
     }
     a.img.setPosition(a.x, a.y);
     if (a.trail && Math.random() < 0.8) fx.push({ x: a.x, y: a.y, vx: rand(-15, 15), vy: rand(-15, 15), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: a.trail });
@@ -2466,6 +2529,8 @@ $('anim-controls').addEventListener('click', e => {
     $('tp-btn').hidden = animChar !== 'ninja';
     $('dash-btn').hidden = animChar !== 'lobo' && animChar !== 'imparable';
     $('stack-btn').hidden = animChar !== 'imparable';
+    $('flip-btn').hidden = animChar !== 'pistolero';
+    $('dome-btn').hidden = animChar !== 'centinela';
     $('kick-btn').hidden = animChar !== 'kungfu';
     $('shade-btn').hidden = animChar !== 'muerte';
     $('spin-btn').hidden = animChar !== 'muerte';
@@ -2476,7 +2541,9 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched'].includes(u.state)) return;
+  if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
+  if (act === 'dome') { if (u.type === 'centinela') { u.domeT = DOME.time; floatText(u.x, u.gy - H * 1.6, '¡Escudo!', '#7fe8ff'); } return; }
   if (u.type === 'imparable') {
     if (act === 'stack') { addStack(u); if (u.form === 1 && u.stacks >= IMP_RULES.stacks) u.set('transform'); return; }
     if (act === 'dash') { u.dashFrom = u.x; u.dashTo = u.x < W / 2 ? u.x + 260 : u.x - 260; u.dir = Math.sign(u.dashTo - u.x); u.set('lunge'); return; }

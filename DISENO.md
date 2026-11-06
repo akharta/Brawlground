@@ -17,7 +17,7 @@ y generas recursos aunque no juegues.
   jugar una entra la siguiente.
 - **Cartas**: guerreros cuerpo a cuerpo, tiradores, máquinas de asedio… cada una con su
   coste de energía.
-- **Energía**: máximo 10, se empieza con 5 y solo se recarga con el tiempo: 1 cada 2,8 s, y el doble
+- **Energía**: máximo 10, se empieza con 5 y solo se recarga con el tiempo: 1 cada 3,5 s, y el doble
   a partir de los 2 minutos de partida. Abatir enemigos no da energía.
 - **Castillo**: tiene defensas propias (p. ej. torres que disparan) y mejoras propias.
 - **Héroe** (uno por batalla):

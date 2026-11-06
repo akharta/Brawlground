@@ -3,7 +3,7 @@
 const COST = __COST__;
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 const ALL = Object.keys(NAMES);
-const EMAX = 10, EREGEN = 1 / 2.8, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
+const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {};
 const ZOOM = VW / W, CAM_Y = 330;   // cámara fija y alejada: se ve el campo entero (1440 px) de un castillo al otro
 let cam, db = null;
