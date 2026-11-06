@@ -5,6 +5,9 @@ const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.spl
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 2.8, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = 15, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, hpText = {};
+const ZOOM = 0.8, CAM_Y = 345;      // cámara algo alejada: se ve 1200 de los 1440 px del campo
+let cam, camX = 0, manualT = 0, db = null;
+(async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const $ = id => document.getElementById(id);
 
@@ -115,6 +118,7 @@ function endGame(win) {
   $('over-text').textContent = (win ? 'Has derribado el castillo rival' : 'Han derribado tu castillo') + ' en ' + Math.round(B.t) + ' s. Enemigos abatidos: ' + B.blue.kills + '.';
   $('stats').innerHTML = statsTable('blue', 'Tu bando') + statsTable('purple', 'Rival');
   window.__lastStats = JSON.parse(JSON.stringify({ win, t: B.t, stats: B.stats, decks: { blue: B.blue.deck, purple: B.purple.deck } }));
+  if (db && !B.saved) { B.saved = true; db.collection('partidas').add({ ...window.__lastStats, t: Math.round(B.t), fecha: new Date().toISOString(), castillos: { azul: Math.max(0, Math.round(castles.blue.hp)), morado: Math.max(0, Math.round(castles.purple.hp)) } }).catch(() => {}); }
   $('over').hidden = false;
 }
 function resetBattle() {
@@ -125,10 +129,40 @@ function resetBattle() {
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
+/* ---- escenario del campo largo ---- */
+function drawField(g) {
+  const top = CAM_Y - HGT / ZOOM / 2 - 10, bot = CAM_Y + HGT / ZOOM / 2 + 10;
+  g.fillStyle(0x7fb85a, 1).fillRect(0, top, W, bot - top);
+  g.fillStyle(0x8cc465, 1);
+  for (let x = 80; x < W; x += 140) g.fillEllipse(x, 60 + ((x / 140) % 2) * 110, 220, 70);
+  g.fillStyle(0xc39a6b, 1).fillRect(0, 300, W, 160);
+  g.fillStyle(0xdcb588, 1).fillRect(0, 306, W, 148);
+  g.fillStyle(0xcfa77a, 1);
+  for (let i = 0; i * 37 + 30 < W; i++) g.fillEllipse(30 + i * 37, 330 + (i * 53 % 100), 18, 6);
+  const tuft = (x, y) => { g.fillStyle(0x5f9a42, 1).fillTriangle(x - 7, y, x - 2, y - 12, x + 2, y); g.fillTriangle(x, y, x + 5, y - 15, x + 9, y); };
+  for (let x = 200; x < W - 150; x += 130) { tuft(x, 110 + (x * 7 % 160)); tuft(x + 60, 500 + (x % 3) * 30); }
+  const rock = (x, y, s) => { g.fillStyle(OUT, 1).fillEllipse(x, y, 40 * s + 6, 26 * s + 6); g.fillStyle(0x9aa1b3, 1).fillEllipse(x, y, 40 * s, 26 * s); g.fillStyle(0xb8bfcf, 1).fillEllipse(x - 5 * s, y - 4 * s, 18 * s, 9 * s); };
+  rock(300, 170, 1); rock(690, 205, 0.8); rock(520, 520, 0.9); rock(1010, 160, 0.9); rock(1180, 530, 0.8);
+  const castle = (flip, col) => {
+    const w = 120, top = 190, bot = 430, x0 = flip ? W - w + 10 : -10;
+    g.fillStyle(OUT, 1).fillRect(x0 - 4, top - 4, w + 8, bot - top + 8);
+    g.fillStyle(0xa3a9b8, 1).fillRect(x0, top, w, bot - top);
+    g.fillStyle(0x8e94a4, 1);
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) g.fillRect(x0 + 8 + c * 38 + (r % 2) * 14, top + 22 + r * 36, 26, 12);
+    for (let c = 0; c < 5; c++) { g.fillStyle(OUT, 1).fillRect(x0 + c * 26 - 2, top - 24, 20, 24); g.fillStyle(0xa3a9b8, 1).fillRect(x0 + c * 26 + 2, top - 20, 12, 20); }
+    const fx0 = flip ? x0 + 30 : x0 + w - 30;
+    g.fillStyle(OUT, 1).fillRect(fx0 - 3, top - 90, 6, 70);
+    g.fillStyle(col, 1).fillTriangle(fx0 + 2, top - 88, fx0 + 2, top - 58, fx0 + (flip ? -40 : 40), top - 73);
+  };
+  castle(false, BLUE); castle(true, PURPLE);
+}
+
 /* ---- Phaser ---- */
 function create() {
   scene = this; mode = 'fight';
-  drawStage(this.add.graphics());
+  drawField(this.add.graphics());
+  cam = this.cameras.main; cam.setZoom(ZOOM); cam.setBounds(0, CAM_Y - HGT / ZOOM / 2, W, HGT / ZOOM); cam.centerOn(camX, CAM_Y);
+  this.input.on('pointermove', p => { if (!p.isDown) return; const dx = (p.x - p.prevPosition.x) / ZOOM; if (Math.abs(dx) > 0) { camX -= dx; manualT = 3; } });
   makeAuraTextures(this); makeChainEdge(this);
   flashG = this.add.graphics().setDepth(5);
   castleG = this.add.graphics().setDepth(990);
@@ -156,11 +190,21 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
+  // la cámara sigue el frente de batalla, salvo un rato después de arrastrarla
+  const half = VW / ZOOM / 2;
+  if (manualT > 0) manualT -= Math.min(0.05, deltaMs / 1000);
+  else {
+    const live = units.filter(u => u.alive && u.state !== 'die');
+    const blueFront = Math.max(150, ...live.filter(u => u.team === 'blue').map(u => u.x)), purpleFront = Math.min(W - 150, ...live.filter(u => u.team === 'purple').map(u => u.x));
+    const target = live.length ? (blueFront + purpleFront) / 2 : 0;   // sin nadie en el campo: tu castillo
+    camX += (target - camX) * Math.min(1, deltaMs / 1000 * 1.5);
+  }
+  camX = Math.max(half, Math.min(W - half, camX)); cam.centerOn(camX, CAM_Y);
   if (B) { drawCastleUI(dt); for (const t of ['blue', 'purple']) hpText[t].setText(Math.ceil(castles[t].hp)); uiTick(); }
 }
 function start() {
   window.__game = new Phaser.Game({
-    type: Phaser.AUTO, parent: 'game', width: W, height: HGT, backgroundColor: '#7fb85a',
+    type: Phaser.AUTO, parent: 'game', width: VW, height: HGT, backgroundColor: '#7fb85a',
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: { preload() {
 __PRELOAD__

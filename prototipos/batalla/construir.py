@@ -11,6 +11,8 @@ pre = re.search(r'preload\(\) \{\n(.*?)\n    \}, create, update', script, re.S).
 def rep(a, b, n=1):
     global core
     assert core.count(a) == n, (core.count(a), a[:70]); core = core.replace(a, b)
+# campo 1,5 veces más largo; el lienzo sigue siendo de 960
+rep("const W = 960, HGT = 540", "const W = 1440, VW = 960, HGT = 540")
 # el castillo rival también es un objetivo
 rep("const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn');",
     "const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn').concat(enemyCastle(u));")
