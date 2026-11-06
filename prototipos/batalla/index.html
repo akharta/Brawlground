@@ -187,6 +187,11 @@ const CRIT = 1.5;   // multiplicador de los golpes críticos
 const DASH_K = 1.5;  // daño de la embestida de Garra respecto a su daño base
 const DOME = { r: H * 1.35, time: 5, cut: 0.6 };   // escudo energético de X-9: radio, duración y daño que absorbe
 const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
+// Unidad X-9 (ascendida): salva de misiles, dron de reparación y sobrecalentamiento
+const MISSILES = { cd: 12, n: 6, dmg: [12, 15], r: H * 0.6 };
+const DRONE = { heal: 6, every: 1, r: H * 2.5 };
+const HEAT = { time: 30, hit: 0.05, k: 1.7 };   // se calienta del todo en 30 s (antes si ataca mucho); entonces hace ×1,7
+let rockets = [];
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
@@ -292,6 +297,7 @@ class Unit {
       this.parts = [this.rifle, this.body, this.bh, this.weapon, this.fh];
       this.rig.add([this.rifle, this.body, this.bh, this.weapon, this.barrelG, this.fh]);
       this.drops = [[this.weapon, 0.6, -420, -6], [this.rifle, -0.5, -500, 8]];
+      this.drone = sc.add.image(0, 0, 'ce_dron').setScale(0.3 * H / 220);
       this.spinA = 0; this.spinV = 0;
     } else if (type === 'catapulta') {
       this.rock = sc.add.image(0, 0, 'ca_roca').setScale(0.345 * H / 512);
@@ -438,6 +444,7 @@ class Unit {
     this.root.setVisible(true).setAlpha(1);
     this.parts.forEach(p => { p.setVisible(true).clearTint(); });
     if (this.arrow) this.arrow.setVisible(false);
+    this.heat = 0; this.misT = 4; this.droneT = 0; this.beamT = 0;
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     this.set('spawn');
@@ -450,6 +457,47 @@ class Unit {
     if (!['idle', 'walk', 'attack'].includes(this.state)) return false;   // no interrumpe habilidades (teletransporte, embestida…)
     this.root.setAlpha(1); this.slashed = false; this.atkChosen = false; this.kicked = false; this.hits = 0;
     this.knockDir = dir; this.knockFrom = this.x; this.knockImm = 4; this.set('knock'); return true;
+  }
+  sentinelExtras(o, dt) {
+    // dron que repara, sobrecalentamiento (color y daño) y su humo
+    const dead = this.state === 'die', now = this.sc.time.now / 1000, k = this.bigK || 1;
+    if (!this.drone.parentContainer) this.root.add(this.drone);
+    this.drone.setVisible(!dead).setPosition(-this.dir * H * 0.5 * k, -H * 1.3 * k + Math.sin(now * 3) * 5).setFlipX(this.dir < 0).setRotation(Math.sin(now * 2.2) * 0.08);
+    if (!this.beamG) this.beamG = this.sc.add.graphics().setDepth(945);
+    this.beamG.clear();
+    if (!dead) {
+      this.droneT -= dt;
+      if (this.droneT <= 0) {
+        this.droneT = DRONE.every;
+        const allies = units.filter(v => v.team === this.team && v.alive && v.state !== 'die' && v.hp < v.max && Math.abs(v.x - this.x) <= DRONE.r);
+        const tg = this.hp < this.max ? this : allies.sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+        if (tg) { tg.healBy(DRONE.heal); this.beamTg = tg; this.beamT = 0.35; }
+      }
+      if (this.beamT > 0 && this.beamTg && this.beamTg.alive) {
+        this.beamT -= dt;
+        const m = this.drone.getWorldTransformMatrix(), sx = m.tx + this.dir * 12, sy = m.ty + 4, tx = this.beamTg.x, ty = this.beamTg.gy - H * 0.55 * (this.beamTg.bigK || 1);
+        const a = Math.min(1, this.beamT / 0.15);
+        this.beamG.lineStyle(7, 0x46ff6e, 0.35 * a).lineBetween(sx, sy, tx, ty).lineStyle(3, 0xd8ffe0, 0.9 * a).lineBetween(sx, sy, tx, ty);
+        this.beamG.fillStyle(0x46ff6e, 0.5 * a).fillCircle(tx, ty, 9);
+      }
+      this.heat = Math.min(1, this.heat + dt / HEAT.time);
+    }
+    // color: de su tono normal a rojo incandescente; al máximo, late y echa humo y chispas
+    if (dead && this.heatGlow) this.heatGlow.forEach(([gl]) => gl.setVisible(false));
+    if (this.hurtT > 0.22 || dead) return;
+    const h = this.heat, full = h >= 1, pulse = full ? 0.5 + 0.5 * Math.sin(now * 7) : 0;
+    const mix = (c1, c2, t) => { const r = (c1 >> 16) + (((c2 >> 16) - (c1 >> 16)) * t), g = ((c1 >> 8) & 255) + ((((c2 >> 8) & 255) - ((c1 >> 8) & 255)) * t), b = (c1 & 255) + (((c2 & 255) - (c1 & 255)) * t); return (r << 16) | (g << 8) | b; };
+    const col = mix(0xffffff, 0xffc0a8, h * h);
+    this.parts.forEach(pt => pt.setTint(col));
+    // brillo incandescente: copias del cuerpo y las armas en rojo, sumando luz encima
+    if (!this.heatGlow) { this.heatGlow = [this.body, this.rifle, this.weapon].map(pt => { const gl = this.sc.add.image(0, 0, pt.texture.key).setBlendMode(Phaser.BlendModes.ADD); this.rig.addAt(gl, this.rig.getIndex(pt) + 1); return [gl, pt]; }); }
+    const ga = h < 0.25 ? 0 : (h - 0.25) / 0.75 * 0.45 + (full ? 0.25 * pulse : 0);
+    this.heatGlow.forEach(([gl, pt]) => {
+      if (gl.texture.key !== pt.texture.key) gl.setTexture(pt.texture.key);
+      gl.setOrigin(pt.originX, pt.originY).setPosition(pt.x, pt.y).setRotation(pt.rotation).setScale(pt.scaleX, pt.scaleY).setFlip(pt.flipX, pt.flipY)
+        .setVisible(pt.visible && ga > 0).setAlpha(ga).setTintFill(full ? 0xff4a1a : 0xff6a3a);
+    });
+    if (full && Math.random() < 0.3) fx.push({ x: this.x + rand(-0.3, 0.3) * H, y: this.gy - rand(0.4, 1.1) * H * k, vx: rand(-10, 10), vy: -rand(30, 70), g: 0, r: rand(2, 4), life: 0.6, t: 0.6, color: Math.random() < 0.5 ? 0xffb060 : 0x8a8f9e });
   }
   launch(dir) { if (!['idle', 'walk', 'attack'].includes(this.state)) return; this.launchDir = dir; this.set('launched'); burst(this.x, this.gy - H * 0.3, 0xffe066, 8, 140); }
   damage(d, src, fromX, crit) {
@@ -611,6 +659,19 @@ class Unit {
           }
           this.set('attack'); this.t = 0.18;
         }
+        break;
+      }
+      case 'missiles': {             // salva de misiles: alza la cabeza, abre los tubos y dispara hacia el cielo
+        const k = this.bigK || 1;
+        o.rot = -0.12 * Math.sin(Math.min(1, t / 1.3) * Math.PI); o.sy = 1 - 0.05 * Math.sin(Math.min(1, t / 0.3) * Math.PI);
+        this.fired = this.fired || 0;
+        for (let i = this.fired; i < MISSILES.n; i++) {
+          if (t < 0.35 + i * 0.1) break;
+          this.fired = i + 1;
+          launchRocket(this, this.x + this.dir * H * 0.12 * k, this.gy - H * 1.02 * k, i);
+          o.hop = H * 0.02;
+        }
+        if (t >= 1.3) { this.fired = 0; this.set('idle'); }
         break;
       }
       case 'flip': {                 // mortal hacia atrás: gana distancia y vuelve a apuntar
@@ -1342,8 +1403,10 @@ class Unit {
       }
       if (o.aim !== this.aimLayer) { this.aimLayer = o.aim; if (o.aim) this.rig.moveAbove(this.rifle, this.body); else this.rig.moveBelow(this.rifle, this.body); }
       const firing = this.state === 'attack' && this.state !== 'die';
-      const key = firing ? 'ce_cuerpo' : 'ce_cuerpo_v';
-      if (this.body.texture.key !== key) this.body.setTexture(key);
+      const tubes = this.state === 'missiles' && this.t > 0.15 && this.t < 1.2;
+      const key = tubes ? 'ce_cuerpo_m' : firing ? 'ce_cuerpo' : 'ce_cuerpo_v';
+      if (this.body.texture.key !== key) this.body.setTexture(key).setOrigin(tubes ? 0.5447 : 0.5, 1);
+      this.sentinelExtras(o, dt);
       if (!this.laserG) { this.laserG = this.sc.add.graphics().setDepth(940); }
       this.laserG.clear();
       if (o.laser > 0 && this.alive) {
@@ -1817,6 +1880,34 @@ function slashArc(u) {
   }
   scene.tweens.add({ targets: g, alpha: 0, duration: 320 / timeScale, ease: 'Quad.easeIn', onComplete: () => g.destroy() });
 }
+const heatK = u => (u.heat || 0) >= 1 ? HEAT.k : 1;
+function launchRocket(u, sx, sy, i) {
+  // sube recto hacia el cielo; después cae en vertical sobre un enemigo vivo
+  const foes = mode === 'fight' ? enemiesOf(u).filter(v => !v.isCastle) : [];
+  const tg = foes.length ? foes[(i + Math.floor(Math.random() * foes.length)) % foes.length] : null;
+  const tx = tg ? tg.x + rand(-12, 12) : u.x + u.dir * rand(180, 480);
+  const img = scene.add.image(sx, sy, 'ce_misil').setScale(0.24 * H / 300).setRotation(-Math.PI / 2).setDepth(955);
+  burst(sx, sy, 0xffb060, 5, 90);
+  rockets.push({ img, x: sx, y: sy, phase: 'up', t: 0, tx, ty: (tg ? tg.gy : GROUND) - 4, tg, team: u.team, src: u, dmg: Math.round(rand(...MISSILES.dmg) * heatK(u)), wait: 0.35 + i * 0.07 });
+}
+function updateRockets(dt) {
+  rockets = rockets.filter(r => {
+    r.t += dt;
+    if (r.phase === 'up') { r.y -= 900 * dt; if (r.y < -220) { r.phase = 'wait'; r.t = 0; } }
+    else if (r.phase === 'wait') { if (r.t >= r.wait) { r.phase = 'down'; if (r.tg && r.tg.alive && r.tg.state !== 'die') r.tx = r.tg.x; r.x = r.tx; r.y = -200; r.img.setRotation(Math.PI / 2); } }
+    else {
+      r.y += 1100 * dt;
+      if (r.y >= r.ty) {
+        burst(r.x, r.ty - 10, 0xff8a3c, 16, 220); burst(r.x, r.ty, 0x3a3f55, 10, 160); ring(r.x, r.ty - 8, 0xffb060, MISSILES.r * 2);
+        if (mode === 'fight') units.filter(v => v.team !== r.team && v.alive && v.state !== 'die' && Math.abs(v.x - r.x) <= MISSILES.r).forEach(v => v.damage(r.dmg, r.src, r.x));
+        r.img.destroy(); return false;
+      }
+    }
+    r.img.setPosition(r.x, r.y).setVisible(r.phase !== 'wait');
+    if (r.phase !== 'wait' && Math.random() < 0.9) fx.push({ x: r.x + rand(-3, 3), y: r.y + (r.phase === 'up' ? 18 : -18), vx: rand(-12, 12), vy: rand(-12, 12), g: 0, r: rand(3, 6), life: 0.4, t: 0.4, color: Math.random() < 0.4 ? 0xffb060 : 0xc9ccd6 });
+    return true;
+  });
+}
 function domeCovers(v) {
   // ¿está v dentro del escudo energético de un X-9 aliado?
   return units.some(c => c.type === 'centinela' && c.team === v.team && c.domeT > 0 && c.alive && c.state !== 'die' && Math.abs(c.x - v.x) <= DOME.r);
@@ -1930,7 +2021,7 @@ function sentinelShot(u, kind, sx, sy) {
   fx.push({ x: sx - u.dir * 24, y: sy + 4, vx: -u.dir * rand(60, 130), vy: -rand(150, 240), r: snipe ? 3.5 : 2.2, life: 0.5, t: 0.5, color: 0xf2c14e });
   burst(tx, ty, snipe ? 0xffd0d0 : 0xfff3c4, snipe ? 10 : 3, snipe ? 160 : 80);
   if (snipe) { const sh = scene.cameras.main; sh.shake(90, 0.004); }
-  if (tg) tg.damage(Math.round(rand(...(snipe ? u.cfg.snipe : u.cfg.burst))), u);
+  if (tg) tg.damage(Math.round(rand(...(snipe ? u.cfg.snipe : u.cfg.burst)) * heatK(u)), u);
 }
 function throwRock(u, sx, sy) {
   // roca en parábola alta hacia el objetivo (o hacia delante en el modo animaciones)
@@ -2013,7 +2104,7 @@ function onShoot(u, sx, sy) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles'].includes(u.state)) continue;
     if (u.type === 'imparable') {
       if (u.form === 3) { u.hp -= IMP_RULES.drain * dt; if (u.hp <= 0) { u.hp = 0; u.set('die'); continue; } }   // se consume
       if (u.form === 1 && u.stacks >= IMP_RULES.stacks && (u.state === 'idle' || u.state === 'walk')) { u.set('transform'); continue; }
@@ -2060,15 +2151,16 @@ function fightLogic(dt) {
 function sentinelLogic(u, dt) {
   // de cerca, minigun; de lejos, francotirador; si no hay nadie a tiro, avanza
   const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
-  u.cd -= dt;
-  if (u.state === 'attack') return;
+  u.cd -= dt; u.misT -= dt;
+  if (u.state === 'attack' || u.state === 'missiles') return;
+  if (u.misT <= 0 && enemiesOf(u).some(v => !v.isCastle)) { u.misT = MISSILES.cd; u.set('missiles'); return; }
   if (o && dist <= u.cfg.range) {
     if (u.state === 'walk') u.set('idle');
     u.dir = Math.sign(o.x - u.x) || u.teamDir;
     if (u.cd <= 0) {
       if (dist <= u.cfg.close) { u.sentMode = 'burst'; u.cd = rand(...u.cfg.burstCd); }
       else { u.sentMode = 'snipe'; u.snipeTarget = o; u.cd = rand(...u.cfg.cd); }
-      u.set('attack');
+      u.set('attack'); u.heat = Math.min(1, u.heat + HEAT.hit);
     }
     return;
   }
@@ -2110,6 +2202,7 @@ function friarLogic(u, dt) {
   else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
 }
 function updateArrows(dt) {
+  updateRockets(dt);
   arrows = arrows.filter(a => {
     if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
     const px0 = a.x;
@@ -2170,6 +2263,7 @@ function drawStage(g) {
 function clearUnits() {
   units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); }); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
+  rockets.forEach(r => r.img.destroy()); rockets = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
 }
 let spawnTimers = [];
@@ -2433,7 +2527,7 @@ function start() {
       L('imp_cuerpo', 'imparable_cuerpo'); L('imp_espada', 'imparable_espada'); L('imp_mano', 'imparable_mano');
       L('imp_mon_cuerpo', 'imparable_monstruo_cuerpo'); L('imp_mon_espada', 'imparable_monstruo_espada'); L('imp_mon_mano', 'imparable_monstruo_mano');
       L('imp_esp_cuerpo', 'imparable_espectro_cuerpo'); L('imp_esp_espada', 'imparable_espectro_espada'); L('imp_esp_mano', 'imparable_espectro_mano');
-      L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
+      L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_m', 'centinela_cuerpo_misiles'); L('ce_misil', 'centinela_misil'); L('ce_dron', 'centinela_dron'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
       L('ca_cuerpo', 'catapulta_cuerpo'); L('ca_arma', 'catapulta_arma'); L('ca_rueda', 'catapulta_rueda'); L('ca_roca', 'catapulta_roca');
       L('fr_cuerpo', 'fraile_cuerpo'); L('fr_arma', 'fraile_arma'); L('fr_mano', 'fraile_mano');
       L('ac_cuerpo', 'acorazado_cuerpo'); L('ac_arma', 'acorazado_arma'); L('ac_mano', 'acorazado_mano'); L('ac_escudo', 'acorazado_escudo');
