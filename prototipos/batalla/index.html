@@ -189,8 +189,8 @@ const DOME = { r: H * 1.35, time: 5, cut: 0.6 };   // escudo energético de X-9:
 const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
 // Unidad X-9 (ascendida): salva de misiles, dron de reparación y sobrecalentamiento
 const MISSILES = { cd: 12, n: 6, dmg: [12, 15], r: H * 0.6 };
-const DRONE = { heal: 6, every: 1, r: H * 2.5 };
-const HEAT = { time: 30, hit: 0.05, k: 1.7 };   // se calienta del todo en 30 s (antes si ataca mucho); entonces hace ×1,7
+const DRONE = { heal: 6, every: 2.5, r: H * 2.5 };
+const HEAT = { time: 30, k: 1.7 };   // se sobrecalienta siempre a los 30 s de salir al campo; entonces hace ×1,7
 let rockets = [];
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
@@ -2160,7 +2160,7 @@ function sentinelLogic(u, dt) {
     if (u.cd <= 0) {
       if (dist <= u.cfg.close) { u.sentMode = 'burst'; u.cd = rand(...u.cfg.burstCd); }
       else { u.sentMode = 'snipe'; u.snipeTarget = o; u.cd = rand(...u.cfg.cd); }
-      u.set('attack'); u.heat = Math.min(1, u.heat + HEAT.hit);
+      u.set('attack');
     }
     return;
   }

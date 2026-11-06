@@ -402,8 +402,8 @@ const DOME = { r: H * 1.35, time: 5, cut: 0.6 };   // escudo energético de X-9:
 const FLIP = { dist: H * 0.95, cd: 4, near: H * 1.9 };   // mortal hacia atrás de Cole
 // Unidad X-9 (ascendida): salva de misiles, dron de reparación y sobrecalentamiento
 const MISSILES = { cd: 12, n: 6, dmg: [12, 15], r: H * 0.6 };
-const DRONE = { heal: 6, every: 1, r: H * 2.5 };
-const HEAT = { time: 30, hit: 0.05, k: 1.7 };   // se calienta del todo en 30 s (antes si ataca mucho); entonces hace ×1,7
+const DRONE = { heal: 6, every: 2.5, r: H * 2.5 };
+const HEAT = { time: 30, k: 1.7 };   // se sobrecalienta siempre a los 30 s de salir al campo; entonces hace ×1,7
 let rockets = [];
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
@@ -2378,7 +2378,7 @@ function sentinelLogic(u, dt) {
     if (u.cd <= 0) {
       if (dist <= u.cfg.close) { u.sentMode = 'burst'; u.cd = rand(...u.cfg.burstCd); }
       else { u.sentMode = 'snipe'; u.snipeTarget = o; u.cd = rand(...u.cfg.cd); }
-      u.set('attack'); u.heat = Math.min(1, u.heat + HEAT.hit);
+      u.set('attack');
     }
     return;
   }
@@ -2695,6 +2695,24 @@ window.__sim = (a, b, maxT = 60, dt = 1 / 30) => {
   while (t < maxT && !out(A) && !out(B)) { simStep(dt); t += dt; }
   const r = { a, b, t: +t.toFixed(1), aHp: Math.max(0, A.hp) / A.max, bHp: Math.max(0, B.hp) / B.max, winner: out(A) && !out(B) ? 'b' : out(B) && !out(A) ? 'a' : 'draw' };
   simReset(); return r;
+};
+window.__simTrace = (a, b, maxT = 60, dt = 1 / 30) => {
+  // duelo con traza: daño que recibe cada uno según quién lo hace, curaciones y momentos clave
+  simReset();
+  const A = new Unit(scene, a, 'blue', 140), B = new Unit(scene, b, 'purple', W - 140); units.push(A, B);
+  const tr = { dmg: {}, heal: {}, ev: [] }; let t = 0;
+  for (const u of [A, B]) {
+    const f = u.damage.bind(u); u.damage = (d, s, x, c) => { const h = u.hp; f(d, s, x, c); const k = u.type + '<-' + (s ? s.type + (s.state === 'missiles' ? ':misil' : '') : '?'); tr.dmg[k] = (tr.dmg[k] || 0) + Math.max(0, h - u.hp); };
+    const g = u.healBy.bind(u); u.healBy = n => { const h = u.hp; g(n); tr.heal[u.type] = (tr.heal[u.type] || 0) + Math.max(0, u.hp - h); };
+  }
+  let lastForm = 1, met = false;
+  while (t < maxT && A.alive && A.state !== 'die' && B.alive && B.state !== 'die') {
+    simStep(dt); t += dt;
+    if (!met && Math.abs(A.x - B.x) < H * 1.4) { met = true; tr.ev.push('contacto ' + t.toFixed(1) + 's hp ' + Math.round(A.hp) + '/' + Math.round(B.hp)); }
+    for (const u of [A, B]) if (u.type === 'centinela' && u.domeT > 0 && !u._d) { u._d = 1; tr.ev.push('escudo ' + t.toFixed(1)); }
+  }
+  tr.ev.push('fin ' + t.toFixed(1) + ' ' + a + ' ' + Math.round(A.hp) + ' ' + b + ' ' + Math.round(B.hp));
+  simReset(); return tr;
 };
 window.__dps = (a, T = 30, dt = 1 / 30) => {
   // daño real por segundo contra un muñeco de entrenamiento (un legionario con vida infinita); el atacante no recibe daño
