@@ -181,23 +181,15 @@ function escPreload(L) {
   L.image(escFondo, 'img/esc/' + escFondo + '.jpg'); L.image(escCamino, 'img/esc/' + escCamino + '.png');
   for (const k in ESC.deco) L.image('d_' + k, 'img/esc/' + k + '.png');
 }
-// decoración: [pieza, x, y del suelo, ancho, animación]
+// decoración: [pieza, x, y del suelo, ancho, animación]. Regla: como mucho DECO_MAX elementos por escenario
+const DECO_MAX = 5;
 const DECO = [
-  // lejos, sobre el horizonte
-  ['caseta', 330, HZ - 34, 52], ['molino', 1060, HZ - 40, 62], ['pozo', 575, HZ - 26, 30],
-  ['hierba_1', 450, PATH_T - 2, 24], ['roca_1', 880, PATH_T - 3, 30], ['arbusto_1', 1180, PATH_T, 44], ['flores', 690, PATH_T - 2, 34], ['hierba_2', 240, PATH_T - 2, 26],
-  // junto a los castillos
-  ['barril', 165, 520, 40], ['caja', 205, 532, 46], ['cartel', 262, 512, 50],
-  ['caja', 1272, 520, 46], ['barril', 1236, 533, 40], ['raton', 1205, 546, 26, 'breath'],
-  // prado de abajo
-  ['roca_musgo', 330, 600, 88], ['erizo', 395, 612, 38, 'walk'], ['flores', 515, 540, 58], ['mariposa', 520, 500, 24, 'fly'],
-  ['arbusto_1', 455, 652, 84], ['hierba_1', 610, 590, 36], ['conejo', 600, 648, 38, 'hop'],
-  ['valla', 760, 572, 92], ['valla', 850, 572, 92], ['gorrion', 875, 520, 26, 'peck'],
-  ['zorro', 790, 662, 46, 'breath'], ['hierba_2', 700, 545, 42], ['flores', 960, 525, 46], ['abeja', 965, 488, 22, 'fly'],
-  ['arbusto_bayas', 1010, 630, 80], ['rana', 1090, 660, 34, 'hop'], ['roca_1', 1115, 552, 54], ['mariquita', 1110, 532, 16, 'crawl'],
-  ['hierba_2', 1175, 600, 44], ['ardilla', 1290, 640, 40, 'breath'], ['arbusto_2', 200, 665, 90], ['roca_2', 690, 640, 46],
-  ['carreta', 1150, 652, 100], ['banco', 905, 655, 70], ['muro', 105, 610, 84],
-];
+  ['molino', 1060, HZ - 40, 62],                       // lejos, sobre las colinas
+  ['roca_musgo', 300, 600, 88],
+  ['conejo', 620, 640, 38, 'hop'],
+  ['mariposa', 860, 520, 24, 'fly'],
+  ['arbusto_bayas', 1110, 630, 80],
+].slice(0, DECO_MAX);
 function drawScenery(sc) {
   escObjs.forEach(o => o.destroy()); escObjs = [];
   const add = o => (escObjs.push(o), o);
