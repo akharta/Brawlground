@@ -414,9 +414,6 @@ $('deckwipe').onclick = e => {
 };
 
 /* ---- botones del menú, la pausa y los mapas ---- */
-$('m-campana').onclick = openWorld;
-$('m-rapida').onclick = () => startRun({ kind: 'rapida' });
-$('m-mazo').onclick = () => openDeck('menu');
 $('mundo-back').onclick = () => show('menu');
 $('reino-back').onclick = openWorld;
 $('nv-close').onclick = () => show('reino');

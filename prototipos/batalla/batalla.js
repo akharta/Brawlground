@@ -44,7 +44,7 @@ function makeCastle(team, hp = CASTLE_HP) {
     hp, max: hp, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0, bigK: 1,
     knock() { return false; }, shove() {}, healBy() {},
     damage(d, src) {
-      if (!this.alive || !B || B.over) return;
+      if (!this.alive || !B || B.over || B.idle) return;
       const dealt = Math.min(this.hp, d); this.hp -= d; this.flash = 0.12;
       if (src && src.team && src.type) stat(src.team, src.type).castle += dealt;
       if (!B.sim) floatText(this.x + this.dir * 20, GROUND - H * 1.7, '-' + d);
@@ -150,7 +150,7 @@ function resetBattle(o = {}) {
   //    deck / enemyDeck, enemyHp, aiK (ritmo de energía del rival), hero / heroP (null: castillo sin héroe)
   clearUnits(); paused = false; if (scene) scene.tweens.resumeAll();
   const demo = !!o.demo, auto = demo || !!o.sim, rh = () => ['aldric', 'lyra', 'gull'][Math.floor(Math.random() * 3)];
-  B = { demo, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
+  B = { demo, idle: !!o.idle, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
     hero: { type: o.hero || (demo ? rh() : myHero), state: 'throne', unit: null, skillT: 0 },
     heroP: { type: o.heroP === undefined ? rh() : o.heroP, state: 'throne', unit: null, skillT: 0 } };
   if (!B.heroP.type) B.heroP.state = 'none';
@@ -218,7 +218,7 @@ let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return 
 function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
-  L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
+  L.image('moneda', 'img/esc/moneda.png'); L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
   for (const e of ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna', 'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas']) L.image('emb_' + e, 'img/emb/' + e + '.png');
 }
 function makeCloud(sc) {
@@ -270,6 +270,12 @@ let zoomCss = 0.5, TXT_K = 1;
 function frameCamera() {
   if (!cam) return;
   const gm = window.__game, cw = gm.scale.width, ch = gm.scale.height, battle = !$('hud').hidden;
+  if (!$('menu').hidden) {   // menú: un tramo del camino, entre la barra de arriba y el botón de batalla, con las unidades más grandes
+    const t = $('hubtop').getBoundingClientRect().bottom + 40, bt = $('hubbot').getBoundingClientRect().top - 4, Y1 = GROUND + 110, Y0 = GROUND - H * 2.2;
+    const z = Math.min(cw / 860, Math.max(60, bt - t) * DPR / (Y1 - Y0), 0.7 * DPR);   // en pantallas grandes, sin pasarse de tamaño
+    cam.setZoom(z); cam.centerOn(W / 2, Y1 - (bt * DPR - ch / 2) / z);
+    zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss)); drawScenery(scene); return;
+  }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
   const X0 = 20, X1 = W - 20, Y0 = THRONE.y - 150, Y1 = GROUND + 120;   // de los tronos al borde del camino
   const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
@@ -308,7 +314,8 @@ function create() {
   loaded();
 }
 function battleStep(dt) {
-  if (B && !B.over && !paused) {
+  if (B && B.idle && !paused) idleStep(dt);   // la expedición del menú (hub.js)
+  else if (B && !B.over && !paused) {
     B.t += dt;
     const rate = EREGEN * (B.t >= DOUBLE_AT ? 2 : 1);   // a partir de los 2 minutos, energía doble
     if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; if (!B.auto) floatText(W / 2, GROUND - H * 2.4, '¡Energía doble!', '#d8b4ff'); }
@@ -355,15 +362,19 @@ __PRELOAD__
 }
 
 /* ---- pantallas: carga → menú (con una partida de la IA contra sí misma de fondo) → mazo → batalla → pausa / final ---- */
-const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over'];
+const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over', 'ejercito', 'taberna', 'arena', 'perfil'];
+const TABS = ['menu', 'mundo', 'ejercito', 'taberna', 'arena'];   // pantallas con la barra de pestañas abajo
 function show(id) {
   SCREENS.forEach(s => { $(s).hidden = s !== id; });
   const hud = id === null || id === 'pausa' || id === 'over', changed = $('hud').hidden === hud;
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
-  if (id === 'menu' || id === 'mundo' || id === 'reino' || id === 'deck') paintGold();
-  // en los mapas no se ve el campo: se detiene el bucle del juego para ahorrar batería
-  const gm = window.__game; if (gm && gm.loop) { if (id === 'mundo' || id === 'reino') gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
+  document.body.classList.toggle('nav', TABS.includes(id)); $('nav').hidden = !TABS.includes(id);
+  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  paintGold(); if (typeof paintHub === 'function') paintHub();
+  if (id === 'menu') requestAnimationFrame(frameCamera);
+  // en las pantallas opacas no se ve el campo: se detiene el bucle del juego para ahorrar batería
+  const gm = window.__game; if (gm && gm.loop) { if (['mundo', 'reino', 'ejercito', 'taberna', 'arena', 'perfil'].includes(id)) gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
 }
 function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
@@ -386,7 +397,6 @@ function fullscreen() {
   try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
 }
 $('tap').onclick = () => { clearInterval(tipTimer); fullscreen(); show('menu'); };
-$('m-practica').onclick = () => { location.href = 'practica.html'; };
 $('pause').onclick = () => { if (B && !B.over) setPaused(true); };
 $('resume').onclick = () => setPaused(false);
 $('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };

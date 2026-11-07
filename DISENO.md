@@ -112,6 +112,25 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
 - Nunca salen en jaulas ni en la taberna.
 - *Pendiente*: cómo se consiguen.
 
+## Estructura de la app
+
+- **Barra de pestañas** (abajo): Inicio, Campaña, Ejército, Taberna y Arena.
+- **Inicio**: arriba tu perfil (retrato de tu héroe, nivel y experiencia del reino, nombre), oro y diamantes.
+  En el centro, la **expedición**: tu mazo avanza por el camino y despacha enemigos de un golpe; acumula oro
+  y experiencia hasta 12 horas aunque no juegues, y se recoge en el cofre. Abajo, **¡Batalla!** (abre el
+  siguiente castillo de la campaña) y **Mazo**. A los lados: Diario, Misiones, Jaulas y Ofertas; Correo,
+  Clasificación y Práctica.
+- **Diario**: premio por entrar cada día, 7 días (el séptimo, el mejor). **Misiones diarias**: ganar 2 batallas,
+  sacar 25 cartas y recoger 2 veces; premio extra por completar las tres.
+- **Ejército**: Unidades (ficha con estadísticas y habilidad; las que faltan dicen dónde conseguirlas), Héroes
+  (pasiva, activa y elegir el de batalla) y Estandarte (color y emblema).
+- **Taberna del Multiverso**: 2 mercenarios cada 4 horas, se pagan con oro (común 200 … legendaria 3.200);
+  si ya lo tienes, guardas una copia de su carta.
+- **Arena**: duelos contra jugadores (próximamente) y batalla rápida contra la IA.
+- **Perfil**: nombre del reino, estadísticas y ajustes.
+- **Experiencia del reino**: por ganar batallas (más la primera vez que conquistas un castillo), por la
+  expedición y por las misiones.
+
 ## Plataforma y aspecto
 
 - **Móvil**, jugable en horizontal y en vertical.
