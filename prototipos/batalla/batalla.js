@@ -110,7 +110,7 @@ function towers(dt) {
     const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
     const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
-    const img = scene.add.image(sx, sy, team === 'blue' ? 'flecha_azul' : 'flecha_morada').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
+    const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
     arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
     s.towerT = TOWER.cd;
   }
@@ -122,7 +122,7 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(CASTLE_ART[team].key + st);
+      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team]));
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
@@ -158,6 +158,7 @@ function resetBattle(o = {}) {
     throneImgP.setVisible(!!B.heroP.type); if (B.heroP.type) setThrone(throneImgP, HEROES[B.heroP.type].throne);
   }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple', o.enemyHp || CASTLE_HP) };
+  if (!B.sim) applyColors(o.colors || battleColors(null));
   if (!auto) renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };

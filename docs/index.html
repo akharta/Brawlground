@@ -191,6 +191,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 /* ---- mapas (mundo y reino): una lámina vertical que se desliza ---- */
 .screen.maps { place-items: stretch; padding: 0; background: #10152a; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
 .mapbar { display: flex; align-items: center; gap: 10px; padding: calc(var(--st) + 8px) var(--sr) 8px var(--sl); background: var(--panel); border-bottom: 4px solid var(--outline); z-index: 2; }
+.mapbar .btn, .mapbar .oro { white-space: nowrap; flex: none; }
 .mapbar h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mapscroll { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sb); display: grid; align-content: center; }
 .mapcanvas { position: relative; width: min(100%, 560px); aspect-ratio: 2 / 3; margin: 0 auto; }
@@ -245,11 +246,29 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 #coach::after { content: ''; position: absolute; left: calc(var(--ax, 50%) - 9px); bottom: -12px; border: 9px solid transparent; border-top-color: var(--outline); border-bottom: 0; }
 #coach.down::after { bottom: auto; top: -12px; border: 9px solid transparent; border-bottom-color: var(--outline); border-top: 0; }
 @keyframes coachbob { 50% { transform: translateY(-4px); } }
+/* ---- estandarte y tributo ---- */
+.estandarte { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.estandarte img { width: 120px; height: auto; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.estandarte b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; margin-bottom: 6px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw { width: 34px; height: 34px; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 0; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); transform: translateY(-2px); }
+#m-campana { position: relative; }
+.badge { position: absolute; top: -10px; right: -8px; background: var(--gold); color: var(--outline); border: 3px solid var(--outline); border-radius: 999px; font-size: .85rem; padding: 0 8px; line-height: 1.4; animation: pulse 1.2s ease-in-out infinite; }
+.tribb { position: absolute; z-index: 3; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 4px; background: #fff8e1; color: var(--outline);
+  border: 3px solid var(--outline); border-radius: 999px; padding: 1px 9px 1px 3px; font-family: var(--font-display); font-size: .95rem; box-shadow: 0 3px 0 var(--outline); animation: tribbob 1.4s ease-in-out infinite; }
+@keyframes tribbob { 50% { transform: translate(-50%, calc(-100% - 5px)); } }
+.tribb i, .coinfly { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); display: inline-block; }
+.tribb.full { background: var(--gold); }
+.tribb::after { content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--outline); }
+.coinfly { position: fixed; z-index: 70; width: 22px; height: 22px; pointer-events: none; }
+.tribline, .tribnote { margin: 0; font-size: .85rem; color: var(--muted); }
+.tribnote b { color: var(--gold); }
 #toast { position: fixed; z-index: 60; left: 50%; bottom: calc(var(--sb) + 22px); transform: translateX(-50%); width: max-content; max-width: min(92vw, 420px);
   background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--outline); text-align: center; font-size: .92rem; }
 #toast.in { animation: toastin .25s ease-out; }
 @keyframes toastin { from { transform: translate(-50%, 16px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -269,7 +288,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   <span class="oro top"><i></i><b class="oro-n">0</b></span>
   <div class="stack">
     <img class="logo" src="img/logo.png" alt="Brawlground">
-    <button class="btn gold big" id="m-campana">Campaña</button>
+    <button class="btn gold big" id="m-campana">Campaña<span class="badge" id="m-badge" hidden></span></button>
     <button class="btn" id="m-rapida">Batalla rápida</button>
     <button class="btn" id="m-mazo">Mazo y héroe</button>
     <button class="btn" id="m-practica">Práctica</button>
@@ -280,6 +299,8 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 <section id="deck" class="screen" hidden>
   <div class="sheet">
     <div class="sheet-top"><button class="btn" id="deckback">← Volver</button><h2>Mazo y héroe</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span id="deckcount">0/8</span></div>
+    <h3>Tu estandarte <small>el color de tu reino: tus banderas, tus torres y los castillos que conquistes</small></h3>
+    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
     <h3>Héroe</h3>
     <div class="heroes" id="heroes"></div>
     <h3>Cartas <small id="decknote">Elige 8 cartas.</small></h3>
@@ -292,7 +313,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 </section>
 
 <section id="mundo" class="screen maps" hidden>
-  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><button class="btn gold small" id="mundo-all" hidden>Recaudar todo</button><span class="oro"><i></i><b class="oro-n">0</b></span></div>
   <div class="mapscroll" id="mundo-scroll"><div class="mapcanvas" id="mundo-map"></div></div>
 </section>
 
@@ -311,6 +332,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
     <div class="army" id="nv-army"></div>
     <h3>Botín</h3>
     <div class="prize" id="nv-prize"></div>
+    <p class="tribline" id="nv-trib"></p>
     <div class="acts"><button class="btn" id="nv-close">Volver</button><button class="btn" id="nv-deck">Mazo</button><button class="btn gold" id="nv-go">¡Atacar!</button></div>
   </div>
 </section>
@@ -355,7 +377,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 (() => {
 'use strict';
 const W = 2160, VW = 960, HGT = 540, GROUND = 410, H = 120;
-const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;
+const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
 const easeInOut = p => p < 0 ? 0 : p > 1 ? 1 : p * p * (3 - 2 * p);
@@ -3002,7 +3024,7 @@ function towers(dt) {
     const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
     const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
-    const img = scene.add.image(sx, sy, team === 'blue' ? 'flecha_azul' : 'flecha_morada').setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
+    const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
     arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
     s.towerT = TOWER.cd;
   }
@@ -3014,7 +3036,7 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(CASTLE_ART[team].key + st);
+      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team]));
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
@@ -3050,6 +3072,7 @@ function resetBattle(o = {}) {
     throneImgP.setVisible(!!B.heroP.type); if (B.heroP.type) setThrone(throneImgP, HEROES[B.heroP.type].throne);
   }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple', o.enemyHp || CASTLE_HP) };
+  if (!B.sim) applyColors(o.colors || battleColors(null));
   if (!auto) renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
@@ -3362,23 +3385,106 @@ const PRADERAS = [
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 90], biome: '#7fcf6a', home: true },
-  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', levels: PRADERAS },
-  { id: 'bosque', name: 'Reino del Bosque', pos: [70, 61], biome: '#3f8f55' },
-  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a' },
-  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7' },
-  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62' },
-  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a' },
+  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], levels: PRADERAS },
+  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'] },
+  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'] },
+  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'] },
+  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'] },
+  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'] },
 ];
 const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.jpg' (herramientas/campana/preparar.py)
-// iconos de castillo del mapa: mientras no lleguen los dibujos, se usan los castillos de batalla
-const ICON = { vasallo: 'img/esc/castillo_morado.png', vasalloTuyo: 'img/esc/castillo_azul.png', real: 'img/esc/castillo_morado.png', realTuyo: 'img/esc/castillo_azul.png' };
+// iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
+// Mientras no lleguen los dibujos se usan los castillos de batalla; tu castillo de origen es el azul.
+const ICON = { vasallo: 'castillo_morado', real: 'castillo_morado', casa: 'castillo_azul' };
 // posiciones de los 10 castillos en el mapa del reino (% ancho, % alto), de abajo arriba por el camino
 const LV_POS = [[50, 88.5], [24, 83.5], [47, 75], [74, 67], [53, 58.5], [25, 50.5], [44, 42], [72, 34], [55, 25.5], [50, 10]];
 const KD = id => KINGDOMS.find(k => k.id === id);
 
+/* ---- colores: el jugador elige el de su reino; cada reino rival tiene el suyo (y otro de reserva si coinciden) ---- */
+const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
+  rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
+// tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
+const SRC_HUE = { castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
+function recolorImage(img, [h0, h1], hex) {
+  // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
+  const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+  const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
+  const d = cx.getImageData(0, 0, cv.width, cv.height), p = d.data, idx = [], vals = [];
+  for (let i = 0; i < p.length; i += 4) {
+    if (p[i + 3] === 0) continue;
+    const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
+    if ((mx - mn) / (mx + 1e-9) <= 0.35 || mx <= 0.2) continue;
+    const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
+    if (h >= h0 && h <= h1) { idx.push(i); vals.push(mx); }
+  }
+  const ref = vals.slice().sort((a, b) => a - b)[Math.floor(vals.length * 0.75)] || 1;
+  const t = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
+  idx.forEach((i, n) => {
+    const l = vals[n] / ref;
+    for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * l + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * l) : t[k] * l);
+  });
+  cx.putImageData(d, 0, 0); return cv;
+}
+function colorTex(base, color) {
+  // textura de un castillo o una flecha con las banderas del color pedido (se crea una vez y se reutiliza)
+  const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || SRC_HUE[fam][2] === color || !scene) return base;
+  const key = base + '@' + color; if (scene.textures.exists(key)) return key;
+  scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1])); return key;
+}
+const colorURLs = {};
+function colorURL(base, color) {
+  const key = colorTex(base, color); if (key === base) return 'img/esc/' + base + '.png';
+  return colorURLs[key] || (colorURLs[key] = scene.textures.get(key).getSourceImage().toDataURL());
+}
+let TEAM_COLOR = { blue: 'azul', purple: 'morado' };
+const myColor = () => COLORES[perfil.color] ? perfil.color : 'azul';
+function rivalColor(kid) { const k = kid && KD(kid), [c1, c2] = k && k.color ? k.color : ['morado', 'rojo']; return c1 === myColor() ? c2 : c1; }
+function battleColors(run) { return { blue: myColor(), purple: rivalColor(run && run.kind === 'nivel' ? run.k : null) }; }
+function applyColors(cols) {
+  TEAM_COLOR = cols;
+  // en las barras de vida, el negro se aclara un poco para que se vea sobre el fondo oscuro
+  const ui = k => k === 'negro' ? '#6b6f80' : COLORES[k][1];
+  BLUE = Phaser.Display.Color.HexStringToColor(ui(cols.blue)).color; PURPLE = Phaser.Display.Color.HexStringToColor(ui(cols.purple)).color;
+  document.documentElement.style.setProperty('--blue', ui(cols.blue)); document.documentElement.style.setProperty('--purple', ui(cols.purple));
+  for (const t of ['blue', 'purple']) if (castleImg[t]) { castleImg[t].state = undefined; }   // el castillo se vuelve a pintar con su color
+}
+
+/* ---- tributo: cada castillo conquistado te paga oro por hora (hasta 12 horas guardadas); más estrellas, más tributo ---- */
+const TRIB = { cap: 12, starK: [0, 1, 1.25, 1.5] };
+const tribBase = (kid, i) => KD(kid).levels[i].royal ? 40 : 10 + i;
+const tribRate = (kid, i) => Math.round(tribBase(kid, i) * TRIB.starK[starsOf(kid)[i]]);
+const tribOf = kid => perfil.trib[kid] || (perfil.trib[kid] = Array(10).fill(0));
+function tribPending(kid, i) {
+  if (!(starsOf(kid)[i] > 0)) return 0;
+  const t0 = tribOf(kid)[i] || (tribOf(kid)[i] = Date.now()), h = Math.min(TRIB.cap, Math.max(0, (Date.now() - t0) / 3.6e6));
+  return Math.floor(h * tribRate(kid, i));
+}
+const tribFull = (kid, i) => starsOf(kid)[i] > 0 && Date.now() - (tribOf(kid)[i] || Date.now()) >= TRIB.cap * 3.6e6;
+function tribKingdom(kid) { const k = KD(kid); return k.levels ? k.levels.reduce((s, _, i) => s + tribPending(kid, i), 0) : 0; }
+function collect(kid, list, fromEl) {
+  let got = 0; const now = Date.now();
+  for (const i of list) { const p = tribPending(kid, i); if (p > 0) { got += p; tribOf(kid)[i] = now; } }
+  if (!got) return 0;
+  perfil.gold += got; savePerfil(); coinFly(fromEl, got);
+  return got;
+}
+function coinFly(fromEl, amount) {
+  // monedas que vuelan hasta tu oro
+  const to = [...document.querySelectorAll('.oro')].find(e => e.offsetParent), a = fromEl && fromEl.getBoundingClientRect(), b = to && to.getBoundingClientRect();
+  if (!a || !b) return paintGold();
+  const n = Math.min(10, 3 + Math.floor(amount / 40));
+  for (let k = 0; k < n; k++) {
+    const c = document.createElement('i'); c.className = 'coinfly'; document.body.appendChild(c);
+    c.style.left = (a.left + a.width / 2 - 11 + (Math.random() - 0.5) * 30) + 'px'; c.style.top = (a.top + a.height / 2 - 11 + (Math.random() - 0.5) * 20) + 'px';
+    c.animate([{ transform: 'translate(0,0) scale(1)' }, { transform: 'translate(' + (b.left + 12 - a.left - a.width / 2) + 'px,' + (b.top + 10 - a.top - a.height / 2) + 'px) scale(.6)' }],
+      { duration: 650 + k * 60, delay: k * 50, easing: 'cubic-bezier(.5,-0.3,.7,1)', fill: 'forwards' }).onfinish = () => c.remove();
+  }
+  setTimeout(() => { paintGold(); if (to) to.animate([{ transform: 'scale(1.25)' }, { transform: 'none' }], { duration: 250 }); }, 650 + n * 60);
+}
+
 /* ---- perfil del jugador ---- */
 const PERFIL_KEY = 'bg-perfil';
-function newPerfil() { return { v: 1, owned: STARTERS.slice(), heroes: ['aldric'], gold: 0, stars: {}, all: false, pending: null }; }
+function newPerfil() { return { v: 1, owned: STARTERS.slice(), heroes: ['aldric'], gold: 0, stars: {}, trib: {}, color: 'azul', all: false, pending: null }; }
 let perfil = (() => { try { const p = JSON.parse(localStorage.getItem(PERFIL_KEY) || 'null'); if (p && p.v === 1 && Array.isArray(p.owned)) return Object.assign(newPerfil(), p); } catch (e) {} return newPerfil(); })();
 function savePerfil() { try { localStorage.setItem(PERFIL_KEY, JSON.stringify(perfil)); } catch (e) {} }
 const owned = () => perfil.all ? ALL.slice() : ALL.filter(k => perfil.owned.includes(k));
@@ -3404,7 +3510,11 @@ function playerDeck() {
   return d.slice(0, 8);
 }
 const playerHero = () => heroesOwned().includes(myHero) ? myHero : 'aldric';
-function paintGold() { document.querySelectorAll('.oro-n').forEach(e => { e.textContent = perfil.gold; }); }
+function paintGold() {
+  document.querySelectorAll('.oro-n').forEach(e => { e.textContent = perfil.gold; });
+  const all = KINGDOMS.reduce((s, k) => s + tribKingdom(k.id), 0), bd = $('m-badge');
+  if (bd) { bd.hidden = all < 1; bd.textContent = '+' + all; }
+}
 let toastT = 0;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; t.classList.remove('in'); void t.offsetWidth; t.classList.add('in'); clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600); }
 
@@ -3421,7 +3531,7 @@ function startRun(run) {
   RUN = run;
   const begin = () => {
     show(null); timeScale = 1; $('speed').textContent = 'x1'; $('speed').setAttribute('aria-pressed', 'false');
-    const base = { run, deck: playerDeck(), hero: playerHero() };
+    const base = { run, deck: playerDeck(), hero: playerHero(), colors: battleColors(run) };
     resetBattle(run.kind === 'nivel' ? Object.assign(base, levelOpts(run.k, run.i)) : Object.assign(base, { enemyDeck: aiDeck(owned()) }));
     coachStart();
   };
@@ -3444,6 +3554,7 @@ function battleResult(win) {
       res.first = st[run.i] === 0;
       res.gold = res.first ? lv.gold : Math.round(lv.gold / 4);
       st[run.i] = Math.max(st[run.i], res.stars);
+      if (res.first) tribOf(run.k)[run.i] = Date.now();   // desde hoy, este castillo te paga tributo
       if (res.first && lv.prize && !perfil.owned.includes(lv.prize)) { perfil.owned.push(lv.prize); res.prize = lv.prize; }
       if (res.first && lv.royal) {
         res.conquered = true; perfil.pending = run.k;
@@ -3467,6 +3578,7 @@ function showResult(res) {
   let pr = '';
   if (res.gold) pr += '<div class="loot"><span class="oro"><i></i><b>+' + res.gold + '</b></span></div>';
   if (res.prize) pr += '<div class="freed">' + cardHtml(res.prize, 'reveal') + '<p><b>¡Has liberado a ' + NAMES[res.prize] + '!</b><br>Estaba preso en las mazmorras del castillo. Ya puedes llevarlo en tu mazo.</p></div>';
+  if (res.first) pr += '<p class="tribnote">Este castillo ya es tuyo: te pagará <b>' + tribRate(run.k, run.i) + ' de oro por hora</b>. Recógelo en el mapa del reino.</p>';
   if (res.hero) pr += '<div class="freed"><img class="hport reveal" src="img/' + HEROES[res.hero].portrait + '.png" alt=""><p><b>' + NAMES_H[res.hero] + ' se une a tu ejército.</b><br>La reina de las praderas jura lealtad a tu corona. Ya puedes elegirla como héroe.</p></div>';
   $('over-prize').innerHTML = pr;
   const a = $('over-a'), b = $('over-b');
@@ -3507,14 +3619,17 @@ function openWorld() {
     lines += '<path class="route' + (next === 'done' ? ' done' : ' next') + (fresh ? ' fresh' : '') + '" d="' + d + '" pathLength="100"/>';
   }
   const nodes = KINGDOMS.map((k, i) => {
-    const st = states[i], icon = st === 'home' || st === 'done' ? ICON.realTuyo : ICON.real;
+    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor()) : colorURL(ICON.real, st === 'done' ? myColor() : rivalColor(k.id));
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
     return '<button class="knode ' + st + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
       + '<span class="kico"><img src="' + icon + '" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
       + '<span class="klbl"><b>' + k.name + '</b><small>' + sub + '</small></span></button>';
   }).join('');
-  m.innerHTML = worldArt() + '<svg class="routes" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">' + lines + '</svg>' + nodes;
+  const bubbles = KINGDOMS.map(k => k.levels ? '<button class="tribb" data-k="' + k.id + '" style="left:' + k.pos[0] + '%;top:' + (k.pos[1] - 6.5) + '%" hidden></button>' : '').join('');
+  m.innerHTML = worldArt() + '<svg class="routes" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">' + lines + '</svg>' + nodes + bubbles;
   m.querySelectorAll('.knode').forEach(b => { b.onclick = () => tapKingdom(+b.dataset.i); });
+  m.querySelectorAll('.tribb').forEach(b => { b.onclick = () => { const k = KD(b.dataset.k); collect(k.id, k.levels.map((_, i) => i), b); tribTick(); }; });
+  tribTick();
   show('mundo');
   // céntralo en el reino que toca
   const target = KINGDOMS.findIndex((k, i) => states[i] === 'open'), sc = $('mundo-scroll');
@@ -3547,22 +3662,36 @@ function kingdomArt(kid) {
     + '<path d="' + d + '" fill="none" stroke="#1e2235" stroke-width="7" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="#e8c48a" stroke-width="5.4" stroke-linecap="round"/>'
     + P.map(([x, y], i) => '<ellipse cx="' + x + '" cy="' + (y + 2) + '" rx="' + (i === 9 ? 13 : 9) + '" ry="' + (i === 9 ? 5 : 3.6) + '" fill="#e8c48a" stroke="#1e2235" stroke-width=".6"/>').join('') + '</svg>';
 }
+let CUR_KID = null;
 function openKingdom(kid) {
+  CUR_KID = kid;
   const kd = KD(kid), st = starsOf(kid), m = $('reino-map');
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
-    const open = levelOpen(kid, i), done = st[i] > 0, icon = lv.royal ? (done ? ICON.realTuyo : ICON.real) : (done ? ICON.vasalloTuyo : ICON.vasallo);
+    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid));
     return '<button class="lnode' + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
       + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
-      + '<span class="lnum">' + (i + 1) + '</span>' + (done ? starsHtml(st[i]) : '') + '</button>';
+      + '<span class="lnum">' + (i + 1) + '</span>' + (done ? starsHtml(st[i]) : '') + '</button>'
+      + (done ? '<button class="tribb" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + (LV_POS[i][1] - (lv.royal ? 8 : 6)) + '%" hidden></button>' : '');
   }).join('');
   m.querySelectorAll('.lnode').forEach(b => { b.onclick = () => { const i = +b.dataset.i; if (levelOpen(kid, i)) openLevel(kid, i); else toast('Conquista antes el castillo ' + i + '.'); }; });
+  m.querySelectorAll('.tribb').forEach(b => { b.onclick = () => { collect(kid, [+b.dataset.i], b); tribTick(); }; });
+  tribTick();
   show('reino');
   const sc = $('reino-scroll');
   requestAnimationFrame(() => { const n = m.querySelector('.lnode[data-i="' + Math.max(0, cur) + '"]'); if (n) sc.scrollTop = n.offsetTop - sc.clientHeight / 2; });
 }
+function tribTick() {
+  document.querySelectorAll('#mundo-map .tribb').forEach(b => { const n = tribKingdom(b.dataset.k), full = KD(b.dataset.k).levels.some((_, i) => tribFull(b.dataset.k, i)); b.hidden = n < 1; b.classList.toggle('full', full); b.innerHTML = '<i></i>' + n; b.setAttribute('aria-label', 'Recoger ' + n + ' de oro de tributo'); });
+  const kid = CUR_KID && KD(CUR_KID);
+  if (kid) document.querySelectorAll('#reino-map .tribb').forEach(b => { const i = +b.dataset.i, n = tribPending(kid.id, i); b.hidden = n < 1; b.classList.toggle('full', tribFull(kid.id, i)); b.innerHTML = '<i></i>' + n; b.setAttribute('aria-label', 'Recoger ' + n + ' de oro de tributo'); });
+  const all = KINGDOMS.reduce((s, k) => s + tribKingdom(k.id), 0); $('mundo-all').hidden = all < 1; $('mundo-all').innerHTML = 'Recaudar <b>' + all + '</b>';
+}
+setInterval(() => { if (!$('mundo').hidden || !$('reino').hidden) tribTick(); }, 4000);
+$('mundo-all').onclick = e => { let got = 0; KINGDOMS.forEach(k => { if (k.levels) got += collect(k.id, k.levels.map((_, i) => i), null); }); if (got) coinFly(e.currentTarget, got); tribTick(); };
+
 let LV = null;
 function openLevel(kid, i) {
   const kd = KD(kid), lv = kd.levels[i], st = starsOf(kid)[i];
@@ -3576,6 +3705,9 @@ function openLevel(kid, i) {
   if (lv.prize) pr += perfil.owned.includes(lv.prize) && !perfil.all ? '<span class="pz">Prisionero ya liberado: ' + LABEL[lv.prize] + '</span>' : cardHtml(lv.prize, 'shadow') + '<span class="pz">Un prisionero espera en sus mazmorras</span>';
   if (lv.hero) pr += '<img class="hport shadow" src="img/' + HEROES[lv.hero].portrait + '.png" alt=""><span class="pz">Si la vences, se une a ti</span>';
   $('nv-prize').innerHTML = pr;
+  const rate = tribRate(kid, i);
+  $('nv-trib').textContent = st ? 'Ya es tuyo: te paga ' + rate + ' de oro por hora' + (st < 3 ? ' (con 3 estrellas, ' + Math.round(tribBase(kid, i) * TRIB.starK[3]) + ').' : ', el máximo.') + ' Guarda hasta 12 horas.'
+    : 'Cuando lo conquistes te pagará ' + tribBase(kid, i) + ' de oro por hora, y más con más estrellas.';
   show('nivel');
 }
 
@@ -3599,10 +3731,16 @@ function openDeck(from = 'menu') {
   const hs = heroesOwned();
   $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => { const has = hs.includes(k); return '<button type="button" class="hpick' + (has ? '' : ' lock') + '" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + (has ? h.skillName : 'Conquista el Reino de las Praderas') + '</span></span></button>'; }).join('');
   document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { if (!hs.includes(b.dataset.h)) return toast('Vence a Lyra en el Castillo Real de las Praderas para que se una a ti.'); myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
+  paintColors();
   $('deckgo').textContent = from === 'nivel' ? '¡Atacar!' : '¡A luchar!';
   $('deckall').setAttribute('aria-pressed', perfil.all); $('deckall').textContent = perfil.all ? 'Pruebas: todo desbloqueado' : 'Pruebas: desbloquear todo';
   $('deckwipe').dataset.sure = ''; $('deckwipe').textContent = 'Borrar progreso';
   syncDeck(); show('deck');
+}
+function paintColors() {
+  $('colores').innerHTML = Object.entries(COLORES).map(([k, [n, hex]]) => '<button type="button" class="sw" data-c="' + k + '" style="--c:' + hex + '" aria-label="' + n + '" aria-pressed="' + (k === myColor()) + '"></button>').join('');
+  $('colorprev').src = colorURL(ICON.casa, myColor()); $('colorname').textContent = COLORES[myColor()][0];
+  document.querySelectorAll('#colores .sw').forEach(b => { b.onclick = () => { perfil.color = b.dataset.c; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
 }
 function syncDeck() {
   document.querySelectorAll('.dk:not(.mini)').forEach(b => b.setAttribute('aria-pressed', picking.includes(b.dataset.k)));

@@ -20,6 +20,8 @@ def rep(a, b, n=1):
 rep("const W = 960, HGT = 540", "const W = 2160, VW = 960, HGT = 540")
 # en batalla las unidades se reparten más a lo ancho del camino
 rep("Math.round(rand(-18, 16))", "Math.round(rand(-34, 30))")
+# los colores de cada bando cambian según el color que elige el jugador y el del reino rival
+rep("const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;", "const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;")
 # el castillo rival también es un objetivo
 rep("const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn');",
     "const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn').concat(enemyCastle(u));")

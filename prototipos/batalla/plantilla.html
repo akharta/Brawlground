@@ -191,6 +191,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 /* ---- mapas (mundo y reino): una lámina vertical que se desliza ---- */
 .screen.maps { place-items: stretch; padding: 0; background: #10152a; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
 .mapbar { display: flex; align-items: center; gap: 10px; padding: calc(var(--st) + 8px) var(--sr) 8px var(--sl); background: var(--panel); border-bottom: 4px solid var(--outline); z-index: 2; }
+.mapbar .btn, .mapbar .oro { white-space: nowrap; flex: none; }
 .mapbar h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mapscroll { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sb); display: grid; align-content: center; }
 .mapcanvas { position: relative; width: min(100%, 560px); aspect-ratio: 2 / 3; margin: 0 auto; }
@@ -245,11 +246,29 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 #coach::after { content: ''; position: absolute; left: calc(var(--ax, 50%) - 9px); bottom: -12px; border: 9px solid transparent; border-top-color: var(--outline); border-bottom: 0; }
 #coach.down::after { bottom: auto; top: -12px; border: 9px solid transparent; border-bottom-color: var(--outline); border-top: 0; }
 @keyframes coachbob { 50% { transform: translateY(-4px); } }
+/* ---- estandarte y tributo ---- */
+.estandarte { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.estandarte img { width: 120px; height: auto; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.estandarte b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; margin-bottom: 6px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw { width: 34px; height: 34px; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 0; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); transform: translateY(-2px); }
+#m-campana { position: relative; }
+.badge { position: absolute; top: -10px; right: -8px; background: var(--gold); color: var(--outline); border: 3px solid var(--outline); border-radius: 999px; font-size: .85rem; padding: 0 8px; line-height: 1.4; animation: pulse 1.2s ease-in-out infinite; }
+.tribb { position: absolute; z-index: 3; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 4px; background: #fff8e1; color: var(--outline);
+  border: 3px solid var(--outline); border-radius: 999px; padding: 1px 9px 1px 3px; font-family: var(--font-display); font-size: .95rem; box-shadow: 0 3px 0 var(--outline); animation: tribbob 1.4s ease-in-out infinite; }
+@keyframes tribbob { 50% { transform: translate(-50%, calc(-100% - 5px)); } }
+.tribb i, .coinfly { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); display: inline-block; }
+.tribb.full { background: var(--gold); }
+.tribb::after { content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--outline); }
+.coinfly { position: fixed; z-index: 70; width: 22px; height: 22px; pointer-events: none; }
+.tribline, .tribnote { margin: 0; font-size: .85rem; color: var(--muted); }
+.tribnote b { color: var(--gold); }
 #toast { position: fixed; z-index: 60; left: 50%; bottom: calc(var(--sb) + 22px); transform: translateX(-50%); width: max-content; max-width: min(92vw, 420px);
   background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--outline); text-align: center; font-size: .92rem; }
 #toast.in { animation: toastin .25s ease-out; }
 @keyframes toastin { from { transform: translate(-50%, 16px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -269,7 +288,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   <span class="oro top"><i></i><b class="oro-n">0</b></span>
   <div class="stack">
     <img class="logo" src="img/logo.png" alt="Brawlground">
-    <button class="btn gold big" id="m-campana">Campaña</button>
+    <button class="btn gold big" id="m-campana">Campaña<span class="badge" id="m-badge" hidden></span></button>
     <button class="btn" id="m-rapida">Batalla rápida</button>
     <button class="btn" id="m-mazo">Mazo y héroe</button>
     <button class="btn" id="m-practica">Práctica</button>
@@ -280,6 +299,8 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 <section id="deck" class="screen" hidden>
   <div class="sheet">
     <div class="sheet-top"><button class="btn" id="deckback">← Volver</button><h2>Mazo y héroe</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span id="deckcount">0/8</span></div>
+    <h3>Tu estandarte <small>el color de tu reino: tus banderas, tus torres y los castillos que conquistes</small></h3>
+    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
     <h3>Héroe</h3>
     <div class="heroes" id="heroes"></div>
     <h3>Cartas <small id="decknote">Elige 8 cartas.</small></h3>
@@ -292,7 +313,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 </section>
 
 <section id="mundo" class="screen maps" hidden>
-  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><button class="btn gold small" id="mundo-all" hidden>Recaudar todo</button><span class="oro"><i></i><b class="oro-n">0</b></span></div>
   <div class="mapscroll" id="mundo-scroll"><div class="mapcanvas" id="mundo-map"></div></div>
 </section>
 
@@ -311,6 +332,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
     <div class="army" id="nv-army"></div>
     <h3>Botín</h3>
     <div class="prize" id="nv-prize"></div>
+    <p class="tribline" id="nv-trib"></p>
     <div class="acts"><button class="btn" id="nv-close">Volver</button><button class="btn" id="nv-deck">Mazo</button><button class="btn gold" id="nv-go">¡Atacar!</button></div>
   </div>
 </section>
