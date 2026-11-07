@@ -26,24 +26,27 @@ const $ = id => document.getElementById(id);
 
 // mazo del jugador: se recuerda en este navegador
 let myDeck = (() => { try { const d = JSON.parse(localStorage.getItem('bg-deck') || 'null'); if (Array.isArray(d) && d.length === 8 && d.every(k => COST[k])) return d; } catch (e) {} return ['legionario', 'arquera', 'lobo', 'tercio', 'valkiria', 'ninja', 'samurai', 'pistolero']; })();
-function aiDeck() {
-  // la IA arma un mazo variado: dos cartas baratas, cuatro medias y dos caras
-  const by = (lo, hi) => shuffle(ALL.filter(k => COST[k] >= lo && COST[k] <= hi));
-  const d = [...by(1, 2).slice(0, 2), ...by(3, 4).slice(0, 4), ...by(5, 7).slice(0, 2)];
-  return d.length === 8 ? d : shuffle(ALL.slice()).slice(0, 8);
+function aiDeck(pool = ALL) {
+  // la IA arma un mazo variado con las cartas de pool: dos baratas, cuatro medias y dos caras
+  if (pool.length <= 8) return shuffle(pool.slice());
+  const by = (lo, hi) => shuffle(pool.filter(k => COST[k] >= lo && COST[k] <= hi));
+  const d = [...new Set([...by(1, 2).slice(0, 2), ...by(3, 4).slice(0, 4), ...by(5, 7).slice(0, 2)])];
+  for (const k of shuffle(pool.slice())) if (d.length < 8 && !d.includes(k)) d.push(k);
+  return d;
 }
-function newSide(deck) { const q = shuffle(deck.slice()); return { energy: 5, hand: q.splice(0, 4), queue: q, kills: 0, towerT: 1, deck: deck.slice() }; }
+// un mazo puede tener menos de 8 cartas (al empezar la campaña solo hay 3): la mano enseña las que haya
+function newSide(deck, regenK = 1) { const q = shuffle(deck.slice()); return { energy: 5, hand: q.splice(0, 4), queue: q, kills: 0, towerT: 1, deck: deck.slice(), regenK }; }
 
-function makeCastle(team) {
+function makeCastle(team, hp = CASTLE_HP) {
   return { isCastle: true, type: 'castle', team, x: team === 'blue' ? CASTLE_FRONT - H * 0.2 : W - CASTLE_FRONT + H * 0.2, lane: 0,   // como objetivo, un poco detrás del frente: todos los de cuerpo a cuerpo llegan a golpearlo desde FIELD_L
      get gy() { return GROUND; }, alive: true, state: 'idle',
-    hp: CASTLE_HP, max: CASTLE_HP, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0, bigK: 1,
+    hp, max: hp, cfg: { ranged: false, h: 1.8 }, dir: team === 'blue' ? 1 : -1, flash: 0, bigK: 1,
     knock() { return false; }, shove() {}, healBy() {},
     damage(d, src) {
       if (!this.alive || !B || B.over) return;
       const dealt = Math.min(this.hp, d); this.hp -= d; this.flash = 0.12;
       if (src && src.team && src.type) stat(src.team, src.type).castle += dealt;
-      floatText(this.x + this.dir * 20, GROUND - H * 1.7, '-' + d);
+      if (!B.sim) floatText(this.x + this.dir * 20, GROUND - H * 1.7, '-' + d);
       burst(this.x + this.dir * 40, GROUND - H * 0.8, 0xbfc4d4, 5, 120);
       if (this.hp <= 0) { this.hp = 0; this.alive = false; endGame(this.team === 'purple'); }
     } };
@@ -80,10 +83,10 @@ function play(team, idx) {
   const side = B[team], type = side.hand[idx];
   if (!type || B.over || side.energy < COST[type]) return false;
   side.energy -= COST[type];
-  side.hand[idx] = side.queue.shift(); side.queue.push(type);
+  side.queue.push(type); side.hand[idx] = side.queue.shift();
   units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
   stat(team, type).played++;
-  if (team === 'blue' && !B.demo) renderHand();
+  if (team === 'blue' && !B.auto) renderHand();
   return true;
 }
 function aiLogic(dt, team = 'purple') {
@@ -132,21 +135,30 @@ function statsTable(team, title) {
   return `<div><h3>${title}</h3><table><thead><tr><th>Carta</th><th>Jugadas</th><th>Daño</th><th>Al castillo</th><th>Bajas</th><th>Caídas (1.ª)</th><th>Cura</th></tr></thead><tbody>${tr || '<tr><td colspan="7">Sin cartas jugadas</td></tr>'}</tbody></table></div>`;
 }
 function endGame(win) {
-  B.over = true;
+  B.over = true; B.win = win;
+  if (B.sim) return;
   if (B.demo) { setTimeout(() => { if (B && B.demo) startDemo(); }, 2500); return; }   // la partida del menú vuelve a empezar sola
-  $('over-title').textContent = win ? '¡Victoria!' : 'Derrota';
-  $('over-text').textContent = (win ? 'Has derribado el castillo rival' : 'Han derribado tu castillo') + ' en ' + Math.round(B.t) + ' s. Enemigos abatidos: ' + B.blue.kills + '.';
   $('stats').innerHTML = statsTable('blue', 'Tu bando') + statsTable('purple', 'Rival');
-  window.__lastStats = JSON.parse(JSON.stringify({ win, t: B.t, stats: B.stats, decks: { blue: B.blue.deck, purple: B.purple.deck } }));
+  window.__lastStats = JSON.parse(JSON.stringify({ win, t: B.t, stats: B.stats, decks: { blue: B.blue.deck, purple: B.purple.deck }, run: B.run }));
   if (db && !B.saved) { B.saved = true; db.collection('partidas').add({ ...window.__lastStats, t: Math.round(B.t), fecha: new Date().toISOString(), castillos: { azul: Math.max(0, Math.round(castles.blue.hp)), morado: Math.max(0, Math.round(castles.purple.hp)) } }).catch(() => {}); }
-  setTimeout(() => { if (B && B.over && !B.demo) show('over'); }, 900);
+  const res = battleResult(win);   // recompensas y progreso (campana.js)
+  setTimeout(() => { if (B && B.over && !B.demo) showResult(res); }, 900);
 }
-function resetBattle(demo = false) {
+function resetBattle(o = {}) {
+  // o: demo (la IA juega por los dos, de fondo en el menú), sim (simulación sin pantalla), run (nivel de campaña o batalla rápida),
+  //    deck / enemyDeck, enemyHp, aiK (ritmo de energía del rival), hero / heroP (null: castillo sin héroe)
   clearUnits(); paused = false; if (scene) scene.tweens.resumeAll();
-  B = { demo, blue: newSide(demo ? aiDeck() : myDeck), purple: newSide(aiDeck()), over: false, t: 0, stats: { blue: {}, purple: {} }, hero: { type: demo ? (Math.random() < 0.5 ? 'aldric' : 'lyra') : myHero, state: 'throne', unit: null, skillT: 0 }, heroP: { type: Math.random() < 0.5 ? 'aldric' : 'lyra', state: 'throne', unit: null, skillT: 0 } };
-  if (throneImg) { setThrone(throneImg, HEROES[B.hero.type].throne); setThrone(throneImgP, HEROES[B.heroP.type].throne); }
-  castles = { blue: makeCastle('blue'), purple: makeCastle('purple') };
-  if (!demo) renderHand();
+  const demo = !!o.demo, auto = demo || !!o.sim, rh = () => Math.random() < 0.5 ? 'aldric' : 'lyra';
+  B = { demo, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
+    hero: { type: o.hero || (demo ? rh() : myHero), state: 'throne', unit: null, skillT: 0 },
+    heroP: { type: o.heroP === undefined ? rh() : o.heroP, state: 'throne', unit: null, skillT: 0 } };
+  if (!B.heroP.type) B.heroP.state = 'none';
+  if (throneImg) {
+    setThrone(throneImg, HEROES[B.hero.type].throne);
+    throneImgP.setVisible(!!B.heroP.type); if (B.heroP.type) setThrone(throneImgP, HEROES[B.heroP.type].throne);
+  }
+  castles = { blue: makeCastle('blue'), purple: makeCastle('purple', o.enemyHp || CASTLE_HP) };
+  if (!auto) renderHand();
 }
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
@@ -154,7 +166,7 @@ const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blu
 function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
 function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
-  const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || B.over) return false;
+  const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || !hr.type || B.over) return false;
   if (hr.state === 'throne' && B[team].kills >= HERO_GOAL) {
     const blue = team === 'blue', x = blue ? FIELD_L + H * 0.3 : FIELD_R - H * 0.3, tx = blue ? THRONE.x : W - THRONE.x;
     const u = new Unit(scene, hr.type, team, x); units.push(u);
@@ -169,7 +181,7 @@ function heroAct(team) {
 function heroClick() { heroAct('blue'); }
 function heroAI(team = 'purple') {
   // la IA: salta en cuanto puede y usa la habilidad cuando le compensa
-  const hr = team === 'blue' ? B.hero : B.heroP;
+  const hr = team === 'blue' ? B.hero : B.heroP; if (!hr.type) return;
   if (hr.state === 'throne') heroAct(team);
   else if (hr.state === 'field' && hr.skillT <= 0) {
     const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
@@ -262,6 +274,7 @@ function frameCamera() {
 }
 // los números de daño y los avisos se agrandan cuando la cámara se aleja (móvil en vertical)
 floatText = function (x, y, txt, color) {
+  if (B && B.sim) return;
   const k = TXT_K, t = scene.add.text(x, y, txt, { fontFamily: 'Lilita One, Trebuchet MS, sans-serif', fontSize: Math.round(30 * k) + 'px', color: color || '#ffffff', stroke: '#1e2235', strokeThickness: Math.round(7 * k) }).setOrigin(0.5).setDepth(1000);
   scene.tweens.add({ targets: t, y: y - 46 * k, alpha: { from: 1, to: 0 }, scale: { from: 1.25, to: 0.9 }, duration: 750 / timeScale, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
 };
@@ -289,18 +302,16 @@ function create() {
   frameCamera(); startDemo();
   loaded();
 }
-function update(_, deltaMs) {
-  const dt = paused ? 0 : Math.min(0.05, deltaMs / 1000) * timeScale;
-  for (const c of clouds) { c.img.x += c.v * deltaMs / 1000; if (c.img.x > c.x1) c.img.x = c.x0; }
+function battleStep(dt) {
   if (B && !B.over && !paused) {
     B.t += dt;
     const rate = EREGEN * (B.t >= DOUBLE_AT ? 2 : 1);   // a partir de los 2 minutos, energía doble
-    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; if (!B.demo) floatText(W / 2, GROUND - H * 2.4, '¡Energía doble!', '#d8b4ff'); }
-    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt);
-    aiLogic(dt, 'purple'); if (B.demo) aiLogic(dt, 'blue');
+    if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; if (!B.auto) floatText(W / 2, GROUND - H * 2.4, '¡Energía doble!', '#d8b4ff'); }
+    for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt * B[team].regenK);
+    aiLogic(dt, 'purple'); if (B.auto) aiLogic(dt, 'blue');
     towers(dt); fightLogic(dt);
     for (const hr of [B.hero, B.heroP]) if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
-    heroAI('purple'); if (B.demo) heroAI('blue');
+    heroAI('purple'); if (B.auto) heroAI('blue');
   }
   units.forEach(u => { if (u.alive && u.root.visible) u.update(B && B.over ? 0 : dt); });
   // nadie pisa un castillo: todos se quedan en el tramo entre las dos murallas (embestidas, saltos y empujones incluidos)
@@ -309,8 +320,13 @@ function update(_, deltaMs) {
     if (u.x < FIELD_L) u.x = FIELD_L; else if (u.x > FIELD_R) u.x = FIELD_R;
   }
   updateArrows(dt);
-  fxG.clear();
   fx = fx.filter(p => (p.life -= dt) > 0);
+}
+function update(_, deltaMs) {
+  const dt = paused ? 0 : Math.min(0.05, deltaMs / 1000) * timeScale;
+  for (const c of clouds) { c.img.x += c.v * deltaMs / 1000; if (c.img.x > c.x1) c.img.x = c.x0; }
+  battleStep(dt);
+  fxG.clear();
   for (const p of fx) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g === undefined ? 420 : p.g) * dt; fxG.fillStyle(p.color, Math.min(1, p.life / p.t * 1.5)).fillCircle(p.x, p.y, p.r * (0.5 + p.life / p.t)); }
   loose = loose.filter(l => { l.life -= dt; if (l.life <= 0) { l.img.destroy(); return false; } return true; });
   for (const l of loose) {
@@ -318,7 +334,7 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); if (!B.demo) uiTick(); }
+  if (B) { drawCastleUI(dt); if (!B.auto) uiTick(); }
 }
 function start() {
   const g = $('game');
@@ -334,18 +350,19 @@ __PRELOAD__
 }
 
 /* ---- pantallas: carga → menú (con una partida de la IA contra sí misma de fondo) → mazo → batalla → pausa / final ---- */
-const SCREENS = ['carga', 'menu', 'deck', 'pausa', 'over'];
+const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over'];
 function show(id) {
   SCREENS.forEach(s => { $(s).hidden = s !== id; });
   const hud = id === null || id === 'pausa' || id === 'over', changed = $('hud').hidden === hud;
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
+  if (id === 'menu' || id === 'mundo' || id === 'reino' || id === 'deck') paintGold();
 }
-function startDemo() { resetBattle(true); }
-function startBattle() { show(null); resetBattle(false); timeScale = 1; $('speed').textContent = 'x1'; $('speed').setAttribute('aria-pressed', 'false'); }
+function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
 const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
-  'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.'];
+  'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.',
+  'Cada castillo vasallo que conquistas libera a un prisionero de sus mazmorras.', 'Gana con tu castillo casi intacto para llevarte las tres estrellas.'];
 let tipI = Math.floor(Math.random() * TIPS.length);
 $('tip').textContent = TIPS[tipI];
 const tipTimer = setInterval(() => { tipI = (tipI + 1) % TIPS.length; $('tip').textContent = TIPS[tipI]; }, 3500);
@@ -362,30 +379,27 @@ function fullscreen() {
   try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
 }
 $('tap').onclick = () => { clearInterval(tipTimer); fullscreen(); show('menu'); };
-$('m-batalla').onclick = startBattle;
-$('m-mazo').onclick = () => openDeck();
 $('m-practica').onclick = () => { location.href = 'practica.html'; };
 $('pause').onclick = () => { if (B && !B.over) setPaused(true); };
 $('resume').onclick = () => setPaused(false);
-$('restart').onclick = () => { setPaused(false); startBattle(); };
-$('quit').onclick = () => { setPaused(false); show('menu'); startDemo(); };
-$('again').onclick = startBattle;
-$('tomenu').onclick = () => { show('menu'); startDemo(); };
 $('speed').onclick = e => { timeScale = timeScale === 1 ? 2 : 1; e.currentTarget.textContent = 'x' + timeScale; e.currentTarget.setAttribute('aria-pressed', timeScale === 2); };
 $('hero').onclick = () => heroClick();
-document.addEventListener('visibilitychange', () => { if (document.hidden && B && !B.over && !B.demo && !paused) setPaused(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && B && !B.over && !B.auto && !paused) setPaused(true); });
 
 /* ---- panel de cartas ---- */
 function renderHand() {
   const h = $('hand'); h.innerHTML = '';
   B.blue.hand.forEach((t, i) => {
+    if (!t) return;
     const b = document.createElement('button');
     b.className = 'hc ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
     b.innerHTML = '<span class="cost">' + COST[t] + '</span><img src="img/' + t + '_carta.png" alt=""><span class="nm">' + LABEL[t] + '</span>';
     b.onclick = () => play('blue', i);
     h.appendChild(b);
   });
-  $('next').src = 'img/' + B.blue.queue[0] + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[B.blue.queue[0]];
+  const nx = B.blue.queue[0];
+  $('nextwrap').hidden = !nx;
+  if (nx) { $('next').src = 'img/' + nx + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[nx]; }
 }
 let lastUI = 0;
 function uiTick() {
@@ -398,44 +412,13 @@ function uiTick() {
   for (const [t, id] of [['blue', 'hpb'], ['purple', 'hpp']]) { const c = castles[t]; $(id).textContent = Math.max(0, Math.ceil(c.hp)); $(id + 'f').style.width = Math.max(0, c.hp / c.max * 100) + '%'; }
   heroUI();
 }
-
-/* ---- mazo y héroe ---- */
-let picking = [];
-function openDeck() {
-  picking = myDeck.slice();
-  const g = $('deckgrid'); g.innerHTML = '';
-  ALL.slice().sort((a, b) => COST[a] - COST[b] || LABEL[a].localeCompare(LABEL[b])).forEach(k => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'dk ' + (RARITY[k] || 'comun'); b.dataset.k = k;
-    b.setAttribute('aria-label', NAMES[k] + ', coste ' + COST[k]);
-    b.innerHTML = '<span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span>';
-    b.onclick = () => { const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck(); };
-    g.appendChild(b);
-  });
-  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => '<button type="button" class="hpick" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + h.skillName + '</span></span></button>').join('');
-  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
-  syncDeck(); show('deck');
-}
-function syncDeck() {
-  document.querySelectorAll('.dk').forEach(b => b.setAttribute('aria-pressed', picking.includes(b.dataset.k)));
-  document.querySelectorAll('.hpick').forEach(b => b.setAttribute('aria-pressed', b.dataset.h === myHero));
-  const avg = picking.length ? picking.reduce((s, k) => s + COST[k], 0) / picking.length : 0;
-  $('deckcount').textContent = picking.length + '/8 · coste medio ' + avg.toFixed(1).replace('.', ',');
-  $('deckgo').disabled = picking.length !== 8;
-}
-function keepDeck() { if (picking.length === 8) { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} } }
 $('selfondo').innerHTML = Object.keys(ESC).map((k, i) => '<option value="' + k + '">' + (i + 1) + '. ' + (ESC_NAME[k] || k) + '</option>').join('');
 $('selfondo').value = escena;
 $('selfondo').onchange = e => { if (scene) setScenery(e.target.value); };
-$('deckrand').onclick = () => { picking = shuffle(ALL.slice()).slice(0, 8); syncDeck(); };
-$('deckgo').onclick = () => { keepDeck(); startBattle(); };
-$('deckback').onclick = () => { keepDeck(); show('menu'); };
 
 /* ---- ganchos para las pruebas ---- */
-window.__debugBattle = () => ({ t: B.t, demo: B.demo, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, deck: B.purple.deck }, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over, zoom: zoomCss });
-window.__startBattle = deck => { if (deck) myDeck = deck; startBattle(); };
+window.__debugBattle = () => ({ t: B.t, demo: B.demo, run: B.run, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, max: castles.purple.max, deck: B.purple.deck }, heroP: B.heroP.type, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over, zoom: zoomCss });
 window.__play = (team, i) => play(team, i);
 window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, x)); };
 window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
 window.__show = show;
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
-})();

@@ -163,7 +163,88 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .stats th, .stats td { padding: 2px 6px; border-bottom: 1px solid #39446a; text-align: right; white-space: nowrap; }
 .stats th:first-child, .stats td:first-child { text-align: left; }
 .stats th { color: var(--muted); font-weight: 800; }
-@media (prefers-reduced-motion: reduce) { #tap, #hero.ready .ring { animation: none; } }
+
+/* ---- oro ---- */
+.oro { display: inline-flex; align-items: center; gap: 6px; background: rgba(15,19,34,.8); border: 3px solid var(--outline); border-radius: 999px; padding: 2px 12px 2px 3px; font-family: var(--font-display); font-size: 1.05rem; color: #fff; font-variant-numeric: tabular-nums; }
+.oro i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); box-shadow: inset 0 0 0 3px rgba(255,255,255,.25); }
+.oro.top { position: fixed; top: calc(var(--st) + 12px); left: var(--sl); width: max-content; }
+.btn.small { font-size: .85rem; padding: 6px 10px; border-radius: 10px; }
+.acts.tests { justify-content: flex-start; opacity: .85; }
+.btn[aria-pressed="true"] { background: var(--gold); color: var(--outline); }
+
+/* ---- cartas bloqueadas y miniaturas ---- */
+.dk.lock { opacity: .55; } .dk.lock img { filter: brightness(0) opacity(.75); }
+.dk.lock::before { content: ''; position: absolute; z-index: 2; left: 50%; top: 47%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 50% 30%, transparent 32%, #d9dde8 33% 46%, transparent 47%) top / 100% 60% no-repeat, linear-gradient(#ffc83d, #c98a12) bottom / 100% 55% no-repeat; border-radius: 4px; }
+.hpick.lock { opacity: .6; } .hpick.lock img { filter: brightness(0) opacity(.7); }
+.dk.mini { width: 54px; opacity: 1; flex: none; } .dk.mini .nm { font-size: .55rem; } .dk.mini .cost { font-size: .7rem; }
+.dk.shadow img, .hport.shadow { filter: brightness(0) opacity(.8); }
+.hport { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--outline); background: #3a3f62; }
+
+/* ---- estrellas ---- */
+.stars { display: inline-flex; gap: 1px; font-size: 1rem; line-height: 1; }
+.stars i { font-style: normal; color: #2b3150; -webkit-text-stroke: 1.5px var(--outline); text-shadow: 0 2px 0 var(--outline); }
+.stars i.on { color: var(--gold); }
+.stars.big { font-size: 2.6rem; gap: 4px; } .stars.big i.on { animation: star .5s var(--d) both cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes star { from { transform: scale(0) rotate(-40deg); opacity: 0; } }
+
+/* ---- mapas (mundo y reino): una lámina vertical que se desliza ---- */
+.screen.maps { place-items: stretch; padding: 0; background: #10152a; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+.mapbar { display: flex; align-items: center; gap: 10px; padding: calc(var(--st) + 8px) var(--sr) 8px var(--sl); background: var(--panel); border-bottom: 4px solid var(--outline); z-index: 2; }
+.mapbar h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapscroll { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sb); display: grid; align-content: center; }
+.mapcanvas { position: relative; width: min(100%, 560px); aspect-ratio: 2 / 3; margin: 0 auto; }
+.mapart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+.routes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.route { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.route.done { stroke: #ffe08a; stroke-width: 6; filter: drop-shadow(0 2px 0 #1e2235); }
+.route.next { stroke: #fff; stroke-width: 5; stroke-dasharray: 2 3; animation: march 1.2s linear infinite; filter: drop-shadow(0 2px 0 #1e2235); }
+.route.fresh { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 1.6s .9s ease-out forwards; }
+@keyframes march { to { stroke-dashoffset: -5; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.knode, .lnode { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; display: grid; justify-items: center; gap: 2px; }
+.kico { position: relative; width: 74px; height: 66px; display: grid; place-items: center; }
+.kico img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.klbl { display: grid; justify-items: center; background: rgba(15,19,34,.85); border: 2px solid var(--outline); border-radius: 10px; padding: 2px 8px; max-width: 150px; }
+.klbl b { font-family: var(--font-display); font-weight: 400; font-size: .85rem; color: #fff; white-space: nowrap; }
+.klbl small { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+.knode.open .kico { animation: bob 1.2s ease-in-out infinite; } .knode.open .klbl { border-color: var(--gold); }
+.knode.locked .kico img, .knode.soon .kico img { filter: grayscale(1) brightness(.75) drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.knode .lock { position: absolute; right: 2px; bottom: 4px; width: 20px; height: 20px; border-radius: 5px; background: linear-gradient(#ffc83d, #c98a12); border: 2px solid var(--outline); }
+.cross { position: absolute; inset: 6px 10px; }
+.cross::before, .cross::after { content: ''; position: absolute; left: 50%; top: 50%; width: 120%; height: 9px; background: #e2363b; border: 2px solid var(--outline); border-radius: 6px; transform: translate(-50%, -50%) rotate(40deg); }
+.cross::after { transform: translate(-50%, -50%) rotate(-40deg); }
+.knode.fresh .cross { animation: stamp .45s .2s both cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes stamp { from { transform: scale(2.4); opacity: 0; } }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.lnode img { width: 66px; height: 60px; object-fit: contain; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.lnode.royal img { width: 104px; height: 92px; }
+.lnode .crown { position: absolute; top: -14px; font-size: 1.5rem; color: var(--gold); -webkit-text-stroke: 1.5px var(--outline); }
+.lnum { font-family: var(--font-display); font-size: .95rem; color: #fff; background: var(--panel-hi); border: 2px solid var(--outline); border-radius: 999px; min-width: 26px; padding: 0 6px; line-height: 1.35; }
+.lnode.locked img { filter: grayscale(1) brightness(.7) drop-shadow(0 3px 0 rgba(0,0,0,.35)); } .lnode.locked .lnum { background: #3a3f55; color: var(--muted); }
+.lnode.cur img { animation: bob 1.1s ease-in-out infinite; } .lnode.cur .lnum { background: var(--gold); color: var(--outline); }
+
+/* ---- ficha de nivel y botín ---- */
+.panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
+.panel.nivel h2 { font-size: 1.8rem; text-wrap: balance; }
+.panel.nivel h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 4px 0 0; color: var(--muted); }
+.eyebrow { margin: 0; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold) !important; }
+.army, .prize { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pz { font-size: .85rem; color: var(--muted); }
+.prize-out { display: grid; gap: 10px; justify-items: center; width: 100%; }
+.loot .oro { font-size: 1.4rem; }
+.freed { display: flex; gap: 12px; align-items: center; text-align: left; background: rgba(255,200,61,.08); border: 2px solid var(--gold); border-radius: 14px; padding: 8px 12px; max-width: 460px; }
+.freed .dk.mini { width: 70px; }
+.freed p { margin: 0; color: var(--ink); font-size: .9rem; }
+.reveal { animation: reveal 1.1s .5s both; }
+.dk.reveal img { animation: unshade 1.1s .5s both; }
+@keyframes reveal { 0% { transform: rotateY(90deg) scale(.6); } 60% { transform: rotateY(0) scale(1.12); } 100% { transform: none; } }
+@keyframes unshade { 0%, 40% { filter: brightness(0); } 100% { filter: none; } }
+#toast { position: fixed; z-index: 60; left: 50%; bottom: calc(var(--sb) + 22px); transform: translateX(-50%); width: max-content; max-width: min(92vw, 420px);
+  background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--outline); text-align: center; font-size: .92rem; }
+#toast.in { animation: toastin .25s ease-out; }
+@keyframes toastin { from { transform: translate(-50%, 16px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -180,25 +261,52 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 </section>
 
 <section id="menu" class="screen" hidden>
+  <span class="oro top"><i></i><b class="oro-n">0</b></span>
   <div class="stack">
     <img class="logo" src="img/logo.png" alt="Brawlground">
-    <button class="btn gold big" id="m-batalla">Batalla</button>
+    <button class="btn gold big" id="m-campana">Campaña</button>
+    <button class="btn" id="m-rapida">Batalla rápida</button>
     <button class="btn" id="m-mazo">Mazo y héroe</button>
     <button class="btn" id="m-practica">Práctica</button>
-    <p class="ver">Prototipo · 16 unidades · 2 héroes</p>
+    <p class="ver">Prototipo · Reino de las Praderas</p>
   </div>
 </section>
 
 <section id="deck" class="screen" hidden>
   <div class="sheet">
-    <div class="sheet-top"><button class="btn" id="deckback">← Menú</button><h2>Mazo y héroe</h2><span id="deckcount">0/8</span></div>
+    <div class="sheet-top"><button class="btn" id="deckback">← Volver</button><h2>Mazo y héroe</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span id="deckcount">0/8</span></div>
     <h3>Héroe</h3>
     <div class="heroes" id="heroes"></div>
-    <h3>Cartas <small>elige 8</small></h3>
+    <h3>Cartas <small id="decknote">Elige 8 cartas.</small></h3>
     <div id="deckgrid"></div>
-    <h3>Escenario</h3>
+    <h3>Escenario <small>para la batalla rápida; en la campaña cada castillo tiene el suyo</small></h3>
     <div class="escrow"><select id="selfondo" aria-label="Escenario"></select></div>
     <div class="acts"><button class="btn" id="deckrand">Al azar</button><button class="btn gold" id="deckgo">¡A luchar!</button></div>
+    <div class="acts tests"><button class="btn small" id="deckall" aria-pressed="false">Pruebas: desbloquear todo</button><button class="btn small" id="deckwipe">Borrar progreso</button></div>
+  </div>
+</section>
+
+<section id="mundo" class="screen maps" hidden>
+  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+  <div class="mapscroll" id="mundo-scroll"><div class="mapcanvas" id="mundo-map"></div></div>
+</section>
+
+<section id="reino" class="screen maps" hidden>
+  <div class="mapbar"><button class="btn" id="reino-back">← Mapa</button><h2 id="reino-name"></h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+  <div class="mapscroll" id="reino-scroll"><div class="mapcanvas" id="reino-map"></div></div>
+</section>
+
+<section id="nivel" class="screen dim" hidden>
+  <div class="panel nivel">
+    <p class="eyebrow" id="nv-k"></p>
+    <h2 id="nv-name"></h2>
+    <div id="nv-stars"></div>
+    <p id="nv-desc"></p>
+    <h3>Su ejército</h3>
+    <div class="army" id="nv-army"></div>
+    <h3>Botín</h3>
+    <div class="prize" id="nv-prize"></div>
+    <div class="acts"><button class="btn" id="nv-close">Volver</button><button class="btn" id="nv-deck">Mazo</button><button class="btn gold" id="nv-go">¡Atacar!</button></div>
   </div>
 </section>
 
@@ -215,23 +323,26 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
     <div class="row">
       <button id="hero" disabled aria-label="Héroe"><span class="ring"><img id="heroimg" src="img/aldric_retrato.png" alt=""></span><span id="herotxt">0/15</span></button>
       <div class="hand" id="hand"></div>
-      <div class="nextc">Sig.<img id="next" alt=""></div>
+      <div class="nextc" id="nextwrap">Sig.<img id="next" alt=""></div>
     </div>
   </div>
 </div>
 
 <section id="pausa" class="screen dim" hidden>
-  <div class="panel"><h2>Pausa</h2>
+  <div class="panel"><h2>Pausa</h2><p id="pausa-info"></p>
     <div class="col"><button class="btn gold" id="resume">Seguir</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="quit">Salir al menú</button></div>
   </div>
 </section>
 
 <section id="over" class="screen dim" hidden>
-  <div class="panel"><h2 id="over-title"></h2><p id="over-text"></p>
+  <div class="panel"><h2 id="over-title"></h2><div id="over-stars"></div><p id="over-text"></p>
+    <div class="prize-out" id="over-prize"></div>
     <details><summary>Estadísticas de la partida</summary><div class="stats" id="stats"></div></details>
-    <div class="acts"><button class="btn" id="tomenu">Menú</button><button class="btn gold" id="again">Revancha</button></div>
+    <div class="acts"><button class="btn" id="over-a">Menú</button><button class="btn gold" id="over-b">Revancha</button></div>
   </div>
 </section>
+
+<div id="toast" role="status" hidden></div>
 
 {{SCRIPT}}
 <!--APP-->
