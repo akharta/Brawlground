@@ -99,6 +99,25 @@ Mapamundi con siete reinos, de abajo arriba: playa de conchas (tu base), setas, 
 engranajes, cristal, cementerio y cielo dorado. Sus mapas de reino comparten los 10 claros del
 mundo 1. Pendiente: sus castillos.
 
+## Mejora de unidades
+
+- Cada unidad va del **nivel 1 al 10**. Cada nivel le da un **10 % más de vida, daño y curación**
+  (nivel 10 = ×1,9). El daño extra cuenta también en sus habilidades (shuriken, misiles, cadenas…).
+- Subir de nivel cuesta **copias de su carta y oro**:
+
+  | Del nivel | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  |---|---|---|---|---|---|---|---|---|---|
+  | Copias | 1 | 2 | 3 | 5 | 8 | 12 | 16 | 22 | 30 |
+  | Oro (común) | 50 | 100 | 180 | 300 | 450 | 650 | 900 | 1.250 | 1.700 |
+
+  El oro se multiplica según la rareza: poco común ×1,2, rara ×1,5, épica ×2, legendaria ×3, ascendida ×4.
+- **Copias**: 3 al conquistar un castillo por primera vez y 1 al repetirlo o ganar una batalla rápida
+  (de cartas de tu mazo); 1 cada 2 horas de expedición; y en la taberna, si el mercenario ya lo tenías.
+- **Rivales con nivel**: los ejércitos del Reino de las Praderas son de nivel 1, Bosque 2, Desierto 3,
+  Nieves 4, Pantano 5 y Volcán 6 (el castillo real, uno más desde el Bosque). En la batalla rápida, el
+  rival lleva el nivel medio de tu mazo.
+- Los héroes aún no suben de nivel.
+
 ## Conseguir personajes
 
 - Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de

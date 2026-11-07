@@ -248,6 +248,34 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .lnode.art.royal .crown { top: -18px; }
 .lnode.art.locked img { filter: brightness(.62) saturate(.55) drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
 
+/* ---- niveles de las unidades ---- */
+.lvb { position: absolute; z-index: 2; left: 50%; top: 66%; transform: translateX(-50%); background: var(--outline); color: var(--gold); border: 2px solid var(--gold);
+  border-radius: 999px; font-family: var(--font-display); font-size: .66rem; line-height: 1.25; padding: 0 6px; white-space: nowrap; pointer-events: none; }
+.lvb.foe { color: #ffb4b4; border-color: #e2363b; }
+.dk.mini .lvb { font-size: .5rem; padding: 0 4px; border-width: 1.5px; }
+.hc .lvb { font-size: .58rem; top: 64%; }
+.ugrid { row-gap: 24px; }
+.cpbar { position: absolute; left: 6%; right: 6%; bottom: -17px; height: 14px; background: #0f1322; border: 2px solid var(--outline); border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
+.cpbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#8fd0ff, #3b82f6); }
+.cpbar.full i { background: linear-gradient(#b6f07a, #3ccf86); }
+.cpbar b { position: relative; font-family: var(--font-display); font-weight: 400; font-size: .62rem; color: #fff; text-shadow: 0 1px 0 var(--outline); }
+.cpbar.wide { position: relative; left: auto; right: auto; bottom: auto; height: 20px; width: 100%; }
+.cpbar.wide b { font-size: .78rem; }
+.dk.up::before { content: '▲'; position: absolute; z-index: 3; right: -6px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: #3ccf86; color: #fff; border: 2px solid var(--outline);
+  display: grid; place-items: center; font-size: .7rem; line-height: 1; animation: pulse 1s ease-in-out infinite; }
+#nav .ndot { position: absolute; top: 4px; right: 22%; width: 12px; height: 12px; border-radius: 50%; background: #3ccf86; border: 2px solid var(--outline); }
+.ustats { border-collapse: collapse; margin: 6px 0 4px; font-size: .84rem; font-variant-numeric: tabular-nums; }
+.ustats th { text-align: left; color: var(--muted); font-weight: 800; padding: 1px 12px 1px 0; }
+.ustats td { padding: 1px 0; }
+.ustats em { font-style: normal; color: #7ee04a; font-weight: 800; }
+.mejora { display: grid; gap: 6px; margin-top: 10px; background: #0f1322; border: 3px solid var(--outline); border-radius: 12px; padding: 8px 10px; }
+.mrow { display: flex; align-items: baseline; gap: 6px; } .mrow b { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; color: var(--gold); }
+.udetail.lvup .dk { animation: lvup .8s ease-out; }
+@keyframes lvup { 0% { transform: scale(1); filter: brightness(1); } 35% { transform: scale(1.15); filter: brightness(1.8) drop-shadow(0 0 10px var(--gold)); } 100% { transform: none; filter: none; } }
+.loot.cps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.cpgain { position: relative; display: inline-grid; justify-items: center; }
+.cpgain b { position: absolute; right: -6px; bottom: -4px; background: #3ccf86; color: var(--outline); border: 2px solid var(--outline); border-radius: 999px; font-family: var(--font-display); font-weight: 400; font-size: .75rem; padding: 0 5px; }
+
 /* ---- ficha de nivel y botín ---- */
 .panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
 .panel.nivel h2 { font-size: 1.8rem; text-wrap: balance; }
@@ -402,7 +430,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail h2 { font-size: 1.5rem !important; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
-@media (prefers-reduced-motion: reduce) { .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
