@@ -84,6 +84,21 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
   Muralla rival de 800 (nivel 1) a 1.600 (nivel 9) y 2.200 la del castillo real.
 - La primera batalla enseña a jugar con burbujas de ayuda (sacar cartas, avanzar, usar al héroe).
 
+### Mundo 1: los seis reinos
+
+Praderas (reina: Lyra), Bosque (rey: Gūll), Desierto, Nieves, Pantano y Volcán; tu reino abajo.
+Cada uno con su mapa pintado y su par de castillos (vasallo y real). Los reinos 2 a 6 ya tienen
+sus 10 castillos con nombre y ejército, pero su dificultad es provisional (sin simular todavía) y
+sus reyes, salvo Gūll, aún no tienen héroe. Prisioneros: Cole (Bosque 3), Berta (Bosque 7),
+Lin (Desierto 5), Velkara (Nieves 6) y Jhotum (Pantano 7). Ahora mismo toda la campaña está
+abierta para revisar los mapas (`CAMPANA_ABIERTA` en campana.js).
+
+### Mundo 2 (arte guardado en assets/campana/mundo2)
+
+Mapamundi con siete reinos, de abajo arriba: playa de conchas (tu base), setas, cañón de huesos,
+engranajes, cristal, cementerio y cielo dorado. Sus mapas de reino comparten los 10 claros del
+mundo 1. Pendiente: sus castillos.
+
 ## Conseguir personajes
 
 - Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de

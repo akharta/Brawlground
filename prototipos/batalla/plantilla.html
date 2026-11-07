@@ -340,7 +340,10 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 #mundo-back { display: none; }   /* en la campaña ya está la barra de pestañas para volver */
 .col.full { width: 100%; }
 /* paneles centrados que, si no caben (móvil en horizontal), se desplazan en vez de cortarse */
-.screen.dim { place-items: stretch; } .screen.dim > .panel { margin: auto; }
+.screen { grid-template-columns: minmax(0, 1fr); }
+.panel, .sheet { box-sizing: border-box; }   /* el ancho incluye borde y relleno */   /* ningún texto largo ensancha la pantalla más que el móvil */
+.screen.dim { place-items: stretch; } .screen.dim > .panel { margin: auto; min-width: 0; }
+.panel.nivel p, .freed p { overflow-wrap: anywhere; }
 .hubbot .mazo, .hubbot .botin { flex: none; }
 .golpe { flex: 0 1 auto; min-width: 0; max-width: 300px; } .golpe small { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (orientation: landscape) and (max-height: 520px) { .golpe { min-width: 0; padding: 4px 22px; } .golpe span { font-size: 1.25rem; } .golpe small { display: none; } .chest { width: 44px; height: 32px; } .hubbot { bottom: calc(var(--navh) + var(--sb) + 6px); } }

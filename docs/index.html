@@ -340,7 +340,10 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 #mundo-back { display: none; }   /* en la campaña ya está la barra de pestañas para volver */
 .col.full { width: 100%; }
 /* paneles centrados que, si no caben (móvil en horizontal), se desplazan en vez de cortarse */
-.screen.dim { place-items: stretch; } .screen.dim > .panel { margin: auto; }
+.screen { grid-template-columns: minmax(0, 1fr); }
+.panel, .sheet { box-sizing: border-box; }   /* el ancho incluye borde y relleno */   /* ningún texto largo ensancha la pantalla más que el móvil */
+.screen.dim { place-items: stretch; } .screen.dim > .panel { margin: auto; min-width: 0; }
+.panel.nivel p, .freed p { overflow-wrap: anywhere; }
 .hubbot .mazo, .hubbot .botin { flex: none; }
 .golpe { flex: 0 1 auto; min-width: 0; max-width: 300px; } .golpe small { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (orientation: landscape) and (max-height: 520px) { .golpe { min-width: 0; padding: 4px 22px; } .golpe span { font-size: 1.25rem; } .golpe small { display: none; } .chest { width: 44px; height: 32px; } .hubbot { bottom: calc(var(--navh) + var(--sb) + 6px); } }
@@ -3634,15 +3637,35 @@ const PRADERAS = [
   { name: 'Muralla de los Pinos', esc: 'escena_10', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1600, aiK: 1.67, gold: 140, prize: 'acorazado' },
   { name: 'Castillo Real de las Praderas', esc: 'escena_01', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2200, aiK: 1.12, gold: 300, prize: null, hero: 'lyra', royal: true },
 ];
+// reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
+const ESCENAS = ['escena_01', 'escena_02', 'escena_03', 'escena_04', 'escena_05', 'escena_06', 'escena_07', 'escena_08', 'escena_09', 'escena_10'];
+const FUERZA = ['legionario', 'arquera', 'tercio', 'lobo', 'valkiria', 'ninja', 'samurai', 'fraile', 'acorazado', 'pistolero', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
+function genReino(n, nombres, premios, rey) {
+  // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
+  return nombres.map((name, i) => {
+    const royal = i === 9, top = Math.min(FUERZA.length, 6 + n + Math.floor(i / 2)), pool = FUERZA.slice(Math.max(0, top - 9), top);
+    const deck = []; for (let k = 0; deck.length < Math.min(8, 4 + Math.floor((i + n) / 2)) && k < 60; k++) { const u = pool[(k * 5 + i * 3 + n) % pool.length]; if (!deck.includes(u)) deck.push(u); }
+    if (royal && n >= 5) deck[deck.length - 1] = n === 6 ? 'imparable' : 'centinela';
+    return { name, esc: ESCENAS[(i * 3 + n * 7) % 10], deck, hp: royal ? 2200 + 300 * (n - 1) : 1300 + 120 * n + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
+      gold: royal ? 300 + 100 * (n - 1) : 80 + 30 * n + 10 * i, prize: premios[i] || null, hero: royal ? rey : undefined, royal: royal || undefined };
+  });
+}
+const BOSQUE = genReino(2, ['Claro del Leñador', 'Torre del Musgo', 'Puente de Troncos', 'Cabaña del Cazador', 'Fortín de las Setas', 'Atalaya del Roble', 'Empalizada del Arroyo', 'Bastión de los Helechos', 'Muralla del Jabalí', 'Castillo Real del Bosque'], { 2: 'pistolero', 6: 'catapulta' }, 'gull');
+const DESIERTO = genReino(3, ['Oasis de las Palmas', 'Torre de Arena', 'Fortín de las Dunas', 'Pozo del Caravanero', 'Atalaya del Sol', 'Bastión de Adobe', 'Puerta del Cañón', 'Fuerte del Escorpión', 'Muralla Dorada', 'Palacio Real del Desierto'], { 4: 'kungfu' }, null);
+const NIEVE = genReino(4, ['Refugio del Pino', 'Torre de Escarcha', 'Fortín del Glaciar', 'Lago Helado', 'Atalaya de Cristal', 'Paso de la Ventisca', 'Bastión Blanco', 'Fuerte de la Aurora', 'Muralla de Hielo', 'Castillo Real de las Nieves'], { 5: 'muerte' }, null);
+const PANTANO = genReino(5, ['Embarcadero Hundido', 'Torre del Lodo', 'Fortín de los Juncos', 'Ciénaga Brumosa', 'Atalaya del Sauce', 'Isla de las Ranas', 'Bastión del Musgo', 'Fuerte de la Niebla', 'Muralla Podrida', 'Castillo Real del Pantano'], { 6: 'desencadenado' }, null);
+const VOLCAN = genReino(6, ['Paso de la Ceniza', 'Torre de Basalto', 'Fortín del Azufre', 'Río de Lava', 'Atalaya del Cráter', 'Forja Ardiente', 'Bastión de Obsidiana', 'Fuerte del Humo', 'Muralla de Fuego', 'Fortaleza Real del Volcán'], {}, null);
+// de momento todos los reinos y castillos están abiertos para poder recorrer los mapas (poner a false para jugar en orden)
+const CAMPANA_ABIERTA = true;
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 89.8], biome: '#7fcf6a', home: true },
   { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [50, 73.6], biome: '#a6dd5c', color: ['morado', 'rojo'], emb: 'pluma', levels: PRADERAS },
-  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [50, 58.6], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali' },
-  { id: 'desierto', name: 'Reino del Desierto', pos: [50, 44.9], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol' },
-  { id: 'nieve', name: 'Reino de las Nieves', pos: [50, 33.2], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo' },
-  { id: 'pantano', name: 'Reino del Pantano', pos: [50, 20.8], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra' },
-  { id: 'volcan', name: 'Reino del Volcán', pos: [50, 9.8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon' },
+  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [50, 58.6], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali', levels: BOSQUE },
+  { id: 'desierto', name: 'Reino del Desierto', pos: [50, 44.9], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol', levels: DESIERTO },
+  { id: 'nieve', name: 'Reino de las Nieves', pos: [50, 33.2], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo', levels: NIEVE },
+  { id: 'pantano', name: 'Reino del Pantano', pos: [50, 20.8], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra', levels: PANTANO },
+  { id: 'volcan', name: 'Reino del Volcán', pos: [50, 9.8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon', levels: VOLCAN },
 ];
 // mapas pintados (herramientas/campana/preparar.py). El mapamundi trae los castillos de cada reino dibujados;
 // los mapas de reino comparten el mismo camino con 10 claros y una colina arriba
@@ -3764,13 +3787,13 @@ const owned = () => perfil.all ? ALL.slice() : ALL.filter(k => perfil.owned.incl
 const heroesOwned = () => Object.keys(HEROES).filter(h => perfil.all || perfil.heroes.includes(h));
 const starsOf = kid => perfil.stars[kid] || (perfil.stars[kid] = Array(10).fill(0));
 const kingdomDone = kid => { const k = KD(kid); return !!(k.home || (k.levels && starsOf(kid)[9] > 0)); };
-const levelOpen = (kid, i) => perfil.all || i === 0 || starsOf(kid)[i - 1] > 0;
+const levelOpen = (kid, i) => perfil.all || CAMPANA_ABIERTA || i === 0 || starsOf(kid)[i - 1] > 0;
 function kingdomState(i) {   // 'home' | 'done' | 'open' | 'soon' (sin niveles aún) | 'locked'
   const k = KINGDOMS[i];
   if (k.home) return 'home';
   if (k.levels && kingdomDone(k.id)) return 'done';
   const prevDone = kingdomDone(KINGDOMS[i - 1].id);
-  if (!prevDone && !perfil.all) return 'locked';
+  if (!prevDone && !perfil.all && !CAMPANA_ABIERTA) return 'locked';
   return k.levels ? 'open' : 'soon';
 }
 function prizeWhere(unit) {   // dónde se libera una unidad que aún no tienes
@@ -3852,7 +3875,7 @@ function showResult(res) {
   if (res.gold) pr += '<div class="loot"><span class="oro"><i></i><b>+' + res.gold + '</b></span></div>';
   if (res.prize) pr += '<div class="freed">' + cardHtml(res.prize, 'reveal') + '<p><b>¡Has liberado a ' + NAMES[res.prize] + '!</b><br>Estaba preso en las mazmorras del castillo. Ya puedes llevarlo en tu mazo.</p></div>';
   if (res.first) pr += '<p class="tribnote">Este castillo ya es tuyo: te pagará <b>' + tribRate(run.k, run.i) + ' de oro por hora</b>. Recógelo en el mapa del reino.</p>';
-  if (res.hero) pr += '<div class="freed"><img class="hport reveal" src="img/' + HEROES[res.hero].portrait + '.png" alt=""><p><b>' + NAMES_H[res.hero] + ' se une a tu ejército.</b><br>La reina de las praderas jura lealtad a tu corona. Ya puedes elegirla como héroe.</p></div>';
+  if (res.hero) pr += '<div class="freed"><img class="hport reveal" src="img/' + HEROES[res.hero].portrait + '.png" alt=""><p><b>' + NAMES_H[res.hero] + ' se une a tu ejército.</b><br>' + (RULER_TXT[res.hero] || ['', 'Ya puedes elegirlo como héroe.'])[1] + '</p></div>';
   $('over-prize').innerHTML = pr;
   const a = $('over-a'), b = $('over-b');
   if (lv) {
@@ -3864,6 +3887,7 @@ function showResult(res) {
   }
   show('over'); paintGold();
 }
+const RULER_TXT = { lyra: ['la reina de las praderas', 'La reina de las praderas jura lealtad a tu corona. Ya puedes elegirla como heroína.'], gull: ['el rey del bosque', 'El rey del bosque jura lealtad a tu corona. Ya puedes elegirlo como héroe.'] };
 const NAMES_H = { aldric: 'El Rey Aldric', lyra: 'Lyra, Ojo de Halcón', gull: 'Gūll, el Puerco' };
 
 /* ---- mapa del mundo ---- */
@@ -3975,11 +3999,11 @@ function openLevel(kid, i) {
   $('nv-k').textContent = kd.name + ' · ' + (lv.royal ? 'Castillo del rey' : 'Castillo vasallo ' + (i + 1) + ' de 9');
   $('nv-name').textContent = lv.name;
   $('nv-stars').innerHTML = starsHtml(st);
-  $('nv-desc').textContent = 'Muralla de ' + lv.hp + ' de vida' + (lv.hero ? '. En el trono te espera ' + NAMES_H[lv.hero] + ', la reina de las praderas.' : '. Sin héroe en el trono.');
+  $('nv-desc').textContent = 'Muralla de ' + lv.hp + ' de vida' + (lv.hero ? '. En el trono te espera ' + NAMES_H[lv.hero] + ', ' + (RULER_TXT[lv.hero] || [''])[0] + '.' : lv.royal ? '. Su rey aún no ha mostrado la cara: de momento, sin héroe en el trono.' : '. Sin héroe en el trono.');
   $('nv-army').innerHTML = lv.deck.map(k => cardHtml(k)).join('');
   let pr = '<span class="oro"><i></i><b>' + (st ? Math.round(lv.gold / 4) : lv.gold) + '</b></span>';
   if (lv.prize) pr += perfil.owned.includes(lv.prize) && !perfil.all ? '<span class="pz">Prisionero ya liberado: ' + LABEL[lv.prize] + '</span>' : cardHtml(lv.prize, 'shadow') + '<span class="pz">Un prisionero espera en sus mazmorras</span>';
-  if (lv.hero) pr += '<img class="hport shadow" src="img/' + HEROES[lv.hero].portrait + '.png" alt=""><span class="pz">Si la vences, se une a ti</span>';
+  if (lv.hero) pr += '<img class="hport shadow" src="img/' + HEROES[lv.hero].portrait + '.png" alt=""><span class="pz">' + (lv.hero === 'lyra' ? 'Si la vences, se une a ti' : 'Si lo vences, se une a ti') + '</span>';
   $('nv-prize').innerHTML = pr;
   const rate = tribRate(kid, i);
   $('nv-trib').textContent = st ? 'Ya es tuyo: te paga ' + rate + ' de oro por hora' + (st < 3 ? ' (con 3 estrellas, ' + Math.round(tribBase(kid, i) * TRIB.starK[3]) + ').' : ', el máximo.') + ' Guarda hasta 12 horas.'
