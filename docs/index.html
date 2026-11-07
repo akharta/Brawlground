@@ -240,11 +240,16 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .dk.reveal img { animation: unshade 1.1s .5s both; }
 @keyframes reveal { 0% { transform: rotateY(90deg) scale(.6); } 60% { transform: rotateY(0) scale(1.12); } 100% { transform: none; } }
 @keyframes unshade { 0%, 40% { filter: brightness(0); } 100% { filter: none; } }
+#coach { position: fixed; z-index: 15; max-width: min(300px, 86vw); background: #fff8e1; color: var(--outline); border: 3px solid var(--outline); border-radius: 14px; padding: 8px 12px;
+  font-weight: 800; font-size: .9rem; line-height: 1.3; box-shadow: 0 4px 0 var(--outline); pointer-events: none; animation: coachbob 1.2s ease-in-out infinite; }
+#coach::after { content: ''; position: absolute; left: calc(var(--ax, 50%) - 9px); bottom: -12px; border: 9px solid transparent; border-top-color: var(--outline); border-bottom: 0; }
+#coach.down::after { bottom: auto; top: -12px; border: 9px solid transparent; border-bottom-color: var(--outline); border-top: 0; }
+@keyframes coachbob { 50% { transform: translateY(-4px); } }
 #toast { position: fixed; z-index: 60; left: 50%; bottom: calc(var(--sb) + 22px); transform: translateX(-50%); width: max-content; max-width: min(92vw, 420px);
   background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--outline); text-align: center; font-size: .92rem; }
 #toast.in { animation: toastin .25s ease-out; }
 @keyframes toastin { from { transform: translate(-50%, 16px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -318,6 +323,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
     <div class="cst p"><i></i><b id="hpp">1500</b><span class="bar"><span id="hppf"></span></span></div>
     <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
   </div>
+  <div id="coach" role="status" hidden></div>
   <div class="dock" id="dock">
     <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
     <div class="row">
@@ -3266,9 +3272,11 @@ function show(id) {
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
   if (id === 'menu' || id === 'mundo' || id === 'reino' || id === 'deck') paintGold();
+  // en los mapas no se ve el campo: se detiene el bucle del juego para ahorrar batería
+  const gm = window.__game; if (gm && gm.loop) { if (id === 'mundo' || id === 'reino') gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
 }
 function startDemo() { resetBattle({ demo: true }); }
-function setPaused(on) { paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
+function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
 const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
   'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.',
   'Cada castillo vasallo que conquistas libera a un prisionero de sus mazmorras.', 'Gana con tu castillo casi intacto para llevarte las tres estrellas.'];
@@ -3337,18 +3345,19 @@ window.__show = show;
    Cada vasallo conquistado libera a un prisionero de sus mazmorras. El progreso se guarda en este navegador. ==== */
 const STARTERS = ['legionario', 'arquera', 'tercio'];   // los guerreros originales de tu reino: Tulio, Ailin y Rodrigo
 // niveles del Reino de las Praderas. deck: ejército del castillo rival; hp: vida de su castillo; aiK: ritmo de energía del rival;
-// prize: prisionero que liberas la primera vez; hero: héroe en el trono rival (solo el castillo real)
+// prize: prisionero que liberas la primera vez; hero: héroe en el trono rival (solo el castillo real).
+// hp y aiK ajustados simulando: la IA que juega tu bando (con el ejército que tendrías al llegar) gana de ~90 % en el 1 a ~30 % en el 10
 const PRADERAS = [
-  { name: 'Granja del Camino', esc: 'escena_06', deck: ['legionario', 'arquera'], hp: 600, aiK: 0.7, gold: 60, prize: 'lobo' },
-  { name: 'Torre del Cartel', esc: 'escena_07', deck: ['legionario', 'arquera', 'tercio'], hp: 750, aiK: 0.75, gold: 70, prize: null },
-  { name: 'Fortín del Molino', esc: 'escena_08', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 850, aiK: 0.8, gold: 80, prize: 'valkiria' },
-  { name: 'Torre del Pozo', esc: 'escena_02', deck: ['legionario', 'arquera', 'lobo', 'valkiria'], hp: 950, aiK: 0.85, gold: 90, prize: null },
-  { name: 'Granja Fortificada', esc: 'escena_03', deck: ['tercio', 'lobo', 'valkiria', 'ninja', 'arquera'], hp: 1050, aiK: 0.9, gold: 100, prize: 'ninja' },
-  { name: 'Castillo del Lago', esc: 'escena_09', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1150, aiK: 0.9, gold: 110, prize: 'samurai' },
-  { name: 'Bastión del Otoño', esc: 'escena_05', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja'], hp: 1250, aiK: 0.95, gold: 120, prize: null },
-  { name: 'Atalaya del Alba', esc: 'escena_04', deck: ['legionario', 'fraile', 'acorazado', 'samurai', 'arquera', 'valkiria'], hp: 1350, aiK: 1, gold: 130, prize: 'fraile' },
-  { name: 'Muralla de los Pinos', esc: 'escena_10', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1450, aiK: 1, gold: 140, prize: 'acorazado' },
-  { name: 'Castillo Real de las Praderas', esc: 'escena_01', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2000, aiK: 1.05, gold: 300, prize: null, hero: 'lyra', royal: true },
+  { name: 'Granja del Camino', esc: 'escena_06', deck: ['legionario', 'arquera'], hp: 800, aiK: 0.77, gold: 60, prize: 'lobo' },
+  { name: 'Torre del Cartel', esc: 'escena_07', deck: ['legionario', 'arquera', 'tercio'], hp: 900, aiK: 1.16, gold: 70, prize: null },
+  { name: 'Fortín del Molino', esc: 'escena_08', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 1000, aiK: 1.3, gold: 80, prize: 'valkiria' },
+  { name: 'Torre del Pozo', esc: 'escena_02', deck: ['legionario', 'arquera', 'lobo', 'valkiria'], hp: 1100, aiK: 1.5, gold: 90, prize: null },
+  { name: 'Granja Fortificada', esc: 'escena_03', deck: ['tercio', 'lobo', 'valkiria', 'ninja', 'arquera'], hp: 1200, aiK: 1.89, gold: 100, prize: 'ninja' },
+  { name: 'Castillo del Lago', esc: 'escena_09', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1300, aiK: 1.4, gold: 110, prize: 'samurai' },
+  { name: 'Bastión del Otoño', esc: 'escena_05', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja'], hp: 1400, aiK: 1.25, gold: 120, prize: null },
+  { name: 'Atalaya del Alba', esc: 'escena_04', deck: ['legionario', 'fraile', 'acorazado', 'samurai', 'arquera', 'valkiria'], hp: 1500, aiK: 1.28, gold: 130, prize: 'fraile' },
+  { name: 'Muralla de los Pinos', esc: 'escena_10', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1600, aiK: 1.67, gold: 140, prize: 'acorazado' },
+  { name: 'Castillo Real de las Praderas', esc: 'escena_01', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2200, aiK: 1.12, gold: 300, prize: null, hero: 'lyra', royal: true },
 ];
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
@@ -3360,7 +3369,9 @@ const KINGDOMS = [
   { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62' },
   { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a' },
 ];
-const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.png'
+const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.jpg' (herramientas/campana/preparar.py)
+// iconos de castillo del mapa: mientras no lleguen los dibujos, se usan los castillos de batalla
+const ICON = { vasallo: 'img/esc/castillo_morado.png', vasalloTuyo: 'img/esc/castillo_azul.png', real: 'img/esc/castillo_morado.png', realTuyo: 'img/esc/castillo_azul.png' };
 // posiciones de los 10 castillos en el mapa del reino (% ancho, % alto), de abajo arriba por el camino
 const LV_POS = [[50, 88.5], [24, 83.5], [47, 75], [74, 67], [53, 58.5], [25, 50.5], [44, 42], [72, 34], [55, 25.5], [50, 10]];
 const KD = id => KINGDOMS.find(k => k.id === id);
@@ -3412,6 +3423,7 @@ function startRun(run) {
     show(null); timeScale = 1; $('speed').textContent = 'x1'; $('speed').setAttribute('aria-pressed', 'false');
     const base = { run, deck: playerDeck(), hero: playerHero() };
     resetBattle(run.kind === 'nivel' ? Object.assign(base, levelOpts(run.k, run.i)) : Object.assign(base, { enemyDeck: aiDeck(owned()) }));
+    coachStart();
   };
   if (run.kind === 'nivel') useScene(KD(run.k).levels[run.i].esc, begin);
   else { let pref = escena; try { pref = localStorage.getItem('bg-escena') || escena; } catch (e) {} useScene(ESC[pref] ? pref : escena, begin); }
@@ -3445,6 +3457,7 @@ function battleResult(win) {
 function starsHtml(n, big) { return '<span class="stars' + (big ? ' big' : '') + '" aria-label="' + n + ' de 3 estrellas">' + [0, 1, 2].map(i => '<i class="' + (i < n ? 'on' : '') + '" style="--d:' + (i * 0.25) + 's">★</i>').join('') + '</span>'; }
 function cardHtml(k, cls = '') { return '<span class="dk mini ' + (RARITY[k] || 'comun') + ' ' + cls + '"><span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span></span>'; }
 function showResult(res) {
+  coach(null);
   const run = res.run, lv = run.kind === 'nivel' ? KD(run.k).levels[run.i] : null;
   const time = Math.floor(B.t / 60) + ':' + String(Math.floor(B.t % 60)).padStart(2, '0');
   $('over-title').textContent = !res.win ? 'Derrota' : res.conquered ? '¡Reino conquistado!' : lv ? '¡Castillo conquistado!' : '¡Victoria!';
@@ -3494,10 +3507,10 @@ function openWorld() {
     lines += '<path class="route' + (next === 'done' ? ' done' : ' next') + (fresh ? ' fresh' : '') + '" d="' + d + '" pathLength="100"/>';
   }
   const nodes = KINGDOMS.map((k, i) => {
-    const st = states[i], icon = st === 'home' || st === 'done' ? 'castillo_azul' : 'castillo_morado';
+    const st = states[i], icon = st === 'home' || st === 'done' ? ICON.realTuyo : ICON.real;
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
     return '<button class="knode ' + st + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
-      + '<span class="kico"><img src="img/esc/' + icon + '.png" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
+      + '<span class="kico"><img src="' + icon + '" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
       + '<span class="klbl"><b>' + k.name + '</b><small>' + sub + '</small></span></button>';
   }).join('');
   m.innerHTML = worldArt() + '<svg class="routes" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">' + lines + '</svg>' + nodes;
@@ -3539,10 +3552,10 @@ function openKingdom(kid) {
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
-    const open = levelOpen(kid, i), done = st[i] > 0, icon = done ? 'castillo_azul' : 'castillo_morado';
+    const open = levelOpen(kid, i), done = st[i] > 0, icon = lv.royal ? (done ? ICON.realTuyo : ICON.real) : (done ? ICON.vasalloTuyo : ICON.vasallo);
     return '<button class="lnode' + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
-      + '<img src="img/esc/' + icon + '.png" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
+      + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
       + '<span class="lnum">' + (i + 1) + '</span>' + (done ? starsHtml(st[i]) : '') + '</button>';
   }).join('');
   m.querySelectorAll('.lnode').forEach(b => { b.onclick = () => { const i = +b.dataset.i; if (levelOpen(kid, i)) openLevel(kid, i); else toast('Conquista antes el castillo ' + i + '.'); }; });
@@ -3626,6 +3639,44 @@ $('pause').addEventListener('click', () => {
   $('pausa-info').textContent = lv ? 'Nivel ' + (RUN.i + 1) + ' · ' + lv.name : 'Batalla rápida';
   $('quit').textContent = lv ? 'Volver al mapa' : 'Salir al menú';
 });
+
+/* ---- primeros pasos: burbujas que enseñan a jugar en la primera batalla de la campaña ---- */
+let CO = null;
+function coach(target, text, below = false) {
+  const c = $('coach');
+  if (!target || $('hud').hidden || paused) { c.hidden = true; return; }
+  const r = $(target).getBoundingClientRect(); if (!r.width) { c.hidden = true; return; }
+  if (c.textContent !== text) c.textContent = text;
+  c.hidden = false;
+  const w = c.offsetWidth, x = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  c.classList.toggle('down', below);
+  c.style.left = x + 'px'; c.style.top = (below ? r.bottom + 16 : r.top - c.offsetHeight - 16) + 'px'; c.style.setProperty('--ax', (r.left + r.width / 2 - x) + 'px');
+}
+function coachStart() {
+  if (!perfil.tut) perfil.tut = {};
+  CO = !perfil.tut.carta && RUN && RUN.kind === 'nivel' ? { step: 'carta' } : null;
+  coach(null);
+}
+function coachTick() {
+  if (!B || B.auto || B.over) return coach(null);
+  if (CO && CO.step === 'carta') return B.t > 0.8 ? coach('hand', 'Toca una carta para sacar a la unidad. Cada carta cuesta la energía que marca su círculo.') : null;
+  if (CO && CO.step === 'avanza') {
+    if (B.t - CO.t0 < 6) return coach('clock', '¡Bien! Tus unidades avanzan solas y atacan lo que encuentran. Sigue sacando cartas hasta derribar la muralla rival.', true);
+    CO = null;
+  }
+  if (!perfil.tut.heroe && B.hero.state === 'throne' && B.blue.kills >= HERO_GOAL) return coach('hero', '¡Tu héroe está listo! Tócalo para que salte del trono al campo.');
+  coach(null);
+}
+const _play = play;
+play = function (team, idx) {
+  const ok = _play(team, idx);
+  if (ok && team === 'blue' && CO && CO.step === 'carta') { perfil.tut.carta = true; savePerfil(); CO = { step: 'avanza', t0: B.t }; }
+  return ok;
+};
+const _heroAct = heroAct;
+heroAct = function (team) { const ok = _heroAct(team); if (ok && team === 'blue' && B && !B.auto && perfil.tut && !perfil.tut.heroe) { perfil.tut.heroe = true; savePerfil(); } return ok; };
+const _heroUI = heroUI;
+heroUI = function () { _heroUI(); coachTick(); };
 
 /* ---- simulación de niveles (para ajustar la dificultad): la IA juega tu bando con el ejército que tendrías al llegar ---- */
 function deckAtLevel(kid, i) { const kd = KD(kid), d = STARTERS.slice(); kd.levels.slice(0, i).forEach(l => { if (l.prize) d.push(l.prize); }); return d.slice(-8); }

@@ -56,6 +56,34 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
 - **Idle**: generas recursos mientras no juegas.
 - *Pendiente*: cómo avanzar la campaña sin jugar (partiendo del modo automático).
 
+### Reino 1: las Praderas (primera versión jugable)
+
+| Nivel | Castillo | Escenario | Prisionero que liberas |
+|---|---|---|---|
+| 1 | Granja del Camino | Prado | Garra, el Lobo |
+| 2 | Torre del Cartel | Montañas | — (oro) |
+| 3 | Fortín del Molino | Molino | Brynja, la Valkiria |
+| 4 | Torre del Pozo | Cerezos | — (oro) |
+| 5 | Granja Fortificada | Atardecer | Kazú, el Ninja |
+| 6 | Castillo del Lago | Lago | Hayato, el Samurái |
+| 7 | Bastión del Otoño | Otoño | — (oro) |
+| 8 | Atalaya del Alba | Amanecer | Fray Tomé, el Fraile |
+| 9 | Muralla de los Pinos | Pinos | Gustav, el Acorazado |
+| 10 | Castillo Real de las Praderas | Noche | La reina, **Lyra**, se une a ti como heroína |
+
+- Los otros reinos luchan con las mismas unidades que tú. Los vasallos no tienen héroe; el rey
+  (o la reina) espera en su trono y salta al campo como el tuyo.
+- **Estrellas**: 1 por ganar, 2 si tu castillo acaba por encima del 50 %, 3 por encima del 80 %.
+- **Oro**: cada castillo da oro la primera vez (más el real) y una cuarta parte al repetirlo.
+  De momento solo se acumula; servirá para la taberna y para subir de nivel.
+- Mientras tu ejército tenga menos de 8 unidades, el mazo lleva todas las que tienes.
+- La dificultad de cada nivel (vida de la muralla rival y ritmo de energía del rival) se ajusta
+  simulando partidas en las que la IA juega tu bando con el ejército que tendrías al llegar.
+  Resultado actual (100-120 partidas por nivel): la IA de tu bando gana el 82 % en el castillo 1,
+  ~75 % en el 2-3, ~68 % en el 4-5, ~58 % en el 6-8, 41 % en el 9 y 37 % contra Lyra.
+  Muralla rival de 800 (nivel 1) a 1.600 (nivel 9) y 2.200 la del castillo real.
+- La primera batalla enseña a jugar con burbujas de ayuda (sacar cartas, avanzar, usar al héroe).
+
 ## Conseguir personajes
 
 - Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de

@@ -357,9 +357,11 @@ function show(id) {
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
   if (id === 'menu' || id === 'mundo' || id === 'reino' || id === 'deck') paintGold();
+  // en los mapas no se ve el campo: se detiene el bucle del juego para ahorrar batería
+  const gm = window.__game; if (gm && gm.loop) { if (id === 'mundo' || id === 'reino') gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
 }
 function startDemo() { resetBattle({ demo: true }); }
-function setPaused(on) { paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
+function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
 const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
   'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.',
   'Cada castillo vasallo que conquistas libera a un prisionero de sus mazmorras.', 'Gana con tu castillo casi intacto para llevarte las tres estrellas.'];
