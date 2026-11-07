@@ -2,7 +2,7 @@
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
 const COST = __COST__;
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null, paused = false;
@@ -11,6 +11,7 @@ const THRONE = { x: 140, y: 200, w: 140 };
 const HEROES = {
   aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'trono_aldric', empty: 'trono_vacio', portrait: 'aldric_retrato' },
   lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: 'trono_lyra_vacio', portrait: 'lyra_retrato' },
+  gull: { name: 'Gūll', skill: 'charge', skillName: 'Embestida porcina', throne: 'trono_gull', empty: 'trono_gull_vacio', portrait: 'gull_retrato', tw: 1.5 },   // trono con el jabalí dormido al lado: más ancho
 };
 let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 // castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
@@ -122,7 +123,7 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team]));
+      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team], TEAM_EMB[team]));
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
@@ -148,7 +149,7 @@ function resetBattle(o = {}) {
   // o: demo (la IA juega por los dos, de fondo en el menú), sim (simulación sin pantalla), run (nivel de campaña o batalla rápida),
   //    deck / enemyDeck, enemyHp, aiK (ritmo de energía del rival), hero / heroP (null: castillo sin héroe)
   clearUnits(); paused = false; if (scene) scene.tweens.resumeAll();
-  const demo = !!o.demo, auto = demo || !!o.sim, rh = () => Math.random() < 0.5 ? 'aldric' : 'lyra';
+  const demo = !!o.demo, auto = demo || !!o.sim, rh = () => ['aldric', 'lyra', 'gull'][Math.floor(Math.random() * 3)];
   B = { demo, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
     hero: { type: o.hero || (demo ? rh() : myHero), state: 'throne', unit: null, skillT: 0 },
     heroP: { type: o.heroP === undefined ? rh() : o.heroP, state: 'throne', unit: null, skillT: 0 } };
@@ -164,7 +165,7 @@ function resetBattle(o = {}) {
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
 /* ---- héroe ---- */
-function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
+function setThrone(img, key) { const h = Object.values(HEROES).find(x => x.throne === key || x.empty === key); img.setTexture(key); img.setScale(THRONE.w * ((h && h.tw) || 1) / img.width); }
 function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
   const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || !hr.type || B.over) return false;
@@ -186,7 +187,9 @@ function heroAI(team = 'purple') {
   if (hr.state === 'throne') heroAct(team);
   else if (hr.state === 'field' && hr.skillT <= 0) {
     const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
-    if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
+    if (hr.type === 'gull') {   // Gūll: embiste cuando tiene dos enemigos por delante y cerca
+      if (foes.filter(v => (v.x - u.x) * u.dir > 0 && Math.abs(v.x - u.x) < H * 4).length >= 2) heroAct(team);
+    } else if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
       const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
       if (ahead >= 2 || nearCastle) heroAct(team);
     } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct(team);
@@ -216,6 +219,7 @@ function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
   L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
+  for (const e of ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna', 'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas']) L.image('emb_' + e, 'img/emb/' + e + '.png');
 }
 function makeCloud(sc) {
   // nube dibujada al estilo del arte: borde oscuro, cuerpo blanco y sombra azulada abajo

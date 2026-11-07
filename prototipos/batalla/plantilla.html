@@ -166,7 +166,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 
 /* ---- oro ---- */
 .oro { display: inline-flex; align-items: center; gap: 6px; background: rgba(15,19,34,.8); border: 3px solid var(--outline); border-radius: 999px; padding: 2px 12px 2px 3px; font-family: var(--font-display); font-size: 1.05rem; color: #fff; font-variant-numeric: tabular-nums; }
-.oro i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); box-shadow: inset 0 0 0 3px rgba(255,255,255,.25); }
+.oro i { width: 24px; height: 25px; background: url(img/esc/moneda.png) center / contain no-repeat; }
 .oro.top { position: fixed; top: calc(var(--st) + 12px); left: var(--sl); width: max-content; }
 .btn.small { font-size: .85rem; padding: 6px 10px; border-radius: 10px; }
 .acts.tests { justify-content: flex-start; opacity: .85; }
@@ -251,6 +251,10 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .estandarte img { width: 120px; height: auto; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
 .estandarte b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; margin-bottom: 6px; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.emblemas { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
+.emb { aspect-ratio: 1; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 4px; display: grid; place-items: center; color: #fff; font-weight: 800; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.emb img { width: 100%; height: 100%; object-fit: contain; }
+.emb[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); }
 .sw { width: 34px; height: 34px; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 0; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
 .sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); transform: translateY(-2px); }
 #m-campana { position: relative; }
@@ -258,7 +262,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .tribb { position: absolute; z-index: 3; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 4px; background: #fff8e1; color: var(--outline);
   border: 3px solid var(--outline); border-radius: 999px; padding: 1px 9px 1px 3px; font-family: var(--font-display); font-size: .95rem; box-shadow: 0 3px 0 var(--outline); animation: tribbob 1.4s ease-in-out infinite; }
 @keyframes tribbob { 50% { transform: translate(-50%, calc(-100% - 5px)); } }
-.tribb i, .coinfly { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); display: inline-block; }
+.tribb i, .coinfly { width: 20px; height: 21px; background: url(img/esc/moneda.png) center / contain no-repeat; display: inline-block; }
 .tribb.full { background: var(--gold); }
 .tribb::after { content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--outline); }
 .coinfly { position: fixed; z-index: 70; width: 22px; height: 22px; pointer-events: none; }
@@ -300,7 +304,8 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   <div class="sheet">
     <div class="sheet-top"><button class="btn" id="deckback">← Volver</button><h2>Mazo y héroe</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span id="deckcount">0/8</span></div>
     <h3>Tu estandarte <small>el color de tu reino: tus banderas, tus torres y los castillos que conquistes</small></h3>
-    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
+    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color y tu emblema"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
+    <div class="emblemas" id="emblemas"></div>
     <h3>Héroe</h3>
     <div class="heroes" id="heroes"></div>
     <h3>Cartas <small id="decknote">Elige 8 cartas.</small></h3>

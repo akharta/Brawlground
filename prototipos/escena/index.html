@@ -144,6 +144,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
       <button data-char="aldric" aria-pressed="false">Rey Aldric (héroe)</button>
       <button data-char="lyra" aria-pressed="false">Lyra, Ojo de Halcón (heroína)</button>
+      <button data-char="gull" aria-pressed="false">Gūll, el Puerco (héroe)</button>
       <button data-char="guardia" aria-pressed="false">Guardián del martillo</button>
     </div>
     <button class="btn" data-act="idle">Quieto</button>
@@ -168,6 +169,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     <button class="btn" data-act="seismic" id="seismic-btn" hidden>Golpe sísmico</button>
     <button class="btn" data-act="herojump" id="herojump-btn" hidden>Salto del trono</button>
     <button class="btn" data-act="storm" id="storm-btn" hidden>Tormenta de plumas</button>
+    <button class="btn" data-act="charge" id="charge-btn" hidden>Embestida porcina</button>
   </div>
   <p class="hint" id="hint"></p>
 
@@ -408,6 +410,11 @@ const CH = {
   aldric: { hp: 1800, dmg: [28, 32], speed: 40, cd: [1.6, 1.9], range: H * 1.15, ranged: false, h: 1.0, hero: true, goal: 15, k: 1.3,
     rest: { bh: [0, 0], fh: [0.523, -0.355], hr: 0 }, banner: [-0.248, -0.692], bannerH: 0.38, hammerH: 0.9344,
     skillCd: 12, seismic: { r: H * 2.2, dmg: [45, 55], stun: 1.5 }, auraR: H * 2.6, auraK: 1.2 },
+  // HÉROE. Gūll, el Puerco: caudillo del bosque a lomos de un jabalí. Pasiva: Al galope (tus unidades andan un 15 % más rápido mientras él lucha).
+  // Activa: Embestida porcina (cada 8 s): el jabalí arrolla en línea recta aturdiendo 1,5 s y Gūll remata girando con la cuchilla.
+  gull: { hp: 1400, dmg: [30, 36], speed: 95, cd: [1.2, 1.5], range: H * 1.4, ranged: false, aoe: true, h: 1.25, hero: true, goal: 15, k: 1.2,
+    rest: { sw: -1.2, bh: [0.12, -0.9] }, mount: [0.06, 0], rider: [-0.14, -0.27], riderH: 0.9, mountW: 1.5, weaponL: 0.95, handH: 0.17, wRot: 0.7,
+    skillCd: 8, charge: { dist: H * 4.2, v: 1100, dmg: [26, 32], stun: 1.5, spin: [40, 48], spinR: H * 1.45 }, haste: 1.15 },
   // HEROÍNA. Lyra, Ojo de Halcón: arquera. Pasiva: Flechas perforantes (cada flecha atraviesa hasta 3 enemigos).
   // Activa: Tormenta de plumas (cada 10 s): una ráfaga de flechas doradas barre todo el carril hasta el castillo rival y le hace daño.
   lyra: { hp: 900, dmg: [30, 36], speed: 45, cd: [1.5, 1.8], range: H * 5.5, ranged: true, h: 1.0, hero: true, goal: 15, k: 1.2, pierce: 3, arrowV: 950,
@@ -493,6 +500,16 @@ class Unit {
       this.parts = [this.body, this.mount, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'gull') {
+      const c = this.cfg;
+      this.mount = sc.add.image(0, 0, 'gu2_montura').setOrigin(0.5, 1); this.mount.setScale(c.mountW * H / this.mount.width);
+      this.body = sc.add.image(0, 0, 'gu2_cuerpo').setOrigin(0.5, 1); this.body.setScale(c.riderH * H / this.body.height);
+      this.weapon = sc.add.image(0, 0, 'gu2_arma').setOrigin(0.086, 0.911); this.weapon.setScale(c.weaponL * H / this.weapon.width);
+      this.bh = sc.add.image(0, 0, 'gu2_mano'); this.bh.setScale(c.handH * H / this.bh.width);
+      this.parts = [this.mount, this.body, this.weapon, this.bh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.6, -560, 10]];
+      this.bigK = c.k; this.shadow.setSize(H * 1.15 * c.k, H * 0.2 * c.k);
     } else if (type === 'esqueleto') {
       this.body = sc.add.image(0, 0, 'esq_cuerpo').setOrigin(0.5, 1).setScale(0.9 * H / 512);
       this.weapon = sc.add.image(0, 0, 'esq_arma').setOrigin(0.135, 0.53).setScale(0.422 * H / 512);
@@ -830,7 +847,7 @@ class Unit {
     const r = this.type === 'imparable' ? this.F.rest : this.cfg.rest;
     const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
     if (this.type === 'legionario') { o.sw = r.sw; o.sh = [...r.sh]; }
-    else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
+    else if (this.type === 'valkiria' || this.type === 'gull') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
     else if (this.type === 'ninja') { o.bk = r.bk; o.fk = r.fk; o.scarf = { r: -0.3, sx: 1 }; }
     else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
     else if (this.type === 'tercio') { o.pr = r.pr; }
@@ -923,12 +940,12 @@ class Unit {
           o.bk = 2.9; o.fk = 2.7;
           o.scarf.r = 0.12 + Math.sin(t * 22) * 0.1; o.scarf.sx = 1.1 + Math.sin(t * 17) * 0.05;
         }
-        if (!this.inPlace) this.x += this.dir * this.cfg.speed * (this.spdK || 1) * dt * (this.backing ? -0.7 : 1);
+        if (!this.inPlace) this.x += this.dir * this.cfg.speed * (this.spdK || 1) * gullHaste(this) * dt * (this.backing ? -0.7 : 1);
         break;
       }
       case 'attack':
         if (this.type === 'legionario') this.attackSword(o, t);
-        else if (this.type === 'valkiria') this.attackAxe(o, t);
+        else if (this.type === 'valkiria' || this.type === 'gull') this.attackAxe(o, t);
         else if (this.type === 'ninja') this.attackKunai(o, t);
         else if (this.type === 'pistolero') this.attackGuns(o, t);
         else if (this.type === 'lobo') this.attackBite(o, t);
@@ -1075,6 +1092,29 @@ class Unit {
         if (t >= (this.stunT || 1)) this.set('idle');
         break;
       }
+      case 'charge': {               // Embestida porcina: el jabalí se encabrita, arrolla en línea recta y Gūll remata girando
+        const c = this.cfg.charge;
+        if (t < 0.28) { const e = ease(t / 0.28); o.mount.r = -0.16 * e; o.rider.r = -0.1 * e; o.sw = lerp(this.cfg.rest.sw, -2.4, e); if (!this.chg) { this.chg = { x0: this.x, hit: new Set(), done: false }; } }
+        else if (!this.chg.done) {
+          const step = c.v * dt * this.dir; this.x += step; o.mount.r = 0.1; o.rider.r = 0.08; o.sw = -2.4; o.mount.y = Math.abs(Math.sin(t * 30)) * 0.05;
+          if (Math.random() < 0.7) burst(this.x - this.dir * H * 0.5, this.gy, 0xe8d3b0, 2, 90);
+          if (mode === 'fight') enemiesOf(this).filter(v => !v.isCastle && !this.chg.hit.has(v) && Math.abs(v.x - (this.x + this.dir * H * 0.6)) < H * 0.5).forEach(v => {
+            this.chg.hit.add(v); v.damage(Math.round(rand(...c.dmg)), this, this.x); if (v.alive && v.stun) v.stun(c.stun);
+            burst(v.x, v.gy - H * 0.5, 0xffe066, 8, 160); if (v.shove) v.shove(this.dir * H * 0.35);
+          });
+          const blocked = (mode === 'fight' && enemiesOf(this).some(v => v.isCastle && Math.abs(v.x - this.x) < H * 1.2)) || (mode !== 'fight' && (this.x > W - 160 || this.x < 160));
+          if (Math.abs(this.x - this.chg.x0) >= c.dist || blocked || t > 1.2) { this.chg.done = true; this.chgT = t; scene.cameras.main.shake(140, 0.005); }
+        } else {                     // giro completo con la cuchilla
+          const q = Math.min(1, (t - this.chgT) / 0.55), th = -2.4 + q * Math.PI * 2;
+          o.sw = th; o.wsx = 1; o.bh = [Math.cos(th) * 0.45, -0.75 + Math.sin(th) * 0.12]; o.rider.r = 0.05 * Math.sin(q * Math.PI * 2);
+          if (!this.spun && q > 0.3) {
+            this.spun = true; ring(this.x, this.gy - H * 0.5, 0xb6e36a, c.spinR * 2); burst(this.x, this.gy - H * 0.5, 0xd7e8b0, 16, 220);
+            if (mode === 'fight') enemiesOf(this).filter(v => Math.abs(v.x - this.x) <= c.spinR).forEach(v => v.damage(Math.round(rand(...c.spin)), this, this.x));
+          }
+          if (q >= 1) { this.chg = null; this.spun = false; this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        }
+        break;
+      }
       case 'storm': {                // Tormenta de plumas: tensa el arco al máximo y suelta una ráfaga de flechas doradas
         this.stormShot = true; this.attackBow(o, t * 0.8);
         o.rot -= 0.06; if (t < 0.8) { o.sx *= 1 + 0.03 * Math.sin(t * 40); }
@@ -1085,8 +1125,8 @@ class Unit {
       case 'heroJump': {             // el héroe salta del trono al campo
         const e = Math.min(1, t / 0.8), fromY = this.jumpFromY || 0;
         this.x = lerp(this.jumpFromX, this.jumpToX, e);
-        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); if (this.type !== 'lyra') { o.fh = [0.2, -0.9]; o.hr = -0.6; }
-        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, this.type === 'lyra' ? '¡Lyra!' : '¡Rey Aldric!', this.type === 'lyra' ? '#8fdcff' : '#ffd84a'); if (this.type === 'lyra') burst(this.x, this.gy - H * 0.6, 0xffe27a, 16, 200); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); if (this.type === 'aldric') { o.fh = [0.2, -0.9]; o.hr = -0.6; }
+        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, { lyra: '¡Lyra!', gull: '¡Gūll!' }[this.type] || '¡Rey Aldric!', { lyra: '#8fdcff', gull: '#b6e36a' }[this.type] || '#ffd84a'); if (this.type === 'lyra') burst(this.x, this.gy - H * 0.6, 0xffe27a, 16, 200); this.set(mode === 'fight' ? 'walk' : 'idle'); }
         break;
       }
       case 'launched': {             // lo ha golpeado un compañero desplazado por la patada de Lin: sale por los aires y queda aturdido
@@ -1786,7 +1826,7 @@ class Unit {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.hr);
       this.banner.setPosition(c.banner[0] * H, c.banner[1] * H + H * 0.27).setRotation(-0.05 + 0.04 * Math.sin(now * 2.6)).setScale(c.bannerH * H / this.banner.height * (1 + 0.05 * Math.sin(now * 5.2)), c.bannerH * H / this.banner.height);
     }
-    if (this.type === 'lyra') { this.rig.scaleX *= this.cfg.k; this.rig.scaleY *= this.cfg.k; }
+    if (this.type === 'lyra' || this.type === 'gull') { this.rig.scaleX *= this.cfg.k; this.rig.scaleY *= this.cfg.k; }
     if (this.type === 'guardia') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(-Math.PI / 2 + o.hr);
       this.shield.setPosition(o.fh[0] * H, o.fh[1] * H);
@@ -2014,6 +2054,13 @@ class Unit {
       this.bh.y += by;
       this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
       this.weapon.setScale(0.1344 * (H / 120) * (o.wsx === undefined ? 1 : o.wsx), 0.1344 * (H / 120));
+    } else if (this.type === 'gull') {
+      const c = this.cfg;
+      this.mount.setPosition(c.mount[0] * H, (c.mount[1] - o.mount.y) * H).setRotation(o.mount.r);
+      this.body.setPosition(c.rider[0] * H, (c.rider[1] - o.rider.y - o.mount.y) * H).setRotation(o.rider.r);
+      this.bh.y += -(o.rider.y + o.mount.y) * H;
+      const ws = c.weaponL * H / this.weapon.width;
+      this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw + c.wRot).setScale(ws * (o.wsx === undefined ? 1 : o.wsx), ws);
     } else if (this.type === 'aldric' || this.type === 'guardia') {
       // martillo, estandarte y escudo ya colocados arriba
     } else if (this.type === 'imparable') {
@@ -2422,6 +2469,14 @@ function seismicSlam(u) {
     }
   }
 }
+function gullHaste(u) {
+  // pasiva de Gūll: sus aliados (no él) andan un 15 % más rápido mientras está en el campo
+  if (u.type === 'gull' || mode !== 'fight') return 1;
+  const g = units.find(v => v.type === 'gull' && v.team === u.team && v.alive && v.state !== 'die' && v.state !== 'heroJump');
+  if (!g) return 1;
+  if (u.state === 'walk' && Math.random() < 0.06) fx.push({ x: u.x - u.dir * H * 0.25, y: u.gy - 2, vx: -u.dir * 40, vy: -20, g: 0, r: rand(2.5, 4), life: 0.4, t: 0.4, color: 0xe8d3b0 });
+  return g.cfg.haste;
+}
 let storms = [];
 function featherStorm(u, sx, sy) {
   // ola de flechas doradas y plumas que barre el carril entero; daña una vez a cada enemigo y, al llegar, al castillo rival
@@ -2653,7 +2708,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -2925,6 +2980,7 @@ function start() {
       L('imp_mon_cuerpo', 'imparable_monstruo_cuerpo'); L('imp_mon_espada', 'imparable_monstruo_espada'); L('imp_mon_mano', 'imparable_monstruo_mano');
       L('imp_esp_cuerpo', 'imparable_espectro_cuerpo'); L('imp_esp_espada', 'imparable_espectro_espada'); L('imp_esp_mano', 'imparable_espectro_mano');
       L('al_cuerpo', 'aldric_cuerpo'); L('al_martillo', 'aldric_martillo'); L('al_mano', 'aldric_mano'); L('al_estandarte', 'aldric_estandarte'); L('al_retrato', 'aldric_retrato');
+      L('gu2_cuerpo', 'gull_cuerpo'); L('gu2_montura', 'gull_montura'); L('gu2_arma', 'gull_arma'); L('gu2_mano', 'gull_mano'); L('trono_gull', 'trono_gull'); L('trono_gull_vacio', 'trono_gull_vacio');
       L('ly_cuerpo', 'lyra_cuerpo'); L('ly_arco', 'lyra_arco'); L('ly_flecha', 'lyra_flecha'); L('ly_mano', 'lyra_mano'); L('ly_pluma', 'lyra_pluma'); L('trono_lyra', 'trono_lyra'); L('trono_lyra_vacio', 'trono_lyra_vacio');
       L('trono_vacio', 'trono_vacio'); L('trono_aldric', 'trono_aldric'); L('gu_cuerpo', 'guardian_cuerpo'); L('gu_martillo', 'guardian_martillo'); L('gu_escudo', 'guardian_escudo');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_m', 'centinela_cuerpo_misiles'); L('ce_cuerpo_c', 'centinela_cuerpo_canon'); L('ce_misil', 'centinela_misil'); L('ce_dron', 'centinela_dron'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
@@ -2984,7 +3040,8 @@ $('anim-controls').addEventListener('click', e => {
     $('heat-btn').hidden = animChar !== 'centinela';
     $('ult-btn').hidden = animChar !== 'centinela' && animChar !== 'imparable';
     $('seismic-btn').hidden = animChar !== 'aldric';
-    $('herojump-btn').hidden = animChar !== 'aldric' && animChar !== 'lyra';
+    $('herojump-btn').hidden = !['aldric', 'lyra', 'gull'].includes(animChar);
+    $('charge-btn').hidden = animChar !== 'gull';
     $('storm-btn').hidden = animChar !== 'lyra';
     $('kick-btn').hidden = animChar !== 'kungfu';
     $('shade-btn').hidden = animChar !== 'muerte';
@@ -2996,11 +3053,12 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
   if (act === 'storm') { if (u.type === 'lyra') { u.inPlace = false; u.set('storm'); } return; }
-  if (act === 'herojump') { if (u.type === 'aldric' || u.type === 'lyra') { u.jumpFromX = 60; u.jumpToX = u.homeX; u.jumpFromY = H * 2.2; u.set('heroJump'); } return; }
+  if (act === 'charge') { if (u.type === 'gull') { u.inPlace = false; u.set('charge'); } return; }
+  if (act === 'herojump') { if (['aldric', 'lyra', 'gull'].includes(u.type)) { u.jumpFromX = 60; u.jumpToX = u.homeX; u.jumpFromY = H * 2.2; u.set('heroJump'); } return; }
   if (act === 'ult') { if (RARITY[u.type] === 'ascendida') { u.ultT = 0; u.ultUsed = false; u.castUlt(); } return; }
   if (act === 'missiles') { if (u.type === 'centinela') { u.inPlace = false; u.set('missiles'); } return; }
   if (act === 'heat') { if (u.type === 'centinela') { u.heat = u.heat >= 1 ? 0 : 1; floatText(u.x, u.gy - H * 1.6, u.heat ? '¡Sobrecalentado!' : 'Enfriado', '#ff8a5a'); } return; }

@@ -21,12 +21,12 @@ const PRADERAS = [
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 90], biome: '#7fcf6a', home: true },
-  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], levels: PRADERAS },
-  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'] },
-  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'] },
-  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'] },
-  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'] },
-  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'] },
+  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], emb: 'pluma', levels: PRADERAS },
+  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali' },
+  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol' },
+  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo' },
+  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra' },
+  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon' },
 ];
 const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.jpg' (herramientas/campana/preparar.py)
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
@@ -41,7 +41,11 @@ const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: [
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
 const SRC_HUE = { castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
-function recolorImage(img, [h0, h1], hex) {
+// emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
+const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
+  'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
+const BANNERS = { castillo_azul: [0.3981, 0.4034, 0.0904, 0.2122], castillo_azul_danado: [0.3923, 0.4013, 0.1038, 0.2059], castillo_morado: [0.5077, 0.4289, 0.0923, 0.2124], castillo_morado_danado: [0.5019, 0.4289, 0.1, 0.1938] };
+function recolorImage(img, [h0, h1], hex, base, emb) {
   // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
   const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
@@ -59,25 +63,35 @@ function recolorImage(img, [h0, h1], hex) {
     const l = vals[n] / ref;
     for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * l + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * l) : t[k] * l);
   });
-  cx.putImageData(d, 0, 0); return cv;
+  cx.putImageData(d, 0, 0);
+  const bn = BANNERS[base];
+  if (emb && bn && scene.textures.exists('emb_' + emb)) {   // el emblema, centrado en la parte alta del estandarte grande
+    const e = scene.textures.get('emb_' + emb).getSourceImage(), w = bn[2] * cv.width * 1.15, x = (bn[0] + bn[2] / 2) * cv.width - w / 2, y = (bn[1] + bn[3] * 0.4) * cv.height - w / 2;
+    cx.drawImage(e, x, y, w, w);
+  }
+  return cv;
 }
-function colorTex(base, color) {
-  // textura de un castillo o una flecha con las banderas del color pedido (se crea una vez y se reutiliza)
-  const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || SRC_HUE[fam][2] === color || !scene) return base;
-  const key = base + '@' + color; if (scene.textures.exists(key)) return key;
-  scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1])); return key;
+function colorTex(base, color, emb) {
+  // textura de un castillo o una flecha con las banderas del color pedido y su emblema (se crea una vez y se reutiliza)
+  const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || !scene) return base;
+  emb = BANNERS[base] && EMBLEMAS.includes(emb) ? emb : '';
+  if (SRC_HUE[fam][2] === color && !emb) return base;
+  const key = base + '@' + color + (emb ? '#' + emb : ''); if (scene.textures.exists(key)) return key;
+  scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1], base, emb)); return key;
 }
 const colorURLs = {};
-function colorURL(base, color) {
-  const key = colorTex(base, color); if (key === base) return 'img/esc/' + base + '.png';
+function colorURL(base, color, emb) {
+  const key = colorTex(base, color, emb); if (key === base) return 'img/esc/' + base + '.png';
   return colorURLs[key] || (colorURLs[key] = scene.textures.get(key).getSourceImage().toDataURL());
 }
-let TEAM_COLOR = { blue: 'azul', purple: 'morado' };
+let TEAM_COLOR = { blue: 'azul', purple: 'morado' }, TEAM_EMB = { blue: '', purple: '' };
 const myColor = () => COLORES[perfil.color] ? perfil.color : 'azul';
+const myEmb = () => EMBLEMAS.includes(perfil.emblema) ? perfil.emblema : '';
+const rivalEmb = kid => { const k = kid && KD(kid); return k && k.emb || 'calavera'; };
 function rivalColor(kid) { const k = kid && KD(kid), [c1, c2] = k && k.color ? k.color : ['morado', 'rojo']; return c1 === myColor() ? c2 : c1; }
-function battleColors(run) { return { blue: myColor(), purple: rivalColor(run && run.kind === 'nivel' ? run.k : null) }; }
+function battleColors(run) { const k = run && run.kind === 'nivel' ? run.k : null; return { blue: myColor(), purple: rivalColor(k), embBlue: myEmb(), embPurple: rivalEmb(k) }; }
 function applyColors(cols) {
-  TEAM_COLOR = cols;
+  TEAM_COLOR = { blue: cols.blue, purple: cols.purple }; TEAM_EMB = { blue: cols.embBlue || '', purple: cols.embPurple || '' };
   // en las barras de vida, el negro se aclara un poco para que se vea sobre el fondo oscuro
   const ui = k => k === 'negro' ? '#6b6f80' : COLORES[k][1];
   BLUE = Phaser.Display.Color.HexStringToColor(ui(cols.blue)).color; PURPLE = Phaser.Display.Color.HexStringToColor(ui(cols.purple)).color;
@@ -227,7 +241,7 @@ function showResult(res) {
   }
   show('over'); paintGold();
 }
-const NAMES_H = { aldric: 'El Rey Aldric', lyra: 'Lyra, Ojo de Halcón' };
+const NAMES_H = { aldric: 'El Rey Aldric', lyra: 'Lyra, Ojo de Halcón', gull: 'Gūll, el Puerco' };
 
 /* ---- mapa del mundo ---- */
 function curve(a, b) {   // camino curvo entre dos puntos del mapa (coordenadas del viewBox 0 0 100 150)
@@ -255,7 +269,7 @@ function openWorld() {
     lines += '<path class="route' + (next === 'done' ? ' done' : ' next') + (fresh ? ' fresh' : '') + '" d="' + d + '" pathLength="100"/>';
   }
   const nodes = KINGDOMS.map((k, i) => {
-    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor()) : colorURL(ICON.real, st === 'done' ? myColor() : rivalColor(k.id));
+    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor(), myEmb()) : st === 'done' ? colorURL(ICON.real, myColor(), myEmb()) : colorURL(ICON.real, rivalColor(k.id), rivalEmb(k.id));
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
     return '<button class="knode ' + st + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
       + '<span class="kico"><img src="' + icon + '" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
@@ -305,7 +319,7 @@ function openKingdom(kid) {
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
-    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid));
+    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid), done ? myEmb() : rivalEmb(kid));
     return '<button class="lnode' + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
       + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
@@ -365,8 +379,8 @@ function openDeck(from = 'menu') {
     g.appendChild(b);
   });
   const hs = heroesOwned();
-  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => { const has = hs.includes(k); return '<button type="button" class="hpick' + (has ? '' : ' lock') + '" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + (has ? h.skillName : 'Conquista el Reino de las Praderas') + '</span></span></button>'; }).join('');
-  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { if (!hs.includes(b.dataset.h)) return toast('Vence a Lyra en el Castillo Real de las Praderas para que se una a ti.'); myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
+  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => { const has = hs.includes(k); return '<button type="button" class="hpick' + (has ? '' : ' lock') + '" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + (has ? h.skillName : 'Conquista el ' + (KINGDOMS.find(q => q.ruler === k) || { name: 'reino de su rey' }).name) + '</span></span></button>'; }).join('');
+  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { if (!hs.includes(b.dataset.h)) { const q = KINGDOMS.find(z => z.ruler === b.dataset.h); return toast('Vence a ' + NAMES_H[b.dataset.h] + ' en el castillo real del ' + (q ? q.name : 'reino') + ' para que se una a ti.'); } myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
   paintColors();
   $('deckgo').textContent = from === 'nivel' ? '¡Atacar!' : '¡A luchar!';
   $('deckall').setAttribute('aria-pressed', perfil.all); $('deckall').textContent = perfil.all ? 'Pruebas: todo desbloqueado' : 'Pruebas: desbloquear todo';
@@ -375,7 +389,9 @@ function openDeck(from = 'menu') {
 }
 function paintColors() {
   $('colores').innerHTML = Object.entries(COLORES).map(([k, [n, hex]]) => '<button type="button" class="sw" data-c="' + k + '" style="--c:' + hex + '" aria-label="' + n + '" aria-pressed="' + (k === myColor()) + '"></button>').join('');
-  $('colorprev').src = colorURL(ICON.casa, myColor()); $('colorname').textContent = COLORES[myColor()][0];
+  $('colorprev').src = colorURL(ICON.casa, myColor(), myEmb()); $('colorname').textContent = COLORES[myColor()][0];
+  $('emblemas').innerHTML = ['', ...EMBLEMAS].map(e => '<button type="button" class="emb" data-e="' + e + '" aria-pressed="' + (e === myEmb()) + '" aria-label="' + (e || 'Sin emblema') + '" style="--c:' + COLORES[myColor()][1] + '">' + (e ? '<img src="img/emb/' + e + '.png" alt="">' : '—') + '</button>').join('');
+  document.querySelectorAll('#emblemas .emb').forEach(b => { b.onclick = () => { perfil.emblema = b.dataset.e; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
   document.querySelectorAll('#colores .sw').forEach(b => { b.onclick = () => { perfil.color = b.dataset.c; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
 }
 function syncDeck() {

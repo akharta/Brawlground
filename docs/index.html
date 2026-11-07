@@ -166,7 +166,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 
 /* ---- oro ---- */
 .oro { display: inline-flex; align-items: center; gap: 6px; background: rgba(15,19,34,.8); border: 3px solid var(--outline); border-radius: 999px; padding: 2px 12px 2px 3px; font-family: var(--font-display); font-size: 1.05rem; color: #fff; font-variant-numeric: tabular-nums; }
-.oro i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); box-shadow: inset 0 0 0 3px rgba(255,255,255,.25); }
+.oro i { width: 24px; height: 25px; background: url(img/esc/moneda.png) center / contain no-repeat; }
 .oro.top { position: fixed; top: calc(var(--st) + 12px); left: var(--sl); width: max-content; }
 .btn.small { font-size: .85rem; padding: 6px 10px; border-radius: 10px; }
 .acts.tests { justify-content: flex-start; opacity: .85; }
@@ -251,6 +251,10 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .estandarte img { width: 120px; height: auto; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
 .estandarte b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; margin-bottom: 6px; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.emblemas { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
+.emb { aspect-ratio: 1; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 4px; display: grid; place-items: center; color: #fff; font-weight: 800; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.emb img { width: 100%; height: 100%; object-fit: contain; }
+.emb[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); }
 .sw { width: 34px; height: 34px; border-radius: 10px; border: 3px solid var(--outline); background: var(--c); padding: 0; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
 .sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold), inset 0 -4px 0 rgba(0,0,0,.2); transform: translateY(-2px); }
 #m-campana { position: relative; }
@@ -258,7 +262,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .tribb { position: absolute; z-index: 3; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 4px; background: #fff8e1; color: var(--outline);
   border: 3px solid var(--outline); border-radius: 999px; padding: 1px 9px 1px 3px; font-family: var(--font-display); font-size: .95rem; box-shadow: 0 3px 0 var(--outline); animation: tribbob 1.4s ease-in-out infinite; }
 @keyframes tribbob { 50% { transform: translate(-50%, calc(-100% - 5px)); } }
-.tribb i, .coinfly { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe68a, var(--gold) 55%, #c98a12); border: 2px solid var(--outline); display: inline-block; }
+.tribb i, .coinfly { width: 20px; height: 21px; background: url(img/esc/moneda.png) center / contain no-repeat; display: inline-block; }
 .tribb.full { background: var(--gold); }
 .tribb::after { content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--outline); }
 .coinfly { position: fixed; z-index: 70; width: 22px; height: 22px; pointer-events: none; }
@@ -300,7 +304,8 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   <div class="sheet">
     <div class="sheet-top"><button class="btn" id="deckback">← Volver</button><h2>Mazo y héroe</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span id="deckcount">0/8</span></div>
     <h3>Tu estandarte <small>el color de tu reino: tus banderas, tus torres y los castillos que conquistes</small></h3>
-    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
+    <div class="estandarte"><img id="colorprev" alt="Tu castillo con tu color y tu emblema"><div><b id="colorname">Azul</b><div class="swatches" id="colores"></div></div></div>
+    <div class="emblemas" id="emblemas"></div>
     <h3>Héroe</h3>
     <div class="heroes" id="heroes"></div>
     <h3>Cartas <small id="decknote">Elige 8 cartas.</small></h3>
@@ -444,6 +449,11 @@ const CH = {
   aldric: { hp: 1800, dmg: [28, 32], speed: 40, cd: [1.6, 1.9], range: H * 1.15, ranged: false, h: 1.0, hero: true, goal: 15, k: 1.3,
     rest: { bh: [0, 0], fh: [0.523, -0.355], hr: 0 }, banner: [-0.248, -0.692], bannerH: 0.38, hammerH: 0.9344,
     skillCd: 12, seismic: { r: H * 2.2, dmg: [45, 55], stun: 1.5 }, auraR: H * 2.6, auraK: 1.2 },
+  // HÉROE. Gūll, el Puerco: caudillo del bosque a lomos de un jabalí. Pasiva: Al galope (tus unidades andan un 15 % más rápido mientras él lucha).
+  // Activa: Embestida porcina (cada 8 s): el jabalí arrolla en línea recta aturdiendo 1,5 s y Gūll remata girando con la cuchilla.
+  gull: { hp: 1400, dmg: [30, 36], speed: 95, cd: [1.2, 1.5], range: H * 1.4, ranged: false, aoe: true, h: 1.25, hero: true, goal: 15, k: 1.2,
+    rest: { sw: -1.2, bh: [0.12, -0.9] }, mount: [0.06, 0], rider: [-0.14, -0.27], riderH: 0.9, mountW: 1.5, weaponL: 0.95, handH: 0.17, wRot: 0.7,
+    skillCd: 8, charge: { dist: H * 4.2, v: 1100, dmg: [26, 32], stun: 1.5, spin: [40, 48], spinR: H * 1.45 }, haste: 1.15 },
   // HEROÍNA. Lyra, Ojo de Halcón: arquera. Pasiva: Flechas perforantes (cada flecha atraviesa hasta 3 enemigos).
   // Activa: Tormenta de plumas (cada 10 s): una ráfaga de flechas doradas barre todo el carril hasta el castillo rival y le hace daño.
   lyra: { hp: 900, dmg: [30, 36], speed: 45, cd: [1.5, 1.8], range: H * 5.5, ranged: true, h: 1.0, hero: true, goal: 15, k: 1.2, pierce: 3, arrowV: 950,
@@ -529,6 +539,16 @@ class Unit {
       this.parts = [this.body, this.mount, this.weapon, this.bh];
       this.rig.add(this.parts);
       this.drops = [[this.weapon, -0.6, -560, 10]];
+    } else if (type === 'gull') {
+      const c = this.cfg;
+      this.mount = sc.add.image(0, 0, 'gu2_montura').setOrigin(0.5, 1); this.mount.setScale(c.mountW * H / this.mount.width);
+      this.body = sc.add.image(0, 0, 'gu2_cuerpo').setOrigin(0.5, 1); this.body.setScale(c.riderH * H / this.body.height);
+      this.weapon = sc.add.image(0, 0, 'gu2_arma').setOrigin(0.086, 0.911); this.weapon.setScale(c.weaponL * H / this.weapon.width);
+      this.bh = sc.add.image(0, 0, 'gu2_mano'); this.bh.setScale(c.handH * H / this.bh.width);
+      this.parts = [this.mount, this.body, this.weapon, this.bh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, -0.6, -560, 10]];
+      this.bigK = c.k; this.shadow.setSize(H * 1.15 * c.k, H * 0.2 * c.k);
     } else if (type === 'esqueleto') {
       this.body = sc.add.image(0, 0, 'esq_cuerpo').setOrigin(0.5, 1).setScale(0.9 * H / 512);
       this.weapon = sc.add.image(0, 0, 'esq_arma').setOrigin(0.135, 0.53).setScale(0.422 * H / 512);
@@ -866,7 +886,7 @@ class Unit {
     const r = this.type === 'imparable' ? this.F.rest : this.cfg.rest;
     const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
     if (this.type === 'legionario') { o.sw = r.sw; o.sh = [...r.sh]; }
-    else if (this.type === 'valkiria') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
+    else if (this.type === 'valkiria' || this.type === 'gull') { o.sw = r.sw; o.mount = { y: 0, r: 0 }; o.rider = { y: 0, r: 0 }; }
     else if (this.type === 'ninja') { o.bk = r.bk; o.fk = r.fk; o.scarf = { r: -0.3, sx: 1 }; }
     else if (this.type === 'pistolero') { o.bg = r.bg; o.fg = r.fg; }
     else if (this.type === 'tercio') { o.pr = r.pr; }
@@ -959,12 +979,12 @@ class Unit {
           o.bk = 2.9; o.fk = 2.7;
           o.scarf.r = 0.12 + Math.sin(t * 22) * 0.1; o.scarf.sx = 1.1 + Math.sin(t * 17) * 0.05;
         }
-        if (!this.inPlace) this.x += this.dir * this.cfg.speed * (this.spdK || 1) * dt * (this.backing ? -0.7 : 1);
+        if (!this.inPlace) this.x += this.dir * this.cfg.speed * (this.spdK || 1) * gullHaste(this) * dt * (this.backing ? -0.7 : 1);
         break;
       }
       case 'attack':
         if (this.type === 'legionario') this.attackSword(o, t);
-        else if (this.type === 'valkiria') this.attackAxe(o, t);
+        else if (this.type === 'valkiria' || this.type === 'gull') this.attackAxe(o, t);
         else if (this.type === 'ninja') this.attackKunai(o, t);
         else if (this.type === 'pistolero') this.attackGuns(o, t);
         else if (this.type === 'lobo') this.attackBite(o, t);
@@ -1111,6 +1131,29 @@ class Unit {
         if (t >= (this.stunT || 1)) this.set('idle');
         break;
       }
+      case 'charge': {               // Embestida porcina: el jabalí se encabrita, arrolla en línea recta y Gūll remata girando
+        const c = this.cfg.charge;
+        if (t < 0.28) { const e = ease(t / 0.28); o.mount.r = -0.16 * e; o.rider.r = -0.1 * e; o.sw = lerp(this.cfg.rest.sw, -2.4, e); if (!this.chg) { this.chg = { x0: this.x, hit: new Set(), done: false }; } }
+        else if (!this.chg.done) {
+          const step = c.v * dt * this.dir; this.x += step; o.mount.r = 0.1; o.rider.r = 0.08; o.sw = -2.4; o.mount.y = Math.abs(Math.sin(t * 30)) * 0.05;
+          if (Math.random() < 0.7) burst(this.x - this.dir * H * 0.5, this.gy, 0xe8d3b0, 2, 90);
+          if (mode === 'fight') enemiesOf(this).filter(v => !v.isCastle && !this.chg.hit.has(v) && Math.abs(v.x - (this.x + this.dir * H * 0.6)) < H * 0.5).forEach(v => {
+            this.chg.hit.add(v); v.damage(Math.round(rand(...c.dmg)), this, this.x); if (v.alive && v.stun) v.stun(c.stun);
+            burst(v.x, v.gy - H * 0.5, 0xffe066, 8, 160); if (v.shove) v.shove(this.dir * H * 0.35);
+          });
+          const blocked = (mode === 'fight' && enemiesOf(this).some(v => v.isCastle && Math.abs(v.x - this.x) < H * 1.2)) || (mode !== 'fight' && (this.x > W - 160 || this.x < 160));
+          if (Math.abs(this.x - this.chg.x0) >= c.dist || blocked || t > 1.2) { this.chg.done = true; this.chgT = t; scene.cameras.main.shake(140, 0.005); }
+        } else {                     // giro completo con la cuchilla
+          const q = Math.min(1, (t - this.chgT) / 0.55), th = -2.4 + q * Math.PI * 2;
+          o.sw = th; o.wsx = 1; o.bh = [Math.cos(th) * 0.45, -0.75 + Math.sin(th) * 0.12]; o.rider.r = 0.05 * Math.sin(q * Math.PI * 2);
+          if (!this.spun && q > 0.3) {
+            this.spun = true; ring(this.x, this.gy - H * 0.5, 0xb6e36a, c.spinR * 2); burst(this.x, this.gy - H * 0.5, 0xd7e8b0, 16, 220);
+            if (mode === 'fight') enemiesOf(this).filter(v => Math.abs(v.x - this.x) <= c.spinR).forEach(v => v.damage(Math.round(rand(...c.spin)), this, this.x));
+          }
+          if (q >= 1) { this.chg = null; this.spun = false; this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        }
+        break;
+      }
       case 'storm': {                // Tormenta de plumas: tensa el arco al máximo y suelta una ráfaga de flechas doradas
         this.stormShot = true; this.attackBow(o, t * 0.8);
         o.rot -= 0.06; if (t < 0.8) { o.sx *= 1 + 0.03 * Math.sin(t * 40); }
@@ -1121,8 +1164,8 @@ class Unit {
       case 'heroJump': {             // el héroe salta del trono al campo
         const e = Math.min(1, t / 0.8), fromY = this.jumpFromY || 0;
         this.x = lerp(this.jumpFromX, this.jumpToX, e);
-        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); if (this.type !== 'lyra') { o.fh = [0.2, -0.9]; o.hr = -0.6; }
-        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, this.type === 'lyra' ? '¡Lyra!' : '¡Rey Aldric!', this.type === 'lyra' ? '#8fdcff' : '#ffd84a'); if (this.type === 'lyra') burst(this.x, this.gy - H * 0.6, 0xffe27a, 16, 200); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+        o.hop = lerp(fromY, 0, easeIn(e)) + Math.sin(e * Math.PI) * H * 0.9; o.rot = lerp(-0.2, 0.1, e); if (this.type === 'aldric') { o.fh = [0.2, -0.9]; o.hr = -0.6; }
+        if (e >= 1) { burst(this.x, this.gy, 0xe8d3b0, 22, 220); ring(this.x, this.gy - 6, 0xffd84a, H * 2.4); scene.cameras.main.shake(260, 0.008); floatText(this.x, this.gy - H * 1.7, { lyra: '¡Lyra!', gull: '¡Gūll!' }[this.type] || '¡Rey Aldric!', { lyra: '#8fdcff', gull: '#b6e36a' }[this.type] || '#ffd84a'); if (this.type === 'lyra') burst(this.x, this.gy - H * 0.6, 0xffe27a, 16, 200); this.set(mode === 'fight' ? 'walk' : 'idle'); }
         break;
       }
       case 'launched': {             // lo ha golpeado un compañero desplazado por la patada de Lin: sale por los aires y queda aturdido
@@ -1822,7 +1865,7 @@ class Unit {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.hr);
       this.banner.setPosition(c.banner[0] * H, c.banner[1] * H + H * 0.27).setRotation(-0.05 + 0.04 * Math.sin(now * 2.6)).setScale(c.bannerH * H / this.banner.height * (1 + 0.05 * Math.sin(now * 5.2)), c.bannerH * H / this.banner.height);
     }
-    if (this.type === 'lyra') { this.rig.scaleX *= this.cfg.k; this.rig.scaleY *= this.cfg.k; }
+    if (this.type === 'lyra' || this.type === 'gull') { this.rig.scaleX *= this.cfg.k; this.rig.scaleY *= this.cfg.k; }
     if (this.type === 'guardia') {
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(-Math.PI / 2 + o.hr);
       this.shield.setPosition(o.fh[0] * H, o.fh[1] * H);
@@ -2050,6 +2093,13 @@ class Unit {
       this.bh.y += by;
       this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw);
       this.weapon.setScale(0.1344 * (H / 120) * (o.wsx === undefined ? 1 : o.wsx), 0.1344 * (H / 120));
+    } else if (this.type === 'gull') {
+      const c = this.cfg;
+      this.mount.setPosition(c.mount[0] * H, (c.mount[1] - o.mount.y) * H).setRotation(o.mount.r);
+      this.body.setPosition(c.rider[0] * H, (c.rider[1] - o.rider.y - o.mount.y) * H).setRotation(o.rider.r);
+      this.bh.y += -(o.rider.y + o.mount.y) * H;
+      const ws = c.weaponL * H / this.weapon.width;
+      this.weapon.setPosition(this.bh.x, this.bh.y).setRotation(o.sw + c.wRot).setScale(ws * (o.wsx === undefined ? 1 : o.wsx), ws);
     } else if (this.type === 'aldric' || this.type === 'guardia') {
       // martillo, estandarte y escudo ya colocados arriba
     } else if (this.type === 'imparable') {
@@ -2458,6 +2508,14 @@ function seismicSlam(u) {
     }
   }
 }
+function gullHaste(u) {
+  // pasiva de Gūll: sus aliados (no él) andan un 15 % más rápido mientras está en el campo
+  if (u.type === 'gull' || mode !== 'fight') return 1;
+  const g = units.find(v => v.type === 'gull' && v.team === u.team && v.alive && v.state !== 'die' && v.state !== 'heroJump');
+  if (!g) return 1;
+  if (u.state === 'walk' && Math.random() < 0.06) fx.push({ x: u.x - u.dir * H * 0.25, y: u.gy - 2, vx: -u.dir * 40, vy: -20, g: 0, r: rand(2.5, 4), life: 0.4, t: 0.4, color: 0xe8d3b0 });
+  return g.cfg.haste;
+}
 let storms = [];
 function featherStorm(u, sx, sy) {
   // ola de flechas doradas y plumas que barre el carril entero; daña una vez a cada enemigo y, al llegar, al castillo rival
@@ -2684,7 +2742,7 @@ function onShoot(u, sx, sy) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -2916,7 +2974,7 @@ function makeAuraTextures(sc) {
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
 const COST = {"legionario": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null, paused = false;
@@ -2925,6 +2983,7 @@ const THRONE = { x: 140, y: 200, w: 140 };
 const HEROES = {
   aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'trono_aldric', empty: 'trono_vacio', portrait: 'aldric_retrato' },
   lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: 'trono_lyra_vacio', portrait: 'lyra_retrato' },
+  gull: { name: 'Gūll', skill: 'charge', skillName: 'Embestida porcina', throne: 'trono_gull', empty: 'trono_gull_vacio', portrait: 'gull_retrato', tw: 1.5 },   // trono con el jabalí dormido al lado: más ancho
 };
 let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 // castillos dibujados: centro en CASTLE_VX, el suelo del torreón (plat) queda a la altura del trono; arch = arquero de la torre delantera
@@ -3036,7 +3095,7 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team]));
+      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team], TEAM_EMB[team]));
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
@@ -3062,7 +3121,7 @@ function resetBattle(o = {}) {
   // o: demo (la IA juega por los dos, de fondo en el menú), sim (simulación sin pantalla), run (nivel de campaña o batalla rápida),
   //    deck / enemyDeck, enemyHp, aiK (ritmo de energía del rival), hero / heroP (null: castillo sin héroe)
   clearUnits(); paused = false; if (scene) scene.tweens.resumeAll();
-  const demo = !!o.demo, auto = demo || !!o.sim, rh = () => Math.random() < 0.5 ? 'aldric' : 'lyra';
+  const demo = !!o.demo, auto = demo || !!o.sim, rh = () => ['aldric', 'lyra', 'gull'][Math.floor(Math.random() * 3)];
   B = { demo, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
     hero: { type: o.hero || (demo ? rh() : myHero), state: 'throne', unit: null, skillT: 0 },
     heroP: { type: o.heroP === undefined ? rh() : o.heroP, state: 'throne', unit: null, skillT: 0 } };
@@ -3078,7 +3137,7 @@ function resetBattle(o = {}) {
 const enemyCastle = u => { const c = castles[u.team === 'blue' ? 'purple' : 'blue']; return c && c.alive ? [c] : []; };
 
 /* ---- héroe ---- */
-function setThrone(img, key) { img.setTexture(key); img.setScale(THRONE.w / img.width); }
+function setThrone(img, key) { const h = Object.values(HEROES).find(x => x.throne === key || x.empty === key); img.setTexture(key); img.setScale(THRONE.w * ((h && h.tw) || 1) / img.width); }
 function heroAct(team) {
   // el héroe de un bando: si está en el trono y tiene las bajas, salta; si está en el campo y la habilidad está lista, la lanza
   const hr = team === 'blue' ? B.hero : B.heroP; if (!hr || !hr.type || B.over) return false;
@@ -3100,7 +3159,9 @@ function heroAI(team = 'purple') {
   if (hr.state === 'throne') heroAct(team);
   else if (hr.state === 'field' && hr.skillT <= 0) {
     const u = hr.unit, foes = enemiesOf(u).filter(v => !v.isCastle);
-    if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
+    if (hr.type === 'gull') {   // Gūll: embiste cuando tiene dos enemigos por delante y cerca
+      if (foes.filter(v => (v.x - u.x) * u.dir > 0 && Math.abs(v.x - u.x) < H * 4).length >= 2) heroAct(team);
+    } else if (hr.type === 'lyra') {   // Lyra: con dos enemigos por delante, o cerca del castillo rival
       const ahead = foes.filter(v => (v.x - u.x) * u.dir > 0).length, nearCastle = enemiesOf(u).some(v => v.isCastle && Math.abs(v.x - u.x) < H * 6);
       if (ahead >= 2 || nearCastle) heroAct(team);
     } else if (foes.filter(v => Math.abs(v.x - (u.x + u.dir * H * 0.9)) <= CH.aldric.seismic.r).length >= 2) heroAct(team);
@@ -3130,6 +3191,7 @@ function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
   L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
+  for (const e of ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna', 'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas']) L.image('emb_' + e, 'img/emb/' + e + '.png');
 }
 function makeCloud(sc) {
   // nube dibujada al estilo del arte: borde oscuro, cuerpo blanco y sombra azulada abajo
@@ -3274,6 +3336,7 @@ function start() {
       L('imp_mon_cuerpo', 'imparable_monstruo_cuerpo'); L('imp_mon_espada', 'imparable_monstruo_espada'); L('imp_mon_mano', 'imparable_monstruo_mano');
       L('imp_esp_cuerpo', 'imparable_espectro_cuerpo'); L('imp_esp_espada', 'imparable_espectro_espada'); L('imp_esp_mano', 'imparable_espectro_mano');
       L('al_cuerpo', 'aldric_cuerpo'); L('al_martillo', 'aldric_martillo'); L('al_mano', 'aldric_mano'); L('al_estandarte', 'aldric_estandarte'); L('al_retrato', 'aldric_retrato');
+      L('gu2_cuerpo', 'gull_cuerpo'); L('gu2_montura', 'gull_montura'); L('gu2_arma', 'gull_arma'); L('gu2_mano', 'gull_mano'); L('trono_gull', 'trono_gull'); L('trono_gull_vacio', 'trono_gull_vacio');
       L('ly_cuerpo', 'lyra_cuerpo'); L('ly_arco', 'lyra_arco'); L('ly_flecha', 'lyra_flecha'); L('ly_mano', 'lyra_mano'); L('ly_pluma', 'lyra_pluma'); L('trono_lyra', 'trono_lyra'); L('trono_lyra_vacio', 'trono_lyra_vacio');
       L('trono_vacio', 'trono_vacio'); L('trono_aldric', 'trono_aldric'); L('gu_cuerpo', 'guardian_cuerpo'); L('gu_martillo', 'guardian_martillo'); L('gu_escudo', 'guardian_escudo');
       L('ce_cuerpo', 'centinela_cuerpo'); L('ce_cuerpo_m', 'centinela_cuerpo_misiles'); L('ce_cuerpo_c', 'centinela_cuerpo_canon'); L('ce_misil', 'centinela_misil'); L('ce_dron', 'centinela_dron'); L('ce_cuerpo_v', 'centinela_cuerpo_verde'); L('ce_arma', 'centinela_arma'); L('ce_rifle', 'centinela_rifle'); L('ce_mano', 'centinela_mano');
@@ -3385,12 +3448,12 @@ const PRADERAS = [
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 90], biome: '#7fcf6a', home: true },
-  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], levels: PRADERAS },
-  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'] },
-  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'] },
-  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'] },
-  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'] },
-  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'] },
+  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], emb: 'pluma', levels: PRADERAS },
+  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali' },
+  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol' },
+  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo' },
+  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra' },
+  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon' },
 ];
 const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.jpg' (herramientas/campana/preparar.py)
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
@@ -3405,7 +3468,11 @@ const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: [
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
 const SRC_HUE = { castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
-function recolorImage(img, [h0, h1], hex) {
+// emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
+const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
+  'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
+const BANNERS = { castillo_azul: [0.3981, 0.4034, 0.0904, 0.2122], castillo_azul_danado: [0.3923, 0.4013, 0.1038, 0.2059], castillo_morado: [0.5077, 0.4289, 0.0923, 0.2124], castillo_morado_danado: [0.5019, 0.4289, 0.1, 0.1938] };
+function recolorImage(img, [h0, h1], hex, base, emb) {
   // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
   const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
@@ -3423,25 +3490,35 @@ function recolorImage(img, [h0, h1], hex) {
     const l = vals[n] / ref;
     for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * l + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * l) : t[k] * l);
   });
-  cx.putImageData(d, 0, 0); return cv;
+  cx.putImageData(d, 0, 0);
+  const bn = BANNERS[base];
+  if (emb && bn && scene.textures.exists('emb_' + emb)) {   // el emblema, centrado en la parte alta del estandarte grande
+    const e = scene.textures.get('emb_' + emb).getSourceImage(), w = bn[2] * cv.width * 1.15, x = (bn[0] + bn[2] / 2) * cv.width - w / 2, y = (bn[1] + bn[3] * 0.4) * cv.height - w / 2;
+    cx.drawImage(e, x, y, w, w);
+  }
+  return cv;
 }
-function colorTex(base, color) {
-  // textura de un castillo o una flecha con las banderas del color pedido (se crea una vez y se reutiliza)
-  const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || SRC_HUE[fam][2] === color || !scene) return base;
-  const key = base + '@' + color; if (scene.textures.exists(key)) return key;
-  scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1])); return key;
+function colorTex(base, color, emb) {
+  // textura de un castillo o una flecha con las banderas del color pedido y su emblema (se crea una vez y se reutiliza)
+  const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || !scene) return base;
+  emb = BANNERS[base] && EMBLEMAS.includes(emb) ? emb : '';
+  if (SRC_HUE[fam][2] === color && !emb) return base;
+  const key = base + '@' + color + (emb ? '#' + emb : ''); if (scene.textures.exists(key)) return key;
+  scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1], base, emb)); return key;
 }
 const colorURLs = {};
-function colorURL(base, color) {
-  const key = colorTex(base, color); if (key === base) return 'img/esc/' + base + '.png';
+function colorURL(base, color, emb) {
+  const key = colorTex(base, color, emb); if (key === base) return 'img/esc/' + base + '.png';
   return colorURLs[key] || (colorURLs[key] = scene.textures.get(key).getSourceImage().toDataURL());
 }
-let TEAM_COLOR = { blue: 'azul', purple: 'morado' };
+let TEAM_COLOR = { blue: 'azul', purple: 'morado' }, TEAM_EMB = { blue: '', purple: '' };
 const myColor = () => COLORES[perfil.color] ? perfil.color : 'azul';
+const myEmb = () => EMBLEMAS.includes(perfil.emblema) ? perfil.emblema : '';
+const rivalEmb = kid => { const k = kid && KD(kid); return k && k.emb || 'calavera'; };
 function rivalColor(kid) { const k = kid && KD(kid), [c1, c2] = k && k.color ? k.color : ['morado', 'rojo']; return c1 === myColor() ? c2 : c1; }
-function battleColors(run) { return { blue: myColor(), purple: rivalColor(run && run.kind === 'nivel' ? run.k : null) }; }
+function battleColors(run) { const k = run && run.kind === 'nivel' ? run.k : null; return { blue: myColor(), purple: rivalColor(k), embBlue: myEmb(), embPurple: rivalEmb(k) }; }
 function applyColors(cols) {
-  TEAM_COLOR = cols;
+  TEAM_COLOR = { blue: cols.blue, purple: cols.purple }; TEAM_EMB = { blue: cols.embBlue || '', purple: cols.embPurple || '' };
   // en las barras de vida, el negro se aclara un poco para que se vea sobre el fondo oscuro
   const ui = k => k === 'negro' ? '#6b6f80' : COLORES[k][1];
   BLUE = Phaser.Display.Color.HexStringToColor(ui(cols.blue)).color; PURPLE = Phaser.Display.Color.HexStringToColor(ui(cols.purple)).color;
@@ -3591,7 +3668,7 @@ function showResult(res) {
   }
   show('over'); paintGold();
 }
-const NAMES_H = { aldric: 'El Rey Aldric', lyra: 'Lyra, Ojo de Halcón' };
+const NAMES_H = { aldric: 'El Rey Aldric', lyra: 'Lyra, Ojo de Halcón', gull: 'Gūll, el Puerco' };
 
 /* ---- mapa del mundo ---- */
 function curve(a, b) {   // camino curvo entre dos puntos del mapa (coordenadas del viewBox 0 0 100 150)
@@ -3619,7 +3696,7 @@ function openWorld() {
     lines += '<path class="route' + (next === 'done' ? ' done' : ' next') + (fresh ? ' fresh' : '') + '" d="' + d + '" pathLength="100"/>';
   }
   const nodes = KINGDOMS.map((k, i) => {
-    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor()) : colorURL(ICON.real, st === 'done' ? myColor() : rivalColor(k.id));
+    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor(), myEmb()) : st === 'done' ? colorURL(ICON.real, myColor(), myEmb()) : colorURL(ICON.real, rivalColor(k.id), rivalEmb(k.id));
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
     return '<button class="knode ' + st + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
       + '<span class="kico"><img src="' + icon + '" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
@@ -3669,7 +3746,7 @@ function openKingdom(kid) {
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
-    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid));
+    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid), done ? myEmb() : rivalEmb(kid));
     return '<button class="lnode' + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
       + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
@@ -3729,8 +3806,8 @@ function openDeck(from = 'menu') {
     g.appendChild(b);
   });
   const hs = heroesOwned();
-  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => { const has = hs.includes(k); return '<button type="button" class="hpick' + (has ? '' : ' lock') + '" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + (has ? h.skillName : 'Conquista el Reino de las Praderas') + '</span></span></button>'; }).join('');
-  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { if (!hs.includes(b.dataset.h)) return toast('Vence a Lyra en el Castillo Real de las Praderas para que se una a ti.'); myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
+  $('heroes').innerHTML = Object.entries(HEROES).map(([k, h]) => { const has = hs.includes(k); return '<button type="button" class="hpick' + (has ? '' : ' lock') + '" data-h="' + k + '"><img src="img/' + h.portrait + '.png" alt=""><span><b>' + h.name + '</b><span>' + (has ? h.skillName : 'Conquista el ' + (KINGDOMS.find(q => q.ruler === k) || { name: 'reino de su rey' }).name) + '</span></span></button>'; }).join('');
+  document.querySelectorAll('.hpick').forEach(b => { b.onclick = () => { if (!hs.includes(b.dataset.h)) { const q = KINGDOMS.find(z => z.ruler === b.dataset.h); return toast('Vence a ' + NAMES_H[b.dataset.h] + ' en el castillo real del ' + (q ? q.name : 'reino') + ' para que se una a ti.'); } myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (er) {} syncDeck(); }; });
   paintColors();
   $('deckgo').textContent = from === 'nivel' ? '¡Atacar!' : '¡A luchar!';
   $('deckall').setAttribute('aria-pressed', perfil.all); $('deckall').textContent = perfil.all ? 'Pruebas: todo desbloqueado' : 'Pruebas: desbloquear todo';
@@ -3739,7 +3816,9 @@ function openDeck(from = 'menu') {
 }
 function paintColors() {
   $('colores').innerHTML = Object.entries(COLORES).map(([k, [n, hex]]) => '<button type="button" class="sw" data-c="' + k + '" style="--c:' + hex + '" aria-label="' + n + '" aria-pressed="' + (k === myColor()) + '"></button>').join('');
-  $('colorprev').src = colorURL(ICON.casa, myColor()); $('colorname').textContent = COLORES[myColor()][0];
+  $('colorprev').src = colorURL(ICON.casa, myColor(), myEmb()); $('colorname').textContent = COLORES[myColor()][0];
+  $('emblemas').innerHTML = ['', ...EMBLEMAS].map(e => '<button type="button" class="emb" data-e="' + e + '" aria-pressed="' + (e === myEmb()) + '" aria-label="' + (e || 'Sin emblema') + '" style="--c:' + COLORES[myColor()][1] + '">' + (e ? '<img src="img/emb/' + e + '.png" alt="">' : '—') + '</button>').join('');
+  document.querySelectorAll('#emblemas .emb').forEach(b => { b.onclick = () => { perfil.emblema = b.dataset.e; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
   document.querySelectorAll('#colores .sw').forEach(b => { b.onclick = () => { perfil.color = b.dataset.c; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
 }
 function syncDeck() {
