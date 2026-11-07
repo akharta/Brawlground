@@ -95,9 +95,10 @@ abierta para revisar los mapas (`CAMPANA_ABIERTA` en campana.js).
 
 ### Mundo 2 (arte guardado en assets/campana/mundo2)
 
-Mapamundi con siete reinos, de abajo arriba: playa de conchas (tu base), setas, cañón de huesos,
-engranajes, cristal, cementerio y cielo dorado. Sus mapas de reino comparten los 10 claros del
-mundo 1. Pendiente: sus castillos.
+Siete reinos jugables al otro lado del mar, de abajo arriba: Playa, Setas, Huesos, Engranajes,
+Cristal, Cementerio y Cielo, con sus 10 castillos cada uno (nombres propios, dificultad provisional).
+Se llega tras conquistar el Volcán. Ejércitos de nivel 7 (Playa) a 10 (Cielo). Sus reyes aún no
+tienen héroe. En la pestaña Campaña se cambia entre Mundo 1 y Mundo 2.
 
 ## Mejora de unidades
 

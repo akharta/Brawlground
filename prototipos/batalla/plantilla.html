@@ -276,6 +276,12 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .cpgain { position: relative; display: inline-grid; justify-items: center; }
 .cpgain b { position: absolute; right: -6px; bottom: -4px; background: #3ccf86; color: var(--outline); border: 2px solid var(--outline); border-radius: 999px; font-family: var(--font-display); font-weight: 400; font-size: .75rem; padding: 0 5px; }
 
+.knode.ico { width: 15%; } .knode.ico .kico { aspect-ratio: 1.15; } .knode.ico .klbl { position: absolute; top: 30%; left: 92%; margin: 0; padding: 0 6px; } .knode.ico.alt .klbl { left: auto; right: 92%; } .knode.ico .klbl b { font-size: .74rem; } .knode.ico .klbl small { font-size: .62rem; }
+.knode.ico.locked .kico img { filter: brightness(.6) saturate(.5) drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.wseg { flex: none; } .wseg button { padding: 4px 9px; font-size: .85rem; }
+.mapbar h2 { flex: 1 1 auto; }
+@media (max-width: 430px) { #mundo .mapbar h2 { display: none; } }
+
 /* ---- ficha de nivel y botín ---- */
 .panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
 .panel.nivel h2 { font-size: 1.8rem; text-wrap: balance; }
@@ -518,7 +524,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 </section>
 
 <section id="mundo" class="screen maps" hidden>
-  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><button class="btn gold small" id="mundo-all" hidden>Recaudar todo</button><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+  <div class="mapbar"><button class="btn" id="mundo-back">← Menú</button><h2>Campaña</h2><div class="seg wseg" id="mundo-tabs"><button data-w="1" aria-pressed="true">Mundo 1</button><button data-w="2" aria-pressed="false">Mundo 2</button></div><button class="btn gold small" id="mundo-all" hidden>Recaudar todo</button><span class="oro"><i></i><b class="oro-n">0</b></span></div>
   <div class="mapscroll" id="mundo-scroll"><div class="mapcanvas" id="mundo-map"></div></div>
 </section>
 

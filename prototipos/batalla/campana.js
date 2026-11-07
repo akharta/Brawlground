@@ -27,7 +27,7 @@ function genReino(n, nombres, premios, rey) {
     const royal = i === 9, top = Math.min(FUERZA.length, 6 + n + Math.floor(i / 2)), pool = FUERZA.slice(Math.max(0, top - 9), top);
     const deck = []; for (let k = 0; deck.length < Math.min(8, 4 + Math.floor((i + n) / 2)) && k < 60; k++) { const u = pool[(k * 5 + i * 3 + n) % pool.length]; if (!deck.includes(u)) deck.push(u); }
     if (royal && n >= 5) deck[deck.length - 1] = n === 6 ? 'imparable' : 'centinela';
-    return { name, esc: ESCENAS[(i * 3 + n * 7) % 10], deck, hp: royal ? 2200 + 300 * (n - 1) : 1300 + 120 * n + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
+    return { name, esc: ESCENAS[(i * 3 + n * 7) % 10], deck, hp: royal ? 2200 + Math.min(300 * (n - 1), 1500 + 120 * (n - 6)) : 1300 + Math.min(120 * n, 720 + 40 * n) + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
       gold: royal ? 300 + 100 * (n - 1) : 80 + 30 * n + 10 * i, prize: premios[i] || null, hero: royal ? rey : undefined, royal: royal || undefined };
   });
 }
@@ -38,6 +38,14 @@ const PANTANO = genReino(5, ['Embarcadero Hundido', 'Torre del Lodo', 'Fortín d
 const VOLCAN = genReino(6, ['Paso de la Ceniza', 'Torre de Basalto', 'Fortín del Azufre', 'Río de Lava', 'Atalaya del Cráter', 'Forja Ardiente', 'Bastión de Obsidiana', 'Fuerte del Humo', 'Muralla de Fuego', 'Fortaleza Real del Volcán'], {}, null);
 // de momento todos los reinos y castillos están abiertos para poder recorrer los mapas (poner a false para jugar en orden)
 const CAMPANA_ABIERTA = true;
+// MUNDO 2: siete reinos al otro lado del mar (de abajo arriba). Ejércitos de nivel más alto; dificultad provisional
+const PLAYA = genReino(7, ['Muelle de las Conchas', 'Torre del Coral', 'Fortín de la Marea', 'Cala de las Perlas', 'Atalaya del Faro', 'Bastión de Arena', 'Puerto de las Gaviotas', 'Fuerte del Arrecife', 'Muralla de Nácar', 'Palacio Real de la Playa'], {}, null);
+const SETAS = genReino(8, ['Claro de los Hongos', 'Torre del Champiñón', 'Fortín de las Esporas', 'Prado del Musgo', 'Atalaya del Helecho', 'Bastión del Sombrerillo', 'Puente de Raíces', 'Fuerte de la Seta Roja', 'Muralla del Moho', 'Castillo Real de las Setas'], {}, null);
+const HUESOS = genReino(9, ['Paso del Colmillo', 'Torre de Costillas', 'Fortín del Cráneo', 'Barranco Rojo', 'Atalaya de Arenisca', 'Bastión del Fósil', 'Puerta de las Vértebras', 'Fuerte del Dragón Muerto', 'Muralla de Hueso', 'Fortaleza Real de los Huesos'], {}, null);
+const ENGRANAJES = genReino(10, ['Taller del Vapor', 'Torre del Engranaje', 'Fortín de las Tuberías', 'Fundición de Latón', 'Atalaya del Reloj', 'Bastión de Remaches', 'Puente de Cadenas', 'Fuerte de la Caldera', 'Muralla de Acero', 'Ciudadela Real de los Engranajes'], {}, null);
+const CRISTAL = genReino(11, ['Mina de Amatista', 'Torre del Cuarzo', 'Fortín del Prisma', 'Cascada Violeta', 'Atalaya de la Geoda', 'Bastión Reluciente', 'Paso del Brillo', 'Fuerte de la Gema', 'Muralla de Cristal', 'Castillo Real de Cristal'], {}, null);
+const CEMENTERIO = genReino(12, ['Verja Oxidada', 'Torre de las Lápidas', 'Fortín del Fuego Fatuo', 'Cripta Olvidada', 'Atalaya del Cuervo', 'Bastión de las Ánimas', 'Arco de la Niebla', 'Fuerte del Sepulturero', 'Muralla del Silencio', 'Castillo Real del Cementerio'], {}, null);
+const CIELO = genReino(13, ['Escalera de Nubes', 'Torre del Viento', 'Fortín de las Cascadas', 'Isla Flotante', 'Atalaya del Sol', 'Bastión Dorado', 'Arco Celeste', 'Fuerte del Trueno', 'Muralla de Oro', 'Palacio Real del Cielo'], {}, null);
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 89.8], biome: '#7fcf6a', home: true },
@@ -47,11 +55,21 @@ const KINGDOMS = [
   { id: 'nieve', name: 'Reino de las Nieves', pos: [50, 33.2], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo', levels: NIEVE },
   { id: 'pantano', name: 'Reino del Pantano', pos: [50, 20.8], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra', levels: PANTANO },
   { id: 'volcan', name: 'Reino del Volcán', pos: [50, 9.8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon', levels: VOLCAN },
+  { id: 'playa', world: 2, name: 'Reino de la Playa', pos: [44, 86], biome: '#f3dfa8', color: ['rosa', 'morado'], emb: 'ancla', levels: PLAYA },
+  { id: 'setas', world: 2, name: 'Reino de las Setas', pos: [50, 70.5], biome: '#7fcf6a', color: ['rojo', 'naranja'], emb: 'flor', levels: SETAS },
+  { id: 'huesos', world: 2, name: 'Reino de los Huesos', pos: [52, 56.5], biome: '#d9713a', color: ['naranja', 'negro'], emb: 'calavera', levels: HUESOS },
+  { id: 'engranajes', world: 2, name: 'Reino de los Engranajes', pos: [52, 42.5], biome: '#8a90b8', color: ['dorado', 'azul'], emb: 'yunque', levels: ENGRANAJES },
+  { id: 'cristal', world: 2, name: 'Reino de Cristal', pos: [52, 31], biome: '#a76ad9', color: ['morado', 'rosa'], emb: 'copo', levels: CRISTAL },
+  { id: 'cementerio', world: 2, name: 'Reino del Cementerio', pos: [54, 19.5], biome: '#4b4d75', color: ['negro', 'verde'], emb: 'buho', levels: CEMENTERIO },
+  { id: 'cielo', world: 2, name: 'Reino del Cielo', pos: [53, 7.5], biome: '#f2d36a', color: ['blanco', 'dorado'], emb: 'sol', levels: CIELO },
 ];
+KINGDOMS.forEach(k => { k.world = k.world || 1; });
+const WORLDS = { 1: { name: 'Mundo 1', art: 'img/campana/mapa_mundo.jpg', castles: true }, 2: { name: 'Mundo 2', art: 'img/campana/mapa_mundo2_b.jpg', castles: false } };
+let curWorld = 1;
 // mapas pintados (herramientas/campana/preparar.py). El mapamundi trae los castillos de cada reino dibujados;
 // los mapas de reino comparten el mismo camino con 10 claros y una colina arriba
 const MAP_ART = { mundo: 'img/campana/mapa_mundo.jpg' };
-for (const k of ['hogar', 'praderas', 'bosque', 'desierto', 'nieve', 'pantano', 'volcan']) MAP_ART[k] = 'img/campana/mapa_' + k + '.jpg';
+for (const k of ['hogar', 'praderas', 'bosque', 'desierto', 'nieve', 'pantano', 'volcan', 'playa', 'setas', 'huesos', 'engranajes', 'cristal', 'cementerio', 'cielo']) MAP_ART[k] = 'img/campana/mapa_' + k + '.jpg';
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
 // Mientras no lleguen los dibujos se usan los castillos de batalla; tu castillo de origen es el azul.
 const ICON = { vasallo: 'castillo_morado', real: 'castillo_morado', casa: 'castillo_azul' };
@@ -279,7 +297,7 @@ function curve(a, b) {   // camino curvo entre dos puntos del mapa (coordenadas 
 // banderín con tu color y tu emblema: marca lo que es tuyo en los mapas pintados
 const pennant = () => '<span class="pennant" style="--c:' + COLORES[myColor()][1] + '" aria-hidden="true">' + (myEmb() ? '<img src="img/emb/' + myEmb() + '.png" alt="">' : '') + '</span>';
 function worldArt() {
-  if (MAP_ART.mundo) return '<img class="mapart" src="' + MAP_ART.mundo + '" alt="">';
+  if (WORLDS[curWorld].art) return '<img class="mapart" src="' + WORLDS[curWorld].art + '" alt="">';
   // mapa provisional: un continente en el mar, con una mancha de color por reino
   const blobs = KINGDOMS.map(k => '<ellipse cx="' + k.pos[0] + '" cy="' + k.pos[1] * 1.5 + '" rx="19" ry="12" fill="' + k.biome + '" stroke="#1e2235" stroke-width=".6" opacity=".95"/>').join('');
   return '<svg class="mapart" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true"><defs><radialGradient id="mar" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#5fb4f0"/><stop offset="1" stop-color="#2f6fc0"/></radialGradient></defs>'
@@ -287,35 +305,43 @@ function worldArt() {
     + '<path d="M18 145 C4 120 10 96 8 80 C6 60 14 40 22 26 C30 10 52 2 70 5 C88 9 96 26 92 46 C88 64 96 84 90 104 C84 126 74 144 52 147 C38 149 26 149 18 145Z" fill="#cfe9a0" stroke="#1e2235" stroke-width=".9"/>'
     + blobs + '</svg>';
 }
-function openWorld() {
-  const m = $('mundo-map'), states = KINGDOMS.map((k, i) => kingdomState(i));
+function openWorld(w) {
+  curWorld = WORLDS[w] ? w : curWorld;
+  const W = WORLDS[curWorld], m = $('mundo-map'), states = KINGDOMS.map((k, i) => kingdomState(i));
+  const idx = KINGDOMS.map((k, i) => i).filter(i => KINGDOMS[i].world === curWorld);
   const pend = perfil.pending ? KINGDOMS.findIndex(k => k.id === perfil.pending) : -1;
+  document.querySelectorAll('#mundo-tabs button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.w === curWorld));
   // líneas: los tramos ya recorridos, y el que lleva al reino que toca conquistar (punteado)
   let lines = '';
-  for (let i = 0; i < KINGDOMS.length - 1; i++) {
-    const from = states[i], next = states[i + 1];
+  for (let n = 0; n < idx.length - 1; n++) {
+    const i = idx[n], from = states[i], next = states[idx[n + 1]];
     if (!(from === 'home' || from === 'done')) break;
-    const d = curve(KINGDOMS[i].pos, KINGDOMS[i + 1].pos), fresh = i === pend;
+    const d = curve(KINGDOMS[i].pos, KINGDOMS[idx[n + 1]].pos), fresh = i === pend;
     lines += '<path class="route' + (next === 'done' ? ' done' : ' next') + (fresh ? ' fresh' : '') + '" d="' + d + '" pathLength="100"/>';
   }
-  const nodes = KINGDOMS.map((k, i) => {
-    const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor(), myEmb()) : st === 'done' ? colorURL(ICON.real, myColor(), myEmb()) : colorURL(ICON.real, rivalColor(k.id), rivalEmb(k.id));
+  const nodes = idx.map(i => {
+    const k = KINGDOMS[i], st = states[i], mine = st === 'home' || st === 'done';
+    const icon = W.castles ? '' : colorURL(iconFor(k.id, true), mine ? myColor() : rivalColor(k.id), mine ? myEmb() : rivalEmb(k.id));
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
-    return '<button class="knode ' + st + (MAP_ART.mundo ? ' art' : '') + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
-      + '<span class="kico">' + (MAP_ART.mundo ? '' : '<img src="' + icon + '" alt="">') + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '')
-      + (st === 'home' || st === 'done' ? pennant() : '') + '</span>'
+    return '<button class="knode ' + st + ' art' + (W.castles ? '' : ' ico' + (idx.indexOf(i) % 2 ? ' alt' : '')) + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
+      + '<span class="kico">' + (icon ? '<img src="' + icon + '" alt="">' : '') + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '')
+      + (mine ? pennant() : '') + '</span>'
       + '<span class="klbl"><b>' + k.name + '</b><small>' + sub + '</small></span></button>';
   }).join('');
-  const bubbles = KINGDOMS.map(k => k.levels ? '<button class="tribb" data-k="' + k.id + '" style="left:' + (k.pos[0] + 17) + '%;top:' + (k.pos[1] - 1) + '%" hidden></button>' : '').join('');
+  const bubbles = idx.map(i => KINGDOMS[i]).map(k => k.levels ? '<button class="tribb" data-k="' + k.id + '" style="left:' + (k.pos[0] + 17) + '%;top:' + (k.pos[1] - 1) + '%" hidden></button>' : '').join('');
   m.innerHTML = worldArt() + '<svg class="routes" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">' + lines + '</svg>' + nodes + bubbles;
   m.querySelectorAll('.knode').forEach(b => { b.onclick = () => tapKingdom(+b.dataset.i); });
   m.querySelectorAll('.tribb').forEach(b => { b.onclick = () => { const k = KD(b.dataset.k); collect(k.id, k.levels.map((_, i) => i), b); tribTick(); }; });
   tribTick();
   show('mundo');
   // céntralo en el reino que toca
-  const target = KINGDOMS.findIndex((k, i) => states[i] === 'open'), sc = $('mundo-scroll');
-  requestAnimationFrame(() => { const n = m.querySelector('.knode[data-i="' + (target >= 0 ? target : 1) + '"]'); if (n) sc.scrollTop = n.offsetTop - sc.clientHeight / 2; });
-  if (pend >= 0) { perfil.pending = null; savePerfil(); setTimeout(() => toast('¡' + KINGDOMS[pend].name + ' es tuyo! Tu ejército marcha hacia el ' + KINGDOMS[pend + 1].name + '.'), 900); }
+  const target = idx.find(i => states[i] === 'open'), sc = $('mundo-scroll');
+  requestAnimationFrame(() => { const n = m.querySelector('.knode[data-i="' + (target !== undefined ? target : idx[0]) + '"]'); if (n) sc.scrollTop = n.offsetTop - sc.clientHeight / 2; });
+  if (pend >= 0) {
+    perfil.pending = null; savePerfil();
+    const nx = KINGDOMS[pend + 1];
+    setTimeout(() => toast('¡' + KINGDOMS[pend].name + ' es tuyo!' + (nx ? ' Tu ejército marcha hacia el ' + nx.name + (nx.world !== KINGDOMS[pend].world ? ', al otro lado del mar' : '') + '.' : ' Has conquistado el mundo entero.')), 900);
+  }
 }
 function tapKingdom(i) {
   const k = KINGDOMS[i], st = kingdomState(i);
@@ -345,7 +371,7 @@ function kingdomArt(kid) {
 }
 let CUR_KID = null;
 function openKingdom(kid) {
-  CUR_KID = kid;
+  CUR_KID = kid; curWorld = KD(kid).world || 1;
   const kd = KD(kid), st = starsOf(kid), m = $('reino-map');
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
@@ -446,7 +472,7 @@ $('deckwipe').onclick = e => {
 
 /* ---- botones del menú, la pausa y los mapas ---- */
 $('mundo-back').onclick = () => show('menu');
-$('reino-back').onclick = openWorld;
+$('reino-back').onclick = () => openWorld();
 $('nv-close').onclick = () => show('reino');
 $('nv-deck').onclick = () => openDeck('nivel');
 $('nv-go').onclick = () => { if (LV) startRun({ kind: 'nivel', k: LV.k, i: LV.i }); };
@@ -513,3 +539,4 @@ window.__setPerfil = p => { perfil = Object.assign(newPerfil(), p); savePerfil()
 window.__levels = () => PRADERAS;
 window.__openKingdom = openKingdom; window.__openWorld = openWorld; window.__openLevel = openLevel; window.__startRun = startRun;
 window.__startBattle = deck => { if (deck) myDeck = deck; perfil.all = true; startRun({ kind: 'rapida' }); };
+document.querySelectorAll('#mundo-tabs button').forEach(b => { b.onclick = () => openWorld(+b.dataset.w); });

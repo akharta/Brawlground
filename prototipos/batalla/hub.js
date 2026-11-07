@@ -172,6 +172,7 @@ $('pf-practica').onclick = () => { location.href = 'practica.html'; };
 function goTab(t) {
   if (t === 'menu') { show('menu'); startDemo(); }
   else if (t === 'mundo') openWorld();
+  
   else if (t === 'ejercito') openArmy();
   else if (t === 'taberna') openTaberna();
   else if (t === 'arena') show('arena');

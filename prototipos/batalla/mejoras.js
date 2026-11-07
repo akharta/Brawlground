@@ -6,7 +6,7 @@ const LV_MAX = 10, LV_PASO = 0.1;
 const LV_COPIAS = [0, 1, 2, 3, 5, 8, 12, 16, 22, 30];          // copias para subir desde el nivel n (índice = nivel actual)
 const LV_ORO = [0, 50, 100, 180, 300, 450, 650, 900, 1250, 1700];
 const LV_RAR = { comun: 1, poco: 1.2, rara: 1.5, epica: 2, legendaria: 3, ascendida: 4 };
-const REINO_LV = { praderas: 1, bosque: 2, desierto: 3, nieve: 4, pantano: 5, volcan: 6 };   // nivel de los ejércitos de cada reino
+const REINO_LV = { praderas: 1, bosque: 2, desierto: 3, nieve: 4, pantano: 5, volcan: 6, playa: 7, setas: 7, huesos: 8, engranajes: 8, cristal: 9, cementerio: 9, cielo: 10 };   // nivel de los ejércitos de cada reino
 const lvK = lv => 1 + LV_PASO * ((lv || 1) - 1);
 const lvOf = k => Math.max(1, Math.min(LV_MAX, (perfil.niveles || {})[k] || 1));
 const copiasOf = k => (perfil.copias || {})[k] || 0;
