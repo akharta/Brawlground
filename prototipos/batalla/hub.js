@@ -243,7 +243,7 @@ function openTaberna() {
   $('tab-slots').innerHTML = slots.map((s, i) => {
     const r = RARITY[s.k] || 'comun', price = TAB.precio[r];
     return '<div class="slot' + (s.sold ? ' sold' : '') + '">' + cardHtml(s.k) + '<b>' + NAMES[s.k] + '</b><small>' + RAREZA[r] + (own.includes(s.k) ? ' · ya lo tienes: te da una copia' : ' · nuevo para tu ejército') + '</small>'
-      + (s.sold ? '<span class="soon">Contratado</span>' : '<button class="btn gold small" data-i="' + i + '"><span class="oro" style="border:0;background:none;padding:0"><i></i><b>' + fmt(price) + '</b></span></button>') + '</div>';
+      + (s.sold ? '<span class="chip">Contratado</span>' : '<button class="btn gold small" data-i="' + i + '"><span class="oro" style="border:0;background:none;padding:0"><i></i><b>' + fmt(price) + '</b></span></button>') + '</div>';
   }).join('');
   document.querySelectorAll('#tab-slots [data-i]').forEach(b => { b.onclick = () => buyMerc(+b.dataset.i); });
   tabTimer(); show('taberna');

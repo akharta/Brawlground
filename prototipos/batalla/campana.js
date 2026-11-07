@@ -20,20 +20,24 @@ const PRADERAS = [
 ];
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
-  { id: 'hogar', name: 'Tu reino', pos: [50, 90], biome: '#7fcf6a', home: true },
-  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [28, 74], biome: '#a6dd5c', color: ['morado', 'rojo'], emb: 'pluma', levels: PRADERAS },
-  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [70, 61], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali' },
-  { id: 'desierto', name: 'Reino del Desierto', pos: [30, 47], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol' },
-  { id: 'nieve', name: 'Reino de las Nieves', pos: [69, 34], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo' },
-  { id: 'pantano', name: 'Reino del Pantano', pos: [32, 21], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra' },
-  { id: 'volcan', name: 'Reino del Volcán', pos: [63, 8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon' },
+  { id: 'hogar', name: 'Tu reino', pos: [50, 89.8], biome: '#7fcf6a', home: true },
+  { id: 'praderas', name: 'Reino de las Praderas', ruler: 'lyra', pos: [50, 73.6], biome: '#a6dd5c', color: ['morado', 'rojo'], emb: 'pluma', levels: PRADERAS },
+  { id: 'bosque', name: 'Reino del Bosque', ruler: 'gull', pos: [50, 58.6], biome: '#3f8f55', color: ['verde', 'naranja'], emb: 'jabali' },
+  { id: 'desierto', name: 'Reino del Desierto', pos: [50, 44.9], biome: '#efc66a', color: ['dorado', 'morado'], emb: 'sol' },
+  { id: 'nieve', name: 'Reino de las Nieves', pos: [50, 33.2], biome: '#d6ecf7', color: ['blanco', 'azul'], emb: 'copo' },
+  { id: 'pantano', name: 'Reino del Pantano', pos: [50, 20.8], biome: '#7f9a62', color: ['negro', 'verde'], emb: 'cobra' },
+  { id: 'volcan', name: 'Reino del Volcán', pos: [50, 9.8], biome: '#d9603a', color: ['rojo', 'negro'], emb: 'dragon' },
 ];
-const MAP_ART = { mundo: null, praderas: null };   // p. ej. 'img/campana/mapa_mundo.jpg' (herramientas/campana/preparar.py)
+// mapas pintados (herramientas/campana/preparar.py). El mapamundi trae los castillos de cada reino dibujados;
+// los mapas de reino comparten el mismo camino con 10 claros y una colina arriba
+const MAP_ART = { mundo: 'img/campana/mapa_mundo.jpg' };
+for (const k of ['hogar', 'praderas', 'bosque', 'desierto', 'nieve', 'pantano', 'volcan']) MAP_ART[k] = 'img/campana/mapa_' + k + '.jpg';
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
 // Mientras no lleguen los dibujos se usan los castillos de batalla; tu castillo de origen es el azul.
 const ICON = { vasallo: 'castillo_morado', real: 'castillo_morado', casa: 'castillo_azul' };
 // posiciones de los 10 castillos en el mapa del reino (% ancho, % alto), de abajo arriba por el camino
-const LV_POS = [[50, 88.5], [24, 83.5], [47, 75], [74, 67], [53, 58.5], [25, 50.5], [44, 42], [72, 34], [55, 25.5], [50, 10]];
+const LV_POS = [[74.1, 85.7], [42, 80.4], [27.2, 68.6], [57.7, 64.6], [69.8, 53.3], [39, 49.6], [28.3, 37.8], [59.7, 34.2], [59.4, 21.2], [48.4, 9.9]];
+const CAMP_POS = [52.6, 96];   // primer claro del camino: el campamento de tu ejército
 const KD = id => KINGDOMS.find(k => k.id === id);
 
 /* ---- colores: el jugador elige el de su reino; cada reino rival tiene el suyo (y otro de reserva si coinciden) ---- */
@@ -248,6 +252,8 @@ function curve(a, b) {   // camino curvo entre dos puntos del mapa (coordenadas 
   const [x1, y1] = [a[0], a[1] * 1.5], [x2, y2] = [b[0], b[1] * 1.5], mx = (x1 + x2) / 2 + (y2 - y1) * 0.18, my = (y1 + y2) / 2 - (x2 - x1) * 0.18;
   return 'M' + x1 + ' ' + y1 + ' Q' + mx + ' ' + my + ' ' + x2 + ' ' + y2;
 }
+// banderín con tu color y tu emblema: marca lo que es tuyo en los mapas pintados
+const pennant = () => '<span class="pennant" style="--c:' + COLORES[myColor()][1] + '" aria-hidden="true">' + (myEmb() ? '<img src="img/emb/' + myEmb() + '.png" alt="">' : '') + '</span>';
 function worldArt() {
   if (MAP_ART.mundo) return '<img class="mapart" src="' + MAP_ART.mundo + '" alt="">';
   // mapa provisional: un continente en el mar, con una mancha de color por reino
@@ -271,11 +277,12 @@ function openWorld() {
   const nodes = KINGDOMS.map((k, i) => {
     const st = states[i], icon = st === 'home' ? colorURL(ICON.casa, myColor(), myEmb()) : st === 'done' ? colorURL(ICON.real, myColor(), myEmb()) : colorURL(ICON.real, rivalColor(k.id), rivalEmb(k.id));
     const sub = st === 'home' ? 'Tu castillo' : st === 'done' ? 'Conquistado' : st === 'open' ? (starsOf(k.id).filter(s => s > 0).length + '/10 castillos') : st === 'soon' ? 'Próximamente' : 'Bloqueado';
-    return '<button class="knode ' + st + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
-      + '<span class="kico"><img src="' + icon + '" alt="">' + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '') + '</span>'
+    return '<button class="knode ' + st + (MAP_ART.mundo ? ' art' : '') + (i === pend ? ' fresh' : '') + '" data-i="' + i + '" style="left:' + k.pos[0] + '%;top:' + k.pos[1] + '%" aria-label="' + k.name + ': ' + sub + '">'
+      + '<span class="kico">' + (MAP_ART.mundo ? '' : '<img src="' + icon + '" alt="">') + (st === 'done' ? '<span class="cross" aria-hidden="true"></span>' : '') + (st === 'locked' || st === 'soon' ? '<span class="lock" aria-hidden="true"></span>' : '')
+      + (st === 'home' || st === 'done' ? pennant() : '') + '</span>'
       + '<span class="klbl"><b>' + k.name + '</b><small>' + sub + '</small></span></button>';
   }).join('');
-  const bubbles = KINGDOMS.map(k => k.levels ? '<button class="tribb" data-k="' + k.id + '" style="left:' + k.pos[0] + '%;top:' + (k.pos[1] - 6.5) + '%" hidden></button>' : '').join('');
+  const bubbles = KINGDOMS.map(k => k.levels ? '<button class="tribb" data-k="' + k.id + '" style="left:' + (k.pos[0] + 17) + '%;top:' + (k.pos[1] - 1) + '%" hidden></button>' : '').join('');
   m.innerHTML = worldArt() + '<svg class="routes" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">' + lines + '</svg>' + nodes + bubbles;
   m.querySelectorAll('.knode').forEach(b => { b.onclick = () => tapKingdom(+b.dataset.i); });
   m.querySelectorAll('.tribb').forEach(b => { b.onclick = () => { const k = KD(b.dataset.k); collect(k.id, k.levels.map((_, i) => i), b); tribTick(); }; });
@@ -320,12 +327,12 @@ function openKingdom(kid) {
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
     const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid), done ? myEmb() : rivalEmb(kid));
-    return '<button class="lnode' + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
+    return '<button class="lnode' + (MAP_ART[kid] ? ' art' : '') + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
       + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')
       + '<span class="lnum">' + (i + 1) + '</span>' + (done ? starsHtml(st[i]) : '') + '</button>'
       + (done ? '<button class="tribb" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + (LV_POS[i][1] - (lv.royal ? 8 : 6)) + '%" hidden></button>' : '');
-  }).join('');
+  }).join('') + '<span class="camp" style="left:' + CAMP_POS[0] + '%;top:' + CAMP_POS[1] + '%" aria-hidden="true">' + pennant() + '</span>';
   m.querySelectorAll('.lnode').forEach(b => { b.onclick = () => { const i = +b.dataset.i; if (levelOpen(kid, i)) openLevel(kid, i); else toast('Conquista antes el castillo ' + i + '.'); }; });
   m.querySelectorAll('.tribb').forEach(b => { b.onclick = () => { collect(kid, [+b.dataset.i], b); tribTick(); }; });
   tribTick();
