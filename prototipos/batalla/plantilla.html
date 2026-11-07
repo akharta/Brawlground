@@ -190,11 +190,12 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .mapbar { display: flex; align-items: center; gap: 10px; padding: calc(var(--st) + 8px) var(--sr) 8px var(--sl); background: var(--panel); border-bottom: 4px solid var(--outline); z-index: 2; }
 .mapbar .btn, .mapbar .oro { white-space: nowrap; flex: none; }
 .mapbar h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mapscroll { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sb); display: grid; align-content: center; }
-.mapscroll { container-type: size; }
-#mundo .mapcanvas { width: max(min(100cqw, 560px), 100cqh * 2 / 3); }   /* el mapamundi llena el alto; los mapas de reino se ven enteros */
+/* la lámina del mapa: columna flexible; el mapa se centra en horizontal (si es más ancho que la pantalla se recorta por igual a los dos lados)
+   y en vertical con márgenes automáticos (si es más alto, se desliza desde arriba sin perder nada) */
+.mapscroll { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: var(--sb); display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 0; container-type: size; }
+.mapcanvas { position: relative; flex: none; width: min(100%, 560px); width: min(100cqw, 560px); aspect-ratio: 2 / 3; margin-block: auto; }
+.screen.maps .mapcanvas { width: max(min(100cqw, 560px), 100cqh * 2 / 3); }   /* los mapas llenan el alto; si sobra ancho, se recorta por igual a los dos lados */
 /* el mapa llena el alto de la pantalla (en el móvil en vertical se recortan un poco los lados); en pantallas anchas, hasta 560 px */
-.mapcanvas { position: relative; width: min(100cqw, 560px); aspect-ratio: 2 / 3; margin: 0; left: 50%; transform: translateX(-50%); }
 .mapart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
 .routes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .route { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
