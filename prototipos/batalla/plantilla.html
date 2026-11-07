@@ -305,7 +305,9 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .grietas { position: absolute; inset: 0; pointer-events: none; opacity: calc(var(--g, 0) / 3); background:
   linear-gradient(62deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 30% 40% / 40% 40% no-repeat,
   linear-gradient(-58deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 70% 55% / 35% 40% no-repeat; mix-blend-mode: screen; }
-.abcell.rota { animation: romper .7s ease-in forwards; }
+.abcell.abierta .absil { animation: salir 1.1s ease-in forwards; }
+@keyframes salir { 0% { transform: scale(1); filter: brightness(0) drop-shadow(0 0 6px var(--c)); } 60% { transform: scale(1.15) translateY(6px); filter: brightness(0) drop-shadow(0 0 22px var(--c)); } 100% { transform: scale(1.5) translateY(10px); filter: brightness(3); opacity: 0; } }
+.abcell.abierta .abfondo { overflow: visible; }
 @keyframes romper { 30% { transform: scale(1.12); filter: brightness(2); } 100% { transform: scale(1.6); opacity: 0; filter: brightness(4); } }
 .abcard { position: relative; display: grid; justify-items: center; gap: 6px; }
 .abcard .dk { width: 150px; opacity: 1; position: relative; z-index: 1; filter: drop-shadow(0 0 16px var(--c)); }

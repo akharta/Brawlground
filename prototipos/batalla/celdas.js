@@ -51,7 +51,7 @@ const gemas = () => perfil.gemas || 0;
 function openCeldas() {
   $('cel-list').innerHTML = CELDAS.map(c => {
     const n = celdasDe()[c.id] || 0, pr = Object.entries(c.prob).map(([r, p]) => '<span style="--c:' + RAR_COL[r] + '">' + RAREZA[r] + ' ' + p + ' %</span>').join('');
-    return '<div class="celda" style="--c:' + c.color + '"><div class="cimg"><img src="img/celdas/celda_' + c.id + '.png" alt=""><b class="cnum">×' + n + '</b></div>'
+    return '<div class="celda" style="--c:' + c.color + '"><div class="cimg"><img src="img/celdas/celda_' + c.id + '_0.png" alt=""><b class="cnum">×' + n + '</b></div>'
       + '<div class="cinfo"><b>' + c.name + '</b><small>' + c.cartas + ' cartas · ' + c.copias[0] + '–' + c.copias[1] + ' copias por carta (menos cuanto más rara)</small><div class="probs">' + pr + '</div>'
       + '<div class="acts start"><button class="btn gold small" data-open="' + c.id + '"' + (n ? '' : ' disabled') + '>Abrir</button>'
       + '<button class="btn small" data-buy="' + c.id + '"><span class="oro gema" style="border:0;background:none;padding:0"><i></i><b>' + c.precio + '</b></span></button></div></div></div>';
@@ -72,8 +72,8 @@ function abrirAnim(id) {
   const r = abrirCelda(id); if (!r) return;
   AB = { r, golpes: 0, i: -1 };
   const top = r.out[r.out.length - 1];
-  $('ab-stage').innerHTML = '<div class="abcell" style="--c:' + r.c.color + '"><div class="abfondo"><img class="absil" src="img/' + top.k + '_carta.png" alt=""></div><img class="abimg" src="img/celdas/celda_' + id + '.png" alt="' + r.c.name + '"><div class="grietas"></div></div>';
-  $('ab-txt').textContent = 'Toca la celda para romper el candado';
+  $('ab-stage').innerHTML = '<div class="abcell" style="--c:' + r.c.color + '"><div class="abfondo"><img class="absil" src="img/' + top.k + '_carta.png" alt=""></div><img class="abimg" src="img/celdas/celda_' + id + '_0.png" alt="' + r.c.name + '"></div>';
+  $('ab-txt').textContent = 'Toca la celda para forzar la puerta';
   $('ab-sum').hidden = true; $('ab-ok').hidden = true; $('abrir').hidden = false;
   $('ab-stage').onclick = golpe;
 }
@@ -91,11 +91,12 @@ function golpe() {
   const cell = document.querySelector('.abcell'); AB.golpes++;
   cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
   cell.style.setProperty('--g', AB.golpes);
+  cell.querySelector('.abimg').src = 'img/celdas/celda_' + AB.r.c.id + '_' + AB.golpes + '.png';   // forzada, entreabierta, abierta
   chispas(cell, AB.r.c.color, 8 + AB.golpes * 6);
-  if (AB.golpes < 3) { $('ab-txt').textContent = AB.golpes === 1 ? '¡Otra vez!' : '¡Una más y se rompe!'; return; }
+  if (AB.golpes < 3) { $('ab-txt').textContent = AB.golpes === 1 ? '¡La has forzado! Otra vez' : '¡Ya cede! Una más'; return; }
   $('ab-txt').textContent = '';
-  cell.classList.add('rota'); chispas(cell, '#fff', 30);
-  setTimeout(() => siguiente(), 700);
+  cell.classList.add('abierta'); chispas(cell, '#fff', 30);
+  setTimeout(() => siguiente(), 1100);
 }
 function siguiente() {
   const out = AB.r.out; AB.i++;
@@ -136,7 +137,7 @@ battleResult = function (win) {
 const _srCel = showResult;
 showResult = function (res) {
   _srCel(res);
-  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde el inicio.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
+  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '_0.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde el inicio.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
 };
 // expedición: una celda de madera cada 4 horas
 const _ceCel = collectExp;
