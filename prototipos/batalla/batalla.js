@@ -218,6 +218,7 @@ let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return 
 function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const c of ['azul', 'morado']) for (const st of ['', '_danado', '_destruido']) L.image('castillo_' + c + st, 'img/esc/castillo_' + c + st + '.png');
+  for (const k in ICONOS) L.image(k, 'img/campana/' + k + '.png');
   L.image('moneda', 'img/esc/moneda.png'); L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
   for (const e of ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna', 'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas']) L.image('emb_' + e, 'img/emb/' + e + '.png');
 }

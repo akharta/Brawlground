@@ -35,6 +35,9 @@ for (const k of ['hogar', 'praderas', 'bosque', 'desierto', 'nieve', 'pantano', 
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
 // Mientras no lleguen los dibujos se usan los castillos de batalla; tu castillo de origen es el azul.
 const ICON = { vasallo: 'castillo_morado', real: 'castillo_morado', casa: 'castillo_azul' };
+// castillos dibujados de cada reino para su mapa (img/campana/icono_<reino>_<vasallo|real>.png); banners = estandartes donde va el emblema
+const ICONOS = __ICONOS__;
+const iconFor = (kid, royal) => { const k = 'icono_' + kid + '_' + (royal ? 'real' : 'vasallo'); return ICONOS[k] ? k : royal ? ICON.real : ICON.vasallo; };
 // posiciones de los 10 castillos en el mapa del reino (% ancho, % alto), de abajo arriba por el camino
 const LV_POS = [[74.1, 85.7], [42, 80.4], [27.2, 68.6], [57.7, 64.6], [69.8, 53.3], [39, 49.6], [28.3, 37.8], [59.7, 34.2], [59.4, 21.2], [48.4, 9.9]];
 const CAMP_POS = [52.6, 96];   // primer claro del camino: el campamento de tu ejército
@@ -44,11 +47,12 @@ const KD = id => KINGDOMS.find(k => k.id === id);
 const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
-const SRC_HUE = { castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
+const SRC_HUE = { icono_: [0.70, 0.86, 'morado'], castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
 // emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
 const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
   'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
 const BANNERS = { castillo_azul: [0.3981, 0.4034, 0.0904, 0.2122], castillo_azul_danado: [0.3923, 0.4013, 0.1038, 0.2059], castillo_morado: [0.5077, 0.4289, 0.0923, 0.2124], castillo_morado_danado: [0.5019, 0.4289, 0.1, 0.1938] };
+const bannersOf = base => BANNERS[base] ? [BANNERS[base]] : ICONOS[base] ? ICONOS[base].banners : [];
 function recolorImage(img, [h0, h1], hex, base, emb) {
   // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
@@ -68,8 +72,7 @@ function recolorImage(img, [h0, h1], hex, base, emb) {
     for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * l + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * l) : t[k] * l);
   });
   cx.putImageData(d, 0, 0);
-  const bn = BANNERS[base];
-  if (emb && bn && scene.textures.exists('emb_' + emb)) {   // el emblema, centrado en la parte alta del estandarte grande
+  for (const bn of bannersOf(base)) if (emb && scene.textures.exists('emb_' + emb)) {   // el emblema, centrado en la parte alta del estandarte grande
     const e = scene.textures.get('emb_' + emb).getSourceImage(), w = bn[2] * cv.width * 1.15, x = (bn[0] + bn[2] / 2) * cv.width - w / 2, y = (bn[1] + bn[3] * 0.4) * cv.height - w / 2;
     cx.drawImage(e, x, y, w, w);
   }
@@ -78,14 +81,14 @@ function recolorImage(img, [h0, h1], hex, base, emb) {
 function colorTex(base, color, emb) {
   // textura de un castillo o una flecha con las banderas del color pedido y su emblema (se crea una vez y se reutiliza)
   const fam = Object.keys(SRC_HUE).find(f => base.startsWith(f)); if (!fam || !color || !scene) return base;
-  emb = BANNERS[base] && EMBLEMAS.includes(emb) ? emb : '';
+  emb = bannersOf(base).length && EMBLEMAS.includes(emb) ? emb : '';
   if (SRC_HUE[fam][2] === color && !emb) return base;
   const key = base + '@' + color + (emb ? '#' + emb : ''); if (scene.textures.exists(key)) return key;
   scene.textures.addCanvas(key, recolorImage(scene.textures.get(base).getSourceImage(), SRC_HUE[fam], COLORES[color][1], base, emb)); return key;
 }
 const colorURLs = {};
 function colorURL(base, color, emb) {
-  const key = colorTex(base, color, emb); if (key === base) return 'img/esc/' + base + '.png';
+  const key = colorTex(base, color, emb); if (key === base) return (base.startsWith('icono_') ? 'img/campana/' : 'img/esc/') + base + '.png';
   return colorURLs[key] || (colorURLs[key] = scene.textures.get(key).getSourceImage().toDataURL());
 }
 let TEAM_COLOR = { blue: 'azul', purple: 'morado' }, TEAM_EMB = { blue: '', purple: '' };
@@ -326,7 +329,7 @@ function openKingdom(kid) {
   $('reino-name').textContent = kd.name;
   const cur = st.findIndex(s => s === 0);
   m.innerHTML = kingdomArt(kid) + kd.levels.map((lv, i) => {
-    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(lv.royal ? ICON.real : ICON.vasallo, done ? myColor() : rivalColor(kid), done ? myEmb() : rivalEmb(kid));
+    const open = levelOpen(kid, i), done = st[i] > 0, icon = colorURL(iconFor(kid, lv.royal), done ? myColor() : rivalColor(kid), done ? myEmb() : rivalEmb(kid));
     return '<button class="lnode' + (MAP_ART[kid] ? ' art' : '') + (lv.royal ? ' royal' : '') + (done ? ' done' : '') + (open ? '' : ' locked') + (i === cur && open ? ' cur' : '') + '" data-i="' + i + '" style="left:' + LV_POS[i][0] + '%;top:' + LV_POS[i][1] + '%"'
       + ' aria-label="Nivel ' + (i + 1) + ': ' + lv.name + (done ? ', ' + st[i] + ' estrellas' : open ? '' : ', bloqueado') + '">'
       + '<img src="' + icon + '" alt="">' + (lv.royal ? '<span class="crown" aria-hidden="true">♛</span>' : '')

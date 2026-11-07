@@ -241,8 +241,12 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .camp { position: absolute; transform: translate(-50%, -100%); width: 30px; height: 40px; }
 .camp .pennant { top: 0; }
 .camp::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 4px; height: 44px; background: var(--outline); transform: translateX(-50%); z-index: -1; }
-.lnode.art { transform: translate(-50%, -68%); }
-.lnode.art.royal { transform: translate(-50%, -62%); }
+.lnode.art { transform: translate(-50%, -72%); }
+.lnode.art img { width: 78px; height: auto; }
+.lnode.art.royal img { width: 132px; height: auto; }
+.lnode.art.royal { transform: translate(-50%, -70%); }
+.lnode.art.royal .crown { top: -18px; }
+.lnode.art.locked img { filter: brightness(.62) saturate(.55) drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
 
 /* ---- ficha de nivel y botín ---- */
 .panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
