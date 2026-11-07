@@ -1,12 +1,20 @@
 # Brawlground — Documento de diseño
 
-> Estado: ficha cerrada. Pendiente: contenido inicial (unidades, héroes, primer mapa).
+> Estado: batalla jugable como app (carga, menú, mazo, batalla). Siguiente: campaña del primer reino.
 
 ## Concepto
 
 Batalla entre dos castillos sobre un terreno horizontal. Cada bando despliega cartas
 de su mazo para destruir el castillo rival. Mejoras tu ejército coleccionando cartas
 y generas recursos aunque no juegues.
+
+## Historia
+
+Eres el señor de un reino pequeño con su castillo, y tu deseo es tener el mundo entero bajo tu
+control. Para ello partes a conquistar los demás reinos, uno tras otro: primero sus castillos
+vasallos y, al final, el castillo de su rey. Al empezar solo te acompañan los guerreros
+originales de tu reino: **Tulio el Legionario, Ailin la Arquera y Rodrigo el Tercio**. El
+resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna del Multiverso).
 
 ## Batalla
 
@@ -33,8 +41,13 @@ y generas recursos aunque no juegues.
 
 ## Progresión
 
-- **Campaña** por mapas con dificultad creciente, enemigos variados y un jefe al final
-  de cada mapa.
+- **Campaña**: cada mapa es un **reino** con **10 niveles**. Del 1 al 9 conquistas sus
+  **castillos vasallos**; el nivel 10 es el **castillo del rey**, el jefe del reino. La dificultad
+  sube nivel a nivel.
+- **Mapa del mundo** (pestaña Campaña): un mapa grande con un punto por reino. Al vencer a
+  su rey, el reino queda tachado y una línea lo une con el siguiente, como si tu ejército
+  viajara por el mapa hasta él.
+- **Mapa del reino**: el camino con sus 10 castillos; cada uno conquistado luce tu bandera.
 - **Coleccionable**: cartas repetidas + oro para subir de nivel unidades, héroes y
   habilidades.
 - **Jaulas de prisioneros** (sustituyen a los cofres): liberas a un preso y se une a
@@ -44,6 +57,9 @@ y generas recursos aunque no juegues.
 - *Pendiente*: cómo avanzar la campaña sin jugar (partiendo del modo automático).
 
 ## Conseguir personajes
+
+- Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de
+  prisioneros** y en la **Taberna del Multiverso**.
 
 ### Jaulas de prisioneros
 
@@ -86,5 +102,7 @@ y generas recursos aunque no juegues.
 
 ## Siguientes pasos
 
-1. Generar el Legionario como patrón de estilo.
-2. Prototipo jugable de una batalla con el arte aprobado.
+1. ~~Legionario como patrón de estilo~~ y ~~batalla jugable con el arte aprobado~~ (hecho).
+2. ~~App instalable con carga, menú y batalla a pantalla completa~~ (hecho: akharta.github.io/Brawlground).
+3. Campaña del primer reino: mapa del mundo, mapa del reino con 10 castillos, progreso guardado.
+4. Jaulas de prisioneros y Taberna del Multiverso para reclutar.
