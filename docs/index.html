@@ -282,6 +282,43 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .mapbar h2 { flex: 1 1 auto; }
 @media (max-width: 430px) { #mundo .mapbar h2 { display: none; } }
 
+/* ---- celdas ---- */
+.gema i { width: 24px !important; height: 22px !important; margin: 0 !important; transform: none !important; border: 0 !important; border-radius: 0 !important; background: url(img/esc/gema.png) center / contain no-repeat !important; }
+.celist { display: grid; gap: 12px; }
+.celda { display: grid; grid-template-columns: 110px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 35%, transparent); }
+.cimg { position: relative; } .cimg img { width: 100%; display: block; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.cnum { position: absolute; right: -6px; bottom: -6px; background: var(--outline); color: #fff; border: 2px solid var(--c); border-radius: 999px; font-family: var(--font-display); font-weight: 400; padding: 0 8px; }
+.cinfo { display: grid; gap: 4px; min-width: 0; } .cinfo b { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; color: var(--c); } .cinfo small { color: var(--muted); }
+.probs { display: flex; flex-wrap: wrap; gap: 4px; } .probs span { font-size: .7rem; border: 2px solid var(--c); border-radius: 999px; padding: 0 6px; color: var(--c); background: #0f1322; }
+.celmini { width: 64px; flex: none; }
+#abrir { z-index: 55; background: radial-gradient(circle at 50% 40%, #2b3560, #0b0e1a 75%); }
+.abwrap { display: grid; gap: 14px; justify-items: center; text-align: center; width: min(420px, 100%); margin: auto; }
+.abstage { min-height: 300px; width: 100%; display: grid; place-items: center; cursor: pointer; }
+.abtxt { margin: 0; font-family: var(--font-display); font-size: 1.1rem; color: #fff; min-height: 1.4em; }
+.abcell { position: relative; width: min(260px, 70vw); }
+.abfondo { position: absolute; left: 20%; right: 20%; top: 26%; bottom: 8%; background: #0b0d18; border-radius: 40% 40% 4px 4px / 30% 30% 4px 4px; overflow: hidden; display: grid; place-items: center; }
+.absil { width: 90%; filter: brightness(0) drop-shadow(0 0 6px var(--c)); opacity: .9; animation: sway 2s ease-in-out infinite; }
+@keyframes sway { 50% { transform: translateX(6px); } }
+.abimg { position: relative; width: 100%; display: block; filter: drop-shadow(0 6px 0 rgba(0,0,0,.4)) drop-shadow(0 0 calc(var(--g, 0) * 8px) var(--c)); }
+.abcell.hit { animation: shake .35s; }
+@keyframes shake { 20% { transform: translate(-8px, 2px) rotate(-3deg); } 40% { transform: translate(7px, -2px) rotate(3deg); } 60% { transform: translate(-5px, 1px) rotate(-2deg); } 80% { transform: translate(3px, 0) rotate(1deg); } }
+.grietas { position: absolute; inset: 0; pointer-events: none; opacity: calc(var(--g, 0) / 3); background:
+  linear-gradient(62deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 30% 40% / 40% 40% no-repeat,
+  linear-gradient(-58deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 70% 55% / 35% 40% no-repeat; mix-blend-mode: screen; }
+.abcell.rota { animation: romper .7s ease-in forwards; }
+@keyframes romper { 30% { transform: scale(1.12); filter: brightness(2); } 100% { transform: scale(1.6); opacity: 0; filter: brightness(4); } }
+.abcard { position: relative; display: grid; justify-items: center; gap: 6px; }
+.abcard .dk { width: 150px; opacity: 1; position: relative; z-index: 1; filter: drop-shadow(0 0 16px var(--c)); }
+.abcard h2 { font-family: var(--font-display); font-weight: 400; margin: 0; font-size: 1.6rem; color: #fff; }
+.abcard .eyebrow { color: var(--c) !important; }
+.abn { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; color: #7ee04a; }
+.rayos { position: absolute; left: 50%; top: 110px; width: 380px; height: 380px; transform: translate(-50%, -50%); background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 45%, transparent) 0 10deg, transparent 10deg 25deg); border-radius: 50%; mask: radial-gradient(closest-side, #000 30%, transparent); -webkit-mask: radial-gradient(closest-side, #000 30%, transparent); animation: girar 8s linear infinite; }
+.r-comun .rayos, .r-poco .rayos { opacity: .5; }
+@keyframes girar { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.absum { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.absum .cpgain em { position: absolute; left: 50%; top: -10px; transform: translateX(-50%); font-style: normal; font-family: var(--font-display); font-size: .7rem; background: var(--gold); color: var(--outline); border: 2px solid var(--outline); border-radius: 999px; padding: 0 6px; }
+.chispa { position: fixed; z-index: 80; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; }
+
 /* ---- ficha de nivel y botín ---- */
 .panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
 .panel.nivel h2 { font-size: 1.8rem; text-wrap: balance; }
@@ -436,7 +473,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail h2 { font-size: 1.5rem !important; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
-@media (prefers-reduced-motion: reduce) { .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -519,7 +556,15 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <div class="pfstats" id="pf-stats"></div>
     <div class="acts start"><button class="btn" id="pf-estandarte">Cambiar estandarte</button><button class="btn" id="pf-practica">Campo de práctica</button></div>
     <h3>Ajustes</h3>
-    <div class="acts start"><button class="btn small" id="deckall" aria-pressed="false">Pruebas: desbloquear todo</button><button class="btn small" id="deckwipe">Borrar progreso</button></div>
+    <div class="acts start"><button class="btn small" id="deckall" aria-pressed="false">Pruebas: desbloquear todo</button><button class="btn small" id="deckwipe">Borrar progreso</button><button class="btn small" id="pf-gemas">Pruebas: +500 diamantes</button></div>
+  </div>
+</section>
+
+<section id="celdas" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="cel-back">← Inicio</button><h2>Celdas</h2><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <p class="note">Presos de los reinos conquistados. Cada celda libera varias cartas de rarezas al azar: si la unidad es nueva, se une a tu ejército; si ya la tenías, son copias para mejorarla.</p>
+    <div class="celist" id="cel-list"></div>
   </div>
 </section>
 
@@ -588,6 +633,10 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <div id="pop-body"></div>
     <div class="acts"><button class="btn" id="pop-close">Cerrar</button><button class="btn gold" id="pop-ok" hidden></button></div>
   </div>
+</div>
+
+<div id="abrir" class="screen" hidden>
+  <div class="abwrap"><div class="abstage" id="ab-stage"></div><p class="abtxt" id="ab-txt"></p><div class="absum" id="ab-sum" hidden></div><button class="btn gold big" id="ab-ok" hidden>¡Genial!</button></div>
 </div>
 
 <div id="toast" role="status" hidden></div>
@@ -4652,6 +4701,169 @@ function mejorar(k) {
 }
 window.__mejorar = mejorar; window.__lvOf = lvOf; window.__openLevel = openLevel;
 window.__unitsLv = () => units.map(u => u.type + ":" + u.team + ":" + u.max + ":nv" + (u.lv || 1));
+
+/* ==== Celdas de prisioneros: cinco calidades; al abrir una salen varias cartas de rarezas al azar, con copias.
+   Si la unidad no la tenías, se une a tu ejército; si ya la tenías, son copias para mejorarla. ==== */
+const CELDAS = [
+  { id: 'madera', name: 'Celda de madera', cartas: 2, copias: [2, 3], precio: 20, color: '#c98a4a',
+    prob: { comun: 80, poco: 20 } },
+  { id: 'hierro', name: 'Celda de hierro', cartas: 3, copias: [3, 5], precio: 50, color: '#8fa3c7',
+    prob: { comun: 45, poco: 40, rara: 15 } },
+  { id: 'runica', name: 'Celda rúnica', cartas: 3, copias: [5, 8], precio: 120, color: '#a66bff',
+    prob: { poco: 35, rara: 45, epica: 20 } },
+  { id: 'oro', name: 'Celda de oro', cartas: 4, copias: [8, 12], precio: 250, color: '#ffc83d',
+    prob: { poco: 15, rara: 40, epica: 40, legendaria: 5 } },
+  { id: 'diamante', name: 'Celda de diamante', cartas: 5, copias: [12, 18], precio: 600, color: '#ff3a5c',
+    prob: { comun: 5, poco: 15, rara: 30, epica: 49, legendaria: 10, ascendida: 1 } },
+];
+const CELDA = id => CELDAS.find(c => c.id === id);
+const RAR_K = { comun: 1, poco: 0.75, rara: 0.5, epica: 0.35, legendaria: 0.2 };
+const RAR_COL = { comun: '#c7cde0', poco: '#3ccf86', rara: '#4da3ff', epica: '#a855f7', legendaria: '#fbbf24', ascendida: '#ff3a5c' };
+const celdasDe = () => perfil.celdas || (perfil.celdas = {});
+const nCeldas = () => Object.values(celdasDe()).reduce((s, n) => s + n, 0);
+function darCelda(id, n = 1) { celdasDe()[id] = (celdasDe()[id] || 0) + n; }
+
+/* ---- sorteo: rareza según la celda, unidad al azar de esa rareza, copias según celda y rareza ---- */
+function sortea(c) {
+  const tot = Object.values(c.prob).reduce((x, y) => x + y, 0);   // si los porcentajes no suman 100, se reparten en proporción
+  let r = Math.random() * tot, rar = 'comun';
+  for (const [k, p] of Object.entries(c.prob)) { if (r < p) { rar = k; break; } r -= p; }
+  const pool = ALL.filter(k => (RARITY[k] || 'comun') === rar);
+  const k = pool[Math.floor(Math.random() * pool.length)];
+  const base = c.copias[0] + Math.floor(Math.random() * (c.copias[1] - c.copias[0] + 1));
+  const n = rar === 'ascendida' ? 1 + (Math.random() < 0.3 ? 1 : 0) : Math.max(1, Math.round(base * RAR_K[rar]));
+  return { k, rar, n };
+}
+function abrirCelda(id) {
+  const c = CELDA(id); if (!(celdasDe()[id] > 0)) return null;
+  celdasDe()[id]--;
+  // varias cartas; si sale repetida en la misma celda, se suman
+  const out = [];
+  for (let i = 0; i < c.cartas; i++) { const s = sortea(c), prev = out.find(o => o.k === s.k); if (prev) prev.n += s.n; else out.push(s); }
+  const orden = ['comun', 'poco', 'rara', 'epica', 'legendaria', 'ascendida'];
+  out.sort((a, b) => orden.indexOf(a.rar) - orden.indexOf(b.rar));   // la mejor, al final
+  for (const o of out) {
+    o.nueva = !perfil.owned.includes(o.k);
+    if (o.nueva) { perfil.owned.push(o.k); if (o.n > 1) addCopias(o.k, o.n - 1); } else addCopias(o.k, o.n);
+  }
+  savePerfil(); return { c, out };
+}
+
+/* ---- pantalla de celdas: las que tienes y la tienda (con diamantes) ---- */
+const gemas = () => perfil.gemas || 0;
+function openCeldas() {
+  $('cel-list').innerHTML = CELDAS.map(c => {
+    const n = celdasDe()[c.id] || 0, pr = Object.entries(c.prob).map(([r, p]) => '<span style="--c:' + RAR_COL[r] + '">' + RAREZA[r] + ' ' + p + ' %</span>').join('');
+    return '<div class="celda" style="--c:' + c.color + '"><div class="cimg"><img src="img/celdas/celda_' + c.id + '.png" alt=""><b class="cnum">×' + n + '</b></div>'
+      + '<div class="cinfo"><b>' + c.name + '</b><small>' + c.cartas + ' cartas · ' + c.copias[0] + '–' + c.copias[1] + ' copias por carta (menos cuanto más rara)</small><div class="probs">' + pr + '</div>'
+      + '<div class="acts start"><button class="btn gold small" data-open="' + c.id + '"' + (n ? '' : ' disabled') + '>Abrir</button>'
+      + '<button class="btn small" data-buy="' + c.id + '"><span class="oro gema" style="border:0;background:none;padding:0"><i></i><b>' + c.precio + '</b></span></button></div></div></div>';
+  }).join('');
+  document.querySelectorAll('#cel-list [data-open]').forEach(b => { b.onclick = () => abrirAnim(b.dataset.open); });
+  document.querySelectorAll('#cel-list [data-buy]').forEach(b => { b.onclick = () => comprar(b.dataset.buy); });
+  paintGold(); show('celdas');
+}
+function comprar(id) {
+  const c = CELDA(id);
+  if (gemas() < c.precio) return toast('Te faltan ' + (c.precio - gemas()) + ' diamantes. Se consiguen en el diario, las misiones y conquistando castillos reales.');
+  perfil.gemas -= c.precio; darCelda(id); savePerfil(); toast('Has conseguido una ' + c.name.toLowerCase() + '.'); openCeldas();
+}
+
+/* ---- apertura: tocas la celda tres veces, tiembla, se rompe y salen los presos uno a uno ---- */
+let AB = null;
+function abrirAnim(id) {
+  const r = abrirCelda(id); if (!r) return;
+  AB = { r, golpes: 0, i: -1 };
+  const top = r.out[r.out.length - 1];
+  $('ab-stage').innerHTML = '<div class="abcell" style="--c:' + r.c.color + '"><div class="abfondo"><img class="absil" src="img/' + top.k + '_carta.png" alt=""></div><img class="abimg" src="img/celdas/celda_' + id + '.png" alt="' + r.c.name + '"><div class="grietas"></div></div>';
+  $('ab-txt').textContent = 'Toca la celda para romper el candado';
+  $('ab-sum').hidden = true; $('ab-ok').hidden = true; $('abrir').hidden = false;
+  $('ab-stage').onclick = golpe;
+}
+function chispas(el, col, n) {
+  const r = el.getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('i'); s.className = 'chispa'; s.style.background = col; document.body.appendChild(s);
+    const a = Math.random() * 6.28, d = 60 + Math.random() * 120;
+    s.style.left = (r.left + r.width / 2) + 'px'; s.style.top = (r.top + r.height * 0.6) + 'px';
+    s.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + Math.cos(a) * d + 'px,' + Math.sin(a) * d + 'px) scale(.3)', opacity: 0 }], { duration: 500 + Math.random() * 300, easing: 'cubic-bezier(.2,.7,.4,1)' }).onfinish = () => s.remove();
+  }
+}
+function golpe() {
+  if (!AB || AB.i >= 0) return siguiente();
+  const cell = document.querySelector('.abcell'); AB.golpes++;
+  cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
+  cell.style.setProperty('--g', AB.golpes);
+  chispas(cell, AB.r.c.color, 8 + AB.golpes * 6);
+  if (AB.golpes < 3) { $('ab-txt').textContent = AB.golpes === 1 ? '¡Otra vez!' : '¡Una más y se rompe!'; return; }
+  $('ab-txt').textContent = '';
+  cell.classList.add('rota'); chispas(cell, '#fff', 30);
+  setTimeout(() => siguiente(), 700);
+}
+function siguiente() {
+  const out = AB.r.out; AB.i++;
+  if (AB.i >= out.length) return resumen();
+  const o = out[AB.i], last = AB.i === out.length - 1;
+  $('ab-stage').innerHTML = '<div class="abcard r-' + o.rar + '" style="--c:' + RAR_COL[o.rar] + '"><div class="rayos"></div>' + cardHtml(o.k, 'reveal') + '<p class="eyebrow">' + RAREZA[o.rar] + (o.nueva ? ' · ¡Nuevo!' : '') + '</p><h2>' + NAMES[o.k] + '</h2><b class="abn">+' + o.n + ' ' + (o.n === 1 ? 'copia' : 'copias') + '</b></div>';
+  if (o.nueva) document.querySelector('.abcard').insertAdjacentHTML('beforeend', '<p class="note">Se une a tu ejército.</p>');
+  $('ab-txt').textContent = (AB.i + 1) + ' de ' + out.length + ' · ' + (last ? 'toca para ver el resumen' : 'toca para el siguiente preso');
+  chispas($('ab-stage'), RAR_COL[o.rar], o.rar === 'legendaria' || o.rar === 'ascendida' ? 40 : 16);
+}
+function resumen() {
+  const out = AB.r.out; AB.i = 99;
+  $('ab-stage').onclick = null; $('ab-stage').innerHTML = '';
+  $('ab-txt').textContent = AB.r.c.name;
+  $('ab-sum').innerHTML = out.map(o => '<span class="cpgain">' + cardHtml(o.k) + '<b>+' + o.n + '</b>' + (o.nueva ? '<em>Nuevo</em>' : '') + '</span>').join('');
+  $('ab-sum').hidden = false; $('ab-ok').hidden = false;
+}
+$('ab-ok').onclick = () => { $('abrir').hidden = true; AB = null; openCeldas(); };
+
+/* ---- de dónde salen las celdas ---- */
+const CEL_TIER = { praderas: 'madera', bosque: 'hierro', desierto: 'hierro', nieve: 'runica', pantano: 'runica', volcan: 'oro', playa: 'oro', setas: 'oro', huesos: 'oro', engranajes: 'oro', cristal: 'diamante', cementerio: 'diamante', cielo: 'diamante' };
+const subeTier = id => CELDAS[Math.min(CELDAS.length - 1, CELDAS.findIndex(c => c.id === id) + 1)].id;
+const _brCel = battleResult;
+battleResult = function (win) {
+  const r = _brCel(win);
+  if (win && !B.auto) {
+    let id = null;
+    if (r.run.kind === 'nivel') {
+      const lv = KD(r.run.k).levels[r.run.i];
+      if (r.first) { id = CEL_TIER[r.run.k] || 'madera'; if (lv.royal) { id = subeTier(id); perfil.gemas = (perfil.gemas || 0) + 10; r.gemas = 10; } }
+      else if (Math.random() < 0.25) id = 'madera';
+    } else if (Math.random() < 0.15) id = 'madera';
+    if (id) { darCelda(id); r.celda = id; }
+    savePerfil();
+  }
+  return r;
+};
+const _srCel = showResult;
+showResult = function (res) {
+  _srCel(res);
+  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde el inicio.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
+};
+// expedición: una celda de madera cada 4 horas
+const _ceCel = collectExp;
+collectExp = function (el) {
+  const t0 = perfil.exp || Date.now(), h = Math.min(12, (Date.now() - t0) / 3.6e6);
+  _ceCel(el);
+  if (perfil.exp !== t0 && h >= 4) { darCelda('madera', Math.floor(h / 4)); savePerfil(); setTimeout(() => toast('La expedición ha traído ' + Math.floor(h / 4) + ' celda(s) de madera.'), 3200); }
+};
+// diario: algunos días dan celdas
+DIARIO[1].celda = 'madera'; DIARIO[4].celda = 'hierro'; DIARIO[6].celda = 'runica';
+const _rwCel = rewardTxt;
+rewardTxt = function (r) { const t = _rwCel(r); return r.celda ? (t ? t + ' y ' : '') + CELDA(r.celda).name.toLowerCase() : t; };
+const _giveCel = give;
+give = function (r, el) { if (r.celda) darCelda(r.celda); _giveCel(r, el); };
+
+/* ---- enganches con el menú ---- */
+SCREENS.push('celdas');
+$('s-jaulas').onclick = openCeldas;
+$('s-jaulas').setAttribute('aria-label', 'Celdas'); $('s-jaulas').querySelector('.slbl').textContent = 'Celdas';
+$('cel-back').onclick = () => { show('menu'); startDemo(); };
+const _phCel = paintHub;
+paintHub = function () { _phCel(); const d = document.querySelector('#s-jaulas .dot'); if (d) d.hidden = !nCeldas(); };
+$('pf-gemas').onclick = () => { perfil.gemas = (perfil.gemas || 0) + 500; CELDAS.forEach(c => darCelda(c.id)); savePerfil(); toast('Pruebas: +500 diamantes y una celda de cada.'); openPerfil(); };
+window.__abrirCelda = abrirCelda; window.__openCeldas = openCeldas; window.__darCelda = darCelda;
 
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();

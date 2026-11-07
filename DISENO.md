@@ -124,16 +124,29 @@ tienen héroe. En la pestaña Campaña se cambia entre Mundo 1 y Mundo 2.
 - Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de
   prisioneros** y en la **Taberna del Multiverso**.
 
-### Jaulas de prisioneros
+### Celdas de prisioneros
 
-- Objeto portátil (celda pequeña con asa y candado). Se ve la silueta del preso dentro.
-- Cuatro rarezas: común (madera), rara (hierro), épica (acero con runas), legendaria (oro).
-- Cada jaula se abre con una **llave de su misma rareza**.
-- Se consiguen al ganar batallas, en la tienda y en el modo idle (se acumulan mientras
-  no juegas).
-- Probabilidad de rareza (propuesta): común 70%, rara 22%, épica 7%, legendaria 1%.
-- Apertura: tocar el candado varias veces → la jaula tiembla y se agrieta → los barrotes
-  saltan y sale el preso.
+- Cinco celdas: **madera, hierro, rúnica, oro y diamante**. Al abrir una salen varias cartas
+  (2, 3, 3, 4 y 5), cada una de una rareza al azar:
+
+  | Celda | Común | Poco común | Rara | Épica | Legendaria | Ascendida |
+  |---|---|---|---|---|---|---|
+  | Madera | 80 % | 20 % | | | | |
+  | Hierro | 45 % | 40 % | 15 % | | | |
+  | Rúnica | | 35 % | 45 % | 20 % | | |
+  | Oro | | 15 % | 40 % | 40 % | 5 % | |
+  | Diamante | 5 % | 15 % | 30 % | 49 % | 10 % | 1 % |
+
+  (Los de diamante suman 110 y se reparten en proporción: la ascendida sale ~0,9 % de las cartas.)
+- Copias por carta: madera 2–3, hierro 3–5, rúnica 5–8, oro 8–12, diamante 12–18, multiplicadas por
+  la rareza (común ×1, poco común ×0,75, rara ×0,5, épica ×0,35, legendaria ×0,2; ascendida 1–2).
+  Si la unidad es nueva, la primera copia la recluta.
+- Apertura: tocas la celda tres veces (tiembla, se agrieta, revienta) y salen los presos uno a uno.
+- Se consiguen: al conquistar un castillo por primera vez (según el reino: Praderas madera, Bosque y
+  Desierto hierro, Nieves y Pantano rúnica, Volcán y mundo 2 oro, Cristal en adelante diamante; el
+  castillo real, una más y 10 diamantes), al repetir castillos (25 %, madera), en la batalla rápida
+  (15 %, madera), en la expedición (una de madera cada 4 h), en el diario (días 2, 5 y 7) y en la
+  tienda con diamantes (20, 50, 120, 250 y 600). De momento no hacen falta llaves.
 
 ### Taberna del Multiverso
 
@@ -144,7 +157,7 @@ tienen héroe. En la pestaña Campaña se cambia entre Mundo 1 y Mundo 2.
 
 ### Ascendidos
 
-- Nunca salen en jaulas ni en la taberna.
+- No salen en la taberna; en la celda de diamante, rara vez.
 - *Pendiente*: cómo se consiguen.
 
 ## Estructura de la app

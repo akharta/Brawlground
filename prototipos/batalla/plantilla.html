@@ -282,6 +282,43 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .mapbar h2 { flex: 1 1 auto; }
 @media (max-width: 430px) { #mundo .mapbar h2 { display: none; } }
 
+/* ---- celdas ---- */
+.gema i { width: 24px !important; height: 22px !important; margin: 0 !important; transform: none !important; border: 0 !important; border-radius: 0 !important; background: url(img/esc/gema.png) center / contain no-repeat !important; }
+.celist { display: grid; gap: 12px; }
+.celda { display: grid; grid-template-columns: 110px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 35%, transparent); }
+.cimg { position: relative; } .cimg img { width: 100%; display: block; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+.cnum { position: absolute; right: -6px; bottom: -6px; background: var(--outline); color: #fff; border: 2px solid var(--c); border-radius: 999px; font-family: var(--font-display); font-weight: 400; padding: 0 8px; }
+.cinfo { display: grid; gap: 4px; min-width: 0; } .cinfo b { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; color: var(--c); } .cinfo small { color: var(--muted); }
+.probs { display: flex; flex-wrap: wrap; gap: 4px; } .probs span { font-size: .7rem; border: 2px solid var(--c); border-radius: 999px; padding: 0 6px; color: var(--c); background: #0f1322; }
+.celmini { width: 64px; flex: none; }
+#abrir { z-index: 55; background: radial-gradient(circle at 50% 40%, #2b3560, #0b0e1a 75%); }
+.abwrap { display: grid; gap: 14px; justify-items: center; text-align: center; width: min(420px, 100%); margin: auto; }
+.abstage { min-height: 300px; width: 100%; display: grid; place-items: center; cursor: pointer; }
+.abtxt { margin: 0; font-family: var(--font-display); font-size: 1.1rem; color: #fff; min-height: 1.4em; }
+.abcell { position: relative; width: min(260px, 70vw); }
+.abfondo { position: absolute; left: 20%; right: 20%; top: 26%; bottom: 8%; background: #0b0d18; border-radius: 40% 40% 4px 4px / 30% 30% 4px 4px; overflow: hidden; display: grid; place-items: center; }
+.absil { width: 90%; filter: brightness(0) drop-shadow(0 0 6px var(--c)); opacity: .9; animation: sway 2s ease-in-out infinite; }
+@keyframes sway { 50% { transform: translateX(6px); } }
+.abimg { position: relative; width: 100%; display: block; filter: drop-shadow(0 6px 0 rgba(0,0,0,.4)) drop-shadow(0 0 calc(var(--g, 0) * 8px) var(--c)); }
+.abcell.hit { animation: shake .35s; }
+@keyframes shake { 20% { transform: translate(-8px, 2px) rotate(-3deg); } 40% { transform: translate(7px, -2px) rotate(3deg); } 60% { transform: translate(-5px, 1px) rotate(-2deg); } 80% { transform: translate(3px, 0) rotate(1deg); } }
+.grietas { position: absolute; inset: 0; pointer-events: none; opacity: calc(var(--g, 0) / 3); background:
+  linear-gradient(62deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 30% 40% / 40% 40% no-repeat,
+  linear-gradient(-58deg, transparent 47%, #fff 48%, #fff 49%, transparent 50%) 70% 55% / 35% 40% no-repeat; mix-blend-mode: screen; }
+.abcell.rota { animation: romper .7s ease-in forwards; }
+@keyframes romper { 30% { transform: scale(1.12); filter: brightness(2); } 100% { transform: scale(1.6); opacity: 0; filter: brightness(4); } }
+.abcard { position: relative; display: grid; justify-items: center; gap: 6px; }
+.abcard .dk { width: 150px; opacity: 1; position: relative; z-index: 1; filter: drop-shadow(0 0 16px var(--c)); }
+.abcard h2 { font-family: var(--font-display); font-weight: 400; margin: 0; font-size: 1.6rem; color: #fff; }
+.abcard .eyebrow { color: var(--c) !important; }
+.abn { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; color: #7ee04a; }
+.rayos { position: absolute; left: 50%; top: 110px; width: 380px; height: 380px; transform: translate(-50%, -50%); background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 45%, transparent) 0 10deg, transparent 10deg 25deg); border-radius: 50%; mask: radial-gradient(closest-side, #000 30%, transparent); -webkit-mask: radial-gradient(closest-side, #000 30%, transparent); animation: girar 8s linear infinite; }
+.r-comun .rayos, .r-poco .rayos { opacity: .5; }
+@keyframes girar { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.absum { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.absum .cpgain em { position: absolute; left: 50%; top: -10px; transform: translateX(-50%); font-style: normal; font-family: var(--font-display); font-size: .7rem; background: var(--gold); color: var(--outline); border: 2px solid var(--outline); border-radius: 999px; padding: 0 6px; }
+.chispa { position: fixed; z-index: 80; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; }
+
 /* ---- ficha de nivel y botín ---- */
 .panel.nivel { width: min(460px, 100%); justify-items: stretch; text-align: left; gap: 8px; }
 .panel.nivel h2 { font-size: 1.8rem; text-wrap: balance; }
@@ -436,7 +473,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail h2 { font-size: 1.5rem !important; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
-@media (prefers-reduced-motion: reduce) { .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -519,7 +556,15 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <div class="pfstats" id="pf-stats"></div>
     <div class="acts start"><button class="btn" id="pf-estandarte">Cambiar estandarte</button><button class="btn" id="pf-practica">Campo de práctica</button></div>
     <h3>Ajustes</h3>
-    <div class="acts start"><button class="btn small" id="deckall" aria-pressed="false">Pruebas: desbloquear todo</button><button class="btn small" id="deckwipe">Borrar progreso</button></div>
+    <div class="acts start"><button class="btn small" id="deckall" aria-pressed="false">Pruebas: desbloquear todo</button><button class="btn small" id="deckwipe">Borrar progreso</button><button class="btn small" id="pf-gemas">Pruebas: +500 diamantes</button></div>
+  </div>
+</section>
+
+<section id="celdas" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="cel-back">← Inicio</button><h2>Celdas</h2><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <p class="note">Presos de los reinos conquistados. Cada celda libera varias cartas de rarezas al azar: si la unidad es nueva, se une a tu ejército; si ya la tenías, son copias para mejorarla.</p>
+    <div class="celist" id="cel-list"></div>
   </div>
 </section>
 
@@ -588,6 +633,10 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <div id="pop-body"></div>
     <div class="acts"><button class="btn" id="pop-close">Cerrar</button><button class="btn gold" id="pop-ok" hidden></button></div>
   </div>
+</div>
+
+<div id="abrir" class="screen" hidden>
+  <div class="abwrap"><div class="abstage" id="ab-stage"></div><p class="abtxt" id="ab-txt"></p><div class="absum" id="ab-sum" hidden></div><button class="btn gold big" id="ab-ok" hidden>¡Genial!</button></div>
 </div>
 
 <div id="toast" role="status" hidden></div>
