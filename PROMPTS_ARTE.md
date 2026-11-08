@@ -117,14 +117,11 @@ Ahora hay dibujos provisionales hechos en el juego; estos los sustituyen.
 > rincones. Arriba a la izquierda, una escalera estrecha sube hasta el borde de arriba de la imagen (lleva a tu
 > castillo). La sala va **vacía** y con el centro del suelo despejado: la bestia se pone encima en el juego.
 
-## 9. Aspectos del castillo: dañado y en ruinas *(10 de 18 hechos)*
+## 9. Aspectos del castillo: dañado y en ruinas *(hecho: los 18 ya están en el juego)*
 
-Ya están en el juego, dañado y en ruinas: Roble, Luna, Vitrales, Mareas, Dragón, Engranajes, Hielo, Grifo, Arena y
-Trueno. Faltan **Pagoda, Faroles, Carnero, Escarabajo, Gólem, Murciélago, Loto y Sol**; hasta que lleguen, se ven
-dañados con unas grietas hechas en el juego y, al caer, con las ruinas genéricas.
-
-Adjunta también el dibujo del castillo intacto. Pide los dos con su **mismo encuadre** (1254×1254, fondo
-transparente, el castillo en el mismo sitio y del mismo tamaño): así encajan solos sobre el intacto.
+Los 18 aspectos tienen su dibujo dañado y sus ruinas. Para un aspecto nuevo, adjunta su dibujo intacto y pide los dos
+con su **mismo encuadre** (1254×1254, fondo transparente, el castillo en el mismo sitio y del mismo tamaño): así encajan
+solos sobre el intacto. Si falta alguno, el juego lo oscurece con grietas o usa las ruinas genéricas.
 
 > **Dañado**: el mismo castillo de la imagen adjunta, igual de grande y en la misma posición, pero muy castigado:
 > grietas, agujeros negros en los muros, almenas rotas, un fuego pequeño con humo en lo alto y cascotes al pie. El
@@ -135,3 +132,11 @@ transparente, el castillo en el mismo sitio y del mismo tamaño): así encajan s
 > propios, con el estandarte azul (#1e4fe0) y dorado caído encima en el centro, el asta partida delante y tres
 > nubecitas de humo. El montón ocupa todo el ancho del castillo y apoya en la misma línea del suelo; la mitad de
 > arriba de la imagen, vacía.
+
+**Dos castillos nuevos sin dibujo intacto**: el del Candado (piedra gris y dorado, cerradura en la puerta) y el de las
+Setas (piedra lila, setas rojas con lunares) llegaron dañados y en ruinas, pero no son ninguno de los 18. Están
+guardados en `assets/castillos_aspecto/sin_intacto/`. Para que sean aspectos nuevos falta su dibujo intacto:
+
+> **Intacto**: el mismo castillo de la imagen adjunta (la versión dañada), igual de grande y en la misma posición,
+> pero nuevo y sin un rasguño: sin grietas, sin agujeros, sin fuego ni humo, con todas las almenas enteras y el
+> estandarte grande del centro completo. Estandartes y capuchas AZULES. Fondo transparente, 1254×1254.
