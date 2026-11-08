@@ -35,19 +35,19 @@ const campana1 = () => perfil.all || kingdomDone('volcan');
 /* ---- el mapa del reino: el dibujo entero de fondo; cada lugar es una zona que se toca (hit: rectángulo en %)
    y lleva su cartel (lbl: centro en %) en los huecos de hierba que deja el dibujo ---- */
 const EDIFICIOS = [
-  { id: 'trono', name: 'El Trono', hit: [20.8,  0.3,  79.3,  27.9], lbl: [50,  29.6], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
-  { id: 'murallas', name: 'Murallas', hit: [20.8,  54.3,  79.0,  70.3], lbl: [50,  71.4], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
-  { id: 'sanctum', name: 'Sanctum Arcano', hit: [70.0,  12.5,  96.5,  31.8], lbl: [80,  33.3], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
-  { id: 'cripta', name: 'Cripta', hit: [2.4,  22.4,  37.7,  31.8], lbl: [20,  33.3], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
-  { id: 'taberna', name: 'Taberna', hit: [0.0,  35.7,  32.8,  50.6], lbl: [17,  52.8], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
-  { id: 'cuartel', name: 'Cuartel', hit: [65.6,  35.9,  99.3,  53.3], lbl: [83,  54.6], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
-  { id: 'consulado', name: 'Alto Consulado Bélico', hit: [33.4,  33.1,  65.6,  50.4], lbl: [49.6,  52.4], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
-  { id: 'mercado', name: 'Mercado negro', hit: [1.1,  73.5,  45.1,  93.7], lbl: [23,  95.6], txt: 'Un comerciante que no hace preguntas. Tres ofertas que cambian cada 8 horas.' },
-  { id: 'retorno', name: 'Altar del Retorno', hit: [55.8,  71.2,  99.3,  92.7], lbl: [77,  95.2], txt: 'Devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias que gastaste en subirla.' },
+  { id: 'trono', name: 'El Trono', hit: [25.0,  5.4,  74.4,  30.2], lbl: [50,  31.8], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
+  { id: 'murallas', name: 'Murallas', hit: [25.5,  53.8,  74.4,  69.4], lbl: [50,  70.9], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
+  { id: 'sanctum', name: 'Sanctum Arcano', hit: [67.0,  16.4,  89.8,  33.5], lbl: [76,  35.1], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
+  { id: 'cripta', name: 'Cripta', hit: [11.7,  26.6,  39.9,  33.5], lbl: [23.5,  35.1], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
+  { id: 'taberna', name: 'Taberna', hit: [8.0,  36.8,  35.6,  50.8], lbl: [22,  52.5], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
+  { id: 'cuartel', name: 'Cuartel', hit: [63.2,  37.4,  92.5,  52.9], lbl: [78,  54.2], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
+  { id: 'consulado', name: 'Alto Consulado Bélico', hit: [36.1,  35.0,  63.2,  50.5], lbl: [49.6,  51.9], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
+  { id: 'mercado', name: 'Mercado negro', hit: [8.5,  71.5,  45.7,  88.5], lbl: [27,  90.6], txt: 'Un comerciante que no hace preguntas. Tres ofertas que cambian cada 8 horas.' },
+  { id: 'retorno', name: 'Altar del Retorno', hit: [54.7,  69.1,  91.9,  87.9], lbl: [73,  90.1], txt: 'Devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias que gastaste en subirla.' },
 ];
 const HOGAR_ART = 'img/reino/reino.jpg';
 // cada lugar recortado del propio fondo (encaja al píxel): al tocarlo se ilumina su contorno y crece un poco
-const SEL_POS = {trono: [20.788,  0.349,  58.534,  27.542],  cripta: [2.407,  24.288,  35.339,  7.554],  sanctum: [72.429,  12.493,  24.07,  19.349],  taberna: [0.328,  35.735,  32.385,  14.817],  consulado: [33.37,  33.178,  32.276,  17.257],  cuartel: [65.646,  35.967,  33.698,  17.374],  murallas: [20.788,  54.561,  58.206,  15.747],  mercado: [1.313,  73.911,  43.107,  19.524],  retorno: [55.799,  71.18,  43.545,  21.499]};
+const SEL_POS = {trono:  [24.973,  5.383,  49.416,  24.821],  cripta:  [11.69,  26.615,  28.162,  6.878],  sanctum:  [66.95,  16.447,  22.848,  17.045],  taberna:  [7.97,  36.782,  27.418,  14.055],  consulado:  [36.132,  34.988,  27.099,  15.371],  cuartel:  [63.231,  37.38,  29.224,  15.55],  murallas:  [25.505,  53.828,  48.884,  15.55],  mercado:  [8.82,  71.471,  36.876,  17.045],  retorno:  [54.729,  69.079,  37.194,  18.84]};
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
