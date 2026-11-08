@@ -411,14 +411,15 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 /* barra de abajo dibujada: el marco (se estira por el centro; las esquinas y los remaches se quedan) y una baldosa por botón */
 #nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: #1e2440;
   border-style: solid; border-width: 0; border-image: url(img/barra/marco.png) 52 70 46 70 fill / 18px 24px 16px 24px;
-  padding: 9px calc(var(--sr) + 10px) calc(var(--sb) + 6px) calc(var(--sl) + 10px); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
+  padding: 9px calc(var(--sr) + 8px) calc(var(--sb) + 6px) calc(var(--sl) + 8px); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
 #nav button { position: relative; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 1px; color: #c9d0ea; font-family: var(--font-display); font-size: .68rem; text-shadow: 0 1px 0 #0b0e1a; }
-#nav .nico { width: 48px; height: 45px; display: grid; place-items: center; background: url(img/barra/boton.png) center / 100% 100% no-repeat; transition: transform .15s; }
+#nav { column-gap: 4px; }
+#nav .nico { width: 100%; height: 46px; box-sizing: border-box; display: grid; place-items: center; border-style: solid; border-width: 0; border-image: url(img/barra/boton.png) 44 fill / 14px; transition: transform .15s; }   /* las baldosas llenan la barra: casi se tocan */
 #nav .nico img { max-width: 34px; max-height: 31px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
 #nav button[aria-current="page"] { color: var(--gold); }
-#nav button[aria-current="page"] .nico { background-image: url(img/barra/boton_sel.png); transform: translateY(-2px) scale(1.08); }
+#nav button[aria-current="page"] .nico { border-image-source: url(img/barra/boton_sel.png); transform: translateY(-2px) scale(1.04); }
 #nav button[aria-current="page"] .nico img { max-width: 36px; max-height: 33px; }
-#nav .badge { top: 0; right: auto; left: calc(50% + 12px); font-size: .7rem; padding: 0 5px; }
+#nav .badge { top: 0; right: 0; left: auto; font-size: .7rem; padding: 0 5px; }
 .screen.tabscr { background: #141a2e; place-items: start center; }
 .screen.maps { grid-template-columns: minmax(0, 1fr); }
 #mundo-back { display: none; }   /* en la campaña ya está la barra de pestañas para volver */
@@ -539,7 +540,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .perks li { background: #0f1322; border: 2px solid var(--outline); border-radius: 10px; padding: 6px 10px; font-size: .82rem; color: var(--muted); opacity: .7; }
 .perks li b { color: #fff; } .perks li small { color: var(--gold); }
 .perks li.on { opacity: 1; border-color: var(--gold); }
-#nav .ndot { right: auto; left: calc(50% + 14px); top: 3px; }   /* pegado a la esquina de su baldosa */
+#nav .ndot { right: 2px; left: auto; top: 2px; }   /* pegado a la esquina de su baldosa */
 /* tienda */
 .shsec { display: grid; gap: 8px; margin-bottom: 14px; }
 .shsec > h3 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
