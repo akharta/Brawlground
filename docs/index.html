@@ -523,12 +523,20 @@ body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
 .hgscroll { width: 100%; display: grid; place-items: start center; }
 .hgmap { position: relative; container-type: inline-size; width: min(560px, 100%, calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px) * .75)); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
   background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
-.hgmap.art { background: #5aa23f; transition: transform .26s ease-in; }
-.hgmap.zoom { transform: scale(1.35); }
+.hgmap.art { background: #5aa23f; }
+.hgdim { position: absolute; inset: 0; background: rgba(10,14,30,.32); opacity: 0; transition: opacity .18s; pointer-events: none; }
+.hgmap.picking .hgdim { opacity: 1; }
+.bsel { position: absolute; display: block; pointer-events: none; opacity: 0; transform-origin: 50% 80%; }
+.bsel.on { opacity: 1; animation: bselect .43s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes bselect {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 #fff0) drop-shadow(0 0 0 #ffd54a00); }
+  45% { transform: scale(1.1); filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px #ffd54a) brightness(1.08); }
+  100% { transform: scale(1.07); filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #ffd54a) brightness(1.04); } }
 .hgbg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .bzone { position: absolute; background: none; border: 0; padding: 0; border-radius: 18px; }
-.bzone:active { background: rgba(255,255,255,.14); }
-.blabel { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; max-width: 31cqw; width: max-content; line-height: 1.02; text-align: left;
+.bzone { -webkit-tap-highlight-color: transparent; outline: none; }
+.bzone:focus-visible { outline: 3px solid var(--gold); }
+.blabel { z-index: 2; -webkit-tap-highlight-color: transparent; position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; max-width: 31cqw; width: max-content; line-height: 1.02; text-align: left;
   background: linear-gradient(#3a4777, #232b4a); border: 3px solid var(--outline); border-radius: 12px; box-shadow: inset 0 2px 0 rgba(255,255,255,.18), 0 3px 0 var(--outline);
   font-family: var(--font-display); font-size: clamp(.5rem, 3.1cqw, .95rem); color: #fff; text-shadow: 0 1px 0 var(--outline); }
 .blabel img { flex: none; width: clamp(16px, 7.5cqw, 34px); height: auto; margin: -6px 0 -6px -8px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
@@ -5336,6 +5344,9 @@ const EDIFICIOS = [
   { id: 'consulado', name: 'Alto Consulado Bélico', hit: [34, 45, 65.5, 69], lbl: [49.6, 71.1], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
 ];
 const HOGAR_ART = 'img/reino/reino.jpg';
+// cada lugar recortado del propio fondo (encaja al píxel): al tocarlo se ilumina su contorno y crece un poco
+const SEL_POS = { trono: [20.81, 0.138, 59.024, 38.605], cripta: [1.289, 30.663, 36.832, 12.914], sanctum: [72.099, 17.127, 24.586, 26.381], consulado: [33.149, 45.442, 33.425, 23.757],
+  cuartel: [66.022, 49.171, 33.61, 24.102], taberna: [0.276, 48.412, 32.413, 21.616], murallas: [20.718, 74.724, 58.748, 22.307] };
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
@@ -5363,7 +5374,9 @@ function reinoColor(src, color, cb) {
 function openHogar() {
   $('hg-name').textContent = perfil.nombre || 'Tu reino';
   const m = $('hg-map'); m.className = 'hgmap art';
-  m.innerHTML = '<img class="hgbg" src="' + (reColURL[HOGAR_ART + '@' + myColor()] || HOGAR_ART) + '" alt="Tu reino">'
+  const selSrc = id => reColURL['img/reino/sel_' + id + '.png@' + myColor()] || 'img/reino/sel_' + id + '.png';
+  m.innerHTML = '<img class="hgbg" src="' + (reColURL[HOGAR_ART + '@' + myColor()] || HOGAR_ART) + '" alt="Tu reino"><span class="hgdim"></span>'
+    + EDIFICIOS.map(e => { const [x, y, w, h] = SEL_POS[e.id]; return '<img class="bsel" data-sel="' + e.id + '" src="' + selSrc(e.id) + '" alt="" style="left:' + x + '%;top:' + y + '%;width:' + w + '%;height:' + h + '%">'; }).join('')
     + EDIFICIOS.map(e => {
       const lock = e.id === 'trono' && !campana1(), dot = edifDot(e.id), [x0, y0, x1, y1] = e.hit;
       return '<button type="button" class="bzone" data-e="' + e.id + '" style="left:' + x0 + '%;top:' + y0 + '%;width:' + (x1 - x0) + '%;height:' + (y1 - y0) + '%" aria-label="' + e.name + (lock ? ', bloqueado' : '') + '"></button>'
@@ -5371,16 +5384,18 @@ function openHogar() {
         + '<img src="img/reino/ico_' + e.id + '.png" alt=""><span>' + e.name + '</span>' + (dot ? '<i class="dot"></i>' : '') + (lock ? '<i class="lk">🔒</i>' : '') + '</button>';
     }).join('');
   reinoColor(HOGAR_ART, myColor(), url => { const bg = m.querySelector('.hgbg'); if (bg && bg.getAttribute('src') !== url) bg.src = url; });
+  EDIFICIOS.forEach(e => reinoColor('img/reino/sel_' + e.id + '.png', myColor(), url => { const im = m.querySelector('[data-sel="' + e.id + '"]'); if (im && im.getAttribute('src') !== url) im.src = url; }));
   m.querySelectorAll('[data-e]').forEach(b => { b.onclick = () => entraEdif(b.dataset.e); });
   show('hogar');
 }
+let entrando = false;
 function entraEdif(id) {
-  // la cámara se acerca al lugar antes de entrar
-  const e = EDIFICIOS.find(x => x.id === id), m = $('hg-map');
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return openEdif(id);
-  m.style.transformOrigin = ((e.hit[0] + e.hit[2]) / 2) + '% ' + ((e.hit[1] + e.hit[3]) / 2) + '%';
-  m.classList.add('zoom');
-  setTimeout(() => { m.classList.remove('zoom'); openEdif(id); }, 260);
+  // el lugar elegido se ilumina por su contorno y crece un poco; el resto del reino se oscurece un momento
+  if (entrando) return;
+  const m = $('hg-map'), im = m.querySelector('[data-sel="' + id + '"]');
+  if (!im || matchMedia('(prefers-reduced-motion: reduce)').matches) return openEdif(id);
+  entrando = true; m.classList.add('picking'); im.classList.add('on');
+  setTimeout(() => { entrando = false; m.classList.remove('picking'); im.classList.remove('on'); openEdif(id); }, 430);
 }
 function edifDot(id) {
   if (id === 'cuartel') return cuartelListo() > 0;

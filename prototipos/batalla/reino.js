@@ -46,6 +46,9 @@ const EDIFICIOS = [
   { id: 'consulado', name: 'Alto Consulado Bélico', hit: [34, 45, 65.5, 69], lbl: [49.6, 71.1], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
 ];
 const HOGAR_ART = 'img/reino/reino.jpg';
+// cada lugar recortado del propio fondo (encaja al píxel): al tocarlo se ilumina su contorno y crece un poco
+const SEL_POS = { trono: [20.81, 0.138, 59.024, 38.605], cripta: [1.289, 30.663, 36.832, 12.914], sanctum: [72.099, 17.127, 24.586, 26.381], consulado: [33.149, 45.442, 33.425, 23.757],
+  cuartel: [66.022, 49.171, 33.61, 24.102], taberna: [0.276, 48.412, 32.413, 21.616], murallas: [20.718, 74.724, 58.748, 22.307] };
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
@@ -73,7 +76,9 @@ function reinoColor(src, color, cb) {
 function openHogar() {
   $('hg-name').textContent = perfil.nombre || 'Tu reino';
   const m = $('hg-map'); m.className = 'hgmap art';
-  m.innerHTML = '<img class="hgbg" src="' + (reColURL[HOGAR_ART + '@' + myColor()] || HOGAR_ART) + '" alt="Tu reino">'
+  const selSrc = id => reColURL['img/reino/sel_' + id + '.png@' + myColor()] || 'img/reino/sel_' + id + '.png';
+  m.innerHTML = '<img class="hgbg" src="' + (reColURL[HOGAR_ART + '@' + myColor()] || HOGAR_ART) + '" alt="Tu reino"><span class="hgdim"></span>'
+    + EDIFICIOS.map(e => { const [x, y, w, h] = SEL_POS[e.id]; return '<img class="bsel" data-sel="' + e.id + '" src="' + selSrc(e.id) + '" alt="" style="left:' + x + '%;top:' + y + '%;width:' + w + '%;height:' + h + '%">'; }).join('')
     + EDIFICIOS.map(e => {
       const lock = e.id === 'trono' && !campana1(), dot = edifDot(e.id), [x0, y0, x1, y1] = e.hit;
       return '<button type="button" class="bzone" data-e="' + e.id + '" style="left:' + x0 + '%;top:' + y0 + '%;width:' + (x1 - x0) + '%;height:' + (y1 - y0) + '%" aria-label="' + e.name + (lock ? ', bloqueado' : '') + '"></button>'
@@ -81,16 +86,18 @@ function openHogar() {
         + '<img src="img/reino/ico_' + e.id + '.png" alt=""><span>' + e.name + '</span>' + (dot ? '<i class="dot"></i>' : '') + (lock ? '<i class="lk">🔒</i>' : '') + '</button>';
     }).join('');
   reinoColor(HOGAR_ART, myColor(), url => { const bg = m.querySelector('.hgbg'); if (bg && bg.getAttribute('src') !== url) bg.src = url; });
+  EDIFICIOS.forEach(e => reinoColor('img/reino/sel_' + e.id + '.png', myColor(), url => { const im = m.querySelector('[data-sel="' + e.id + '"]'); if (im && im.getAttribute('src') !== url) im.src = url; }));
   m.querySelectorAll('[data-e]').forEach(b => { b.onclick = () => entraEdif(b.dataset.e); });
   show('hogar');
 }
+let entrando = false;
 function entraEdif(id) {
-  // la cámara se acerca al lugar antes de entrar
-  const e = EDIFICIOS.find(x => x.id === id), m = $('hg-map');
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return openEdif(id);
-  m.style.transformOrigin = ((e.hit[0] + e.hit[2]) / 2) + '% ' + ((e.hit[1] + e.hit[3]) / 2) + '%';
-  m.classList.add('zoom');
-  setTimeout(() => { m.classList.remove('zoom'); openEdif(id); }, 260);
+  // el lugar elegido se ilumina por su contorno y crece un poco; el resto del reino se oscurece un momento
+  if (entrando) return;
+  const m = $('hg-map'), im = m.querySelector('[data-sel="' + id + '"]');
+  if (!im || matchMedia('(prefers-reduced-motion: reduce)').matches) return openEdif(id);
+  entrando = true; m.classList.add('picking'); im.classList.add('on');
+  setTimeout(() => { entrando = false; m.classList.remove('picking'); im.classList.remove('on'); openEdif(id); }, 430);
 }
 function edifDot(id) {
   if (id === 'cuartel') return cuartelListo() > 0;
