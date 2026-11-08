@@ -182,7 +182,7 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - **Reino**: el dibujo del reino de fondo (tejados, banderas y estandartes con el color de tu estandarte); cada
   lugar se toca en el dibujo o en su cartel, la vista se acerca y se entra. Cada lugar lleva su dibujo arriba:
   - **Taberna**: 2 mercenarios cada 4 horas, con oro.
-  - **Murallas**: estandarte (color y emblema), aspecto del castillo (18 castillos además del de piedra, 150 diamantes
+  - **Murallas**: estandarte (color y emblema), aspecto del castillo (20 castillos además del de piedra, 150 diamantes
     cada uno; con tu color y tu emblema en sus estandartes y arqueros. Con media vida pasa a su dibujo dañado
     (estandarte rasgado, grietas, fuego) y al caer, a sus ruinas con el estandarte caído en tu color; un aspecto
     nuevo sin esos dibujos se oscurece con grietas y cae en el montón genérico) y

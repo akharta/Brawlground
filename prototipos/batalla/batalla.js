@@ -27,7 +27,10 @@ function castleArt(team, st = '') {
   const sk = CASTLE_SKIN[team];
   if (sk) {
     const s = st === '_danado' ? 'd' : st === '_destruido' ? 'r' : '', key = 'cas_' + sk.id + (s ? '_' + s : ''), ok = !s || (scene && scene.textures.exists(key));
-    if (ok || s === 'd') { const dy = ok && s && sk[s] ? sk[s].dy : 0; return { key: ok ? key : 'cas_' + sk.id, plat: [sk.plat[0], sk.plat[1] + dy], arch: [sk.arch[0], sk.arch[1] + dy] }; }
+    if (ok || s === 'd') {   // el rival lo tiene al revés (volteado): su arquero queda a la izquierda
+      const dy = ok && s && sk[s] ? sk[s].dy : 0, fx = x => team === 'purple' ? 520 - x : x;
+      return { key: ok ? key : 'cas_' + sk.id, plat: [fx(sk.plat[0]), sk.plat[1] + dy], arch: [fx(sk.arch[0]), sk.arch[1] + dy], flip: team === 'purple' };
+    }
   }
   return { key: CASTLE_ART[team].key + st, plat: CASTLE_ART[team].plat, arch: CASTLE_ART[team].arch };
 }
@@ -134,7 +137,7 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; const A = castleArt(team, st); ci.setTexture(colorTex(A.key, TEAM_COLOR[team], TEAM_EMB[team]));
+      ci.state = st; const A = castleArt(team, st); ci.setTexture(colorTex(A.key, TEAM_COLOR[team], TEAM_EMB[team])).setFlipX(!!A.flip);
       ci.setOrigin(A.plat[0] / ci.width, A.plat[1] / ci.height).setScale(CASTLE_W / ci.width);
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
@@ -274,7 +277,7 @@ function drawScenery(sc) {
    en vertical, entre el camino y el panel de cartas; en horizontal, en la esquina libre. Si el dibujo no llega a cubrir todo
    el ancho, la tierra del medio se repite en espejo. Mientras se carga, uno provisional hecho aquí. ---- */
 const SUBSUELO = __SUBSUELO__;
-let SUB_Y = GROUND + 200, SUB_TEMA = 'piedra', SUB_L = null, subColorKey = null;   // dónde empieza, su tema y cómo se ha colocado (lo usa la cripta)
+let SUB_Y = GROUND + 200, SUB_TEMA = 'piedra', SUB_TEMA_P = 'piedra', SUB_L = null, subColorKey = null, subParKey = null;   // dónde empieza, su tema y cómo se ha colocado (lo usa la cripta)
 const subCarga = {};
 function subTex(tema, cb) {   // carga el dibujo de un tema con sus tres franjas: cripta, tierra y cripta
   const key = 'sub_' + tema; if (!scene || !SUBSUELO.temas[tema]) return;
@@ -290,13 +293,26 @@ function subFranjas(tex) {
   const w = tex.source[0].width, h = tex.source[0].height, { xa, xb } = SUBSUELO;
   tex.add('L', 0, 0, 0, xa, h); tex.add('M', 0, xa, 0, xb - xa, h); tex.add('R', 0, xb, 0, w - xb, h); return tex;
 }
-function subColor(sc, tema) {   // las gemas de cada cripta, con el color de su bando (cian y morado son los de siempre)
-  const base = 'sub_' + tema, cb = TEAM_COLOR.blue, cp = TEAM_COLOR.purple;
+function subPar(sc, a, b) {   // tu mitad con tu tema y la del rival con el suyo; la tierra del medio pasa de uno a otro poco a poco
+  if (a === b || !sc.textures.exists('sub_' + b)) return 'sub_' + a;
+  const key = 'subp_' + a + '|' + b; if (sc.textures.exists(key)) return key;
+  if (subParKey && sc.textures.exists(subParKey)) sc.textures.remove(subParKey);
+  const A = sc.textures.get('sub_' + a).getSourceImage(), Bi = sc.textures.get('sub_' + b).getSourceImage(), w = A.width, h = A.height, { xa, xb } = SUBSUELO;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d');
+  c.drawImage(A, 0, 0); c.drawImage(Bi, xb, 0, w - xb, h, xb, 0, w - xb, h);
+  const m = document.createElement('canvas'); m.width = xb - xa; m.height = h; const mc = m.getContext('2d');
+  mc.drawImage(Bi, xa, 0, xb - xa, h, 0, 0, xb - xa, h); mc.globalCompositeOperation = 'destination-in';
+  const g = mc.createLinearGradient(0, 0, xb - xa, 0); g.addColorStop(0.15, 'rgba(0,0,0,0)'); g.addColorStop(0.85, 'rgba(0,0,0,1)'); mc.fillStyle = g; mc.fillRect(0, 0, xb - xa, h);
+  c.drawImage(m, xa, 0);
+  subParKey = key; subFranjas(sc.textures.addCanvas(key, cv)); return key;
+}
+function subColor(sc, base, TL, TR) {   // las gemas de cada cripta, con el color de su bando (cian y morado son los de siempre)
+  const cb = TEAM_COLOR.blue, cp = TEAM_COLOR.purple;
   if (cb === 'azul' && cp === 'morado') return base;
   const key = base + '@' + cb + ',' + cp; if (sc.textures.exists(key)) return key;
   if (subColorKey && sc.textures.exists(subColorKey)) sc.textures.remove(subColorKey);   // solo se guarda la última
   const src = sc.textures.get(base).getSourceImage(), cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height;
-  const c = cv.getContext('2d', { willReadFrequently: true }), T = SUBSUELO.temas[tema]; c.drawImage(src, 0, 0);
+  const c = cv.getContext('2d', { willReadFrequently: true }), T = { L: TL.L, R: TR.R }; c.drawImage(src, 0, 0);
   for (const [lado, col, def, h0, h1] of [['L', cb, 'azul', 0.44, 0.58], ['R', cp, 'morado', 0.70, 0.86]]) {
     if (col === def || !COLORES[col]) continue;
     const t = [1, 3, 5].map(i => parseInt(COLORES[col][1].slice(i, i + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
@@ -346,7 +362,8 @@ function drawSubsuelo(sc, ytop, add, cx, vw, bot, grass) {
   SUB_Y = ytop; SUB_L = null;
   const T = SUBSUELO.temas[SUB_TEMA];
   if (!T || !sc.textures.exists('sub_' + SUB_TEMA)) { subTex(SUB_TEMA, () => drawScenery(scene)); return subsueloProv(sc, ytop, add, cx, vw, bot, grass); }
-  const key = subColor(sc, SUB_TEMA), src = sc.textures.get(key).getSourceImage(), IW = src.width, IH = src.height, { xa, xb } = SUBSUELO;
+  const TP = SUBSUELO.temas[SUB_TEMA_P] && sc.textures.exists('sub_' + SUB_TEMA_P) ? SUBSUELO.temas[SUB_TEMA_P] : T;
+  const key = subColor(sc, subPar(sc, SUB_TEMA, TP === T ? SUB_TEMA : SUB_TEMA_P), T, TP), src = sc.textures.get(key).getSourceImage(), IW = src.width, IH = src.height, { xa, xb } = SUBSUELO;
   // lo que se ve del subsuelo (en píxeles css): en batalla, hasta el panel de cartas o, en horizontal, la esquina libre a su lado
   const z = cam.zoom, k = DPR / z, left = cx - vw / 2, top = bot - cam.height / z, ug = (ytop - top) / k, ih = window.innerHeight;
   let Hc = (ih - ug) * k, Wc = vw, esq = false;

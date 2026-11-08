@@ -1,4 +1,4 @@
-# Prepara el arte de la interfaz (assets/interfaz): el fondo de la pantalla de carga, el fondo azul de las pantallas,
+# Prepara el arte de la interfaz (assets/interfaz): el fondo azul de las pantallas (también la de carga),
 # los 8 botones de los lados de Campaña y las piezas de arriba (marco del avatar con su nivel, cápsulas de oro y de
 # diamantes, barra de experiencia y su relleno). El halo de las piezas se recorta: queda solo lo opaco.
 # Uso: python3 herramientas/interfaz_arte.py   → docs/img/ui/*
@@ -6,7 +6,7 @@ import os, numpy as np
 from PIL import Image
 R = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')); SRC = os.path.join(R, 'assets/interfaz'); OUT = os.path.join(R, 'docs/img/ui')
 os.makedirs(OUT, exist_ok=True)
-for n in ('fondo_carga', 'fondo_azul'):
+for n in ('fondo_azul',):
     Image.open(os.path.join(SRC, n + '.png')).convert('RGB').save(os.path.join(OUT, n + '.jpg'), quality=86, optimize=True, progressive=True)
 def pieza(src, box, n, alto=None, ancho=None, corte=110):
     im = Image.open(os.path.join(SRC, 'campana', src + '.png')).convert('RGBA').crop(box)

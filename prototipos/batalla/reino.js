@@ -131,7 +131,8 @@ const ASPECTOS_POS = __ASPECTOS__;
 const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Roble'], ['luna', 'Castillo Lunar'], ['vitral', 'Catedral de Vitrales'], ['marea', 'Alcázar de las Mareas'],
   ['dragon', 'Fortaleza del Dragón'], ['engranaje', 'Castillo de Engranajes'], ['hielo', 'Fortaleza de Hielo'], ['grifo', 'Alcázar del Grifo'], ['arena', 'Fortaleza de Arena'],
   ['trueno', 'Castillo del Trueno'], ['pagoda', 'Castillo Pagoda'], ['farol', 'Castillo de los Faroles'], ['carnero', 'Fortín del Carnero'], ['escarabajo', 'Templo del Escarabajo'],
-  ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol']];
+  ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol'],
+  ['candado', 'Fortaleza del Candado'], ['setas', 'Castillo de las Setas']];
 const ASP_PRECIO = 150;
 for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = (v.d && v.d.ban) || v.ban; }
 const aspTiene = id => id === 'piedra' || perfil.all || (perfil.aspectos || []).includes(id);
@@ -336,12 +337,27 @@ function atkK(u) { return moveK(u); }   // la velocidad de ataque sigue a la de 
 const _ghR = gullHaste;
 gullHaste = function (u) { return _ghR(u) * (mode === 'fight' && B && !B.idle ? moveK(u) : 1); };
 const teamBuffK = team => team === 'blue' && B && B.beast && B.beast.id === 'grifo' ? 1 + B.beast.v : 1;
+// aspecto de los castillos rivales: los vasallos de cada reino alternan dos de su tema y el castillo real lleva el suyo;
+// en la batalla rápida (y en la del menú), uno al azar. 'piedra' es el castillo de siempre
+const RIVAL_ASP = { praderas: [['piedra', 'roble'], 'grifo'], bosque: [['roble', 'pagoda'], 'golem'], desierto: [['arena', 'escarabajo'], 'sol'],
+  nieve: [['hielo', 'luna'], 'trueno'], pantano: [['loto', 'murcielago'], 'golem'], volcan: [['farol', 'dragon'], 'dragon'], playa: [['marea', 'vitral'], 'marea'],
+  setas: [['setas', 'loto'], 'setas'], huesos: [['carnero', 'murcielago'], 'dragon'], engranajes: [['engranaje', 'candado'], 'engranaje'],
+  cristal: [['vitral', 'luna'], 'vitral'], cementerio: [['murcielago', 'candado'], 'murcielago'], cielo: [['grifo', 'sol'], 'pagoda'] };
+function rivalAspecto(o) {
+  if (o.run && o.run.kind === 'nivel') { const r = RIVAL_ASP[o.run.k], lv = KD(o.run.k).levels[o.run.i]; return !r ? null : lv.royal ? r[1] : r[0][o.run.i % r[0].length]; }
+  const ids = ASPECTOS.map(a => a[0]); return ids[Math.floor(Math.random() * ids.length)];
+}
 const _resetR = resetBattle;
 resetBattle = function (o = {}) {
   _resetR(o);
   const sk = mySkin(); CASTLE_SKIN.blue = sk && scene && scene.textures.exists('cas_' + sk) ? Object.assign({ id: sk }, ASPECTOS_POS[sk]) : null;
   SUB_TEMA = SUBSUELO.temas[sk] ? sk : 'piedra';   // el subsuelo, con las criptas a juego con tu castillo
   if (!o.sim && scene) subTex(SUB_TEMA, () => drawScenery(scene));
+  // el rival, con su aspecto, su subsuelo y su cripta
+  const ps = o.sim ? null : rivalAspecto(o), esta = B; CASTLE_SKIN.purple = null; if (castleImg.purple) castleImg.purple.state = undefined;
+  SUB_TEMA_P = SUBSUELO.temas[ps] ? ps : 'piedra';
+  if (ps && ps !== 'piedra' && ASPECTOS_POS[ps] && scene) skinTex(ps, () => { if (B !== esta) return; CASTLE_SKIN.purple = Object.assign({ id: ps }, ASPECTOS_POS[ps]); if (castleImg.purple) castleImg.purple.state = undefined; });
+  if (!o.sim && scene) subTex(SUB_TEMA_P, () => { if (B === esta) drawScenery(scene); });
   if (sk && !CASTLE_SKIN.blue) skinTex(sk);
   if (castleImg.blue) castleImg.blue.state = undefined;   // se vuelve a pintar con su aspecto
   const real = !o.demo && !o.sim;
@@ -609,4 +625,4 @@ loaded = function () { _loadedR(); skinTex(mySkin()); subTex(SUBSUELO.temas[mySk
 const _dsR = drawScenery;
 drawScenery = function (sc) { _dsR(sc); colocaCripta(); };
 window.__sub = () => { const gm = window.__game, z = cam.zoom, k = DPR / z; return { SUB_Y, k, left: cam.scrollX + cam.width / 2 - gm.scale.width / 2 / z, top: cam.scrollY + cam.height / 2 - gm.scale.height / 2 / z, vw: gm.scale.width / z, cripta: CRIPTA && { x: CRIPTA.x, y: CRIPTA.y, w: CRIPTA.w, h: CRIPTA.h }, tema: SUB_TEMA, capa: SUB_L && { s: SUB_L.s, yi: SUB_L.yi, Lx: SUB_L.Lx, Rx: SUB_L.Rx, esq: SUB_L.esq }, bst: BST && { x: BST.x, y: BST.y, h: BST.displayHeight, v: BST.visible } }; };
-window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
+window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__skinP = () => CASTLE_SKIN.purple && CASTLE_SKIN.purple.id; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
