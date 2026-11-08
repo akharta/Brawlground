@@ -475,7 +475,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail h2 { font-size: 1.5rem !important; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
-@media (prefers-reduced-motion: reduce) { .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .sello.big, .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 
 /* ==== estructura nueva: tienda, reino, eventos, abismo, promoción ==== */
 .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
@@ -483,11 +483,16 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .ins i { width: 18px !important; height: 26px !important; margin: 0 !important; transform: none !important; border: 0 !important; border-radius: 0 !important;
   background: url(img/insignia.png) center / contain no-repeat !important; }
 .rk { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); }
-.rk b { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; border: 3px solid var(--outline); background: #6b7290; color: #fff; font-weight: 400; font-size: 1.05rem; }
 .rk i { font-style: normal; color: var(--gold); letter-spacing: -2px; font-size: .95rem; text-shadow: 0 1px 0 var(--outline); }
-.rk.r1 b { background: #3ccf86; } .rk.r2 b { background: #4da3ff; } .rk.r3 b { background: #a855f7; } .rk.r4 b { background: #f59e0b; } .rk.r5 b { background: #e2363b; } .rk.r6 b { background: linear-gradient(135deg, #ff3a5c, #ffc83d); }
 .rkb { position: absolute; z-index: 2; left: 0; right: 0; top: 54%; text-align: center; font-size: .62rem; color: var(--gold); letter-spacing: -1px; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; pointer-events: none; }
 .dk.mini .rkb { font-size: .45rem; }
+.sello { display: block; width: 34px; height: auto; filter: drop-shadow(0 2px 0 rgba(0,0,0,.3)); }
+.sello.mini { display: inline-block; width: 15px; vertical-align: -3px; margin-right: 3px; filter: none; }
+.dk .sello.rks, .hc .sello.rks { position: absolute; z-index: 2; left: auto; top: 2%; right: 2%; width: 27%; height: auto; object-fit: contain; background: none; border-radius: 0; pointer-events: none; }
+.ascenso { display: grid; justify-items: center; gap: 6px; text-align: center; margin-bottom: 12px; padding: 12px; border-radius: 16px; background: radial-gradient(70% 80% at 50% 30%, #ffd36b33, transparent 70%); }
+.ascenso p { margin: 0; color: #d9cfee; } .ascenso p b { color: #fff; } .ascenso p { line-height: 1.5; }
+.sello.big { width: 104px; animation: sello .7s cubic-bezier(.3, 1.5, .5, 1) both; filter: drop-shadow(0 0 18px #ffd36b); }
+@keyframes sello { from { transform: scale(.2) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .promo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 8px; margin-top: 10px; }
 .pcol { display: grid; gap: 6px; align-content: start; background: #0f1322; border: 3px solid var(--outline); border-radius: 12px; padding: 8px 10px; }
 .pcol em { font-style: normal; color: #7ee04a; font-weight: 800; }

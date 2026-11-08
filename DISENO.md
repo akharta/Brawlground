@@ -114,6 +114,8 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - **Rango (E → D → C → B → A → S → S+)**: se sube con **copias de su carta** (5, 10, 20, 40, 70 y 120).
   Cada rango multiplica vida y daño: D ×1,15 · C ×1,3 · B ×1,5 · A ×1,75 · S ×2,05 · S+ ×2,4
   (de E a S+ sin estrellas → 6 ★).
+  Cada rango tiene su **sello dibujado** (de la E gris a la S+ roja y dorada): en la ficha, en la esquina de
+  las cartas (también en la mano de batalla) junto a sus estrellas, y grande arriba de la ficha al ascender.
   - **Habilidades de rango**: en **C, A y S+** la unidad aprende una habilidad nueva. Tipos que entiende el
     motor: golpe crítico, furia (más daño herido), ejecutar (más daño a enemigos tocados), aura (más daño a los
     aliados cercanos), escudo inicial, aguante (sobrevive una vez a un golpe mortal), robo de vida, aturdir,

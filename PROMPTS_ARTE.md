@@ -86,7 +86,7 @@ de la cabeza.
 > escudo negro con un sol dorado y espada con hoja más ancha. Debe seguir viéndose que es Tulio.
 > *Si te convence, se repite para cada unidad.*
 
-> **Sellos de rango** (7 piezas): letras E, D, C, B, A, S y S+ talladas en un escudo pequeño, del gris de la E
+> **Sellos de rango** *(hechos)* (7 piezas): letras E, D, C, B, A, S y S+ talladas en un escudo pequeño, del gris de la E
 > al rojo y dorado de la S+.
 
 ## 7. Tienda

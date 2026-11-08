@@ -21,7 +21,10 @@ const insignias = () => perfil.insignias || 0;
 function addCopias(k, n) { perfil.copias = perfil.copias || {}; perfil.copias[k] = (perfil.copias[k] || 0) + n; }
 function addInsignias(n) { perfil.insignias = insignias() + n; }
 const estrellas = r => r ? '★'.repeat(r) : '';
-const rangoHtml = r => '<span class="rk r' + r + '"><b>' + RANGOS[r] + '</b>' + (r ? '<i>' + estrellas(r) + '</i>' : '') + '</span>';
+// sellos de rango dibujados (img/rangos): del gris de la E al rojo y oro de la S+
+const RANGO_IMG = ['e', 'd', 'c', 'b', 'a', 's', 'splus'].map(n => 'img/rangos/' + n + '.png');
+const sello = (r, cls) => '<img class="sello' + (cls ? ' ' + cls : '') + '" src="' + RANGO_IMG[r] + '" alt="Rango ' + RANGOS[r] + '">';
+const rangoHtml = r => '<span class="rk r' + r + '">' + sello(r) + (r ? '<i>' + estrellas(r) + '</i>' : '') + '</span>';
 
 /* ---- costes ---- */
 const oroNivel = (k, lv) => Math.round((20 + 8 * lv + 0.6 * lv * lv) * (LV_RAR[RARITY[k] || 'comun'] || 1) / 10) * 10;
@@ -158,6 +161,7 @@ resetBattle = function (o = {}) {
   const d = B.blue.deck || [], pw = d.map(k => B.blue.pw[k] || [1, 0]);
   const media = pw.length ? [Math.round(pw.reduce((s, p) => s + p[0], 0) / pw.length), Math.round(pw.reduce((s, p) => s + p[1], 0) / pw.length)] : [1, 0];
   B.purple.pwAll = o.enemyPw || (o.run && o.run.kind === 'rapida' ? media : [1, 0]);
+  if (!o.sim) renderHand();   // la mano ya estaba pintada: ahora con el nivel y el rango de cada carta
 };
 const _levelOptsLv = levelOpts;
 levelOpts = function (kid, i) { return Object.assign(_levelOptsLv(kid, i), { enemyPw: enemyPower(kid, i) }); };
@@ -217,11 +221,12 @@ const _rwLv = rewardTxt;
 rewardTxt = function (r) { const t = _rwLv(r); return r.insignias ? (t ? t + ' y ' : '') + r.insignias + (r.insignias === 1 ? ' insignia' : ' insignias') : t; };
 
 /* ---- nivel y rango en las cartas ---- */
-const lvBadge = (lv, enemy, r) => '<span class="lvb' + (enemy ? ' foe' : '') + '">Nv ' + lv + '</span>' + (r ? '<span class="rkb">' + estrellas(r) + '</span>' : '');
+const lvBadge = (lv, enemy, r) => '<span class="lvb' + (enemy ? ' foe' : '') + '">Nv ' + lv + '</span>' + (r ? '<span class="rkb">' + estrellas(r) + '</span>' + sello(r, 'rks') : '');
 function marcaCartas(sel, fn) {
   document.querySelectorAll(sel).forEach(b => {
-    const k = b.dataset.k || (B && B.blue.hand[+b.dataset.i]); if (!k || b.querySelector('.lvb') || b.classList.contains('lock')) return;
-    const [lv, r] = fn(k); b.insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
+    const k = b.dataset.k || (B && B.blue.hand[+b.dataset.i]); if (!k || b.classList.contains('lock')) return;
+    const [lv, r] = fn(k), tag = k + ':' + lv + ':' + r; if (b.dataset.pw === tag) return;   // se repinta si cambia
+    b.querySelectorAll('.lvb, .rkb, .rks').forEach(e => e.remove()); b.dataset.pw = tag; b.insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
   });
 }
 const _renderHandLv = renderHand;
@@ -264,7 +269,7 @@ openUnit = function (k, subio) {
   const st = (a, kk) => c.heal ? f(c.heal[0] * kk) + '–' + f(c.heal[1] * kk) : f(c.dmg[0] * kk) + '–' + f(c.dmg[1] * kk);
   const rows = [['Vida', f(c.hp * k0)], [c.heal ? 'Cura' : 'Daño', st(0, k0)],
     ['Cadencia', 'cada ' + String(c.cd[0]).replace('.', ',') + '–' + String(c.cd[1]).replace('.', ',') + ' s'], ['Alcance', (c.range / H).toFixed(1).replace('.', ',')], ['Velocidad', spd], ['Coste', COST[k] + ' de energía']];
-  const perks = (PERKS[k] || []).map(([rr, nm, t, v]) => '<li class="' + (rr <= r ? 'on' : '') + '"><b>' + nm + '</b> <small>rango ' + RANGOS[rr] + '</small><br>' + PERK_TXT[t](v) + '</li>').join('');
+  const perks = (PERKS[k] || []).map(([rr, nm, t, v]) => '<li class="' + (rr <= r ? 'on' : '') + '"><b>' + nm + '</b> <small>' + sello(rr, 'mini') + 'rango ' + RANGOS[rr] + '</small><br>' + PERK_TXT[t](v) + '</li>').join('');
   let mejora = '';
   if (has) {
     const have = copiasOf(k);
@@ -302,8 +307,11 @@ function subirRango(k) {
   perfil.copias[k] -= c.copias; perfil.rangos = perfil.rangos || {}; perfil.rangos[k] = r;
   savePerfil(); paintGold();
   const p = (PERKS[k] || []).find(x => x[0] === r);
-  toast('¡' + LABEL[k] + ' asciende a rango ' + RANGOS[r] + '!' + (p ? ' Aprende ' + p[1] + '.' : ''));
   openUnit(k, true);
+  // arriba de la ficha, el sello nuevo (la ficha sigue abierta para seguir promocionando)
+  $('pop-body').insertAdjacentHTML('afterbegin', '<div class="ascenso">' + sello(r, 'big') + '<p><b>¡' + LABEL[k] + ' asciende a rango ' + RANGOS[r] + '!</b> ' + estrellas(r)
+    + '<br>×' + RANGO_K[r].toString().replace('.', ',') + ' a vida y daño' + (p ? '. Aprende <b>' + p[1] + '</b>: ' + PERK_TXT[p[2]](p[3]).replace(/\.$/, '') : '') + '.</p></div>');
+  $('pop-body').firstElementChild.scrollIntoView({ block: 'start' });
 }
 const mejorar = subirRango;
 window.__mejorar = subirRango; window.__subirNivel = subirNivel; window.__lvOf = lvOf; window.__rangoOf = rangoOf; window.__openLevel = openLevel;
