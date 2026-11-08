@@ -574,7 +574,8 @@ body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
 .kcard .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
 .kcico { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff8, transparent 55%), var(--c, #4a5a92); }
 .kcimg { flex: none; width: 56px; height: 56px; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
-.abil .aico img { width: 100%; height: 100%; border-radius: 50%; display: block; }
+.abil .aico img { width: 100%; height: 100%; border-radius: 50%; display: block; object-fit: contain; }
+.kcimg.bst { width: 72px; height: 72px; object-fit: contain; }
 .aspgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(120px, 30%), 1fr)); gap: 8px; }
 .asp { display: grid; justify-items: center; align-content: start; gap: 3px; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 6px 4px 8px; text-align: center; }
 .asp img { width: 100%; aspect-ratio: 520 / 470; object-fit: contain; filter: drop-shadow(0 3px 0 rgba(0,0,0,.3)); }
@@ -5563,6 +5564,22 @@ const BESTIAS = {
   huargo: { name: 'Huargo de la cripta', kind: 'Lucha', c: '#9aa4c7', every: 25, v: lv => lv,
     txt: v => 'Cada 25 s se une a la batalla un lobo de la cripta de nivel ' + huargoPw(v)[0] + ', rango ' + RANGOS[huargoPw(v)[1]] + '.' },
 };
+// dibujos de cada bestia: retrato (Cripta), reposo y acción en batalla
+const BEAST_ART = {
+  grifo: { port: 'grifo_sentado', idle: 'grifo_vuelo', act: 'grifo_vuelo', fly: true, h: 1.2 },
+  basilisco: { port: 'basilisco_sentado', idle: 'basilisco_sentado', act: 'basilisco_pie', h: 1.2 },
+  dragon: { port: 'dragon_sentado', idle: 'dragon_sentado', ready: 'dragon_pie', act: 'dragon_fuego', h: 1.3, mouth: [0.6, 0.57] },
+  huargo: { port: 'huargo_aullido', idle: 'huargo_pie', act: 'huargo_aullido', h: 1.35 },
+};
+function beastTex(names, cb) {   // como los castillos: imágenes sueltas que se añaden a Phaser al llegar
+  let left = 0; const done = () => { if (--left <= 0 && cb) cb(); };
+  for (const n of names) {
+    const k = 'bst_' + n; if (!scene || scene.textures.exists(k)) continue;
+    left++; const im = new Image(); im.onload = () => { if (!scene.textures.exists(k)) scene.textures.addImage(k, im); done(); }; im.onerror = done; im.src = 'img/bestias/' + n + '.png';
+  }
+  if (!left && cb) cb();
+}
+const beastNames = id => [...new Set(Object.values(BEAST_ART[id]).filter(v => typeof v === 'string'))];
 const huargoPw = lv => [1 + (lv - 1) * 8, Math.min(4, Math.floor((lv - 1) / 2))];
 const BE_MAX = 10, beLv = id => (perfil.bestias || {})[id] || 0, beUp = id => Math.round(300 * Math.pow(beLv(id), 1.6) / 10) * 10, BE_PRECIO = 150;
 const myBestia = () => beLv(perfil.bestia) ? perfil.bestia : null;
@@ -5570,7 +5587,7 @@ function cripta(el) {
   const first = !Object.keys(perfil.bestias || {}).length;
   el.innerHTML = (first ? '<div class="infocard"><h3>Elige tu primera bestia</h3><p>La primera es gratis. Las demás se pueden despertar con diamantes.</p></div>' : '') + '<div class="cards3">' + Object.entries(BESTIAS).map(([id, b]) => {
     const lv = beLv(id), sel = myBestia() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><img class="kcimg bst" src="img/bestias/' + BEAST_ART[id].port + '.png" alt=""><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
       + '<span class="kind">' + b.kind + '</span><p>' + b.txt(b.v(Math.max(1, lv))) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-w="' + id + '">' + (first ? 'Elegir · gratis' : 'Despertar · ' + gemBtn(BE_PRECIO)) + '</button>'
         : (sel ? '<span class="kind">Contigo en batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < BE_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(beUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
@@ -5645,8 +5662,39 @@ resetBattle = function (o = {}) {
     const sp = myHechizo(); if (sp) B.spell = { id: sp, k: spK(sp), t: HECHIZOS[sp].t0 };
     const be = myBestia(); if (be) { const lv = beLv(be); B.beast = { id: be, lv, v: BESTIAS[be].v(lv), t: BESTIAS[be].t0 || BESTIAS[be].every || 0 }; if (be === 'basilisco') B.curse = { team: 'purple', k: B.beast.v }; }
   }
+  if (BST) { scene.tweens.killTweensOf(BST); BST.destroy(); BST = null; }
+  if (B.beast && !B.sim) beastTex(beastNames(B.beast.id), () => { if (B && B.beast && !BST) bestiaEnCampo(B.beast.id); });
   abilUI(true);
 };
+let BST = null;
+function bestiaEnCampo(id) {
+  // de pie en el suelo, delante de la puerta de tu castillo (el grifo, volando sobre las almenas)
+  const A = BEAST_ART[id], x = A.fly ? CASTLE_VX + 120 : CASTLE_FRONT - H * 0.4, y = A.fly ? THRONE.y - 30 : GROUND + 4;
+  BST = scene.add.image(x, y, 'bst_' + A.idle).setOrigin(0.5, A.fly ? 0.5 : 1).setDepth(A.fly ? 1200 : GROUND - 2);
+  BST.k = A.h * H / BST.height; BST.setScale(BST.k); BST.art = A; BST.pose = A.idle; BST.x0 = x; BST.y0 = y; BST.actT = 0; BST.tic = 0;
+  if (A.fly) scene.tweens.add({ targets: BST, y: y - 14, duration: 900, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
+  else scene.tweens.add({ targets: BST, scaleY: BST.k * 1.04, duration: 850, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
+  scene.tweens.add({ targets: BST, alpha: { from: 0, to: 1 }, duration: 400 });
+}
+function bestiaPose(n, t) {   // cambia de dibujo (con un pequeño salto) y vuelve al de reposo pasados t segundos
+  if (!BST || !scene.textures.exists('bst_' + n)) return;
+  if (BST.pose !== n) { BST.setTexture('bst_' + n); BST.k = BST.art.h * H / BST.height; BST.pose = n; }
+  BST.setScale(BST.k * 1.12, BST.k * 0.92); scene.tweens.add({ targets: BST, scaleX: BST.k, scaleY: BST.k, duration: 260, ease: 'Back.out' });
+  BST.actT = t || 0;
+}
+function bestiaTick(dt) {
+  if (!BST || !B.beast) return;
+  const id = B.beast.id, A = BST.art;
+  if (BST.actT > 0) { BST.actT -= dt; if (BST.actT <= 0) bestiaPose(id === 'dragon' && B.beast.t <= 0 ? A.ready : A.idle); return; }
+  if (id === 'dragon' && B.beast.t <= 0 && BST.pose !== A.ready) bestiaPose(A.ready);   // lista para escupir fuego: se levanta
+  if (id === 'dragon' && BST.pose === A.ready && Math.random() < dt * 1.5) fx.push({ x: BST.x + BST.displayWidth * 0.3, y: BST.y - BST.displayHeight * 0.9, vx: rand(-10, 10), vy: rand(-50, -30), g: 0, r: rand(3, 6), life: 0.9, t: 0.9, color: 0x9a9aa8 });
+  BST.tic -= dt;
+  if (id === 'basilisco' && BST.tic <= 0) {   // mirada: se levanta y los enemigos se ven envueltos en un brillo verde
+    BST.tic = 7; bestiaPose(A.act, 1.6);
+    foesOf('blue').forEach(v => { for (let i = 0; i < 6; i++) fx.push({ x: v.x + rand(-20, 20), y: v.gy - rand(10, 90), vx: rand(-20, 20), vy: rand(-40, -10), g: 0, r: rand(3, 5), life: 0.9, t: 0.9, color: 0x5fcf6a }); });
+  }
+  if (id === 'grifo' && BST.tic <= 0) { BST.tic = rand(3, 5); BST.setScale(BST.k, BST.k * 0.88); scene.tweens.add({ targets: BST, scaleY: BST.k, duration: 220, ease: 'Back.out' }); }   // aleteo
+}
 const _bsR = battleStep;
 battleStep = function (dt) {
   _bsR(dt);
@@ -5654,12 +5702,12 @@ battleStep = function (dt) {
   for (const t of ['blue', 'purple']) { const bf = B.buff[t]; if (bf.hasteT > 0) bf.hasteT -= dt; if (bf.slowT > 0) bf.slowT -= dt; }
   if (B.spell && B.spell.t > 0) B.spell.t -= dt;
   if (B.beast) {
-    B.beast.t -= dt;
+    B.beast.t -= dt; bestiaTick(dt);
     if (B.beast.id === 'huargo' && B.beast.t <= 0) {   // llega un lobo de la cripta
       B.beast.t = BESTIAS.huargo.every;
       const u = new Unit(scene, 'lobo', 'blue', FIELD_L); units.push(u); const [lv, r] = huargoPw(B.beast.lv); applyPromo(u, lv, r, teamBuffK('blue'));
       if (u.parts) u.parts.forEach(p => p.setTint(0xc4ccff));
-      if (!B.auto) floatText(FIELD_L, GROUND - H * 1.6, '¡Auuu!', '#c4ccff');
+      if (!B.auto) { floatText(BST ? BST.x : FIELD_L, GROUND - H * 1.6, '¡Auuu!', '#c4ccff'); bestiaPose('huargo_aullido', 1.3); }
     }
   }
 };
@@ -5669,7 +5717,7 @@ function abilUI(reset) {
   const real = B && !B.auto && !B.idle;
   sb.hidden = !(real && B.spell); bb.hidden = !(real && B.beast && B.beast.id === 'dragon');
   if (!sb.hidden && sb.dataset.id !== B.spell.id) { const h = HECHIZOS[B.spell.id]; sb.dataset.id = B.spell.id; sb.style.setProperty('--c', h.c); sb.querySelector('.aico').innerHTML = '<img src="img/hechizos/' + B.spell.id + '.png" alt="">'; sb.setAttribute('aria-label', h.name); }
-  if (!bb.hidden && bb.dataset.id !== 'dragon') { const b = BESTIAS.dragon; bb.dataset.id = 'dragon'; bb.style.setProperty('--c', b.c); bb.querySelector('.aico').innerHTML = svg('dragon'); bb.setAttribute('aria-label', b.name + ': aliento de fuego'); }
+  if (!bb.hidden && bb.dataset.id !== 'dragon') { const b = BESTIAS.dragon; bb.dataset.id = 'dragon'; bb.style.setProperty('--c', b.c); bb.querySelector('.aico').innerHTML = '<img src="img/bestias/dragon_pie.png" alt="">'; bb.setAttribute('aria-label', b.name + ': aliento de fuego'); }
   const one = (btn, t, cd, label) => { const ready = t <= 0; btn.disabled = !ready || B.over; btn.classList.toggle('ready', ready); btn.style.setProperty('--p', Math.max(0, Math.min(1, 1 - t / cd)).toFixed(3)); const txt = ready ? label : Math.ceil(t) + ' s'; if (btn.lastChild.textContent !== txt) btn.lastChild.textContent = txt; };
   if (!sb.hidden) one(sb, B.spell.t, HECHIZOS[B.spell.id].cd, '¡Hechizo!');
   if (!bb.hidden) one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!');
@@ -5683,6 +5731,12 @@ function colocaAbils() {
   const t = Math.max(top, y - hh);
   if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
 }
+const _playR = play;
+play = function (team, idx) {
+  const n = units.length, ok = _playR(team, idx);
+  if (ok && team === 'blue' && BST && B.beast && B.beast.id === 'grifo' && units.length > n) { const u = units[units.length - 1]; burst(u.x, u.gy - H * 0.6, 0xffd36b, 12, 160); BST.tic = 0; }
+  return ok;
+};
 const _uiTickR = uiTick;
 uiTick = function () { _uiTickR(); abilUI(false); };
 $('ab-spell').onclick = () => { if (B && B.spell && B.spell.t <= 0 && !B.over && !paused) { lanzar(B.spell.id, 'blue', B.spell.k); B.spell.t = HECHIZOS[B.spell.id].cd; abilUI(); } };
@@ -5728,6 +5782,11 @@ function lanzar(id, team, k = 1) {
   }
 }
 function alientoDragon(team, dmg) {
+  if (team === 'blue' && BST && B.beast && B.beast.id === 'dragon') {
+    bestiaPose('dragon_fuego', 1.3);
+    const mx = BST.x - BST.displayWidth / 2 + BST.displayWidth * BST.art.mouth[0], my = BST.y - BST.displayHeight + BST.displayHeight * BST.art.mouth[1];
+    for (let i = 0; i < 46; i++) fx.push({ x: mx, y: my + rand(-8, 8), vx: rand(700, 1100), vy: rand(-60, 60), g: 0, r: rand(6, 12), life: rand(0.35, 0.6), t: 0.6, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i % 3] });
+  }
   const L = team === 'blue' ? FIELD_L : W / 2, R = team === 'blue' ? W / 2 : FIELD_R;
   for (let x = L; x < R; x += 38) for (let i = 0; i < 3; i++) fx.push({ x: x + rand(-15, 15), y: GROUND - rand(10, 150), vx: rand(-30, 30), vy: rand(-90, -30), g: -40, r: rand(5, 10), life: 0.8, t: 0.8, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i] });
   foesOf(team).filter(v => v.x >= L && v.x <= R).forEach(v => v.damage(dmg, null, v.x));

@@ -192,7 +192,9 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
     (160 en área, también al castillo).
   - **El Trono**: los héroes. Se abre al conquistar los siete reinos del Mundo 1 (hasta entonces el héroe se
     elige en el mazo). Más adelante: niveles, equipo y talentos de los héroes.
-  - **Cripta**: bestias (la primera es gratis, las demás 150 diamantes; suben de nivel con oro). Una va
+  - **Cripta** (bestias dibujadas; en batalla salen junto a tu castillo y cambian de pose al actuar: el dragón se
+    levanta cuando su fuego está listo y lo escupe por la boca, el huargo aúlla al llamar al lobo, el basilisco se alza
+    y su mirada envuelve a los enemigos en verde, el grifo vuela sobre las almenas y bendice a cada unidad que sale): bestias (la primera es gratis, las demás 150 diamantes; suben de nivel con oro). Una va
     contigo: Grifo real (bendición: +10 % de vida y daño a los tuyos), Basilisco (maldición: enemigos un
     12 % más lentos), Dragón de ceniza (habilidad: aliento de fuego en tu mitad del campo cada 30 s) y Huargo
     de la cripta (lucha: un lobo se une a la batalla cada 25 s).
