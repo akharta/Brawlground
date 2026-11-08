@@ -177,7 +177,8 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
   si no la tienes; comunes a raras con oro, épicas y mejores con diamantes; renovar por 20 diamantes),
   celdas, oro por diamantes, diamantes con dinero real (se ven, pero los pagos llegarán más adelante) y lotes
   varios (cuerdas y antorchas para el Abismo, insignias, pack de bienvenida).
-- **Reino**: tu castillo con sus lugares (dibujo pendiente; ahora un fondo provisional con botones):
+- **Reino**: el dibujo del reino de fondo (tejados, banderas y estandartes con el color de tu estandarte); cada
+  lugar se toca en el dibujo o en su cartel, la vista se acerca y se entra. Cada lugar lleva su dibujo arriba:
   - **Taberna**: 2 mercenarios cada 4 horas, con oro.
   - **Murallas**: estandarte (color y emblema), aspecto del castillo (otros castillos: pendiente de arte) y
     defensas: Muralla (+6 % de vida del castillo por nivel), Arqueros de las torres (+10 % de daño) y

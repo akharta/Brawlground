@@ -521,9 +521,23 @@ body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
 .hgtop { display: flex; align-items: center; gap: 10px; width: min(560px, 100%); box-sizing: border-box; flex-wrap: wrap; }
 .hgtop h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0 auto 0 0; }
 .hgscroll { width: 100%; display: grid; place-items: start center; }
-.hgmap { position: relative; width: min(560px, 100%, 74vh); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
+.hgmap { position: relative; container-type: inline-size; width: min(560px, 100%, calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px) * .75)); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
   background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
-.hgmap.art { background: #2b3560 center / cover no-repeat; }
+.hgmap.art { background: #5aa23f; transition: transform .26s ease-in; }
+.hgmap.zoom { transform: scale(1.35); }
+.hgbg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.bzone { position: absolute; background: none; border: 0; padding: 0; border-radius: 18px; }
+.bzone:active { background: rgba(255,255,255,.14); }
+.blabel { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; max-width: 31cqw; width: max-content; line-height: 1.02; text-align: left;
+  background: linear-gradient(#3a4777, #232b4a); border: 3px solid var(--outline); border-radius: 12px; box-shadow: inset 0 2px 0 rgba(255,255,255,.18), 0 3px 0 var(--outline);
+  font-family: var(--font-display); font-size: clamp(.5rem, 3.1cqw, .95rem); color: #fff; text-shadow: 0 1px 0 var(--outline); }
+.blabel img { flex: none; width: clamp(16px, 7.5cqw, 34px); height: auto; margin: -6px 0 -6px -8px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
+.blabel .dot { position: absolute; top: -8px; right: -8px; width: 16px; height: 16px; border-radius: 50%; background: #e2363b; border: 2px solid var(--outline); }
+.blabel .lk { font-style: normal; font-size: .8em; }
+.blabel.lock { filter: saturate(.3) brightness(.85); }
+.bhead.bhead { grid-template-columns: 96px minmax(0, 1fr); }
+.bhead .bimg { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 3px 0 rgba(0,0,0,.3)); }
+#taberna .bhead { margin-bottom: 4px; }
 .hgmap .hill { position: absolute; border-radius: 50%; background: #7cc756; border: 3px solid #4f8f36; }
 .hgmap .road { position: absolute; left: 44%; width: 12%; top: 58%; bottom: -2%; background: #e3c48a; border-left: 3px solid #b7975c; border-right: 3px solid #b7975c; }
 .hgmap .castle { position: absolute; left: 50%; top: 12%; width: 74%; transform: translateX(-50%); filter: drop-shadow(0 6px 0 rgba(0,0,0,.25)); pointer-events: none; }
@@ -683,7 +697,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 <section id="taberna" class="screen tabscr" hidden>
   <div class="sheet">
     <div class="sheet-top"><button class="btn" id="tab-back">← Reino</button><h2>Taberna del Multiverso</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
-    <p class="note">Mercenarios llegados de otros mundos. Se pagan con oro. Los puestos se renuevan cada 4 horas: <b id="tab-timer"></b></p>
+    <p class="note">Los puestos se renuevan cada 4 horas: <b id="tab-timer"></b></p>
     <div class="slots" id="tab-slots"></div>
     <p class="note">Si ya tienes al mercenario, ganas una copia de su carta (servirán para subirlo de nivel). Más puestos y mejores mercenarios al mejorar la taberna: próximamente.</p>
   </div>

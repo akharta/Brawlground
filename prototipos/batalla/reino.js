@@ -34,29 +34,63 @@ function paga(c) {   // cobra oro y diamantes si llegan; si no, avisa
 const lordLv = () => nivelDe(perfil.xp || 0).lv;
 const campana1 = () => perfil.all || kingdomDone('volcan');
 
-/* ---- el mapa del reino: castillo en el centro y los lugares alrededor (cuando llegue el dibujo, solo cambian las posiciones) ---- */
+/* ---- el mapa del reino: el dibujo entero de fondo; cada lugar es una zona que se toca (hit: rectángulo en %)
+   y lleva su cartel (lbl: centro en %) en los huecos de hierba que deja el dibujo ---- */
 const EDIFICIOS = [
-  { id: 'trono', name: 'El Trono', pos: [50, 27], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
-  { id: 'murallas', name: 'Murallas', pos: [50, 52], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
-  { id: 'sanctum', name: 'Sanctum Arcano', pos: [83, 38], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
-  { id: 'cripta', name: 'Cripta', pos: [17, 38], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
-  { id: 'taberna', name: 'Taberna', pos: [20, 67], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
-  { id: 'cuartel', name: 'Cuartel', pos: [80, 67], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
-  { id: 'consulado', name: 'Alto Consulado Bélico', pos: [50, 86], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
+  { id: 'trono', name: 'El Trono', hit: [28, 1, 73, 38], lbl: [50, 40.6], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
+  { id: 'murallas', name: 'Murallas', hit: [20, 75, 80, 97], lbl: [50, 95.4], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
+  { id: 'sanctum', name: 'Sanctum Arcano', hit: [71, 17, 97, 44], lbl: [80.4, 45.6], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
+  { id: 'cripta', name: 'Cripta', hit: [2, 30, 38, 43.5], lbl: [20, 45.6], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
+  { id: 'taberna', name: 'Taberna', hit: [1, 48, 32, 70], lbl: [16.6, 72.4], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
+  { id: 'cuartel', name: 'Cuartel', hit: [66, 48, 99.5, 72.5], lbl: [84.2, 74.4], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
+  { id: 'consulado', name: 'Alto Consulado Bélico', hit: [34, 45, 65.5, 69], lbl: [49.6, 71.1], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
 ];
-const HOGAR_ART = null;   // 'img/reino/reino.jpg' cuando llegue el dibujo del reino
+const HOGAR_ART = 'img/reino/reino.jpg';
+// los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
+const reColURL = {};
+function reinoColor(src, color, cb) {
+  if (color === 'azul') return cb(src);
+  const key = src + '@' + color; if (reColURL[key]) return cb(reColURL[key]);
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+    const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
+    const d = cx.getImageData(0, 0, cv.width, cv.height), p = d.data, hex = COLORES[color][1];
+    const t = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
+    for (let i = 0; i < p.length; i += 4) {
+      if (p[i + 3] < 8) continue;
+      const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
+      if ((mx - mn) / (mx + 1e-9) <= 0.4 || mx <= 0.3) continue;
+      const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
+      if (h < 0.59 || h > 0.7) continue;
+      for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * mx + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * mx) : t[k] * mx);
+    }
+    cx.putImageData(d, 0, 0);
+    cv.toBlob(bl => { reColURL[key] = URL.createObjectURL(bl); cb(reColURL[key]); }, src.endsWith('.jpg') ? 'image/jpeg' : 'image/png', 0.9);
+  };
+  img.onerror = () => cb(src); img.src = src;
+}
 function openHogar() {
   $('hg-name').textContent = perfil.nombre || 'Tu reino';
-  const m = $('hg-map'); m.classList.toggle('art', !!HOGAR_ART); if (HOGAR_ART) m.style.backgroundImage = 'url(' + HOGAR_ART + ')';
-  m.innerHTML = (HOGAR_ART ? '' : '<span class="hill" style="left:-18%;top:30%;width:60%;height:16%"></span><span class="hill" style="right:-20%;top:29%;width:64%;height:18%"></span><span class="road"></span>'
-    + '<img class="castle" src="' + colorURL(ICON.casa, myColor(), myEmb()) + '" alt="Tu castillo">')
+  const m = $('hg-map'); m.className = 'hgmap art';
+  m.innerHTML = '<img class="hgbg" src="' + (reColURL[HOGAR_ART + '@' + myColor()] || HOGAR_ART) + '" alt="Tu reino">'
     + EDIFICIOS.map(e => {
-      const lock = e.id === 'trono' && !campana1(), dot = edifDot(e.id);
-      return '<button type="button" class="bld' + (lock ? ' lock' : '') + '" data-e="' + e.id + '" style="left:' + e.pos[0] + '%;top:' + e.pos[1] + '%" aria-label="' + e.name + (lock ? ', bloqueado' : '') + '">'
-        + '<span class="bico">' + svg(e.id) + (dot ? '<span class="dot"></span>' : '') + '</span><span class="blbl">' + e.name + '</span></button>';
+      const lock = e.id === 'trono' && !campana1(), dot = edifDot(e.id), [x0, y0, x1, y1] = e.hit;
+      return '<button type="button" class="bzone" data-e="' + e.id + '" style="left:' + x0 + '%;top:' + y0 + '%;width:' + (x1 - x0) + '%;height:' + (y1 - y0) + '%" aria-label="' + e.name + (lock ? ', bloqueado' : '') + '"></button>'
+        + '<button type="button" class="blabel' + (lock ? ' lock' : '') + '" data-e="' + e.id + '" style="left:' + e.lbl[0] + '%;top:' + e.lbl[1] + '%" tabindex="-1" aria-hidden="true">'
+        + '<img src="img/reino/ico_' + e.id + '.png" alt=""><span>' + e.name + '</span>' + (dot ? '<i class="dot"></i>' : '') + (lock ? '<i class="lk">🔒</i>' : '') + '</button>';
     }).join('');
-  m.querySelectorAll('.bld').forEach(b => { b.onclick = () => openEdif(b.dataset.e); });
+  reinoColor(HOGAR_ART, myColor(), url => { const bg = m.querySelector('.hgbg'); if (bg && bg.getAttribute('src') !== url) bg.src = url; });
+  m.querySelectorAll('[data-e]').forEach(b => { b.onclick = () => entraEdif(b.dataset.e); });
   show('hogar');
+}
+function entraEdif(id) {
+  // la cámara se acerca al lugar antes de entrar
+  const e = EDIFICIOS.find(x => x.id === id), m = $('hg-map');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return openEdif(id);
+  m.style.transformOrigin = ((e.hit[0] + e.hit[2]) / 2) + '% ' + ((e.hit[1] + e.hit[3]) / 2) + '%';
+  m.classList.add('zoom');
+  setTimeout(() => { m.classList.remove('zoom'); openEdif(id); }, 260);
 }
 function edifDot(id) {
   if (id === 'cuartel') return cuartelListo() > 0;
@@ -71,7 +105,8 @@ function openEdif(id) {
   if (id === 'trono' && !campana1()) return pop('<p class="eyebrow">Bloqueado</p><h2>El Trono</h2><p class="note">Se abre al conquistar los siete reinos del Mundo 1. Hasta entonces eliges a tu héroe en la pantalla del mazo.</p>');
   EDIF = id; ESTANDARTE.remove();
   $('ed-title').textContent = e.name;
-  $('ed-body').innerHTML = '<div class="bhead"><span class="bico">' + svg(id) + '</span><p>' + e.txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
+  $('ed-body').innerHTML = '<div class="bhead"><img class="bimg" src="img/reino/' + id + '.png" alt=""><p>' + e.txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
+  reinoColor('img/reino/' + id + '.png', myColor(), url => { const im = document.querySelector('#ed-body .bimg'); if (im) im.src = url; });
   ({ murallas, sanctum, trono, cripta, cuartel, consulado })[id]($('ed-in'));
   show('edif');
 }
@@ -320,4 +355,9 @@ paintHub = function () {
   _phR();
   const d = document.querySelector('#nav [data-tab="hogar"] .ndot'); if (d) d.hidden = !(cuartelListo() > 0 || !Object.keys(perfil.bestias || {}).length);
 };
+// la taberna tiene su propia pantalla: también lleva su dibujo arriba
+(() => { const tb = document.querySelector('#taberna .sheet-top'); if (tb) tb.insertAdjacentHTML('afterend', '<div class="bhead"><img class="bimg" src="img/reino/taberna.png" alt=""><p>Mercenarios llegados de otros mundos. Se pagan con oro.</p></div>'); })();
+// al cambiar de color en las Murallas, el reino se repinta
+const _pcR = paintColors;
+paintColors = function () { _pcR(); if (EDIF === 'murallas' && !$('edif').hidden) reinoColor('img/reino/murallas.png', myColor(), url => { const im = document.querySelector('#ed-body .bimg'); if (im) im.src = url; }); };
 window.__B = () => B; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
