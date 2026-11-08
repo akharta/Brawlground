@@ -228,6 +228,9 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
     capas, castillos, kit de interfaz, bocetos de pantallas, jaulas, llaves y taberna.
   - **Claude** lo monta y le da vida: pantallas reales, animación por código, efectos.
   - Reglas completas en la Biblia de arte (documento aparte).
+- **Al tocar cualquier cosa** (botones, cartas, castillos del mapa, pestañas, lugares del reino): se ilumina su
+  contorno en blanco y dorado y crece un poco con un pequeño rebote. Fuera de la batalla la acción espera un
+  instante para que se vea; en batalla responde al momento.
 - **Sensación**: partículas, números de daño, destellos al golpear, temblor de pantalla,
   animaciones suaves en la interfaz, sonido y música.
 
