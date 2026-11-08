@@ -246,13 +246,14 @@ const BESTIAS = {
   huargo: { name: 'Huargo de la cripta', kind: 'Lucha', c: '#9aa4c7', every: 25, v: lv => lv,
     txt: v => 'Cada 25 s se une a la batalla un lobo de la cripta de nivel ' + huargoPw(v)[0] + ', rango ' + RANGOS[huargoPw(v)[1]] + '.' },
 };
-// dibujos de cada bestia: retrato (Cripta), reposo y acción en batalla
+// dibujos de cada bestia: retrato (Cripta), reposo, preparada (ready, cuando le quedan readyAt s) y acción en batalla
 const BEAST_ART = {
-  grifo: { port: 'grifo_sentado', idle: 'grifo_vuelo', act: 'grifo_vuelo', fly: true, h: 1.2 },
-  basilisco: { port: 'basilisco_sentado', idle: 'basilisco_sentado', act: 'basilisco_pie', h: 1.2 },
-  dragon: { port: 'dragon_sentado', idle: 'dragon_sentado', ready: 'dragon_pie', act: 'dragon_fuego', h: 1.3, mouth: [0.6, 0.57] },
-  huargo: { port: 'huargo_aullido', idle: 'huargo_pie', act: 'huargo_aullido', h: 1.35 },
+  grifo: { port: 'grifo_sentado', idle: 'grifo_sentado', alt: 'grifo_pie', act: 'grifo_vuelo', h: 1.15 },
+  basilisco: { port: 'basilisco_sentado', idle: 'basilisco_sentado', act: 'basilisco_pie', h: 1.15 },
+  dragon: { port: 'dragon_sentado', idle: 'dragon_sentado', ready: 'dragon_pie', readyAt: 0, act: 'dragon_fuego', h: 1.25, mouth: [0.6, 0.57] },
+  huargo: { port: 'huargo_aullido', idle: 'huargo_pie', ready: 'huargo_ataque', readyAt: 2.5, act: 'huargo_aullido', h: 1.25 },
 };
+const POSE_H = { huargo_ataque: 0.66, basilisco_pie: 0.8, dragon_fuego: 0.9 };   // poses agachadas o tumbadas: más bajas
 function beastTex(names, cb) {   // como los castillos: imágenes sueltas que se añaden a Phaser al llegar
   let left = 0; const done = () => { if (--left <= 0 && cb) cb(); };
   for (const n of names) {
@@ -345,37 +346,125 @@ resetBattle = function (o = {}) {
     const be = myBestia(); if (be) { const lv = beLv(be); B.beast = { id: be, lv, v: BESTIAS[be].v(lv), t: BESTIAS[be].t0 || BESTIAS[be].every || 0 }; if (be === 'basilisco') B.curse = { team: 'purple', k: B.beast.v }; }
   }
   if (BST) { scene.tweens.killTweensOf(BST); BST.destroy(); BST = null; }
+  colocaCripta();
   if (B.beast && !B.sim) beastTex(beastNames(B.beast.id), () => { if (B && B.beast && !BST) bestiaEnCampo(B.beast.id); });
   abilUI(true);
 };
-let BST = null;
+let BST = null, CRIPTA = null;
+/* ---- la cripta: una sala de piedra bajo tu castillo, en el subsuelo, donde vive tu bestia ----
+   Se coloca en el trozo de subsuelo que se ve: en vertical, entre el camino y el panel de cartas; en horizontal,
+   en la esquina libre a la izquierda del panel. Dibujo provisional hasta que llegue el definitivo. */
+function criptaTex() {
+  if (scene.textures.exists('cripta')) return;
+  const CW = 640, CH = 520, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const c = cv.getContext('2d'), O = '#1e2235', R = rng(11), r = (a, b) => a + R() * (b - a);
+  const sala = g => { c.beginPath(); c.moveTo(70 - g, CH + 10); c.lineTo(70 - g, 250); c.ellipse(320, 250, 250 + g, 130 + g, 0, Math.PI, Math.PI * 2); c.lineTo(570 + g, CH + 10); c.closePath(); };
+  const pozo = g => { c.beginPath(); c.rect(152 - g, -10, 64 + g * 2, 175); };   // la escalera que sube a tu castillo
+  const union = (g, lw, fill) => { c.lineWidth = lw; c.strokeStyle = O; sala(g); c.stroke(); pozo(g); c.stroke(); c.fillStyle = fill; sala(g); c.fill(); pozo(g); c.fill(); };
+  union(30, 12, '#8b8fa5');
+  // juntas de los sillares: en la bóveda, radiales; en los muros y en el pozo, en hileras
+  c.strokeStyle = 'rgba(30,34,53,.55)'; c.lineWidth = 4;
+  for (let a = Math.PI + 0.12; a < Math.PI * 2 - 0.05; a += 0.2) { c.beginPath(); c.moveTo(320 + Math.cos(a) * 250, 250 + Math.sin(a) * 130); c.lineTo(320 + Math.cos(a) * 280, 250 + Math.sin(a) * 160); c.stroke(); }
+  for (let y = 280, i = 0; y < CH; y += 46, i++) for (const x0 of [40, 570]) { c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + 30, y); c.stroke(); c.beginPath(); c.moveTo(x0 + (i % 2 ? 12 : 20), y); c.lineTo(x0 + (i % 2 ? 12 : 20), y + 46); c.stroke(); }
+  for (let y = 18; y < 150; y += 34) for (const x0 of [122, 216]) { c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + 30, y); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.ellipse(320, 250, 268, 148, 0, Math.PI * 1.08, Math.PI * 1.4); c.ellipse(320, 250, 258, 138, 0, Math.PI * 1.4, Math.PI * 1.08, true); c.fill();
+  // dentro: oscuro, con el muro del fondo y un brillo verde detrás de la bestia
+  const gr = c.createLinearGradient(0, 120, 0, CH); gr.addColorStop(0, '#2e2947'); gr.addColorStop(1, '#1c1a2d');
+  union(0, 10, gr);
+  c.save(); sala(0); c.clip();
+  c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = 3;
+  for (let y = 140, i = 0; y < 440; y += 38, i++) { c.beginPath(); c.moveTo(60, y); c.lineTo(580, y); c.stroke(); for (let x = 60 + (i % 2) * 40; x < 580; x += 80) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 38); c.stroke(); } }
+  const gl = c.createRadialGradient(320, 380, 10, 320, 380, 240); gl.addColorStop(0, 'rgba(110,230,130,.30)'); gl.addColorStop(1, 'rgba(110,230,130,0)'); c.fillStyle = gl; c.fillRect(0, 0, CW, CH);
+  // cadenas que cuelgan de la bóveda
+  for (const [x, n] of [[255, 6], [420, 4]]) for (let i = 0; i < n; i++) {
+    const y = 132 + i * 22 + (x > 300 ? 8 : 0); c.beginPath(); if (i % 2) c.ellipse(x, y, 4, 11, 0, 0, Math.PI * 2); else c.ellipse(x, y, 9, 11, 0, 0, Math.PI * 2);
+    c.lineWidth = 7; c.strokeStyle = O; c.stroke(); c.lineWidth = 3.5; c.strokeStyle = '#a3a9bf'; c.stroke();
+  }
+  // telarañas en las esquinas de la bóveda
+  c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 2;
+  for (const [x, y, d] of [[96, 196, 1], [544, 196, -1]]) { for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + d * (20 + k * 16), y - 60 + k * 20); c.stroke(); } for (const q of [18, 34]) { c.beginPath(); c.arc(x, y, q, d > 0 ? -1.4 : Math.PI + 0.3, d > 0 ? -0.3 : Math.PI + 1.4); c.stroke(); } }
+  // suelo de losas
+  c.fillStyle = '#6c6d85'; c.fillRect(0, 446, CW, CH); c.fillStyle = '#9a9cb3'; c.fillRect(0, 446, CW, 9);
+  c.strokeStyle = O; c.lineWidth = 5; c.beginPath(); c.moveTo(0, 446); c.lineTo(CW, 446); c.stroke();
+  c.lineWidth = 4; c.strokeStyle = 'rgba(30,34,53,.6)'; for (let x = 100; x < CW; x += 92) { c.beginPath(); c.moveTo(x, 455); c.lineTo(x - 10, CH); c.stroke(); }
+  c.beginPath(); c.moveTo(0, 488); c.lineTo(CW, 488); c.stroke();
+  c.restore();
+  // escalones del pozo
+  c.save(); pozo(0); c.clip(); for (let y = 10; y < 165; y += 26) { c.fillStyle = '#4a4664'; c.fillRect(150, y, 70, 9); c.fillStyle = '#6f6a8f'; c.fillRect(150, y, 70, 3); } c.restore();
+  // huesos y una calavera en el suelo
+  const hueso = (x, y, l, a) => { c.save(); c.translate(x, y); c.rotate(a); for (const [e, col] of [[3, O], [0, '#efe6d2']]) { c.fillStyle = col; c.fillRect(-l / 2, -4 - e, l, 8 + e * 2); [[-l / 2, -5], [-l / 2, 5], [l / 2, -5], [l / 2, 5]].forEach(([a2, b2]) => { c.beginPath(); c.arc(a2, b2, 6 + e, 0, Math.PI * 2); c.fill(); }); } c.restore(); };
+  hueso(130, 452, 40, -0.15); hueso(505, 455, 34, 0.3); hueso(530, 446, 30, -0.5);
+  c.beginPath(); c.arc(112, 432, 17, 0, Math.PI * 2); c.fillStyle = '#efe6d2'; c.fill(); c.lineWidth = 5; c.strokeStyle = O; c.stroke();
+  c.fillStyle = O; c.beginPath(); c.arc(106, 430, 4.5, 0, Math.PI * 2); c.arc(119, 430, 4.5, 0, Math.PI * 2); c.fill();
+  // antorchas en los muros (la llama la pone la batalla)
+  for (const x of [108, 532]) {
+    c.lineWidth = 5; c.strokeStyle = O; c.fillStyle = '#7a5434'; c.beginPath(); c.rect(x - 7, 268, 14, 46); c.fill(); c.stroke();
+    c.fillStyle = '#8f93a8'; c.beginPath(); c.moveTo(x - 16, 258); c.lineTo(x + 16, 258); c.lineTo(x + 10, 274); c.lineTo(x - 10, 274); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.rect(x - 12, 300, 24, 8); c.fill(); c.stroke();
+  }
+  scene.textures.addCanvas('cripta', cv);
+}
+const CRIPTA_TEX = { w: 640, h: 520, suelo: 450, antorchas: [[108, 256], [532, 256]] };
+function colocaCripta() {
+  if (CRIPTA) { CRIPTA.objs.forEach(o => o.destroy()); CRIPTA = null; }
+  if (BST) BST.setVisible(false);
+  if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
+  criptaTex();
+  const T = CRIPTA_TEX, gm = window.__game, z = cam.zoom, k = DPR / z;   // unidades del mundo por píxel css
+  const left = cam.scrollX + cam.width / 2 - gm.scale.width / 2 / z, top = cam.scrollY + cam.height / 2 - gm.scale.height / 2 / z;
+  const d = $('dock').getBoundingClientRect(), ih = window.innerHeight, ug = (SUB_Y - top) / k;
+  const enBanda = d.top - ug, enEsquina = d.left >= 74 ? ih - ug : 0;
+  const esquina = enEsquina > enBanda * 1.25, hCss = Math.max(64, Math.min(240, (esquina ? enEsquina : enBanda) * 0.94));
+  const h = hCss * k, w = h * T.w / T.h, s = h / T.h;
+  const cx = esquina ? left + d.left / 2 * k : Math.max(CASTLE_VX + 40, left + 12 * k + w / 2), y = SUB_Y - 6;
+  const img = scene.add.image(cx, y, 'cripta').setOrigin(0.5, 0).setScale(s).setDepth(-28);
+  CRIPTA = { objs: [img], x: cx - w / 2, y, w, h, s, antorchas: T.antorchas.map(([ax, ay]) => [cx - w / 2 + ax * s, y + ay * s]) };
+  if (BST) {
+    BST.x0 = cx + w * 0.02; BST.y0 = y + T.suelo * s; BST.hh = h * 0.47 * BST.art.h;
+    BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
+  }
+}
 function bestiaEnCampo(id) {
-  // de pie en el suelo, delante de la puerta de tu castillo (el grifo, volando sobre las almenas)
-  const A = BEAST_ART[id], x = A.fly ? CASTLE_VX + 120 : CASTLE_FRONT - H * 0.4, y = A.fly ? THRONE.y - 30 : GROUND + 4;
-  BST = scene.add.image(x, y, 'bst_' + A.idle).setOrigin(0.5, A.fly ? 0.5 : 1).setDepth(A.fly ? 1200 : GROUND - 2);
-  BST.k = A.h * H / BST.height; BST.setScale(BST.k); BST.art = A; BST.pose = A.idle; BST.x0 = x; BST.y0 = y; BST.actT = 0; BST.tic = 0;
-  if (A.fly) scene.tweens.add({ targets: BST, y: y - 14, duration: 900, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
-  else scene.tweens.add({ targets: BST, scaleY: BST.k * 1.04, duration: 850, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
+  const A = BEAST_ART[id];
+  BST = scene.add.image(0, 0, 'bst_' + A.idle).setOrigin(0.5, 1).setDepth(-27).setVisible(false);
+  BST.art = A; BST.pose = A.idle; BST.actT = 0; BST.tic = 2; BST.hh = 100; BST.k = 1;
+  colocaCripta();
   scene.tweens.add({ targets: BST, alpha: { from: 0, to: 1 }, duration: 400 });
 }
-function bestiaPose(n, t) {   // cambia de dibujo (con un pequeño salto) y vuelve al de reposo pasados t segundos
+function bstRespira() {   // en reposo, respira (se estira un poco hacia arriba y vuelve)
+  scene.tweens.killTweensOf(BST); BST.setScale(BST.k);
+  scene.tweens.add({ targets: BST, scaleY: BST.k * 1.04, duration: 850, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
+}
+function bestiaPose(n, t, quieta) {   // cambia de dibujo (con un pequeño salto) y vuelve al de reposo pasados t segundos
   if (!BST || !scene.textures.exists('bst_' + n)) return;
-  if (BST.pose !== n) { BST.setTexture('bst_' + n); BST.k = BST.art.h * H / BST.height; BST.pose = n; }
-  BST.setScale(BST.k * 1.12, BST.k * 0.92); scene.tweens.add({ targets: BST, scaleX: BST.k, scaleY: BST.k, duration: 260, ease: 'Back.out' });
+  if (BST.pose !== n || quieta) { BST.setTexture('bst_' + n); BST.k = BST.hh * (POSE_H[n] || 1) / BST.height; BST.pose = n; }
   BST.actT = t || 0;
+  if (quieta) return bstRespira();
+  scene.tweens.killTweensOf(BST); BST.setAlpha(1);
+  BST.setScale(BST.k * 1.12, BST.k * 0.92); scene.tweens.add({ targets: BST, scaleX: BST.k, scaleY: BST.k, duration: 260, ease: 'Back.out', onComplete: () => { if (BST) bstRespira(); } });
+}
+function criptaTick(dt) {   // llamas de las antorchas
+  if (!CRIPTA) return;
+  const q = CRIPTA.h / 300;
+  for (const [x, y] of CRIPTA.antorchas) if (Math.random() < dt * 30) fx.push({ x: x + rand(-4, 4) * q, y: y + rand(-2, 4) * q, vx: rand(-8, 8) * q, vy: rand(-70, -40) * q, g: 0, r: rand(3.5, 6) * q, life: 0.35, t: 0.35, color: [0xff7a1a, 0xffc83d, 0xffe08a][(Math.random() * 3) | 0] });
 }
 function bestiaTick(dt) {
-  if (!BST || !B.beast) return;
-  const id = B.beast.id, A = BST.art;
-  if (BST.actT > 0) { BST.actT -= dt; if (BST.actT <= 0) bestiaPose(id === 'dragon' && B.beast.t <= 0 ? A.ready : A.idle); return; }
-  if (id === 'dragon' && B.beast.t <= 0 && BST.pose !== A.ready) bestiaPose(A.ready);   // lista para escupir fuego: se levanta
-  if (id === 'dragon' && BST.pose === A.ready && Math.random() < dt * 1.5) fx.push({ x: BST.x + BST.displayWidth * 0.3, y: BST.y - BST.displayHeight * 0.9, vx: rand(-10, 10), vy: rand(-50, -30), g: 0, r: rand(3, 6), life: 0.9, t: 0.9, color: 0x9a9aa8 });
+  if (!BST || !B.beast || !BST.visible) return;
+  const id = B.beast.id, A = BST.art, q = CRIPTA ? CRIPTA.h / 300 : 1, listo = A.ready && B.beast.t <= A.readyAt;
+  if (BST.actT > 0) { BST.actT -= dt; if (BST.actT <= 0) bestiaPose(listo ? A.ready : A.idle); return; }
+  if (listo && BST.pose !== A.ready) bestiaPose(A.ready);   // el dragón se levanta con el fuego listo; el huargo se agazapa antes de mandar al lobo
+  if (id === 'dragon' && BST.pose === A.ready && Math.random() < dt * 1.5) fx.push({ x: BST.x + BST.displayWidth * 0.3, y: BST.y - BST.displayHeight * 0.9, vx: rand(-10, 10) * q, vy: rand(-50, -30) * q, g: 0, r: rand(3, 6) * q, life: 0.9, t: 0.9, color: 0x9a9aa8 });
   BST.tic -= dt;
   if (id === 'basilisco' && BST.tic <= 0) {   // mirada: se levanta y los enemigos se ven envueltos en un brillo verde
     BST.tic = 7; bestiaPose(A.act, 1.6);
+    for (let i = 0; i < 10; i++) fx.push({ x: BST.x + BST.displayWidth * rand(0.2, 0.45), y: BST.y - BST.displayHeight * rand(0.5, 0.8), vx: rand(20, 90) * q, vy: rand(-60, -10) * q, g: 0, r: rand(2.5, 4.5) * q, life: 0.7, t: 0.7, color: 0x8dff8a });
     foesOf('blue').forEach(v => { for (let i = 0; i < 6; i++) fx.push({ x: v.x + rand(-20, 20), y: v.gy - rand(10, 90), vx: rand(-20, 20), vy: rand(-40, -10), g: 0, r: rand(3, 5), life: 0.9, t: 0.9, color: 0x5fcf6a }); });
   }
-  if (id === 'grifo' && BST.tic <= 0) { BST.tic = rand(3, 5); BST.setScale(BST.k, BST.k * 0.88); scene.tweens.add({ targets: BST, scaleY: BST.k, duration: 220, ease: 'Back.out' }); }   // aleteo
+  if (id === 'grifo' && BST.tic <= 0) {   // se levanta a otear y vuelve a sentarse, o se sacude las alas
+    BST.tic = rand(4, 7);
+    if (BST.pose === A.idle && Math.random() < 0.5) bestiaPose(A.alt, rand(1.6, 2.6));
+    else { BST.setScale(BST.k, BST.k * 0.88); scene.tweens.add({ targets: BST, scaleY: BST.k, duration: 220, ease: 'Back.out' }); }
+  }
 }
 const _bsR = battleStep;
 battleStep = function (dt) {
@@ -384,12 +473,15 @@ battleStep = function (dt) {
   for (const t of ['blue', 'purple']) { const bf = B.buff[t]; if (bf.hasteT > 0) bf.hasteT -= dt; if (bf.slowT > 0) bf.slowT -= dt; }
   if (B.spell && B.spell.t > 0) B.spell.t -= dt;
   if (B.beast) {
-    B.beast.t -= dt; bestiaTick(dt);
-    if (B.beast.id === 'huargo' && B.beast.t <= 0) {   // llega un lobo de la cripta
+    B.beast.t -= dt; bestiaTick(dt); criptaTick(dt);
+    if (B.beast.id === 'huargo' && B.beast.t <= 0) {   // el huargo aúlla en la cripta y un lobo sale por la puerta del castillo
       B.beast.t = BESTIAS.huargo.every;
       const u = new Unit(scene, 'lobo', 'blue', FIELD_L); units.push(u); const [lv, r] = huargoPw(B.beast.lv); applyPromo(u, lv, r, teamBuffK('blue'));
       if (u.parts) u.parts.forEach(p => p.setTint(0xc4ccff));
-      if (!B.auto) { floatText(BST ? BST.x : FIELD_L, GROUND - H * 1.6, '¡Auuu!', '#c4ccff'); bestiaPose('huargo_aullido', 1.3); }
+      if (!B.auto) {
+        burst(CASTLE_FRONT - H * 0.3, GROUND - 30, 0xc4ccff, 14, 220);
+        if (BST && BST.visible) { floatText(BST.x, BST.y - BST.displayHeight * 1.1, '¡Auuu!', '#c4ccff'); bestiaPose('huargo_aullido', 1.3); }
+      }
     }
   }
 };
@@ -405,10 +497,12 @@ function abilUI(reset) {
   if (!bb.hidden) one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!');
   colocaAbils();
 }
-// dónde van: en horizontal, en la esquina libre junto al panel de cartas; en vertical, en el cielo encima de tu trono
+// dónde van: en horizontal, en la esquina derecha junto al panel de cartas; en vertical, en el cielo encima de tu trono
 function colocaAbils() {
   const ab = $('abils'), d = $('dock').getBoundingClientRect(), ih = window.innerHeight;
-  if (d.left >= 74) { ab.style.top = ''; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
+  // en horizontal, la esquina izquierda es para la cripta: los botones van a la derecha del panel
+  if (d.left >= 74) { ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'var(--sr)'; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
+  ab.style.left = ''; ab.style.right = '';
   const z = cam.zoom / DPR, y = (THRONE.y - 175 - cam.worldView.y) * z, top = $('hudtop').getBoundingClientRect().bottom + 8, hh = ab.offsetHeight || 130;
   const t = Math.max(top, y - hh);
   if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
@@ -416,7 +510,10 @@ function colocaAbils() {
 const _playR = play;
 play = function (team, idx) {
   const n = units.length, ok = _playR(team, idx);
-  if (ok && team === 'blue' && BST && B.beast && B.beast.id === 'grifo' && units.length > n) { const u = units[units.length - 1]; burst(u.x, u.gy - H * 0.6, 0xffd36b, 12, 160); BST.tic = 0; }
+  if (ok && team === 'blue' && BST && B.beast && B.beast.id === 'grifo' && units.length > n) {   // el grifo bate las alas y bendice a la que sale
+    const u = units[units.length - 1]; burst(u.x, u.gy - H * 0.6, 0xffd36b, 12, 160);
+    if (BST.visible) { bestiaPose(BST.art.act, 0.7); burst(BST.x, BST.y - BST.displayHeight * 0.6, 0xffd36b, 8, 90 * CRIPTA.h / 300); }
+  }
   return ok;
 };
 const _uiTickR = uiTick;
@@ -464,11 +561,12 @@ function lanzar(id, team, k = 1) {
   }
 }
 function alientoDragon(team, dmg) {
-  if (team === 'blue' && BST && B.beast && B.beast.id === 'dragon') {
+  if (team === 'blue' && BST && BST.visible && BST.art === BEAST_ART.dragon) {   // ruge en la cripta y el fuego sale por la puerta del castillo
     bestiaPose('dragon_fuego', 1.3);
-    const mx = BST.x - BST.displayWidth / 2 + BST.displayWidth * BST.art.mouth[0], my = BST.y - BST.displayHeight + BST.displayHeight * BST.art.mouth[1];
-    for (let i = 0; i < 46; i++) fx.push({ x: mx, y: my + rand(-8, 8), vx: rand(700, 1100), vy: rand(-60, 60), g: 0, r: rand(6, 12), life: rand(0.35, 0.6), t: 0.6, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i % 3] });
+    const q = CRIPTA.h / 300, mx = BST.x - BST.displayWidth / 2 + BST.displayWidth * BST.art.mouth[0], my = BST.y - BST.displayHeight + BST.displayHeight * BST.art.mouth[1];
+    for (let i = 0; i < 24; i++) fx.push({ x: mx, y: my + rand(-4, 4) * q, vx: rand(220, 380) * q, vy: rand(-30, 30) * q, g: 0, r: rand(4, 8) * q, life: rand(0.25, 0.45), t: 0.45, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i % 3] });
   }
+  if (team === 'blue') for (let i = 0; i < 46; i++) fx.push({ x: CASTLE_FRONT - H * 0.3, y: GROUND - 45 + rand(-12, 12), vx: rand(700, 1100), vy: rand(-60, 60), g: 0, r: rand(6, 12), life: rand(0.35, 0.6), t: 0.6, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i % 3] });
   const L = team === 'blue' ? FIELD_L : W / 2, R = team === 'blue' ? W / 2 : FIELD_R;
   for (let x = L; x < R; x += 38) for (let i = 0; i < 3; i++) fx.push({ x: x + rand(-15, 15), y: GROUND - rand(10, 150), vx: rand(-30, 30), vy: rand(-90, -30), g: -40, r: rand(5, 10), life: 0.8, t: 0.8, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i] });
   foesOf(team).filter(v => v.x >= L && v.x <= R).forEach(v => v.damage(dmg, null, v.x));
@@ -489,4 +587,7 @@ paintColors = function () { _pcR(); if (EDIF === 'murallas' && !$('edif').hidden
 // al arrancar, el aspecto elegido ya queda cargado para la primera batalla
 const _loadedR = loaded;
 loaded = function () { _loadedR(); skinTex(mySkin()); };
+// la cripta se recoloca cada vez que la cámara cambia (al girar el móvil, al entrar en batalla…)
+const _dsR = drawScenery;
+drawScenery = function (sc) { _dsR(sc); colocaCripta(); };
 window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();

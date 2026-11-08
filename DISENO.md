@@ -192,9 +192,11 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
     (160 en área, también al castillo).
   - **El Trono**: los héroes. Se abre al conquistar los siete reinos del Mundo 1 (hasta entonces el héroe se
     elige en el mazo). Más adelante: niveles, equipo y talentos de los héroes.
-  - **Cripta** (bestias dibujadas; en batalla salen junto a tu castillo y cambian de pose al actuar: el dragón se
-    levanta cuando su fuego está listo y lo escupe por la boca, el huargo aúlla al llamar al lobo, el basilisco se alza
-    y su mirada envuelve a los enemigos en verde, el grifo vuela sobre las almenas y bendice a cada unidad que sale): bestias (la primera es gratis, las demás 150 diamantes; suben de nivel con oro). Una va
+  - **Cripta** (bestias dibujadas). En batalla, tu bestia vive en una cripta de piedra bajo tu castillo, en el
+    subsuelo, y cambia de pose al actuar: el dragón se levanta cuando su fuego está listo, ruge en la cripta y el
+    fuego sale por la puerta del castillo; el huargo se agazapa antes de mandar al lobo y aúlla cuando sale; el
+    basilisco se alza y su mirada envuelve a los enemigos en verde; el grifo se levanta a otear y bate las alas
+    al bendecir cada unidad que sale. Bestias: la primera es gratis, las demás 150 diamantes; suben de nivel con oro. Una va
     contigo: Grifo real (bendición: +10 % de vida y daño a los tuyos), Basilisco (maldición: enemigos un
     12 % más lentos), Dragón de ceniza (habilidad: aliento de fuego en tu mitad del campo cada 30 s) y Huargo
     de la cripta (lucha: un lobo se une a la batalla cada 25 s).
@@ -222,9 +224,11 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 ## Plataforma y aspecto
 
 - **Móvil**, jugable en horizontal y en vertical.
-  - Horizontal: campo completo.
-  - Vertical: campo comprimido (escalado al ancho, unidades algo más grandes) con la
-    interfaz y las cartas abajo.
+  - Horizontal: campo completo; la cripta asoma en la esquina izquierda, junto al panel de cartas, y el hechizo
+    y la bestia van en la esquina derecha.
+  - Vertical: campo comprimido (escalado al ancho) con la interfaz y las cartas abajo. El camino sube hasta un
+    tercio de la pantalla y debajo se ve el **subsuelo** (tierra, raíces, piedras, huesos y cristales en la roca)
+    con la cripta de tu bestia bajo tu castillo. Subsuelo y cripta son provisionales hasta que lleguen sus dibujos.
 - **Tecnología**: Phaser (HTML5), instalable como app (PWA) y jugable sin conexión.
 - **Arte propio**, original y exclusivo de Brawlground. Estilo cartoon chibi: cabeza
   grande, sin brazos (manos flotantes), contorno grueso azul marino, colores planos.

@@ -248,7 +248,7 @@ function drawScenery(sc) {
   const ih0 = f.h * tw / f.w * base, k = Math.max(1, Math.min(1.25, (GROUND - top) / pc / ih0)), s = base * k, ih = ih0 * k, iw = tw * s, y0 = GROUND + 2 - pc * ih;
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
   add(sc.add.rectangle(cx, (top - 60 + y0) / 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-31));
-  add(sc.add.rectangle(cx, (y0 + ih + bot + 60) / 2, vw + 200, bot - y0 - ih + 64, col(f.bot)).setDepth(-31));
+  drawSubsuelo(sc, y0 + ih, add, cx, vw, bot, col(f.bot));
   for (let i = -3; i <= 3; i++) {
     const x = W / 2 + i * iw; if (x + iw / 2 < cx - vw / 2 - 10 || x - iw / 2 > cx + vw / 2 + 10) continue;
     add(sc.add.image(x, y0, escena).setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-30));
@@ -264,6 +264,69 @@ function drawScenery(sc) {
       clouds.push({ img, v: rand(8, 18), x0: cx - vw / 2 - 400, x1: cx + vw / 2 + 400 });
     }
   }
+}
+/* ---- subsuelo: bajo el camino, tierra, piedras, raíces y roca (en batalla, con la cripta de tu bestia bajo tu castillo) ----
+   De momento es un dibujo provisional hecho aquí, con el mismo estilo: contorno oscuro y colores planos. */
+let SUB_Y = GROUND + 200;   // dónde empieza el subsuelo (lo usa la cripta)
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function subsueloTex(sc) {
+  if (sc.textures.exists('subsuelo')) return;
+  const CW = 1084, CH = 900, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const c = cv.getContext('2d'), R = rng(7), r = (a, b) => a + R() * (b - a), O = '#1e2235';
+  const edge = x => 22 + Math.sin(x / 47) * 6 + Math.sin(x / 13 + 1) * 3;   // borde de arriba: la hierba cuelga un poco
+  const capa = (y0, amp, f, ph) => x => y0 + Math.sin(x / f + ph) * amp + Math.sin(x / (f * 0.37) + ph * 2) * amp * 0.35;
+  const fill = (top, color) => { c.beginPath(); c.moveTo(0, CH); for (let x = 0; x <= CW; x += 6) c.lineTo(x, top(x)); c.lineTo(CW, CH); c.closePath(); c.fillStyle = color; c.fill(); c.lineWidth = 5; c.strokeStyle = 'rgba(30,34,53,.55)'; c.beginPath(); for (let x = 0; x <= CW; x += 6) c[x ? 'lineTo' : 'moveTo'](x, top(x)); c.stroke(); };
+  fill(edge, '#94673f');
+  fill(capa(300, 16, 70, 1), '#7c5434');
+  fill(capa(560, 20, 90, 3), '#5f4132');
+  fill(capa(770, 14, 60, 5), '#46323b');
+  c.lineWidth = 7; c.strokeStyle = O; c.beginPath(); for (let x = 0; x <= CW; x += 6) c[x ? 'lineTo' : 'moveTo'](x, edge(x)); c.stroke();
+  // raíces que bajan desde la hierba
+  for (let i = 0; i < 9; i++) {
+    let x = r(30, CW - 30), y = edge(x) - 2; const n = r(4, 8) | 0;
+    const pts = [[x, y]]; for (let j = 0; j < n; j++) { x += r(-16, 16); y += r(14, 24); pts.push([x, y]); }
+    for (const [w, col] of [[9, O], [5, '#6b4527']]) { c.lineWidth = w; c.lineCap = 'round'; c.strokeStyle = col; c.beginPath(); pts.forEach((p, k) => c[k ? 'lineTo' : 'moveTo'](p[0], p[1])); c.stroke(); }
+  }
+  // piedras (más grandes cuanto más hondo), huesos y cristales en la roca
+  const piedras = [], libre = (x, y, rr) => piedras.every(([a, b, q]) => Math.hypot(a - x, b - y) > q + rr + 10);
+  for (let k = 0; k < 400 && piedras.length < 46; k++) {
+    const y = r(70, CH - 30), rr = 8 + y / CH * 26 * r(0.6, 1.2), x = r(rr + 4, CW - rr - 4); if (!libre(x, y, rr)) continue; piedras.push([x, y, rr]);
+    const sq = r(0.6, 0.85), col = ['#b9a68a', '#a99880', '#958fa0', '#c4b08f'][(R() * 4) | 0], rot = r(-0.5, 0.5);
+    c.save(); c.translate(x, y); c.rotate(rot);
+    c.beginPath(); c.ellipse(0, 0, rr, rr * sq, 0, 0, Math.PI * 2); c.fillStyle = col; c.fill(); c.lineWidth = 5; c.strokeStyle = O; c.stroke();
+    c.beginPath(); c.ellipse(0, rr * sq * 0.35, rr * 0.82, rr * sq * 0.5, 0, 0, Math.PI); c.fillStyle = 'rgba(30,34,53,.22)'; c.fill();
+    c.beginPath(); c.ellipse(-rr * 0.35, -rr * sq * 0.4, rr * 0.28, rr * sq * 0.16, -0.4, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.5)'; c.fill();
+    c.restore();
+  }
+  const hueso = (x, y, l, a) => {
+    c.save(); c.translate(x, y); c.rotate(a);
+    for (const [w, col] of [[5, O], [0, '#efe6d2']]) {
+      c.fillStyle = col; const e = w / 2;
+      c.fillRect(-l / 2, -5 - e, l, 10 + w); [[-l / 2, -6], [-l / 2, 6], [l / 2, -6], [l / 2, 6]].forEach(([a2, b2]) => { c.beginPath(); c.arc(a2, b2, 7 + e, 0, Math.PI * 2); c.fill(); });
+    }
+    c.restore();
+  };
+  hueso(r(150, 400), r(380, 480), 46, r(-0.6, 0.6)); hueso(r(650, 950), r(420, 520), 38, r(-0.6, 0.6)); hueso(r(300, 800), r(640, 700), 52, r(-0.4, 0.4));
+  for (let i = 0; i < 4; i++) {   // cristales en la roca del fondo
+    const x = r(80, CW - 80), y = r(800, 860), col = i % 2 ? ['#b48cff', '#e2d1ff'] : ['#6fc8ff', '#d4f1ff'];
+    [[-14, 0.8], [0, 1.15], [13, 0.7]].forEach(([dx, k]) => {
+      const h = 46 * k, w = 13 * k; c.beginPath(); c.moveTo(x + dx - w, y); c.lineTo(x + dx - w, y - h * 0.7); c.lineTo(x + dx, y - h); c.lineTo(x + dx + w, y - h * 0.7); c.lineTo(x + dx + w, y); c.closePath();
+      c.fillStyle = col[0]; c.fill(); c.lineWidth = 5; c.strokeStyle = O; c.stroke();
+      c.beginPath(); c.moveTo(x + dx - w * 0.4, y - 6); c.lineTo(x + dx - w * 0.4, y - h * 0.68); c.lineWidth = 4; c.strokeStyle = col[1]; c.stroke();
+    });
+  }
+  sc.textures.addCanvas('subsuelo', cv);
+}
+function drawSubsuelo(sc, ytop, add, cx, vw, bot, grass) {
+  SUB_Y = ytop;
+  subsueloTex(sc);
+  const key = 'subsuelo', src = sc.textures.get(key).getSourceImage(), s = (W + 8) / src.width, iw = src.width * s, ih = src.height * s;
+  add(sc.add.rectangle(cx, ytop + 40, vw + 200, 90, grass).setDepth(-31));   // la hierba se ve por el borde ondulado
+  for (let i = -3; i <= 3; i++) {
+    const x = W / 2 + i * iw; if (x + iw / 2 < cx - vw / 2 - 10 || x - iw / 2 > cx + vw / 2 + 10) continue;
+    add(sc.add.image(x, ytop - 3, key).setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-30));
+  }
+  if (ytop + ih < bot + 60) add(sc.add.rectangle(cx, (ytop + ih + bot + 60) / 2 - 4, vw + 200, bot + 64 - ytop - ih, 0x46323b).setDepth(-31));
 }
 function setScenery(e) {
   escena = e || escena;
@@ -288,7 +351,9 @@ function frameCamera() {
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
   const X0 = 20, X1 = W - 20, Y0 = THRONE.y - 150, Y1 = GROUND + 120;   // de los tronos al borde del camino
   const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
-  cam.setZoom(z); cam.centerOn(W / 2, Y1 - (botCss * DPR - ch / 2) / z);
+  // si sobra alto (móvil en vertical), el camino sube hasta un tercio de la pantalla y debajo se ve el subsuelo
+  const yCss = battle ? Math.max(Math.min(botCss, window.innerHeight * 2 / 3), topCss + (Y1 - Y0) * z / DPR) : botCss;
+  cam.setZoom(z); cam.centerOn(W / 2, Y1 - (yCss * DPR - ch / 2) / z);
   zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss));
   drawScenery(scene);
 }
