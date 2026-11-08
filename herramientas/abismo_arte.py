@@ -2,7 +2,7 @@
 """Prepara el arte del Abismo del Despertar (assets/abismo -> docs/img/abismo).
 - fondo.jpg (vertical, pantalla del Abismo) y cartel.jpg (horizontal, tarjeta de Eventos y fondo en horizontal)
 - las 4 entradas con sus 3 trampas (vacío, lava, sombras), todas con el mismo recorte para que encajen igual
-- cada entrada "a oscuras" (sin trampa a la vista): la de sombras con la boca rellena de negro
+- cada entrada "a oscuras" (sin trampa a la vista), de la hoja entradas.png
 - cuerda, antorcha e insignia de mando (docs/img/insignia.png)
 Uso: python3 herramientas/abismo_arte.py"""
 import os
@@ -27,22 +27,27 @@ box = (box[0] - 6, box[1] - 6, box[2] + 6, box[3] + 6)
 LADO = 300
 def salida(im): im = im.crop(box); return im.resize((LADO, round(LADO * im.height / im.width)), Image.LANCZOS)
 for (k, t), im in ims.items(): guarda(salida(im), os.path.join(O, f'{k}_{t}.png'))
-# a oscuras: el marco de piedra es igual en las tres trampas; lo que cambia entre ellas es el interior de la boca.
-# Ese interior (sin las líneas finas de los bordes) se pinta de negro sobre la de sombras: se van los ojos.
-for k in CAMINOS:
-    v = [np.asarray(ims[(k, t)]).astype(int) for t in TRAMPAS]
-    d = np.zeros(v[0].shape[:2], bool)
-    for x in range(3):
-        for y in range(x + 1, 3): d |= np.abs(v[x][..., :3] - v[y][..., :3]).sum(2) > 60
-    d = nd.binary_opening(d, iterations=3)
-    lab, n = nd.label(d); tam = nd.sum(d, lab, range(1, n + 1))
-    d = np.isin(lab, [i + 1 for i, t in enumerate(tam) if t > 3000])
-    boca = nd.binary_fill_holes(nd.binary_closing(d, iterations=8)) & (v[2][..., 3] > 200)
-    h, w = boca.shape; g = np.linspace(0, 1, h)[:, None]
-    out = v[2].astype(float)
-    for ch, (c0, c1) in enumerate(zip([24, 18, 38], [7, 6, 14])): out[..., ch] = np.where(boca, (1 - g) * c0 + g * c1, out[..., ch])
-    print(k, 'boca', int(boca.sum()), 'px')
-    guarda(salida(Image.fromarray(out.clip(0, 255).astype(np.uint8), 'RGBA')), os.path.join(O, f'{k}.png'))
+# a oscuras: la hoja de las cuatro entradas vacías (2×2, en el orden gruta, cueva / grieta, túnel), cada una
+# escalada y colocada sobre su versión con trampa para que al cambiar de una a otra la piedra no se mueva
+hoja = Image.open(os.path.join(A, 'entradas.png')).convert('RGBA'); q = hoja.width // 2
+caja = lambda im: im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox()
+for n, k in enumerate(CAMINOS):
+    x0, y0 = (n % 2) * q, (n // 2) * q
+    pieza = hoja.crop((x0, y0, x0 + q, y0 + q)); pieza = pieza.crop(caja(pieza))
+    ref = ims[(k, 'sombras')]; rb = caja(ref); rw, rh = rb[2] - rb[0], rb[3] - rb[1]
+    mejor = None
+    for ds in np.linspace(-0.02, 0.02, 9):   # ajuste fino: la escala y el sitio que mejor tapan la silueta de la de trampa
+        sc = (rw / pieza.width + rh / pieza.height) / 2 * (1 + ds)
+        p2 = pieza.resize((round(pieza.width * sc), round(pieza.height * sc)), Image.LANCZOS)
+        for dx in range(-6, 7, 2):
+            for dy in range(-6, 7, 2):
+                lien = Image.new('RGBA', ref.size, (0, 0, 0, 0))
+                lien.paste(p2, (round((rb[0] + rb[2] - p2.width) / 2) + dx, round((rb[1] + rb[3] - p2.height) / 2) + dy), p2)
+                a1 = np.asarray(lien.getchannel('A')) > 128; a2 = np.asarray(ref.getchannel('A')) > 128
+                iou = (a1 & a2).sum() / (a1 | a2).sum()
+                if not mejor or iou > mejor[0]: mejor = (iou, lien)
+    print(k, 'encaje', round(mejor[0], 4))
+    guarda(salida(mejor[1]), os.path.join(O, f'{k}.png'))
 # objetos
 for n, dst in [('cuerda', os.path.join(O, 'cuerda.png')), ('antorcha', os.path.join(O, 'antorcha.png')), ('insignia', os.path.join(R, 'docs/img/insignia.png'))]:
     im = Image.open(os.path.join(A, n + '.png')).convert('RGBA'); im = im.crop(im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox())
