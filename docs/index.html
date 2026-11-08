@@ -559,13 +559,16 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .offer .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
 .cpx { font-family: var(--font-display); color: var(--gold); font-size: 1.05rem; }
 /* reino: el castillo y sus lugares */
-.screen.hogar { place-items: start center; padding-top: calc(var(--st) + 8px); grid-template-rows: auto 1fr; gap: 6px; }
-body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
+.screen.hogar { place-items: stretch; padding: 0; grid-template-rows: 1fr; gap: 0; }
+/* el reino a pantalla completa: el dibujo de borde a borde y el título con el oro flotando encima */
+.screen.hogar .hgtop { position: absolute; z-index: 3; top: 0; left: 0; right: 0; width: auto; margin: 0 auto; max-width: 760px; padding: calc(var(--st) + 8px) calc(var(--sr) + 12px) 22px calc(var(--sl) + 12px); background: linear-gradient(rgba(12,15,28,.78), rgba(12,15,28,.45) 65%, transparent); pointer-events: none; }
+.screen.hogar .hgtop > * { pointer-events: auto; } .screen.hogar .hgtop h2 { text-shadow: 0 2px 0 var(--outline), 0 0 8px #000; }
+body.nav .screen.hogar { padding-bottom: 0; } body.nav .screen.hogar .hgscroll { padding-bottom: calc(var(--navh) + var(--sb) - 18px); box-sizing: border-box; }
 .hgtop { display: flex; align-items: center; gap: 10px; width: min(560px, 100%); box-sizing: border-box; flex-wrap: wrap; }
 .hgtop h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0 auto 0 0; }
-.hgscroll { width: 100%; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: center; }
+.hgscroll { width: 100%; height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: center; }
 .uprow .mini { width: 26px; height: 26px; border-radius: 6px; vertical-align: middle; object-fit: cover; }
-.hgmap { position: relative; flex: none; container-type: inline-size; width: min(560px, 100%); aspect-ratio: 914 / 1721;   /* alto: en móviles altos llena la pantalla; si no, se baja con el dedo */ border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
+.hgmap { position: relative; flex: none; container-type: inline-size; width: max(min(760px, 100%), calc((100dvh - var(--navh) - var(--sb) + 18px) * 914 / 1721)); aspect-ratio: 914 / 1721;   /* de borde a borde y de arriba abajo (si sobra ancho, se recortan un poco los lados); si no cabe, se baja con el dedo */ border: 0; border-radius: 0; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,.5);
   background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
 .hgmap.art { background: #5aa23f; }
 .hgdim { position: absolute; inset: 0; background: rgba(10,14,30,.32); opacity: 0; transition: opacity .18s; pointer-events: none; }
@@ -5620,26 +5623,32 @@ const SEL_POS = {trono: [20.788,  0.349,  58.534,  27.542],  cripta: [2.407,  24
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
+  // los tejados, banderas y estandartes azules se pintan del color de tu reino. Si el dibujo trae su máscara (<nombre>_m.png)
+  // solo se pinta lo que marca, con los bordes suaves; si no, todo el azul intenso
   if (color === 'azul') return cb(src);
   const key = src + '@' + color; if (reColURL[key]) return cb(reColURL[key]);
-  const img = new Image();
-  img.onload = () => {
+  const img = new Image(), msk = new Image(), msrc = src.replace(/\.(jpg|png)$/, '_m.png');
+  let n = 2, conMask = true;
+  const listo = () => { if (--n) return;
     const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
     const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
     const d = cx.getImageData(0, 0, cv.width, cv.height), p = d.data, hex = COLORES[color][1];
+    let m = null;
+    if (conMask) { const mc = document.createElement('canvas'); mc.width = img.width; mc.height = img.height; const mx2 = mc.getContext('2d', { willReadFrequently: true }); mx2.drawImage(msk, 0, 0, img.width, img.height); m = mx2.getImageData(0, 0, img.width, img.height).data; }
     const t = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
     for (let i = 0; i < p.length; i += 4) {
       if (p[i + 3] < 8) continue;
       const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
-      if ((mx - mn) / (mx + 1e-9) <= 0.4 || mx <= 0.3) continue;
-      const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
-      if (h < 0.59 || h > 0.7) continue;
-      for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * mx + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * mx) : t[k] * mx);
+      let w;
+      if (m) { w = m[i] / 255; if (w < 0.02) continue; }
+      else { if ((mx - mn) / (mx + 1e-9) <= 0.4 || mx <= 0.3) continue; const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6; if (h < 0.59 || h > 0.7) continue; w = 1; }
+      for (let k = 0; k < 3; k++) { const v = 255 * Math.min(1, dark ? 0.1 + 0.13 * mx + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * mx) : t[k] * mx); p[i + k] = p[i + k] * (1 - w) + v * w; }
     }
     cx.putImageData(d, 0, 0);
-    cv.toBlob(bl => { reColURL[key] = URL.createObjectURL(bl); cb(reColURL[key]); }, src.endsWith('.jpg') ? 'image/jpeg' : 'image/png', 0.9);
+    cv.toBlob(bl => { reColURL[key] = URL.createObjectURL(bl); cb(reColURL[key]); }, src.endsWith('.jpg') ? 'image/jpeg' : 'image/png', 0.95);
   };
-  img.onerror = () => cb(src); img.src = src;
+  img.onload = listo; img.onerror = () => cb(src); img.src = src;
+  msk.onload = listo; msk.onerror = () => { conMask = false; listo(); }; msk.src = msrc;
 }
 function openHogar() {
   $('hg-name').textContent = perfil.nombre || 'Tu reino';

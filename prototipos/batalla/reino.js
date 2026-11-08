@@ -51,26 +51,32 @@ const SEL_POS = {trono: [20.788,  0.349,  58.534,  27.542],  cripta: [2.407,  24
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
+  // los tejados, banderas y estandartes azules se pintan del color de tu reino. Si el dibujo trae su máscara (<nombre>_m.png)
+  // solo se pinta lo que marca, con los bordes suaves; si no, todo el azul intenso
   if (color === 'azul') return cb(src);
   const key = src + '@' + color; if (reColURL[key]) return cb(reColURL[key]);
-  const img = new Image();
-  img.onload = () => {
+  const img = new Image(), msk = new Image(), msrc = src.replace(/\.(jpg|png)$/, '_m.png');
+  let n = 2, conMask = true;
+  const listo = () => { if (--n) return;
     const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
     const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
     const d = cx.getImageData(0, 0, cv.width, cv.height), p = d.data, hex = COLORES[color][1];
+    let m = null;
+    if (conMask) { const mc = document.createElement('canvas'); mc.width = img.width; mc.height = img.height; const mx2 = mc.getContext('2d', { willReadFrequently: true }); mx2.drawImage(msk, 0, 0, img.width, img.height); m = mx2.getImageData(0, 0, img.width, img.height).data; }
     const t = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
     for (let i = 0; i < p.length; i += 4) {
       if (p[i + 3] < 8) continue;
       const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
-      if ((mx - mn) / (mx + 1e-9) <= 0.4 || mx <= 0.3) continue;
-      const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
-      if (h < 0.59 || h > 0.7) continue;
-      for (let k = 0; k < 3; k++) p[i + k] = 255 * Math.min(1, dark ? 0.1 + 0.13 * mx + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * mx) : t[k] * mx);
+      let w;
+      if (m) { w = m[i] / 255; if (w < 0.02) continue; }
+      else { if ((mx - mn) / (mx + 1e-9) <= 0.4 || mx <= 0.3) continue; const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6; if (h < 0.59 || h > 0.7) continue; w = 1; }
+      for (let k = 0; k < 3; k++) { const v = 255 * Math.min(1, dark ? 0.1 + 0.13 * mx + t[k] * 0.3 : light ? t[k] * (0.55 + 0.42 * mx) : t[k] * mx); p[i + k] = p[i + k] * (1 - w) + v * w; }
     }
     cx.putImageData(d, 0, 0);
-    cv.toBlob(bl => { reColURL[key] = URL.createObjectURL(bl); cb(reColURL[key]); }, src.endsWith('.jpg') ? 'image/jpeg' : 'image/png', 0.9);
+    cv.toBlob(bl => { reColURL[key] = URL.createObjectURL(bl); cb(reColURL[key]); }, src.endsWith('.jpg') ? 'image/jpeg' : 'image/png', 0.95);
   };
-  img.onerror = () => cb(src); img.src = src;
+  img.onload = listo; img.onerror = () => cb(src); img.src = src;
+  msk.onload = listo; msk.onerror = () => { conMask = false; listo(); }; msk.src = msrc;
 }
 function openHogar() {
   $('hg-name').textContent = perfil.nombre || 'Tu reino';
