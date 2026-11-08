@@ -541,7 +541,7 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); if (!B.auto) uiTick(); }
+  if (B) { drawCastleUI(dt); if (!B.auto) { uiTick(); colocaAnillos(); } }
 }
 function start() {
   const g = $('game');

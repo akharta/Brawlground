@@ -140,6 +140,12 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 #hero #herotxt { font-family: var(--font-display); font-size: .78rem; color: var(--gold); text-shadow: 0 2px 0 var(--outline); white-space: nowrap; }
 #hero:disabled { cursor: default; } #hero:disabled img { filter: saturate(.6) brightness(.8); }
 #hero.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 3px var(--gold), 0 0 14px var(--gold); }
+/* el círculo del héroe va sobre su cabeza (en el trono o en el campo) y el de la bestia, sobre la suya en la cripta */
+#hero, #ab-beast { position: fixed; left: 0; top: 0; z-index: 12; transform: translate(-50%, -100%); width: auto; gap: 1px; will-change: left, top; }
+#hero .ring { width: 44px; height: 44px; padding: 3px; }
+#hero #herotxt, #ab-beast b { font-size: .68rem; background: rgba(15,19,34,.78); border-radius: 999px; padding: 0 6px; }
+#ab-beast .ring { width: 40px; height: 40px; }
+#ab-beast.auto { pointer-events: none; }
 @media (orientation: landscape) {
   .dock { max-width: min(640px, 78vw); padding-top: 8px; gap: 6px; }
   .hc { height: min(120px, 21vh); }
@@ -4046,7 +4052,7 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); if (!B.auto) uiTick(); }
+  if (B) { drawCastleUI(dt); if (!B.auto) { uiTick(); colocaAnillos(); } }
 }
 function start() {
   const g = $('game');
@@ -5929,7 +5935,7 @@ resetBattle = function (o = {}) {
     const sp = myHechizo(); if (sp) B.spell = { id: sp, k: spK(sp), t: HECHIZOS[sp].t0 };
     const be = myBestia(); if (be) { const lv = beLv(be); B.beast = { id: be, lv, v: BESTIAS[be].v(lv), t: BESTIAS[be].t0 || BESTIAS[be].every || 0 }; if (be === 'basilisco') B.curse = { team: 'purple', k: B.beast.v }; }
   }
-  if (BST) { scene.tweens.killTweensOf(BST); BST.destroy(); BST = null; }
+  if (BST) { scene.tweens.killTweensOf(BST); if (BST.sombra) BST.sombra.destroy(); BST.destroy(); BST = null; }
   colocaCripta();
   if (B.beast && !B.sim) beastTex(beastNames(B.beast.id), () => { if (B && B.beast && !BST) bestiaEnCampo(B.beast.id); });
   abilUI(true);
@@ -5992,13 +5998,15 @@ function criptaTex() {
 const CRIPTA_TEX = { w: 640, h: 520, suelo: 450, antorchas: [[108, 256], [532, 256]] };
 function colocaCripta() {
   if (CRIPTA) { CRIPTA.objs.forEach(o => o.destroy()); CRIPTA = null; }
-  if (BST) BST.setVisible(false);
+  if (BST) { BST.setVisible(false); if (BST.sombra) BST.sombra.setVisible(false); }
   if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
   if (SUB_L) {   // la cripta dibujada en el subsuelo: la bestia, en el suelo de la tuya, a la izquierda de la escalera
     const { s, yi, Lx, T } = SUB_L, [x0, y0, x1, y1] = T.L.muro, base = (y1 - y0) * s * 0.72;
     CRIPTA = { objs: [], x: Lx + x0 * s, y: yi + y0 * s, w: (x1 - x0) * s, h: base / 0.47, s, antorchas: [] };
     if (BST) {
       BST.x0 = Lx + (x0 + (x1 - x0) * 0.42) * s; BST.y0 = yi + (y1 + 2) * s; BST.hh = base * BST.art.h;
+      BST.minX = Lx + (x0 + (x1 - x0) * 0.24) * s; BST.maxX = Lx + (x0 + (x1 - x0) * 0.56) * s;   // se pasea por el suelo libre, sin subir la escalera
+      BST.paseo = null; BST.setFlipX(false);
       BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
     }
     return;
@@ -6021,12 +6029,14 @@ function colocaCripta() {
 function bestiaEnCampo(id) {
   const A = BEAST_ART[id];
   BST = scene.add.image(0, 0, 'bst_' + A.idle).setOrigin(0.5, 1).setDepth(-27).setVisible(false);
-  BST.art = A; BST.pose = A.idle; BST.actT = 0; BST.tic = 2; BST.hh = 100; BST.k = 1;
+  BST.art = A; BST.pose = A.idle; BST.actT = 0; BST.tic = 2; BST.hh = 100; BST.k = 1; BST.paseoT = 2; BST.paseo = null;
+  if (BST.sombra) BST.sombra.destroy();
+  BST.sombra = scene.add.ellipse(0, 0, 10, 4, 0x000000, 0.28).setDepth(-27.5).setVisible(false);   // su sombra en el suelo de la cripta
   colocaCripta();
   scene.tweens.add({ targets: BST, alpha: { from: 0, to: 1 }, duration: 400 });
 }
 function bstRespira() {   // en reposo, respira (se estira un poco hacia arriba y vuelve)
-  scene.tweens.killTweensOf(BST); BST.setScale(BST.k);
+  scene.tweens.killTweensOf(BST); BST.setScale(BST.k); if (!BST.paseo && BST.y0 !== undefined) BST.y = BST.y0;
   if (BST.alpha < 1) scene.tweens.add({ targets: BST, alpha: 1, duration: 300 });   // si se recolocó a medio aparecer, termina de aparecer
   scene.tweens.add({ targets: BST, scaleY: BST.k * 1.04, duration: 850, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
 }
@@ -6034,6 +6044,7 @@ function bestiaPose(n, t, quieta) {   // cambia de dibujo (con un pequeño salto
   if (!BST || !scene.textures.exists('bst_' + n)) return;
   if (BST.pose !== n || quieta) { BST.setTexture('bst_' + n); BST.k = BST.hh * (POSE_H[n] || 1) / BST.height; BST.pose = n; }
   BST.actT = t || 0;
+  if (t) { BST.paseo = null; BST.setFlipX(false); BST.y = BST.y0; }
   if (quieta) return bstRespira();
   scene.tweens.killTweensOf(BST); BST.setAlpha(1);
   BST.setScale(BST.k * 1.12, BST.k * 0.92); scene.tweens.add({ targets: BST, scaleX: BST.k, scaleY: BST.k, duration: 260, ease: 'Back.out', onComplete: () => { if (BST) bstRespira(); } });
@@ -6043,15 +6054,45 @@ function criptaTick(dt) {   // llamas de las antorchas
   const q = CRIPTA.h / 300;
   for (const [x, y] of CRIPTA.antorchas) if (Math.random() < dt * 30) fx.push({ x: x + rand(-4, 4) * q, y: y + rand(-2, 4) * q, vx: rand(-8, 8) * q, vy: rand(-70, -40) * q, g: 0, r: rand(3.5, 6) * q, life: 0.35, t: 0.35, color: [0xff7a1a, 0xffc83d, 0xffe08a][(Math.random() * 3) | 0] });
 }
+function bstOnda(color, n = 1) {   // la bestia actúa: destello blanco, un salto y una onda de su color que se abre
+  if (!BST || !BST.visible) return;
+  const x = BST.x, y = BST.y - BST.displayHeight * 0.5, r = BST.displayHeight * 0.35;
+  BST.setTintFill(0xffffff); scene.time.delayedCall(90, () => { if (BST) BST.clearTint(); });
+  scene.tweens.add({ targets: BST, y: BST.y0 - BST.displayHeight * 0.12, duration: 150, ease: 'Quad.out', yoyo: true });
+  for (let i = 0; i < n; i++) {
+    const o = scene.add.circle(x, y, r, color, 0.18).setStrokeStyle(Math.max(2, r * 0.12), color, 0.9).setDepth(-26).setScale(0.4);
+    scene.tweens.add({ targets: o, scale: 1.9, alpha: 0, duration: 650, delay: i * 160, ease: 'Cubic.out', onComplete: () => o.destroy() });
+  }
+  const q = CRIPTA ? CRIPTA.h / 300 : 1;
+  for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = rand(60, 140) * q; fx.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30 * q, g: 0, r: rand(2.5, 5) * q, life: 0.6, t: 0.6, color }); }
+}
+function bstPasea(dt) {   // en reposo se pasea por la cripta a saltitos, se para, mira a un lado y a otro
+  const S = BST, A = S.art; if (S.minX === undefined) return;
+  if (S.sombra) S.sombra.setVisible(true).setPosition(S.x, S.y0 + 1).setSize(S.displayWidth * 0.6, S.displayWidth * 0.12);
+  if (S.actT > 0 || (S.pose !== A.idle && S.pose !== A.ready)) return;
+  if (S.paseo) {
+    const d = S.paseo.to - S.x, st = Math.sign(d) * Math.min(Math.abs(d), S.paseo.v * dt); S.x += st; S.paseo.f += dt * 9;
+    S.y = S.y0 - Math.abs(Math.sin(S.paseo.f)) * S.displayHeight * 0.06;
+    if (Math.abs(d) < 1) { S.paseo = null; S.y = S.y0; S.paseoT = rand(1.8, 4.5); }
+    return;
+  }
+  S.paseoT -= dt;
+  if (S.paseoT <= 0) {
+    if (Math.random() < 0.25) { S.setFlipX(!S.flipX); S.paseoT = rand(1, 2); return; }   // mira al otro lado
+    const to = rand(S.minX, S.maxX); if (Math.abs(to - S.x) < (S.maxX - S.minX) * 0.15) { S.paseoT = 0.5; return; }
+    S.setFlipX(to < S.x); S.paseo = { to, v: (S.maxX - S.minX) * 0.55, f: 0 };
+  }
+}
 function bestiaTick(dt) {
   if (!BST || !B.beast || !BST.visible) return;
+  bstPasea(dt);
   const id = B.beast.id, A = BST.art, q = CRIPTA ? CRIPTA.h / 300 : 1, listo = A.ready && B.beast.t <= A.readyAt;
   if (BST.actT > 0) { BST.actT -= dt; if (BST.actT <= 0) bestiaPose(listo ? A.ready : A.idle); return; }
   if (listo && BST.pose !== A.ready) bestiaPose(A.ready);   // el dragón se levanta con el fuego listo; el huargo se agazapa antes de mandar al lobo
   if (id === 'dragon' && BST.pose === A.ready && Math.random() < dt * 1.5) fx.push({ x: BST.x + BST.displayWidth * 0.3, y: BST.y - BST.displayHeight * 0.9, vx: rand(-10, 10) * q, vy: rand(-50, -30) * q, g: 0, r: rand(3, 6) * q, life: 0.9, t: 0.9, color: 0x9a9aa8 });
   BST.tic -= dt;
   if (id === 'basilisco' && BST.tic <= 0) {   // mirada: se levanta y los enemigos se ven envueltos en un brillo verde
-    BST.tic = 7; bestiaPose(A.act, 1.6);
+    BST.tic = 7; bestiaPose(A.act, 1.6); bstOnda(0x8dff8a, 2);
     for (let i = 0; i < 10; i++) fx.push({ x: BST.x + BST.displayWidth * rand(0.2, 0.45), y: BST.y - BST.displayHeight * rand(0.5, 0.8), vx: rand(20, 90) * q, vy: rand(-60, -10) * q, g: 0, r: rand(2.5, 4.5) * q, life: 0.7, t: 0.7, color: 0x8dff8a });
     foesOf('blue').forEach(v => { for (let i = 0; i < 6; i++) fx.push({ x: v.x + rand(-20, 20), y: v.gy - rand(10, 90), vx: rand(-20, 20), vy: rand(-40, -10), g: 0, r: rand(3, 5), life: 0.9, t: 0.9, color: 0x5fcf6a }); });
   }
@@ -6075,7 +6116,7 @@ battleStep = function (dt) {
       if (u.parts) u.parts.forEach(p => p.setTint(0xc4ccff));
       if (!B.auto) {
         burst(CASTLE_FRONT - H * 0.3, GROUND - 30, 0xc4ccff, 14, 220);
-        if (BST && BST.visible) { floatText(BST.x, BST.y - BST.displayHeight * 1.1, '¡Auuu!', '#c4ccff'); bestiaPose('huargo_aullido', 1.3); }
+        if (BST && BST.visible) { floatText(BST.x, BST.y - BST.displayHeight * 1.1, '¡Auuu!', '#c4ccff'); bestiaPose('huargo_aullido', 1.3); bstOnda(0xc4ccff, 3); }
       }
     }
   }
@@ -6084,12 +6125,16 @@ battleStep = function (dt) {
 function abilUI(reset) {
   const sb = $('ab-spell'), bb = $('ab-beast'); if (!sb) return;
   const real = B && !B.auto && !B.idle;
-  sb.hidden = !(real && B.spell); bb.hidden = !(real && B.beast && B.beast.id === 'dragon');
+  const bid = real && B.beast && BST && BST.visible && (B.beast.id === 'dragon' || B.beast.id === 'huargo') ? B.beast.id : null;
+  sb.hidden = !(real && B.spell); bb.hidden = !bid;
   if (!sb.hidden && sb.dataset.id !== B.spell.id) { const h = HECHIZOS[B.spell.id]; sb.dataset.id = B.spell.id; sb.style.setProperty('--c', h.c); sb.querySelector('.aico').innerHTML = '<img src="img/hechizos/' + B.spell.id + '.png" alt="">'; sb.setAttribute('aria-label', h.name); }
-  if (!bb.hidden && bb.dataset.id !== 'dragon') { const b = BESTIAS.dragon; bb.dataset.id = 'dragon'; bb.style.setProperty('--c', b.c); bb.querySelector('.aico').innerHTML = '<img src="img/bestias/dragon_pie.png" alt="">'; bb.setAttribute('aria-label', b.name + ': aliento de fuego'); }
+  if (!bb.hidden && bb.dataset.id !== bid) {
+    const b = BESTIAS[bid]; bb.dataset.id = bid; bb.style.setProperty('--c', b.c); bb.classList.toggle('auto', bid !== 'dragon');
+    bb.querySelector('.aico').innerHTML = '<img src="img/bestias/' + BEAST_ART[bid].port + '.png" alt="">'; bb.setAttribute('aria-label', b.name + (bid === 'dragon' ? ': aliento de fuego' : ': el próximo lobo'));
+  }
   const one = (btn, t, cd, label) => { const ready = t <= 0; btn.disabled = !ready || B.over; btn.classList.toggle('ready', ready); btn.style.setProperty('--p', Math.max(0, Math.min(1, 1 - t / cd)).toFixed(3)); const txt = ready ? label : Math.ceil(t) + ' s'; if (btn.lastChild.textContent !== txt) btn.lastChild.textContent = txt; };
   if (!sb.hidden) one(sb, B.spell.t, HECHIZOS[B.spell.id].cd, '¡Hechizo!');
-  if (!bb.hidden) one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!');
+  if (!bb.hidden) { if (bid === 'dragon') one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!'); else { one(bb, B.beast.t, BESTIAS.huargo.every, '¡Auuu!'); bb.disabled = true; } }
   colocaAbils();
 }
 // dónde van: en horizontal, en la esquina derecha junto al panel de cartas; en vertical, en el cielo encima de tu trono
@@ -6102,12 +6147,26 @@ function colocaAbils() {
   const t = Math.max(top, y - hh);
   if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
 }
+function w2css(x, y) { const z = cam.zoom / DPR; return [(x - cam.worldView.x) * z, (y - cam.worldView.y) * z]; }
+function colocaAnillos() {
+  if (!B || B.auto || B.idle || $('hud').hidden) return;
+  const top = $('hudtop').getBoundingClientRect().bottom + 4, d = $('dock').getBoundingClientRect(), iw = window.innerWidth;
+  const pon = (el, x, y, h) => {   // encima de (x, y) del mundo, sin salirse de la pantalla ni pisar el marcador
+    const [cx, cy] = w2css(x, y), w = (el.offsetWidth || 48) / 2;
+    el.style.left = Math.max(w + 2, Math.min(iw - w - 2, cx)) + 'px'; el.style.top = Math.max(top + h, cy) + 'px';
+  };
+  const hr = B.hero, he = $('hero');
+  if (hr.state === 'field' && hr.unit && hr.unit.alive) { const u = hr.unit; pon(he, u.x, u.gy - H * (u.cfg.h || 1) * (u.bigK || 1) * 1.25 - 26, he.offsetHeight || 60); }
+  else if (throneImg) pon(he, THRONE.x, THRONE.y - throneImg.displayHeight * 0.92 - 6, he.offsetHeight || 60);
+  const bb = $('ab-beast');
+  if (!bb.hidden && BST) pon(bb, BST.x, BST.y - BST.displayHeight - 4, bb.offsetHeight || 56);
+}
 const _playR = play;
 play = function (team, idx) {
   const n = units.length, ok = _playR(team, idx);
   if (ok && team === 'blue' && BST && B.beast && B.beast.id === 'grifo' && units.length > n) {   // el grifo bate las alas y bendice a la que sale
     const u = units[units.length - 1]; burst(u.x, u.gy - H * 0.6, 0xffd36b, 12, 160);
-    if (BST.visible) { bestiaPose(BST.art.act, 0.7); burst(BST.x, BST.y - BST.displayHeight * 0.6, 0xffd36b, 8, 90 * CRIPTA.h / 300); }
+    if (BST.visible) { bestiaPose(BST.art.act, 0.7); bstOnda(0xffd36b); }
   }
   return ok;
 };
@@ -6157,7 +6216,7 @@ function lanzar(id, team, k = 1) {
 }
 function alientoDragon(team, dmg) {
   if (team === 'blue' && BST && BST.visible && BST.art === BEAST_ART.dragon) {   // ruge en la cripta y el fuego sale por la puerta del castillo
-    bestiaPose('dragon_fuego', 1.3);
+    bestiaPose('dragon_fuego', 1.3); bstOnda(0xff7a1a, 2);
     const q = CRIPTA.h / 300, mx = BST.x - BST.displayWidth / 2 + BST.displayWidth * BST.art.mouth[0], my = BST.y - BST.displayHeight + BST.displayHeight * BST.art.mouth[1];
     for (let i = 0; i < 24; i++) fx.push({ x: mx, y: my + rand(-4, 4) * q, vx: rand(220, 380) * q, vy: rand(-30, 30) * q, g: 0, r: rand(4, 8) * q, life: rand(0.25, 0.45), t: 0.45, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i % 3] });
   }

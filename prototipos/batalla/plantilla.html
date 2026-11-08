@@ -140,6 +140,12 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 #hero #herotxt { font-family: var(--font-display); font-size: .78rem; color: var(--gold); text-shadow: 0 2px 0 var(--outline); white-space: nowrap; }
 #hero:disabled { cursor: default; } #hero:disabled img { filter: saturate(.6) brightness(.8); }
 #hero.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 3px var(--gold), 0 0 14px var(--gold); }
+/* el círculo del héroe va sobre su cabeza (en el trono o en el campo) y el de la bestia, sobre la suya en la cripta */
+#hero, #ab-beast { position: fixed; left: 0; top: 0; z-index: 12; transform: translate(-50%, -100%); width: auto; gap: 1px; will-change: left, top; }
+#hero .ring { width: 44px; height: 44px; padding: 3px; }
+#hero #herotxt, #ab-beast b { font-size: .68rem; background: rgba(15,19,34,.78); border-radius: 999px; padding: 0 6px; }
+#ab-beast .ring { width: 40px; height: 40px; }
+#ab-beast.auto { pointer-events: none; }
 @media (orientation: landscape) {
   .dock { max-width: min(640px, 78vw); padding-top: 8px; gap: 6px; }
   .hc { height: min(120px, 21vh); }
