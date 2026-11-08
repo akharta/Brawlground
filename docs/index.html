@@ -563,19 +563,9 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
 .hgtop { display: flex; align-items: center; gap: 10px; width: min(560px, 100%); box-sizing: border-box; flex-wrap: wrap; }
 .hgtop h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0 auto 0 0; }
-.hgscroll { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; }
-/* el arrabal: el reino sigue bajo el mapa (camino, hierba y dos lugares); ocupa todo lo que sobre de pantalla */
-.hgext { position: relative; container-type: size; flex: 1 0 150px; width: min(560px, 100%, calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px - 150px) * .75)); max-width: 100%; margin-top: -26px; z-index: 0; border: 4px solid var(--outline); border-top: 0; border-radius: 0 0 22px 22px; overflow: hidden;
-  background: radial-gradient(circle at 18% 30%, #6fbf4a 0 6%, transparent 7%), radial-gradient(circle at 84% 70%, #6fbf4a 0 5%, transparent 6%), radial-gradient(circle at 70% 18%, #6fbf4a 0 4%, transparent 5%), linear-gradient(#5aa23f, #4c8f36); }
-.hgmap { z-index: 1; }
-.hxroad { position: absolute; left: 50%; top: 0; bottom: 0; width: 13%; transform: translateX(-50%); background: #e8c98d; border-left: 4px solid #b7975c; border-right: 4px solid #b7975c; }
-.hxb { position: absolute; top: 50%; width: min(40%, 60cqh * 1.2); transform: translate(-50%, -50%); background: none; border: 0; padding: 0; display: grid; justify-items: center; }
-.hxb.l { left: 25%; } .hxb.r { left: 75%; }
-.hxb svg { width: 100%; height: auto; filter: drop-shadow(0 5px 0 rgba(0,0,0,.25)); }
-.hxb .hxl { position: relative; transform: none; margin-top: -10%; max-width: none; font-size: clamp(.75rem, 3.6cqw, 1.05rem); }
-.bsvg { display: block; width: 120px; } .bsvg svg { width: 100%; height: auto; }
+.hgscroll { width: 100%; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: center; }
 .uprow .mini { width: 26px; height: 26px; border-radius: 6px; vertical-align: middle; object-fit: cover; }
-.hgmap { position: relative; flex: none; container-type: inline-size; width: min(560px, 100%, calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px - 150px) * .75)); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
+.hgmap { position: relative; flex: none; container-type: inline-size; width: min(560px, 100%); aspect-ratio: 914 / 1721;   /* alto: en móviles altos llena la pantalla; si no, se baja con el dedo */ border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
   background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
 .hgmap.art { background: #5aa23f; }
 .hgdim { position: absolute; inset: 0; background: rgba(10,14,30,.32); opacity: 0; transition: opacity .18s; pointer-events: none; }
@@ -721,14 +711,6 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 .abil b { font-family: var(--font-display); font-weight: 400; font-size: .7rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
 .abil:disabled { cursor: default; } .abil:disabled .aico { filter: saturate(.5) brightness(.75); }
 .abil.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 2px var(--c), 0 0 12px var(--c); }
-/* pantallas bajas (horizontal): el arrabal va a la derecha del mapa, igual de alto */
-@media (orientation: landscape) and (max-height: 640px) {
-  .hgscroll { flex-direction: row; justify-content: center; align-items: flex-start; }
-  .hgmap { width: calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px) * .75); }
-  .hgext { flex: none; height: calc(100vh - var(--navh) - var(--sb) - var(--st) - 74px); width: calc((100vh - var(--navh) - var(--sb) - var(--st) - 74px) * .62); margin: 0 0 0 -26px; border-top: 4px solid var(--outline); border-left: 0; border-radius: 0 22px 22px 0; }
-  .hxroad { left: 0; right: 0; top: 50%; bottom: auto; width: auto; height: 11%; transform: translateY(-50%); border: 0; border-top: 4px solid #b7975c; border-bottom: 4px solid #b7975c; }
-  .hxb { left: 58% !important; width: 62%; } .hxb.l { top: 26%; } .hxb.r { top: 76%; }
-}
 </style>
 
 </head>
@@ -5622,18 +5604,19 @@ const campana1 = () => perfil.all || kingdomDone('volcan');
 /* ---- el mapa del reino: el dibujo entero de fondo; cada lugar es una zona que se toca (hit: rectángulo en %)
    y lleva su cartel (lbl: centro en %) en los huecos de hierba que deja el dibujo ---- */
 const EDIFICIOS = [
-  { id: 'trono', name: 'El Trono', hit: [28, 1, 73, 38], lbl: [50, 40.6], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
-  { id: 'murallas', name: 'Murallas', hit: [20, 75, 80, 97], lbl: [50, 95.4], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
-  { id: 'sanctum', name: 'Sanctum Arcano', hit: [71, 17, 97, 44], lbl: [80.4, 45.6], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
-  { id: 'cripta', name: 'Cripta', hit: [2, 30, 38, 43.5], lbl: [20, 45.6], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
-  { id: 'taberna', name: 'Taberna', hit: [1, 48, 32, 70], lbl: [16.6, 72.4], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
-  { id: 'cuartel', name: 'Cuartel', hit: [66, 48, 99.5, 72.5], lbl: [84.2, 74.4], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
-  { id: 'consulado', name: 'Alto Consulado Bélico', hit: [34, 45, 65.5, 69], lbl: [49.6, 71.1], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
+  { id: 'trono', name: 'El Trono', hit: [20.8,  0.3,  79.3,  27.9], lbl: [50,  29.6], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
+  { id: 'murallas', name: 'Murallas', hit: [20.8,  54.3,  79.0,  70.3], lbl: [50,  71.4], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
+  { id: 'sanctum', name: 'Sanctum Arcano', hit: [70.0,  12.5,  96.5,  31.8], lbl: [80,  33.3], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
+  { id: 'cripta', name: 'Cripta', hit: [2.4,  22.4,  37.7,  31.8], lbl: [20,  33.3], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
+  { id: 'taberna', name: 'Taberna', hit: [0.0,  35.7,  32.8,  50.6], lbl: [17,  52.8], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
+  { id: 'cuartel', name: 'Cuartel', hit: [65.6,  35.9,  99.3,  53.3], lbl: [83,  54.6], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
+  { id: 'consulado', name: 'Alto Consulado Bélico', hit: [33.4,  33.1,  65.6,  50.4], lbl: [49.6,  52.4], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
+  { id: 'mercado', name: 'Mercado negro', hit: [1.1,  73.5,  45.1,  93.7], lbl: [23,  95.6], txt: 'Un comerciante que no hace preguntas. Tres ofertas que cambian cada 8 horas.' },
+  { id: 'retorno', name: 'Altar del Retorno', hit: [55.8,  71.2,  99.3,  92.7], lbl: [77,  95.2], txt: 'Devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias que gastaste en subirla.' },
 ];
 const HOGAR_ART = 'img/reino/reino.jpg';
 // cada lugar recortado del propio fondo (encaja al píxel): al tocarlo se ilumina su contorno y crece un poco
-const SEL_POS = { trono: [20.81, 0.138, 59.024, 38.605], cripta: [1.289, 30.663, 36.832, 12.914], sanctum: [72.099, 17.127, 24.586, 26.381], consulado: [33.149, 45.442, 33.425, 23.757],
-  cuartel: [66.022, 49.171, 33.61, 24.102], taberna: [0.276, 48.412, 32.413, 21.616], murallas: [20.718, 74.724, 58.748, 22.307] };
+const SEL_POS = {trono: [20.788,  0.349,  58.534,  27.542],  cripta: [2.407,  24.288,  35.339,  7.554],  sanctum: [72.429,  12.493,  24.07,  19.349],  taberna: [0.328,  35.735,  32.385,  14.817],  consulado: [33.37,  33.178,  32.276,  17.257],  cuartel: [65.646,  35.967,  33.698,  17.374],  murallas: [20.788,  54.561,  58.206,  15.747],  mercado: [1.313,  73.911,  43.107,  19.524],  retorno: [55.799,  71.18,  43.545,  21.499]};
 // los tejados, banderas y estandartes azules del dibujo se pintan del color de tu reino (el cielo y los contornos, no)
 const reColURL = {};
 function reinoColor(src, color, cb) {
@@ -5673,8 +5656,6 @@ function openHogar() {
   reinoColor(HOGAR_ART, myColor(), url => { const bg = m.querySelector('.hgbg'); if (bg && bg.getAttribute('src') !== url) bg.src = url; });
   EDIFICIOS.forEach(e => reinoColor('img/reino/sel_' + e.id + '.png', myColor(), url => { const im = m.querySelector('[data-sel="' + e.id + '"]'); if (im && im.getAttribute('src') !== url) im.src = url; }));
   m.querySelectorAll('[data-e]').forEach(b => { b.onclick = () => entraEdif(b.dataset.e); });
-  const vx = $('hg-ext'); if (vx) vx.remove(); m.insertAdjacentHTML('afterend', arrabal());
-  document.querySelectorAll('#hg-ext [data-x]').forEach(b => { b.onclick = () => openEdif(b.dataset.x); });
   show('hogar');
 }
 let entrando = false;
@@ -5687,25 +5668,14 @@ function entraEdif(id) {
   setTimeout(() => { entrando = false; m.classList.remove('picking'); im.classList.remove('on'); openEdif(id); }, 430);
 }
 function edifDot(id) {
+  if (id === 'mercado') return mnNuevo();
   if (id === 'cuartel') return cuartelListo() > 0;
   if (id === 'cripta') return !Object.keys(perfil.bestias || {}).length;
   return false;
 }
-/* ---- el arrabal: bajo las murallas, el reino sigue camino abajo con dos lugares más.
+/* ---- el arrabal (dibujado en el propio fondo del reino, bajo las murallas): Mercado negro y Altar del Retorno.
    Mercado negro: tres ofertas que cambian cada 8 horas (copias de cartas, insignias y celdas, con oro o diamantes).
-   Altar del Retorno: devuelve una unidad al nivel 1 y te da el 60 % del oro y las insignias que gastaste en subirla.
-   Dibujos provisionales hechos aquí hasta que lleguen los definitivos. ---- */
-const SVG_MERCADO = '<svg viewBox="0 0 200 170"><g stroke="#1e2235" stroke-width="6" stroke-linejoin="round"><rect x="38" y="78" width="124" height="70" rx="6" fill="#6b4a33"/><rect x="58" y="96" width="34" height="52" fill="#2a1d2f"/><rect x="108" y="96" width="38" height="28" rx="3" fill="#ffc83d"/><path d="M22 80 L100 22 L178 80 Z" fill="#4b2a6e"/><path d="M48 80 L100 22 L74 80 Z M126 80 L100 22 L152 80 Z" fill="#7a3fb3"/><path d="M22 80 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0" fill="#3a1f55"/><circle cx="100" cy="18" r="7" fill="#ffc83d"/><circle cx="127" cy="110" r="7" fill="#a66bff"/></g><path d="M112 104 l6 -5 m10 0 l6 5" stroke="#fff6" stroke-width="3"/></svg>';
-const SVG_RETORNO = '<svg viewBox="0 0 200 170"><g stroke="#1e2235" stroke-width="6" stroke-linejoin="round"><path d="M40 150 h120 l-10 -22 h-100 z" fill="#8f93a8"/><rect x="62" y="70" width="76" height="58" rx="6" fill="#b9bdd0"/><path d="M50 72 h100 l-12 -16 h-76 z" fill="#d4d7e4"/><circle cx="100" cy="99" r="17" fill="#5fe0d0"/><path d="M100 30 c-10 12 -10 22 0 30 c10 -8 10 -18 0 -30z" fill="#7dfff0"/></g><path d="M92 99 a8 8 0 1 1 8 8" fill="none" stroke="#1e2235" stroke-width="4"/><path d="M98 103 l2 4 l-5 1" fill="none" stroke="#1e2235" stroke-width="4"/></svg>';
-const EXTRA = {
-  mercado: { name: 'Mercado negro', svg: SVG_MERCADO, txt: 'Un comerciante que no hace preguntas. Tres ofertas que cambian cada 8 horas.' },
-  retorno: { name: 'Altar del Retorno', svg: SVG_RETORNO, txt: 'Devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias que gastaste en subirla.' },
-};
-function arrabal() {   // el terreno bajo el mapa del reino, con el camino que sigue y sus dos lugares
-  return '<div class="hgext" id="hg-ext"><span class="hxroad"></span>'
-    + Object.entries(EXTRA).map(([id, e], i) => '<button type="button" class="hxb ' + (i ? 'r' : 'l') + '" data-x="' + id + '" aria-label="' + e.name + '">' + e.svg
-      + '<span class="blabel hxl"><span>' + e.name + '</span>' + (id === 'mercado' && mnNuevo() ? '<i class="dot"></i>' : '') + '</span></button>').join('') + '</div>';
-}
+   Altar del Retorno: devuelve una unidad al nivel 1 y te da el 60 % del oro y las insignias que gastaste en subirla. ---- */
 // mercado negro
 const MN_H = 8, mnTanda = () => Math.floor(Date.now() / (MN_H * 3600e3));
 function mnRoll() {
@@ -5758,18 +5728,13 @@ const ESTANDARTE = $('seg-estandarte');
 let EDIF = null;
 function openEdif(id) {
   if (id === 'taberna') return openTaberna();
-  if (EXTRA[id]) {
-    EDIF = id; ESTANDARTE.remove(); $('ed-title').textContent = EXTRA[id].name;
-    $('ed-body').innerHTML = '<div class="bhead"><span class="bimg bsvg">' + EXTRA[id].svg + '</span><p>' + EXTRA[id].txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
-    ({ mercado, retorno })[id]($('ed-in')); return show('edif');
-  }
   const e = EDIFICIOS.find(x => x.id === id);
   if (id === 'trono' && !campana1()) return pop('<p class="eyebrow">Bloqueado</p><h2>El Trono</h2><p class="note">Se abre al conquistar los siete reinos del Mundo 1. Hasta entonces eliges a tu héroe en la pantalla del mazo.</p>');
   EDIF = id; ESTANDARTE.remove();
   $('ed-title').textContent = e.name;
   $('ed-body').innerHTML = '<div class="bhead"><img class="bimg" src="img/reino/' + id + '.png" alt=""><p>' + e.txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
   reinoColor('img/reino/' + id + '.png', myColor(), url => { const im = document.querySelector('#ed-body .bimg'); if (im) im.src = url; });
-  ({ murallas, sanctum, trono, cripta, cuartel, consulado })[id]($('ed-in'));
+  ({ murallas, sanctum, trono, cripta, cuartel, consulado, mercado, retorno })[id]($('ed-in'));
   show('edif');
 }
 $('ed-back').onclick = () => openHogar();

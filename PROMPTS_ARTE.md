@@ -134,7 +134,7 @@ guardados en `assets/castillos_aspecto/sin_intacto/`. Para que sean aspectos nue
 > pero nuevo y sin un rasguño: sin grietas, sin agujeros, sin fuego ni humo, con todas las almenas enteras y el
 > estandarte grande del centro completo. Estandartes y capuchas AZULES. Fondo transparente, 1254×1254.
 
-## 10. Arrabal del reino *(pendiente: ahora hay dibujos provisionales)*
+## 10. Arrabal del reino *(hecho: el reino alto con el Mercado negro y el Altar del Retorno)*
 
 Bajo el mapa del reino, el camino sigue con dos lugares nuevos. Adjunta el dibujo del reino como referencia de estilo.
 
