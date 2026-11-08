@@ -59,7 +59,7 @@ de la cabeza.
 > sol de luz dorada con manos abiertas (fondo verde claro), copo de nieve con viento (fondo celeste) y meteoro
 > en llamas cayendo (fondo naranja).
 
-## 5. Abismo del Despertar
+## 5. Abismo del Despertar *(hecho: ya está en el juego)*
 
 > **Fondo vertical** (1536×2048): una sima gigante que baja en espiral dentro de la montaña, con paredes de roca
 > morada oscura, cristales que brillan, raíces y un resplandor naranja de lava muy al fondo. Pasarelas y
@@ -79,8 +79,7 @@ de la cabeza.
 
 ## 6. Promoción
 
-> **Insignia de mando** (512×512, fondo transparente): medalla dorada con estrella en relieve y cinta roja.
-> La que hay ahora es provisional.
+> **Insignia de mando** *(hecha)*: medalla dorada con estrella en relieve y cinta roja.
 
 > **Rango B del legionario** (mismas piezas por separado que el legionario: cuerpo, arma, escudo y mano, en
 > la misma posición y tamaño): armadura negra con remaches y bordes de oro viejo, capa y penacho granates,

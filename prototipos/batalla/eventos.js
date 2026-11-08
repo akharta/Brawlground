@@ -11,7 +11,7 @@ const ABI = {
   prof: { legendaria: 50, ascendida: 60 }, copias: { legendaria: 15, ascendida: 8 },
   celda: { 10: 'hierro', 20: 'runica', 30: 'oro', 40: 'oro', 50: 'diamante', 60: 'diamante' },
 };
-const ABI_CAMINOS = ['Gruta', 'Cueva', 'Grieta', 'Túnel'];
+const ABI_CAMINOS = ['Gruta', 'Cueva', 'Grieta', 'Túnel'], ABI_IDS = ['gruta', 'cueva', 'grieta', 'tunel'];   // dibujos en img/abismo
 const ABI_PISTAS = ['húmeda', 'oscura', 'con eco', 'estrecha', 'con raíces', 'con huesos', 'cálida', 'ventosa', 'de cristal', 'con runas', 'silenciosa', 'con goteras'];
 const diaN = () => { const d = new Date(); return Math.floor((d - d.getTimezoneOffset() * 6e4) / 864e5); };
 const abiPremio = () => ABI.premios[diaN() % ABI.premios.length];
@@ -21,14 +21,16 @@ function abi() {
   if (!perfil.abismo || perfil.abismo.f !== hoy()) { perfil.abismo = { f: hoy(), prof: 0, cuerdas: ABI.cuerdas, antorchas: ABI.antorchas, caido: false, reint: 0, fin: false, oro: 0, gemas: 0 }; abiNivel(perfil.abismo); savePerfil(); }
   return perfil.abismo;
 }
-const abiPeligro = p => p < 20 ? ['el vacío', 'al vacío'] : p < 40 ? ['la lava', 'a la lava'] : ['las sombras', 'a las sombras'];
+const abiPeligro = p => p < 20 ? ['el vacío', 'al vacío', 'vacio'] : p < 40 ? ['la lava', 'a la lava', 'lava'] : ['las sombras', 'a las sombras', 'sombras'];
+const abiBoca = (i, trampa) => 'img/abismo/' + ABI_IDS[i] + (trampa ? '_' + trampa : '') + '.png';   // la entrada a oscuras o con su trampa a la vista
+const abiIco = n => '<img class="abico" src="img/abismo/' + n + '.png" alt="">';
 const cuerdasTot = s => s.cuerdas + (perfil.cuerdas || 0), antorchasTot = s => s.antorchas + (perfil.antorchas || 0);
 function gasta(s, k) { if (s[k] > 0) s[k]--; else perfil[k] = (perfil[k] || 0) - 1; }
 let abiMsg = ['', ''];
 
 function openEventos() {
   const s = abi(), k = abiPremio(), meta = abiMeta(k);
-  $('ev-body').innerHTML = '<div class="evcard">' + cardHtml(k) + '<h3>Abismo del Despertar</h3><p>Hoy espera en el fondo <b>' + NAMES[k] + '</b> (' + RAREZA[RARITY[k]].toLowerCase() + '). Baja ' + meta + ' niveles eligiendo bien el camino: uno de cada cuatro lleva ' + abiPeligro(0)[1] + '.</p>'
+  $('ev-body').innerHTML = '<div class="evcard abi"><div class="evban"><h3>Abismo del Despertar</h3>' + cardHtml(k) + '</div><p>Hoy espera en el fondo <b>' + NAMES[k] + '</b> (' + RAREZA[RARITY[k]].toLowerCase() + '). Baja ' + meta + ' niveles eligiendo bien el camino: uno de cada cuatro lleva ' + abiPeligro(0)[1] + '.</p>'
     + '<p>' + (s.fin ? '¡Premio conseguido! Mañana, otro.' : s.caido ? 'Has caído en el nivel ' + (s.prof + 1) + '.' : s.prof ? 'Vas por el nivel ' + s.prof + ' de ' + meta + '.' : 'Aún no has bajado hoy.') + '</p><button class="btn gold" id="ev-abismo">' + (s.fin ? 'Ver' : s.prof || s.caido ? 'Seguir' : 'Entrar') + '</button></div>'
     + '<div class="grid2"><div class="evcard soon"><h3>Invasión del Rey Exiliado</h3><p>Evento de fin de semana: un rey sin trono asalta tus castillos conquistados. Defiéndelos para ganar celdas.</p><span class="chip">Próximamente</span></div>'
     + '<div class="evcard soon"><h3>Torneo del Multiverso</h3><p>Mazos prestados y reglas especiales cada semana.</p><span class="chip">Próximamente</span></div></div>';
@@ -36,11 +38,12 @@ function openEventos() {
   show('eventos');
 }
 function openAbismo() {
-  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel] = abiPeligro(s.prof);
+  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel, tid] = abiPeligro(s.prof);
+  $('abismo').style.setProperty('--p', Math.min(1, s.prof / meta).toFixed(3));   // el fondo baja contigo
   const marcas = Array.from({ length: Math.floor(meta / 10) - 1 }, (_, i) => '<i style="left:' + ((i + 1) * 10 / meta * 100) + '%"></i>').join('');
   let h = '<div class="abhud"><div class="abprize">' + cardHtml(k) + '<div><b>' + NAMES[k] + '</b><small>' + (perfil.owned.includes(k) ? ABI.copias[RARITY[k]] + ' copias' : 'Se une a tu ejército') + ' al llegar al fondo</small></div></div>'
     + '<div class="depth"><b>' + s.prof + '</b><small>de ' + meta + '</small></div><div class="abbar"><span style="width:' + (s.prof / meta * 100) + '%"></span>' + marcas + '</div></div>'
-    + '<div class="abres"><span class="res"><svg viewBox="0 0 24 24" stroke="#e3c48a">' + ICO.cuerda + '</svg>' + cuerdasTot(s) + (cuerdasTot(s) === 1 ? ' cuerda' : ' cuerdas') + '</span><span class="res"><svg viewBox="0 0 24 24" stroke="#ffb35a">' + ICO.antorcha + '</svg>' + antorchasTot(s) + (antorchasTot(s) === 1 ? ' antorcha' : ' antorchas') + '</span>'
+    + '<div class="abres"><span class="res">' + abiIco('cuerda') + cuerdasTot(s) + (cuerdasTot(s) === 1 ? ' cuerda' : ' cuerdas') + '</span><span class="res">' + abiIco('antorcha') + antorchasTot(s) + (antorchasTot(s) === 1 ? ' antorcha' : ' antorchas') + '</span>'
     + '<span class="note">Botín de hoy: ' + fmt(s.oro) + ' de oro' + (s.gemas ? ', ' + s.gemas + ' diamantes' : '') + '</span></div>';
   if (s.fin) h += '<p class="abmsg good">¡Has llegado al fondo! ' + NAMES[k] + ' es tuyo. Mañana espera otra unidad.</p>';
   else if (s.caido) {
@@ -49,8 +52,8 @@ function openAbismo() {
       + (c ? '<button class="btn gold" id="abi-re">Volver al nivel ' + (Math.floor(s.prof / 10) * 10) + ' con 2 cuerdas · ' + gemBtn(c) + '</button>' : '') + '<button class="btn" id="abi-sal">Volver mañana</button></div>';
   } else {
     h += '<p class="abmsg ' + (abiMsg[1] || '') + '">' + (abiMsg[0] || 'Nivel ' + (s.prof + 1) + ': uno de estos caminos lleva ' + a_pel + '.') + '</p><div class="paths" id="abi-paths">'
-      + ABI_CAMINOS.map((n, i) => { const trap = (s.luz || s.vista) && i === s.trap; return '<button type="button" class="path' + (trap ? ' trap' : (s.luz ? ' safe' : '')) + '" data-i="' + i + '"' + (trap ? ' disabled' : '') + '><span class="mouth"></span><b>' + n + '</b><small>' + (trap ? '¡Aquí está ' + pel + '!' : s.pistas[i]) + '</small></button>'; }).join('')
-      + '</div><div class="abacts"><button class="btn" id="abi-luz"' + (s.luz || s.vista || !antorchasTot(s) ? ' disabled' : '') + '>Encender antorcha</button></div>';
+      + ABI_CAMINOS.map((n, i) => { const trap = (s.luz || s.vista) && i === s.trap; return '<button type="button" class="path' + (trap ? ' trap' : (s.luz ? ' safe' : '')) + '" data-i="' + i + '"' + (trap ? ' disabled' : '') + '><img class="mouth" src="' + abiBoca(i, trap && tid) + '" alt=""><b>' + n + '</b><small>' + (trap ? '¡Aquí está ' + pel + '!' : s.pistas[i]) + '</small></button>'; }).join('')
+      + '</div><div class="abacts"><button class="btn" id="abi-luz"' + (s.luz || s.vista || !antorchasTot(s) ? ' disabled' : '') + '>' + abiIco('antorcha') + 'Encender antorcha</button></div>';
   }
   h += '<p class="note">Rellanos cada 10 niveles: +' + ABI.rellano.cuerdas + ' cuerdas, +' + ABI.rellano.antorchas + ' antorcha, +' + ABI.rellano.insignias + ' insignias y una celda. Cuerdas y antorchas también se compran en la Tienda.</p>';
   $('abi-body').innerHTML = h; abiMsg = ['', ''];
@@ -61,10 +64,10 @@ function openAbismo() {
   show('abismo');
 }
 function abiElige(i, btn) {
-  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel] = abiPeligro(s.prof);
+  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel, tid] = abiPeligro(s.prof);
   document.querySelectorAll('#abi-paths .path').forEach(b => { b.disabled = true; }); btn.classList.add('picked');
-  if (i === s.trap) {
-    btn.classList.add('trap'); $('abi-paths').classList.add('falling');
+  if (i === s.trap) {   // se ve lo que había dentro y caes
+    btn.classList.add('trap'); btn.querySelector('.mouth').src = abiBoca(i, tid); $('abi-paths').classList.add('falling');
     setTimeout(() => {
       if (cuerdasTot(s) > 0) { gasta(s, 'cuerdas'); s.vista = true; abiMsg = ['¡' + pel[0].toUpperCase() + pel.slice(1) + '! Tu cuerda te sujeta. Ya sabes dónde está la trampa: elige otro camino.', 'bad']; }
       else s.caido = true;

@@ -19,8 +19,6 @@ const ICO = {
   basilisco: '<path d="M3 17c3 3 7 3 9 0s6-3 9 0"/><path d="M5 13c2-6 12-6 14 0"/><circle cx="9" cy="10" r="1.3"/><circle cx="15" cy="10" r="1.3"/>',
   dragon: '<path d="M3 20c2-6 6-9 11-9l3-6 2 5 3 1-4 3c0 4-4 6-8 6z"/><path d="M9 14c-2 1-3 3-3 5"/>',
   huargo: '<path d="M4 20l2-9-3-6 5 2 4-3 4 3 5-2-3 6 2 9z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/><path d="M11 16h2"/>',
-  cuerda: '<path d="M6 3c8 0 8 6 0 6s-8 6 0 6 8 6 0 6"/>',
-  antorcha: '<path d="M10 22l1-11h2l1 11z"/><path d="M12 10c-3-2-2-6 0-8 0 3 3 3 2 6-1 2-2 2-2 2z"/>',
 };
 const svg = (k, cls = '') => '<svg viewBox="0 0 24 24"' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true">' + (ICO[k] || '') + '</svg>';
 const oroBtn = n => '<span class="oro"><i></i><b>' + fmt(n) + '</b></span>';

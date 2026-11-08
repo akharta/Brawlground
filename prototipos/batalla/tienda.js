@@ -8,9 +8,9 @@ const TI = {
   oro: [[30, 500], [120, 2500], [400, 10000]],
   gemas: [[80, '0,99 €'], [500, '4,99 €'], [1200, '9,99 €', 'Popular'], [6500, '49,99 €', 'Mejor valor']],
   varios: [
-    { id: 'explorador', name: 'Lote del explorador', txt: '3 cuerdas y 2 antorchas para el Abismo', p: { gemas: 40 }, give: { cuerdas: 3, antorchas: 2 } },
-    { id: 'insignias', name: 'Insignias de mando ×5', txt: 'Para los saltos de nivel de tus unidades', p: { gemas: 60 }, give: { insignias: 5 } },
-    { id: 'bienvenida', name: 'Pack de bienvenida', txt: '500 diamantes, 5.000 de oro y una celda de oro', real: '2,99 €', once: true },
+    { id: 'explorador', img: ['abismo/cuerda', 'abismo/antorcha'], name: 'Lote del explorador', txt: '3 cuerdas y 2 antorchas para el Abismo', p: { gemas: 40 }, give: { cuerdas: 3, antorchas: 2 } },
+    { id: 'insignias', img: ['insignia'], name: 'Insignias de mando ×5', txt: 'Para los saltos de nivel de tus unidades', p: { gemas: 60 }, give: { insignias: 5 } },
+    { id: 'bienvenida', img: ['esc/gema', 'esc/moneda'], name: 'Pack de bienvenida', txt: '500 diamantes, 5.000 de oro y una celda de oro', real: '2,99 €', once: true },
   ],
 };
 function tiRoll() {
@@ -40,7 +40,7 @@ function openTienda() {
     + '<div class="shsec"><h3>Celdas <small>se abren en Campaña → Celdas</small></h3><div class="offers">' + CELDAS.map(c => '<div class="offer"><span class="pile"><img src="img/celdas/celda_' + c.id + '_0.png" alt=""></span><b class="t">' + c.name + '</b><small>' + c.cartas + ' cartas · tienes ' + (celdasDe()[c.id] || 0) + '</small><button class="btn gold" data-cel="' + c.id + '">' + gemBtn(c.precio) + '</button></div>').join('') + '</div></div>'
     + '<div class="shsec"><h3>Oro</h3><div class="offers">' + TI.oro.map(([g, o], i) => '<div class="offer"><span class="pile"><img src="img/esc/moneda.png" alt=""></span><span class="big">' + fmt(o) + '</span><small>de oro</small><button class="btn gold" data-oro="' + i + '">' + gemBtn(g) + '</button></div>').join('') + '</div></div>'
     + '<div class="shsec"><h3>Diamantes <small>los pagos llegarán más adelante</small></h3><div class="offers">' + TI.gemas.map(([g, e, tag]) => '<div class="offer">' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '<span class="pile"><img src="img/esc/gema.png" alt=""></span><span class="big">' + fmt(g) + '</span><small>diamantes</small><button class="btn" disabled>' + e + '</button></div>').join('') + '</div></div>'
-    + '<div class="shsec"><h3>Ofertas varias</h3><div class="offers">' + TI.varios.map(v => '<div class="offer"><b class="t">' + v.name + '</b><small>' + v.txt + '</small>'
+    + '<div class="shsec"><h3>Ofertas varias</h3><div class="offers">' + TI.varios.map(v => '<div class="offer"><span class="pile' + (v.img.length > 1 ? ' two' : '') + '">' + v.img.map(n => '<img src="img/' + n + '.png" alt="">').join('') + '</span><b class="t">' + v.name + '</b><small>' + v.txt + '</small>'
       + (v.real ? '<button class="btn" disabled>' + v.real + '</button><small>Próximamente</small>' : '<button class="btn gold" data-v="' + v.id + '">' + costeHtml(v.p) + '</button>') + '</div>').join('') + '</div></div>';
   if ($('ti-regalo')) $('ti-regalo').onclick = e => { t.regalo = true; perfil.gold += 100; savePerfil(); coinFly(e.currentTarget, 100); openTienda(); };
   $('ti-renovar').onclick = () => { if (paga({ gemas: TI.renovar })) { tiHoy(true); toast('Ofertas nuevas.'); openTienda(); } };

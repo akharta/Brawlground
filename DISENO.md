@@ -210,6 +210,9 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - **Ejército** *(nombre provisional)*: lo competitivo. Batalla rápida contra la IA; duelos, torneo semanal,
   guerra de clanes y clasificación, próximamente.
 - **Eventos**: el **Abismo del Despertar** (fijo) y los eventos que vayan saliendo.
+  - Arte: la sima en espiral de fondo (baja contigo según la profundidad; en horizontal, el cartel), el cartel
+    en la tarjeta de Eventos con la carta del premio del día, las 4 entradas a oscuras y, al caer o con la
+    antorcha, la trampa que esconden (vacío, lava o sombras con ojos). Cuerda y antorcha dibujadas.
   - Cada día espera en el fondo una unidad: legendaria → 50 niveles; ascendida → 60. En cada nivel, 4 caminos
     (gruta, cueva, grieta, túnel): 3 bajan y dan oro (y diamantes cada 5), 1 lleva al vacío, a la lava o a las
     sombras según la profundidad.
