@@ -20,6 +20,8 @@ def rep(a, b, n=1):
 rep("const W = 960, HGT = 540", "const W = 2160, VW = 960, HGT = 540")
 # en batalla las unidades se reparten más a lo ancho del camino
 rep("Math.round(rand(-18, 16))", "Math.round(rand(-34, 30))")
+# la velocidad de ataque depende de hechizos, bestias y habilidades de rango (atkK en reino.js)
+assert core.count('u.cd -= dt') == 4, core.count('u.cd -= dt'); core = core.replace('u.cd -= dt', 'u.cd -= dt * atkK(u)')
 # los colores de cada bando cambian según el color que elige el jugador y el del reino rival
 rep("const OUT = 0x1e2235, BLUE = 0x3b82f6, PURPLE = 0x8b5cf6, STRING = 0xf6e3c6;", "const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;")
 # el castillo rival también es un objetivo
@@ -32,7 +34,7 @@ core = core.replace('team: u.team, fromX: u.x }', 'team: u.team, fromX: u.x, src
 rep("a.target.damage(a.dmg, null, a.fromX)", "a.target.damage(a.dmg, a.src || null, a.fromX)")
 # costes desde las cartas de la escena
 cost = {m.group(2): int(m.group(1)) for m in re.finditer(r'<div class="cost">(\d+)</div>\s*<div class="art"><img src="img/(\w+)_carta\.png"', esc)}
-bat = (open(os.path.join(D, 'batalla.js')).read() + open(os.path.join(D, 'campana.js')).read() + open(os.path.join(D, 'hub.js')).read() + open(os.path.join(D, 'mejoras.js')).read() + open(os.path.join(D, 'celdas.js')).read() + '\n(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);\n})();\n').replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ICONOS__', json.dumps(json.load(open(os.path.join(OUT, 'img/campana/iconos.json'))))).replace('__ESC__', json.dumps(json.load(open(os.path.join(OUT, 'img/esc/escenas.json')))))
+bat = (open(os.path.join(D, 'batalla.js')).read() + open(os.path.join(D, 'campana.js')).read() + open(os.path.join(D, 'hub.js')).read() + open(os.path.join(D, 'mejoras.js')).read() + open(os.path.join(D, 'celdas.js')).read() + ''.join(open(os.path.join(D, f)).read() for f in ['tienda.js', 'reino.js', 'eventos.js']) + '\n(document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);\n})();\n').replace('__COST__', json.dumps(cost)).replace('__PRELOAD__', pre).replace('__ICONOS__', json.dumps(json.load(open(os.path.join(OUT, 'img/campana/iconos.json'))))).replace('__ESC__', json.dumps(json.load(open(os.path.join(OUT, 'img/esc/escenas.json')))))
 html = open(os.path.join(D, 'plantilla.html')).read().replace('{{SCRIPT}}', '<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>\n<script>\n' + core + phaser + bat + '</script>')
 open(os.path.join(OUT, 'index.html'), 'w').write(html)
 # versión para el artifact: sin doctype/html/head/body (el visor la envuelve) y sin lo propio de la app instalable

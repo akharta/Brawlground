@@ -137,7 +137,7 @@ battleResult = function (win) {
 const _srCel = showResult;
 showResult = function (res) {
   _srCel(res);
-  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '_0.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde el inicio.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
+  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '_0.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde Campaña.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
 };
 // expedición: una celda de madera cada 4 horas
 const _ceCel = collectExp;

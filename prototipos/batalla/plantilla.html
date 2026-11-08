@@ -476,6 +476,152 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
 @media (prefers-reduced-motion: reduce) { .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+
+/* ==== estructura nueva: tienda, reino, eventos, abismo, promoción ==== */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
+.infocard.pvp { background: linear-gradient(135deg, #3a2d63, #252e48); }
+.ins i { width: 22px !important; height: 24px !important; margin: 0 !important; transform: none !important; border: 0 !important; border-radius: 0 !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 26'%3E%3Cpath d='M6 1h5l2 8H8zM18 1h-5l-2 8h5z' fill='%23d63a3a' stroke='%231e2235' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='16' r='8' fill='%23ffc83d' stroke='%231e2235' stroke-width='1.8'/%3E%3Cpath d='M12 11.5l1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.1 3.1-.4z' fill='%23fff3b0' stroke='%23a8741a' stroke-width='.8'/%3E%3C/svg%3E") center / contain no-repeat !important; }
+.rk { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); }
+.rk b { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; border: 3px solid var(--outline); background: #6b7290; color: #fff; font-weight: 400; font-size: 1.05rem; }
+.rk i { font-style: normal; color: var(--gold); letter-spacing: -2px; font-size: .95rem; text-shadow: 0 1px 0 var(--outline); }
+.rk.r1 b { background: #3ccf86; } .rk.r2 b { background: #4da3ff; } .rk.r3 b { background: #a855f7; } .rk.r4 b { background: #f59e0b; } .rk.r5 b { background: #e2363b; } .rk.r6 b { background: linear-gradient(135deg, #ff3a5c, #ffc83d); }
+.rkb { position: absolute; z-index: 2; left: 0; right: 0; top: 54%; text-align: center; font-size: .62rem; color: var(--gold); letter-spacing: -1px; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; pointer-events: none; }
+.dk.mini .rkb { font-size: .45rem; }
+.promo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 8px; margin-top: 10px; }
+.pcol { display: grid; gap: 6px; align-content: start; background: #0f1322; border: 3px solid var(--outline); border-radius: 12px; padding: 8px 10px; }
+.pcol em { font-style: normal; color: #7ee04a; font-weight: 800; }
+.pcol .btn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+.pcol .btn .oro { font-size: .95rem; }
+.ph { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; margin: 10px 0 4px; }
+.perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.perks li { background: #0f1322; border: 2px solid var(--outline); border-radius: 10px; padding: 6px 10px; font-size: .82rem; color: var(--muted); opacity: .7; }
+.perks li b { color: #fff; } .perks li small { color: var(--gold); }
+.perks li.on { opacity: 1; border-color: var(--gold); }
+#nav .ndot { right: 26%; }
+/* tienda */
+.shsec { display: grid; gap: 8px; margin-bottom: 14px; }
+.shsec > h3 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.offers { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 46%), 1fr)); gap: 10px; }
+.offer { position: relative; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; align-content: start; }
+.offer .dk { width: 74px; opacity: 1; }
+.offer b.t { font-family: var(--font-display); font-weight: 400; font-size: 1rem; }
+.offer small { color: var(--muted); font-size: .75rem; }
+.offer.sold { opacity: .5; }
+.offer .tag { position: absolute; top: -10px; right: -6px; background: #e2363b; color: #fff; border: 2px solid var(--outline); border-radius: 999px; font-family: var(--font-display); font-size: .72rem; padding: 0 7px; }
+.offer .big { font-family: var(--font-display); font-size: 1.5rem; line-height: 1; display: flex; align-items: center; gap: 6px; }
+.offer .pile { width: 64px; height: 48px; display: grid; place-items: center; }
+.offer .pile img { max-width: 100%; max-height: 100%; }
+.offer .btn { width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: .95rem; display: inline-flex; justify-content: center; align-items: center; gap: 4px; }
+.offer .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.cpx { font-family: var(--font-display); color: var(--gold); font-size: 1.05rem; }
+/* reino: el castillo y sus lugares */
+.screen.hogar { background: #141a2e; place-items: start center; padding-top: calc(var(--st) + 8px); grid-template-rows: auto 1fr; gap: 6px; }
+body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
+.hgtop { display: flex; align-items: center; gap: 10px; width: min(560px, 100%); box-sizing: border-box; flex-wrap: wrap; }
+.hgtop h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0 auto 0 0; }
+.hgscroll { width: 100%; display: grid; place-items: start center; }
+.hgmap { position: relative; width: min(560px, 100%, 74vh); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
+  background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
+.hgmap.art { background: #2b3560 center / cover no-repeat; }
+.hgmap .hill { position: absolute; border-radius: 50%; background: #7cc756; border: 3px solid #4f8f36; }
+.hgmap .road { position: absolute; left: 44%; width: 12%; top: 58%; bottom: -2%; background: #e3c48a; border-left: 3px solid #b7975c; border-right: 3px solid #b7975c; }
+.hgmap .castle { position: absolute; left: 50%; top: 12%; width: 74%; transform: translateX(-50%); filter: drop-shadow(0 6px 0 rgba(0,0,0,.25)); pointer-events: none; }
+.bld { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; width: 96px; }
+.bld .bico { position: relative; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(#4a5a92, #2b3560); border: 3px solid var(--outline); box-shadow: inset 0 3px 0 rgba(255,255,255,.18), 0 4px 0 var(--outline); display: grid; place-items: center; }
+.bld .bico svg { width: 34px; height: 34px; fill: none; stroke: #f4e7c4; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.bld .blbl { font-family: var(--font-display); font-size: .8rem; line-height: 1.05; color: #fff; text-align: center; background: rgba(20,24,40,.82); border: 2px solid var(--outline); border-radius: 8px; padding: 1px 6px; }
+.bld .dot { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: #e2363b; border: 2px solid var(--outline); }
+.bld.lock .bico { filter: grayscale(1) brightness(.7); } .bld.lock .blbl::after { content: ' 🔒'; }
+.bld:active .bico { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255,255,255,.18), 0 1px 0 var(--outline); }
+/* edificios */
+.bhead { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; }
+.bhead .bico { width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(#4a5a92, #2b3560); border: 3px solid var(--outline); display: grid; place-items: center; }
+.bhead .bico svg { width: 34px; height: 34px; fill: none; stroke: #f4e7c4; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.bhead p { margin: 0; color: var(--muted); font-size: .88rem; }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 10px; }
+.kcard { position: relative; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.kcard header { display: flex; gap: 10px; align-items: center; }
+.kcard header b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; }
+.kcard header small { color: var(--muted); font-size: .76rem; }
+.kcard p { margin: 0; font-size: .84rem; }
+.kcard .acts { justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+.kcard.sel { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.kcard.lock { opacity: .72; }
+.kcard .btn { display: inline-flex; align-items: center; gap: 4px; }
+.kcard .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.kico { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff8, transparent 55%), var(--c, #4a5a92); }
+.kico svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.kind { font-family: var(--font-display); font-size: .72rem; color: var(--outline); background: var(--gold); border-radius: 999px; padding: 0 8px; justify-self: start; }
+.lvl { font-family: var(--font-display); color: var(--gold); }
+.uprow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px; }
+.uprow b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; }
+.uprow small { color: var(--muted); grid-column: 1; }
+.uprow .btn { grid-row: 1 / span 2; grid-column: 2; display: inline-flex; align-items: center; gap: 4px; }
+.uprow .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.pips { display: flex; gap: 3px; grid-column: 1; } .pips i { width: 10px; height: 10px; border-radius: 3px; background: #0f1322; border: 2px solid var(--outline); } .pips i.on { background: var(--gold); }
+.trslots { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 10px; }
+.trslot { background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; display: grid; gap: 6px; justify-items: center; text-align: center; min-height: 190px; align-content: center; }
+.trslot .dk { width: 84px; opacity: 1; }
+.trslot.empty { border-style: dashed; color: var(--muted); }
+.trslot.lock { opacity: .55; }
+.trslot .btn { display: inline-flex; align-items: center; gap: 4px; }
+.pickgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.pickgrid .dk { opacity: 1; }
+/* eventos y abismo */
+.evcard { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; border: 3px solid var(--outline); border-radius: 18px; padding: 14px;
+  background: radial-gradient(60% 90% at 85% 50%, #ff6a2a55, transparent 70%), linear-gradient(135deg, #2a1c3e, #12101e); }
+.evcard h3 { margin: 0 !important; font-size: 1.35rem !important; }
+.evcard p { margin: 0; color: #d9cfee; font-size: .86rem; }
+.evcard .dk { width: 70px; opacity: 1; grid-row: 1 / span 3; grid-column: 2; }
+.evcard .btn { justify-self: start; }
+.evcard.soon { background: var(--panel); } .evcard.soon p { color: var(--muted); }
+.screen.abismo { background: radial-gradient(90% 60% at 50% 110%, #ff5a1a55, transparent 70%), linear-gradient(#1b1430, #07060c 80%); place-items: start center; }
+body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); }
+.abhud { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: rgba(15,19,34,.85); border: 3px solid var(--outline); border-radius: 16px; padding: 10px 12px; }
+.abprize { display: flex; gap: 10px; align-items: center; }
+.abprize .dk { width: 56px; opacity: 1; flex: none; }
+.abprize b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; display: block; }
+.abprize small { color: var(--muted); font-size: .76rem; }
+.depth { font-family: var(--font-display); text-align: right; line-height: 1; }
+.depth b { font-size: 2.2rem; color: #ffb35a; display: block; text-shadow: 0 3px 0 var(--outline); }
+.depth small { color: var(--muted); font-size: .8rem; }
+.abbar { grid-column: 1 / -1; position: relative; height: 14px; background: #0f1322; border: 2px solid var(--outline); border-radius: 8px; overflow: hidden; }
+.abbar span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ffb35a, #ff4a1a); }
+.abbar i { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff8; }
+.abres { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.res { display: inline-flex; align-items: center; gap: 4px; background: rgba(15,19,34,.85); border: 3px solid var(--outline); border-radius: 999px; padding: 2px 10px 2px 4px; font-family: var(--font-display); font-size: 1rem; }
+.res svg { width: 22px; height: 22px; fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.paths { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 520px) { .paths { grid-template-columns: repeat(2, 1fr); } }
+.path { position: relative; display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border: 3px solid var(--outline); border-radius: 18px 18px 12px 12px; color: #fff; text-align: center;
+  background: linear-gradient(#3b2f55, #1a1426); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 4px 0 var(--outline); }
+.path .mouth { width: 74px; height: 64px; border-radius: 40px 40px 6px 6px; background: radial-gradient(60% 70% at 50% 100%, #000 40%, #24182f 75%); border: 3px solid #120c1a; box-shadow: inset 0 -10px 18px #000; }
+.path b { font-family: var(--font-display); font-weight: 400; font-size: .95rem; }
+.path small { color: #b9add6; font-size: .72rem; min-height: 2.2em; }
+.path:active { transform: translateY(3px); }
+.path.trap .mouth { background: radial-gradient(60% 70% at 50% 100%, #ff6a1a 10%, #7a1f0a 55%, #24182f 80%); box-shadow: inset 0 -10px 18px #ff4a1a, 0 0 16px #ff4a1a; }
+.path.safe { opacity: .55; }
+.path.picked { border-color: var(--gold); }
+.path:disabled { cursor: default; }
+.abmsg { text-align: center; font-family: var(--font-display); font-size: 1.2rem; min-height: 1.4em; margin: 0; }
+.abmsg.bad { color: #ff7a5a; } .abmsg.good { color: #9dff8a; }
+.abacts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.abacts .btn { display: inline-flex; align-items: center; gap: 4px; }
+.abacts .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.falling { animation: fall .9s ease-in both; }
+@keyframes fall { 0% { transform: none; } 30% { transform: translateX(-6px) rotate(-1deg); } 60% { transform: translateX(6px) rotate(1deg); } 100% { transform: translateY(40px) scale(.9); opacity: .3; } }
+.descend { animation: descend .55s ease-out; }
+@keyframes descend { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* batalla: hechizo y bestia */
+#abils { position: absolute; left: var(--sl); display: grid; gap: 8px; pointer-events: none; }
+.abil { pointer-events: auto; display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; width: 58px; }
+.abil .ring { width: 50px; height: 50px; border-radius: 50%; padding: 3px; box-sizing: border-box; background: conic-gradient(var(--c, #7fd0ff) calc(var(--p, 0) * 1turn), #141826 0); border: 3px solid var(--outline); display: grid; }
+.abil .aico { border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff6, transparent 55%), var(--c, #4a5a92); border: 2px solid var(--outline); }
+.abil .aico svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.abil b { font-family: var(--font-display); font-weight: 400; font-size: .7rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
+.abil:disabled { cursor: default; } .abil:disabled .aico { filter: saturate(.5) brightness(.75); }
+.abil.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 2px var(--c), 0 0 12px var(--c); }
 </style>
 </head>
 <body>
@@ -498,12 +644,12 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <span class="oro"><i></i><b class="oro-n">0</b></span>
     <span class="oro gema"><i></i><b class="gema-n">0</b></span>
   </div>
-  <div class="side l"><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/></svg><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M5 9a7 5 0 0 1 14 0v11H5z"/><path d="M9 9v11M12 9v11M15 9v11M5 14h14"/><circle cx="12" cy="4" r="1.6"/></svg><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3 7h18v3H3zM12 7v13"/><path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
+  <div class="side l"><button class="sbtn" id="s-tropas" aria-label="Tropas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 11l2 2 4-4"/></svg><span class="dot" hidden></span></span><span class="slbl">Tropas</span></button><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/></svg><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M5 9a7 5 0 0 1 14 0v11H5z"/><path d="M9 9v11M12 9v11M15 9v11M5 14h14"/><circle cx="12" cy="4" r="1.6"/></svg><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3 7h18v3H3zM12 7v13"/><path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
   <div class="side r"><button class="sbtn" id="s-correo" aria-label="Correo"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span class="dot" hidden></span></span><span class="slbl">Correo</span></button><button class="sbtn" id="s-ranking" aria-label="Clasificación"><span class="sico"><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M9 18h6"/></svg><span class="dot" hidden></span></span><span class="slbl">Clasificación</span></button><button class="sbtn" id="s-practica" aria-label="Práctica"><span class="sico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/></svg><span class="dot" hidden></span></span><span class="slbl">Práctica</span></button></div>
   <div class="hubbot" id="hubbot">
     <button class="botin" id="h-botin" aria-label="Recoger el botín de la expedición"><span class="chest"></span><span class="btxt"><small>Expedición</small><b><i></i><span id="h-botin-n">0</span></b></span></button>
     <button class="btn gold big golpe" id="h-batalla"><span>¡Batalla!</span><small id="h-next">Reino de las Praderas · Castillo 1</small></button>
-    <button class="btn mazo" id="h-mazo">Mazo</button>
+    <button class="btn mazo" id="h-mazo">Mapa</button>
   </div>
 </section>
 
@@ -522,8 +668,8 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="ejercito" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Ejército</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
-    <div class="seg" role="tablist"><button data-seg="unidades" aria-pressed="true">Unidades</button><button data-seg="heroes" aria-pressed="false">Héroes</button><button data-seg="estandarte" aria-pressed="false">Estandarte</button></div>
+    <div class="sheet-top"><button class="btn" id="ej-back">← Campaña</button><h2>Tropas</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="seg" role="tablist" hidden><button data-seg="unidades" aria-pressed="true">Unidades</button><button data-seg="heroes" aria-pressed="false">Héroes</button><button data-seg="estandarte" aria-pressed="false">Estandarte</button></div>
     <div id="seg-unidades"><div class="rowline"><p class="note" id="ej-note"></p><button class="btn gold small" id="ej-mazo">Editar mazo</button></div><div class="ugrid" id="ej-grid"></div></div>
     <div id="seg-heroes" hidden><div class="hgrid" id="ej-heroes"></div></div>
     <div id="seg-estandarte" hidden>
@@ -536,7 +682,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="taberna" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Taberna del Multiverso</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="sheet-top"><button class="btn" id="tab-back">← Reino</button><h2>Taberna del Multiverso</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
     <p class="note">Mercenarios llegados de otros mundos. Se pagan con oro. Los puestos se renuevan cada 4 horas: <b id="tab-timer"></b></p>
     <div class="slots" id="tab-slots"></div>
     <p class="note">Si ya tienes al mercenario, ganas una copia de su carta (servirán para subirlo de nivel). Más puestos y mejores mercenarios al mejorar la taberna: próximamente.</p>
@@ -545,9 +691,47 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="arena" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Arena</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
-    <div class="infocard"><h3>Duelos contra otros señores</h3><p>Pronto podrás enfrentar tu mazo al de otros jugadores, subir en la clasificación y ganar premios de temporada.</p><span class="chip">Próximamente</span></div>
-    <div class="infocard"><h3>Batalla rápida</h3><p>Tu mazo contra la IA, que lleva tus mismas unidades. Da oro y experiencia.</p><button class="btn gold" id="ar-rapida">¡A luchar!</button></div>
+    <div class="sheet-top"><h2>Ejército</h2><span class="chip">Competitivo</span><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="infocard pvp"><h3>Duelos</h3><p>Tu mazo contra el de otros señores. Cada victoria da copas; con las copas subes de liga y te llevas los premios de temporada.</p><span class="chip">Próximamente</span></div>
+    <div class="infocard"><h3>Batalla rápida</h3><p>Tu mazo contra la IA, que lleva tus mismas unidades a tu nivel. Da oro, experiencia y copias.</p><button class="btn gold" id="ar-rapida">¡A luchar!</button></div>
+    <div class="grid2">
+      <div class="infocard"><h3>Torneo semanal</h3><p>Ocho señores, eliminación directa. El campeón se lleva una celda de diamante.</p><span class="chip">Próximamente</span></div>
+      <div class="infocard"><h3>Guerra de clanes</h3><p>Tu clan contra otro durante tres días. Se organiza en el Alto Consulado Bélico de tu reino.</p><span class="chip">Próximamente</span></div>
+      <div class="infocard"><h3>Clasificación</h3><p>Los mejores señores de la temporada, por copas.</p><span class="chip">Próximamente</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="tienda" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><h2>Tienda</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ti-body"></div>
+  </div>
+</section>
+
+<section id="hogar" class="screen hogar" hidden>
+  <div class="hgtop"><h2 id="hg-name">Tu reino</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+  <div class="hgscroll"><div class="hgmap" id="hg-map"></div></div>
+</section>
+
+<section id="edif" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="ed-back">← Reino</button><h2 id="ed-title"></h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ed-body"></div>
+  </div>
+</section>
+
+<section id="eventos" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><h2>Eventos</h2><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ev-body"></div>
+  </div>
+</section>
+
+<section id="abismo" class="screen abismo" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="ab-back">← Eventos</button><h2>Abismo del Despertar</h2></div>
+    <div id="abi-body"></div>
   </div>
 </section>
 
@@ -604,6 +788,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
   </div>
   <div id="coach" role="status" hidden></div>
+  <div id="abils"><button class="abil" id="ab-spell" hidden><span class="ring"><span class="aico"></span></span><b></b></button><button class="abil" id="ab-beast" hidden><span class="ring"><span class="aico"></span></span><b></b></button></div>
   <div class="dock" id="dock">
     <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
     <div class="row">
@@ -628,7 +813,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
   </div>
 </section>
 
-<nav id="nav" hidden><button data-tab="menu" aria-label="Inicio"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 21V9l3 2V6l5 3 5-3v5l3-2v12z"/><path d="M10 21v-5h4v5"/></svg></span><span>Inicio</span></button><button data-tab="mundo" aria-label="Campaña"><span class="nico"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="ejercito" aria-label="Ejército"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0v5H5z"/><path d="M12 5v12M5 17h14l-1 3H6z"/></svg></span><span>Ejército</span></button><button data-tab="taberna" aria-label="Taberna"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 7h10v13H5z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 7c0-3 10-3 10 0"/></svg></span><span>Taberna</span></button><button data-tab="arena" aria-label="Arena"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 4l11 11M15 15l-2 3 3-1 3 3 1-1-3-3 1-3z"/><path d="M19 4L8 15M9 15l2 3-3-1-3 3-1-1 3-3-1-3z"/></svg></span><span>Arena</span></button></nav>
+<nav id="nav" hidden><button data-tab="tienda" aria-label="Tienda"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1.5 11h-13z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/><path d="M9 13v3M15 13v3"/></svg></span><span>Tienda</span></button><button data-tab="hogar" aria-label="Reino"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 21V9l3 2V6l5 3 5-3v5l3-2v12z"/><path d="M10 21v-5h4v5"/></svg></span><span>Reino</span><span class="ndot" hidden></span></button><button data-tab="menu" aria-label="Campaña"><span class="nico"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="arena" aria-label="Ejército"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 4l11 11M15 15l-2 3 3-1 3 3 1-1-3-3 1-3z"/><path d="M19 4L8 15M9 15l2 3-3-1-3 3-1-1 3-3-1-3z"/></svg></span><span>Ejército</span></button><button data-tab="eventos" aria-label="Eventos"><span class="nico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></span><span>Eventos</span><span class="ndot" hidden></span></button></nav>
 
 <div id="pop" class="screen dim pop" hidden>
   <div class="panel popbox">

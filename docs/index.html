@@ -476,6 +476,152 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
 @media (prefers-reduced-motion: reduce) { .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+
+/* ==== estructura nueva: tienda, reino, eventos, abismo, promoción ==== */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
+.infocard.pvp { background: linear-gradient(135deg, #3a2d63, #252e48); }
+.ins i { width: 22px !important; height: 24px !important; margin: 0 !important; transform: none !important; border: 0 !important; border-radius: 0 !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 26'%3E%3Cpath d='M6 1h5l2 8H8zM18 1h-5l-2 8h5z' fill='%23d63a3a' stroke='%231e2235' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='16' r='8' fill='%23ffc83d' stroke='%231e2235' stroke-width='1.8'/%3E%3Cpath d='M12 11.5l1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.1 3.1-.4z' fill='%23fff3b0' stroke='%23a8741a' stroke-width='.8'/%3E%3C/svg%3E") center / contain no-repeat !important; }
+.rk { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); }
+.rk b { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; border: 3px solid var(--outline); background: #6b7290; color: #fff; font-weight: 400; font-size: 1.05rem; }
+.rk i { font-style: normal; color: var(--gold); letter-spacing: -2px; font-size: .95rem; text-shadow: 0 1px 0 var(--outline); }
+.rk.r1 b { background: #3ccf86; } .rk.r2 b { background: #4da3ff; } .rk.r3 b { background: #a855f7; } .rk.r4 b { background: #f59e0b; } .rk.r5 b { background: #e2363b; } .rk.r6 b { background: linear-gradient(135deg, #ff3a5c, #ffc83d); }
+.rkb { position: absolute; z-index: 2; left: 0; right: 0; top: 54%; text-align: center; font-size: .62rem; color: var(--gold); letter-spacing: -1px; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; pointer-events: none; }
+.dk.mini .rkb { font-size: .45rem; }
+.promo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 8px; margin-top: 10px; }
+.pcol { display: grid; gap: 6px; align-content: start; background: #0f1322; border: 3px solid var(--outline); border-radius: 12px; padding: 8px 10px; }
+.pcol em { font-style: normal; color: #7ee04a; font-weight: 800; }
+.pcol .btn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+.pcol .btn .oro { font-size: .95rem; }
+.ph { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; margin: 10px 0 4px; }
+.perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.perks li { background: #0f1322; border: 2px solid var(--outline); border-radius: 10px; padding: 6px 10px; font-size: .82rem; color: var(--muted); opacity: .7; }
+.perks li b { color: #fff; } .perks li small { color: var(--gold); }
+.perks li.on { opacity: 1; border-color: var(--gold); }
+#nav .ndot { right: 26%; }
+/* tienda */
+.shsec { display: grid; gap: 8px; margin-bottom: 14px; }
+.shsec > h3 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.offers { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 46%), 1fr)); gap: 10px; }
+.offer { position: relative; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; align-content: start; }
+.offer .dk { width: 74px; opacity: 1; }
+.offer b.t { font-family: var(--font-display); font-weight: 400; font-size: 1rem; }
+.offer small { color: var(--muted); font-size: .75rem; }
+.offer.sold { opacity: .5; }
+.offer .tag { position: absolute; top: -10px; right: -6px; background: #e2363b; color: #fff; border: 2px solid var(--outline); border-radius: 999px; font-family: var(--font-display); font-size: .72rem; padding: 0 7px; }
+.offer .big { font-family: var(--font-display); font-size: 1.5rem; line-height: 1; display: flex; align-items: center; gap: 6px; }
+.offer .pile { width: 64px; height: 48px; display: grid; place-items: center; }
+.offer .pile img { max-width: 100%; max-height: 100%; }
+.offer .btn { width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: .95rem; display: inline-flex; justify-content: center; align-items: center; gap: 4px; }
+.offer .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.cpx { font-family: var(--font-display); color: var(--gold); font-size: 1.05rem; }
+/* reino: el castillo y sus lugares */
+.screen.hogar { background: #141a2e; place-items: start center; padding-top: calc(var(--st) + 8px); grid-template-rows: auto 1fr; gap: 6px; }
+body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
+.hgtop { display: flex; align-items: center; gap: 10px; width: min(560px, 100%); box-sizing: border-box; flex-wrap: wrap; }
+.hgtop h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0 auto 0 0; }
+.hgscroll { width: 100%; display: grid; place-items: start center; }
+.hgmap { position: relative; width: min(560px, 100%, 74vh); aspect-ratio: 3 / 4; border: 4px solid var(--outline); border-radius: 22px; overflow: hidden;
+  background: radial-gradient(70% 40% at 50% 20%, #ffe7b0 0, transparent 70%), linear-gradient(#8fd1ff 0, #c9ecff 34%, #9bd46a 34.2%, #6fb94a 60%, #5aa23f 100%); }
+.hgmap.art { background: #2b3560 center / cover no-repeat; }
+.hgmap .hill { position: absolute; border-radius: 50%; background: #7cc756; border: 3px solid #4f8f36; }
+.hgmap .road { position: absolute; left: 44%; width: 12%; top: 58%; bottom: -2%; background: #e3c48a; border-left: 3px solid #b7975c; border-right: 3px solid #b7975c; }
+.hgmap .castle { position: absolute; left: 50%; top: 12%; width: 74%; transform: translateX(-50%); filter: drop-shadow(0 6px 0 rgba(0,0,0,.25)); pointer-events: none; }
+.bld { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; width: 96px; }
+.bld .bico { position: relative; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(#4a5a92, #2b3560); border: 3px solid var(--outline); box-shadow: inset 0 3px 0 rgba(255,255,255,.18), 0 4px 0 var(--outline); display: grid; place-items: center; }
+.bld .bico svg { width: 34px; height: 34px; fill: none; stroke: #f4e7c4; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.bld .blbl { font-family: var(--font-display); font-size: .8rem; line-height: 1.05; color: #fff; text-align: center; background: rgba(20,24,40,.82); border: 2px solid var(--outline); border-radius: 8px; padding: 1px 6px; }
+.bld .dot { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: #e2363b; border: 2px solid var(--outline); }
+.bld.lock .bico { filter: grayscale(1) brightness(.7); } .bld.lock .blbl::after { content: ' 🔒'; }
+.bld:active .bico { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255,255,255,.18), 0 1px 0 var(--outline); }
+/* edificios */
+.bhead { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; }
+.bhead .bico { width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(#4a5a92, #2b3560); border: 3px solid var(--outline); display: grid; place-items: center; }
+.bhead .bico svg { width: 34px; height: 34px; fill: none; stroke: #f4e7c4; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.bhead p { margin: 0; color: var(--muted); font-size: .88rem; }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 10px; }
+.kcard { position: relative; background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.kcard header { display: flex; gap: 10px; align-items: center; }
+.kcard header b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; display: block; }
+.kcard header small { color: var(--muted); font-size: .76rem; }
+.kcard p { margin: 0; font-size: .84rem; }
+.kcard .acts { justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+.kcard.sel { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.kcard.lock { opacity: .72; }
+.kcard .btn { display: inline-flex; align-items: center; gap: 4px; }
+.kcard .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.kico { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff8, transparent 55%), var(--c, #4a5a92); }
+.kico svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.kind { font-family: var(--font-display); font-size: .72rem; color: var(--outline); background: var(--gold); border-radius: 999px; padding: 0 8px; justify-self: start; }
+.lvl { font-family: var(--font-display); color: var(--gold); }
+.uprow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px; }
+.uprow b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; }
+.uprow small { color: var(--muted); grid-column: 1; }
+.uprow .btn { grid-row: 1 / span 2; grid-column: 2; display: inline-flex; align-items: center; gap: 4px; }
+.uprow .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.pips { display: flex; gap: 3px; grid-column: 1; } .pips i { width: 10px; height: 10px; border-radius: 3px; background: #0f1322; border: 2px solid var(--outline); } .pips i.on { background: var(--gold); }
+.trslots { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 10px; }
+.trslot { background: var(--panel); border: 3px solid var(--outline); border-radius: 16px; padding: 10px; display: grid; gap: 6px; justify-items: center; text-align: center; min-height: 190px; align-content: center; }
+.trslot .dk { width: 84px; opacity: 1; }
+.trslot.empty { border-style: dashed; color: var(--muted); }
+.trslot.lock { opacity: .55; }
+.trslot .btn { display: inline-flex; align-items: center; gap: 4px; }
+.pickgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.pickgrid .dk { opacity: 1; }
+/* eventos y abismo */
+.evcard { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; border: 3px solid var(--outline); border-radius: 18px; padding: 14px;
+  background: radial-gradient(60% 90% at 85% 50%, #ff6a2a55, transparent 70%), linear-gradient(135deg, #2a1c3e, #12101e); }
+.evcard h3 { margin: 0 !important; font-size: 1.35rem !important; }
+.evcard p { margin: 0; color: #d9cfee; font-size: .86rem; }
+.evcard .dk { width: 70px; opacity: 1; grid-row: 1 / span 3; grid-column: 2; }
+.evcard .btn { justify-self: start; }
+.evcard.soon { background: var(--panel); } .evcard.soon p { color: var(--muted); }
+.screen.abismo { background: radial-gradient(90% 60% at 50% 110%, #ff5a1a55, transparent 70%), linear-gradient(#1b1430, #07060c 80%); place-items: start center; }
+body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); }
+.abhud { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: rgba(15,19,34,.85); border: 3px solid var(--outline); border-radius: 16px; padding: 10px 12px; }
+.abprize { display: flex; gap: 10px; align-items: center; }
+.abprize .dk { width: 56px; opacity: 1; flex: none; }
+.abprize b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; display: block; }
+.abprize small { color: var(--muted); font-size: .76rem; }
+.depth { font-family: var(--font-display); text-align: right; line-height: 1; }
+.depth b { font-size: 2.2rem; color: #ffb35a; display: block; text-shadow: 0 3px 0 var(--outline); }
+.depth small { color: var(--muted); font-size: .8rem; }
+.abbar { grid-column: 1 / -1; position: relative; height: 14px; background: #0f1322; border: 2px solid var(--outline); border-radius: 8px; overflow: hidden; }
+.abbar span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ffb35a, #ff4a1a); }
+.abbar i { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff8; }
+.abres { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.res { display: inline-flex; align-items: center; gap: 4px; background: rgba(15,19,34,.85); border: 3px solid var(--outline); border-radius: 999px; padding: 2px 10px 2px 4px; font-family: var(--font-display); font-size: 1rem; }
+.res svg { width: 22px; height: 22px; fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.paths { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 520px) { .paths { grid-template-columns: repeat(2, 1fr); } }
+.path { position: relative; display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border: 3px solid var(--outline); border-radius: 18px 18px 12px 12px; color: #fff; text-align: center;
+  background: linear-gradient(#3b2f55, #1a1426); box-shadow: inset 0 3px 0 rgba(255,255,255,.12), 0 4px 0 var(--outline); }
+.path .mouth { width: 74px; height: 64px; border-radius: 40px 40px 6px 6px; background: radial-gradient(60% 70% at 50% 100%, #000 40%, #24182f 75%); border: 3px solid #120c1a; box-shadow: inset 0 -10px 18px #000; }
+.path b { font-family: var(--font-display); font-weight: 400; font-size: .95rem; }
+.path small { color: #b9add6; font-size: .72rem; min-height: 2.2em; }
+.path:active { transform: translateY(3px); }
+.path.trap .mouth { background: radial-gradient(60% 70% at 50% 100%, #ff6a1a 10%, #7a1f0a 55%, #24182f 80%); box-shadow: inset 0 -10px 18px #ff4a1a, 0 0 16px #ff4a1a; }
+.path.safe { opacity: .55; }
+.path.picked { border-color: var(--gold); }
+.path:disabled { cursor: default; }
+.abmsg { text-align: center; font-family: var(--font-display); font-size: 1.2rem; min-height: 1.4em; margin: 0; }
+.abmsg.bad { color: #ff7a5a; } .abmsg.good { color: #9dff8a; }
+.abacts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.abacts .btn { display: inline-flex; align-items: center; gap: 4px; }
+.abacts .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
+.falling { animation: fall .9s ease-in both; }
+@keyframes fall { 0% { transform: none; } 30% { transform: translateX(-6px) rotate(-1deg); } 60% { transform: translateX(6px) rotate(1deg); } 100% { transform: translateY(40px) scale(.9); opacity: .3; } }
+.descend { animation: descend .55s ease-out; }
+@keyframes descend { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* batalla: hechizo y bestia */
+#abils { position: absolute; left: var(--sl); display: grid; gap: 8px; pointer-events: none; }
+.abil { pointer-events: auto; display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; width: 58px; }
+.abil .ring { width: 50px; height: 50px; border-radius: 50%; padding: 3px; box-sizing: border-box; background: conic-gradient(var(--c, #7fd0ff) calc(var(--p, 0) * 1turn), #141826 0); border: 3px solid var(--outline); display: grid; }
+.abil .aico { border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff6, transparent 55%), var(--c, #4a5a92); border: 2px solid var(--outline); }
+.abil .aico svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.abil b { font-family: var(--font-display); font-weight: 400; font-size: .7rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
+.abil:disabled { cursor: default; } .abil:disabled .aico { filter: saturate(.5) brightness(.75); }
+.abil.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 2px var(--c), 0 0 12px var(--c); }
 </style>
 </head>
 <body>
@@ -498,12 +644,12 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <span class="oro"><i></i><b class="oro-n">0</b></span>
     <span class="oro gema"><i></i><b class="gema-n">0</b></span>
   </div>
-  <div class="side l"><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/></svg><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M5 9a7 5 0 0 1 14 0v11H5z"/><path d="M9 9v11M12 9v11M15 9v11M5 14h14"/><circle cx="12" cy="4" r="1.6"/></svg><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3 7h18v3H3zM12 7v13"/><path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
+  <div class="side l"><button class="sbtn" id="s-tropas" aria-label="Tropas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 11l2 2 4-4"/></svg><span class="dot" hidden></span></span><span class="slbl">Tropas</span></button><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/></svg><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M5 9a7 5 0 0 1 14 0v11H5z"/><path d="M9 9v11M12 9v11M15 9v11M5 14h14"/><circle cx="12" cy="4" r="1.6"/></svg><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3 7h18v3H3zM12 7v13"/><path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
   <div class="side r"><button class="sbtn" id="s-correo" aria-label="Correo"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span class="dot" hidden></span></span><span class="slbl">Correo</span></button><button class="sbtn" id="s-ranking" aria-label="Clasificación"><span class="sico"><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M9 18h6"/></svg><span class="dot" hidden></span></span><span class="slbl">Clasificación</span></button><button class="sbtn" id="s-practica" aria-label="Práctica"><span class="sico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/></svg><span class="dot" hidden></span></span><span class="slbl">Práctica</span></button></div>
   <div class="hubbot" id="hubbot">
     <button class="botin" id="h-botin" aria-label="Recoger el botín de la expedición"><span class="chest"></span><span class="btxt"><small>Expedición</small><b><i></i><span id="h-botin-n">0</span></b></span></button>
     <button class="btn gold big golpe" id="h-batalla"><span>¡Batalla!</span><small id="h-next">Reino de las Praderas · Castillo 1</small></button>
-    <button class="btn mazo" id="h-mazo">Mazo</button>
+    <button class="btn mazo" id="h-mazo">Mapa</button>
   </div>
 </section>
 
@@ -522,8 +668,8 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="ejercito" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Ejército</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
-    <div class="seg" role="tablist"><button data-seg="unidades" aria-pressed="true">Unidades</button><button data-seg="heroes" aria-pressed="false">Héroes</button><button data-seg="estandarte" aria-pressed="false">Estandarte</button></div>
+    <div class="sheet-top"><button class="btn" id="ej-back">← Campaña</button><h2>Tropas</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="seg" role="tablist" hidden><button data-seg="unidades" aria-pressed="true">Unidades</button><button data-seg="heroes" aria-pressed="false">Héroes</button><button data-seg="estandarte" aria-pressed="false">Estandarte</button></div>
     <div id="seg-unidades"><div class="rowline"><p class="note" id="ej-note"></p><button class="btn gold small" id="ej-mazo">Editar mazo</button></div><div class="ugrid" id="ej-grid"></div></div>
     <div id="seg-heroes" hidden><div class="hgrid" id="ej-heroes"></div></div>
     <div id="seg-estandarte" hidden>
@@ -536,7 +682,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="taberna" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Taberna del Multiverso</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="sheet-top"><button class="btn" id="tab-back">← Reino</button><h2>Taberna del Multiverso</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
     <p class="note">Mercenarios llegados de otros mundos. Se pagan con oro. Los puestos se renuevan cada 4 horas: <b id="tab-timer"></b></p>
     <div class="slots" id="tab-slots"></div>
     <p class="note">Si ya tienes al mercenario, ganas una copia de su carta (servirán para subirlo de nivel). Más puestos y mejores mercenarios al mejorar la taberna: próximamente.</p>
@@ -545,9 +691,47 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 
 <section id="arena" class="screen tabscr" hidden>
   <div class="sheet">
-    <div class="sheet-top"><h2>Arena</h2><span class="oro"><i></i><b class="oro-n">0</b></span></div>
-    <div class="infocard"><h3>Duelos contra otros señores</h3><p>Pronto podrás enfrentar tu mazo al de otros jugadores, subir en la clasificación y ganar premios de temporada.</p><span class="chip">Próximamente</span></div>
-    <div class="infocard"><h3>Batalla rápida</h3><p>Tu mazo contra la IA, que lleva tus mismas unidades. Da oro y experiencia.</p><button class="btn gold" id="ar-rapida">¡A luchar!</button></div>
+    <div class="sheet-top"><h2>Ejército</h2><span class="chip">Competitivo</span><span class="oro"><i></i><b class="oro-n">0</b></span></div>
+    <div class="infocard pvp"><h3>Duelos</h3><p>Tu mazo contra el de otros señores. Cada victoria da copas; con las copas subes de liga y te llevas los premios de temporada.</p><span class="chip">Próximamente</span></div>
+    <div class="infocard"><h3>Batalla rápida</h3><p>Tu mazo contra la IA, que lleva tus mismas unidades a tu nivel. Da oro, experiencia y copias.</p><button class="btn gold" id="ar-rapida">¡A luchar!</button></div>
+    <div class="grid2">
+      <div class="infocard"><h3>Torneo semanal</h3><p>Ocho señores, eliminación directa. El campeón se lleva una celda de diamante.</p><span class="chip">Próximamente</span></div>
+      <div class="infocard"><h3>Guerra de clanes</h3><p>Tu clan contra otro durante tres días. Se organiza en el Alto Consulado Bélico de tu reino.</p><span class="chip">Próximamente</span></div>
+      <div class="infocard"><h3>Clasificación</h3><p>Los mejores señores de la temporada, por copas.</p><span class="chip">Próximamente</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="tienda" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><h2>Tienda</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ti-body"></div>
+  </div>
+</section>
+
+<section id="hogar" class="screen hogar" hidden>
+  <div class="hgtop"><h2 id="hg-name">Tu reino</h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+  <div class="hgscroll"><div class="hgmap" id="hg-map"></div></div>
+</section>
+
+<section id="edif" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="ed-back">← Reino</button><h2 id="ed-title"></h2><span class="oro"><i></i><b class="oro-n">0</b></span><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ed-body"></div>
+  </div>
+</section>
+
+<section id="eventos" class="screen tabscr" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><h2>Eventos</h2><span class="oro gema"><i></i><b class="gema-n">0</b></span></div>
+    <div id="ev-body"></div>
+  </div>
+</section>
+
+<section id="abismo" class="screen abismo" hidden>
+  <div class="sheet">
+    <div class="sheet-top"><button class="btn" id="ab-back">← Eventos</button><h2>Abismo del Despertar</h2></div>
+    <div id="abi-body"></div>
   </div>
 </section>
 
@@ -604,6 +788,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
     <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
   </div>
   <div id="coach" role="status" hidden></div>
+  <div id="abils"><button class="abil" id="ab-spell" hidden><span class="ring"><span class="aico"></span></span><b></b></button><button class="abil" id="ab-beast" hidden><span class="ring"><span class="aico"></span></span><b></b></button></div>
   <div class="dock" id="dock">
     <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
     <div class="row">
@@ -628,7 +813,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
   </div>
 </section>
 
-<nav id="nav" hidden><button data-tab="menu" aria-label="Inicio"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 21V9l3 2V6l5 3 5-3v5l3-2v12z"/><path d="M10 21v-5h4v5"/></svg></span><span>Inicio</span></button><button data-tab="mundo" aria-label="Campaña"><span class="nico"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="ejercito" aria-label="Ejército"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0v5H5z"/><path d="M12 5v12M5 17h14l-1 3H6z"/></svg></span><span>Ejército</span></button><button data-tab="taberna" aria-label="Taberna"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 7h10v13H5z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 7c0-3 10-3 10 0"/></svg></span><span>Taberna</span></button><button data-tab="arena" aria-label="Arena"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 4l11 11M15 15l-2 3 3-1 3 3 1-1-3-3 1-3z"/><path d="M19 4L8 15M9 15l2 3-3-1-3 3-1-1 3-3-1-3z"/></svg></span><span>Arena</span></button></nav>
+<nav id="nav" hidden><button data-tab="tienda" aria-label="Tienda"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1.5 11h-13z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/><path d="M9 13v3M15 13v3"/></svg></span><span>Tienda</span></button><button data-tab="hogar" aria-label="Reino"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 21V9l3 2V6l5 3 5-3v5l3-2v12z"/><path d="M10 21v-5h4v5"/></svg></span><span>Reino</span><span class="ndot" hidden></span></button><button data-tab="menu" aria-label="Campaña"><span class="nico"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="arena" aria-label="Ejército"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 4l11 11M15 15l-2 3 3-1 3 3 1-1-3-3 1-3z"/><path d="M19 4L8 15M9 15l2 3-3-1-3 3-1-1 3-3-1-3z"/></svg></span><span>Ejército</span></button><button data-tab="eventos" aria-label="Eventos"><span class="nico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></span><span>Eventos</span><span class="ndot" hidden></span></button></nav>
 
 <div id="pop" class="screen dim pop" hidden>
   <div class="panel popbox">
@@ -3048,7 +3233,7 @@ function fightLogic(dt) {
     }
     const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.dir === u.teamDir && (u.teamDir > 0 ? u.x >= wall : u.x <= wall);
     if (o && dist <= u.cfg.range) {
-      u.cd -= dt;
+      u.cd -= dt * atkK(u);
       const ownWall = u.teamDir > 0 ? 130 : W - 130, roomBehind = u.teamDir > 0 ? u.x > ownWall : u.x < ownWall;
       if (u.cd <= 0 && (u.state === 'idle' || u.state === 'walk')) { u.backing = false; u.set('attack'); u.cd = rand(...u.cfg.cd) * (u.cdK || 1); u.backBudget = 0.4; }
       else if (u.cfg.keepAway && dist < u.cfg.keepAway && roomBehind && (u.backBudget || 0) > 0 && (u.state === 'idle' || u.state === 'walk')) {
@@ -3063,7 +3248,7 @@ function fightLogic(dt) {
 function sentinelLogic(u, dt) {
   // de cerca, minigun; de lejos, francotirador; si no hay nadie a tiro, avanza
   const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
-  u.cd -= dt; u.misT -= dt;
+  u.cd -= dt * atkK(u); u.misT -= dt;
   if (u.state === 'attack' || u.state === 'missiles') return;
   if (u.misT <= 0 && enemiesOf(u).some(v => !v.isCastle)) { u.misT = MISSILES.cd; u.set('missiles'); return; }
   if (o && dist <= u.cfg.range) {
@@ -3084,7 +3269,7 @@ function siegeLogic(u, dt) {
   // dispara a los enemigos entre su alcance mínimo y máximo; si se le pegan, no puede hacer nada
   const foes = enemiesOf(u), near = foes.filter(v => Math.abs(v.x - u.x) <= u.cfg.range);
   const shootable = near.filter(v => Math.abs(v.x - u.x) >= u.cfg.minRange).sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - u.x) - Math.abs(b.x - u.x));
-  u.cd -= dt;
+  u.cd -= dt * atkK(u);
   if (u.state === 'attack') return;
   if (near.length) {
     if (u.state === 'walk') u.set('idle');
@@ -3101,7 +3286,7 @@ function friarLogic(u, dt) {
   // aliados heridos a su alcance (incluido él mismo), el más herido primero
   const hurt = units.filter(v => v.team === u.team && v.alive && v.hp < v.max && !['die', 'spawn'].includes(v.state) && Math.abs(v.x - u.x) <= u.cfg.range)
     .sort((a, b) => a.hp / a.max - b.hp / b.max);
-  u.cd -= dt;
+  u.cd -= dt * atkK(u);
   if (u.state === 'attack') return;
   if (hurt.length && u.cd <= 0) {
     u.set('attack'); u.cd = rand(...u.cfg.cd); return;
@@ -3350,8 +3535,8 @@ function towers(dt) {
     const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
     const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
-    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
-    s.towerT = TOWER.cd;
+    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: Math.round(TOWER.dmg * (s.towerK || 1)), stuck: 0 });
+    s.towerT = TOWER.cd * (s.towerCd || 1);
   }
 }
 function drawCastleUI(dt) {
@@ -3625,19 +3810,21 @@ function start() {
 }
 
 /* ---- pantallas: carga → menú (con una partida de la IA contra sí misma de fondo) → mazo → batalla → pausa / final ---- */
-const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over', 'ejercito', 'taberna', 'arena', 'perfil'];
-const TABS = ['menu', 'mundo', 'ejercito', 'taberna', 'arena'];   // pantallas con la barra de pestañas abajo
+const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over', 'ejercito', 'taberna', 'arena', 'perfil', 'tienda', 'hogar', 'edif', 'eventos', 'abismo'];
+// pantallas con la barra de pestañas abajo y la pestaña que se ilumina en cada una
+const TAB_OF = { tienda: 'tienda', hogar: 'hogar', edif: 'hogar', taberna: 'hogar', menu: 'menu', mundo: 'menu', ejercito: 'menu', arena: 'arena', eventos: 'eventos', abismo: 'eventos' };
+const TABS = Object.keys(TAB_OF);
 function show(id) {
   SCREENS.forEach(s => { $(s).hidden = s !== id; });
   const hud = id === null || id === 'pausa' || id === 'over', changed = $('hud').hidden === hud;
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
   document.body.classList.toggle('nav', TABS.includes(id)); $('nav').hidden = !TABS.includes(id);
-  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === TAB_OF[id]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintGold(); if (typeof paintHub === 'function') paintHub();
   if (id === 'menu') requestAnimationFrame(frameCamera);
   // en las pantallas opacas no se ve el campo: se detiene el bucle del juego para ahorrar batería
-  const gm = window.__game; if (gm && gm.loop) { if (['mundo', 'reino', 'ejercito', 'taberna', 'arena', 'perfil'].includes(id)) gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
+  const gm = window.__game; if (gm && gm.loop) { if (['mundo', 'reino', 'ejercito', 'taberna', 'arena', 'perfil', 'tienda', 'hogar', 'edif', 'eventos', 'abismo', 'celdas'].includes(id)) gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
 }
 function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
@@ -4347,9 +4534,9 @@ function openMisiones() {
     const v = Math.min(m.n, d[m.id]), done = v >= m.n, got = d.ok[m.id];
     return '<div class="mis' + (got ? ' got' : '') + '"><b>' + m.txt + '</b><small>' + (got ? 'Recogida' : rewardTxt(m)) + '</small><span class="xpbar"><span style="width:' + (v / m.n * 100) + '%"></span></span>'
       + (done && !got ? '<button class="btn gold small" data-m="' + m.id + '">Recoger</button>' : '<small>' + v + '/' + m.n + '</small>') + '</div>';
-  }).join('') + '<div class="mis' + (d.ok.todas ? ' got' : '') + '"><b>Completa las 3 misiones</b><small>' + (d.ok.todas ? 'Recogida' : '5 diamantes') + '</small>'
+  }).join('') + '<div class="mis' + (d.ok.todas ? ' got' : '') + '"><b>Completa las 3 misiones</b><small>' + (d.ok.todas ? 'Recogida' : '5 diamantes y 1 insignia') + '</small>'
     + (MISIONES.every(m => d.ok[m.id]) && !d.ok.todas ? '<button class="btn gold small" data-m="todas">Recoger</button>' : '<small>' + MISIONES.filter(m => d.ok[m.id]).length + '/3</small>') + '</div></div>');
-  document.querySelectorAll('#pop-body [data-m]').forEach(b => { b.onclick = () => { const id = b.dataset.m; d.ok[id] = true; give(id === 'todas' ? { gemas: 5 } : MISIONES.find(m => m.id === id), b); openMisiones(); }; });
+  document.querySelectorAll('#pop-body [data-m]').forEach(b => { b.onclick = () => { const id = b.dataset.m; d.ok[id] = true; give(id === 'todas' ? { gemas: 5, insignias: 1 } : MISIONES.find(m => m.id === id), b); openMisiones(); }; });
 }
 // contadores para las misiones
 const _br = battleResult;
@@ -4404,27 +4591,32 @@ setInterval(() => { if (!$('menu').hidden) paintHub(); }, 5000);
 $('h-perfil').onclick = () => openPerfil();
 $('h-botin').onclick = e => collectExp(e.currentTarget);
 $('h-batalla').onclick = () => { const nx = nextLevel(); if (nx) { nivelFrom = 'menu'; openLevel(nx.k, nx.i); } else openWorld(); };
-$('h-mazo').onclick = () => openDeck('menu');
+$('h-mazo').onclick = () => openWorld();
+$('s-tropas').onclick = () => openArmy('unidades');
+$('ej-back').onclick = () => goTab('menu');
+$('tab-back').onclick = () => goTab('hogar');
 $('s-diario').onclick = openDiario;
 $('s-misiones').onclick = openMisiones;
 $('s-jaulas').onclick = () => proximamente('jaulas');
-$('s-ofertas').onclick = () => proximamente('ofertas');
+$('s-ofertas').onclick = () => goTab('tienda');
 $('s-correo').onclick = () => proximamente('correo');
-$('s-ranking').onclick = () => proximamente('ranking');
+$('s-ranking').onclick = () => goTab('arena');
 $('s-practica').onclick = () => { location.href = 'practica.html'; };
 $('pf-practica').onclick = () => { location.href = 'practica.html'; };
 
-/* ---- barra de pestañas ---- */
+/* ---- barra de pestañas: Tienda · Reino · Campaña · Ejército · Eventos ---- */
 function goTab(t) {
   if (t === 'menu') { show('menu'); startDemo(); }
   else if (t === 'mundo') openWorld();
-  
-  else if (t === 'ejercito') openArmy();
-  else if (t === 'taberna') openTaberna();
+  else if (t === 'tienda') openTienda();
+  else if (t === 'hogar') openHogar();
   else if (t === 'arena') show('arena');
+  else if (t === 'eventos') openEventos();
+  else if (t === 'ejercito') openArmy('unidades');
+  else if (t === 'taberna') openTaberna();
 }
 document.querySelectorAll('#nav button').forEach(b => { b.onclick = () => goTab(b.dataset.tab); });
-$('mundo-back').textContent = '← Inicio';
+$('mundo-back').textContent = '← Campaña';
 $('mundo-back').onclick = () => goTab('menu');
 let nivelFrom = 'reino';
 const _openKingdom = openKingdom;
@@ -4440,7 +4632,7 @@ let armySeg = 'unidades';
 function openArmy(seg = armySeg) {
   armySeg = seg;
   document.querySelectorAll('#ejercito .seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.seg === seg));
-  ['unidades', 'heroes', 'estandarte'].forEach(s => { $('seg-' + s).hidden = s !== seg; });
+  ['unidades', 'heroes', 'estandarte'].forEach(s => { const el = $('seg-' + s); if (el) el.hidden = s !== seg; });
   const own = owned();
   if (seg === 'unidades') {
     $('ej-note').textContent = 'Tienes ' + own.length + ' de ' + ALL.length + ' unidades. Toca una para ver su ficha.';
@@ -4523,7 +4715,7 @@ function openPerfil() {
 }
 $('pf-back').onclick = () => goTab('menu');
 $('pf-name').onchange = e => { perfil.nombre = e.target.value.trim().slice(0, 22) || 'Señor del Reino'; savePerfil(); paintHub(); };
-$('pf-estandarte').onclick = () => openArmy('estandarte');
+$('pf-estandarte').onclick = () => openEdif('murallas');
 $('deckall').onclick = () => { perfil.all = !perfil.all; savePerfil(); openPerfil(); };
 $('deckwipe').onclick = e => {
   const b = e.currentTarget;
@@ -4545,74 +4737,207 @@ openDeck = function (from = 'menu') { _openDeck(from); $('deckgo').textContent =
 const _tap = $('tap').onclick;
 $('tap').onclick = () => { _tap(); startDemo(); };
 window.__perfilAbrir = openPerfil; window.__goTab = goTab;
-
-/* ==== Mejora de unidades: con copias de su carta y oro subes una unidad de nivel (del 1 al 10).
-   Cada nivel le da un 10 % más de vida, daño y curación (nivel 10 = ×1,9). Las copias salen al ganar batallas,
-   en la expedición y en la taberna. Los reinos enemigos también tienen nivel: más alto cuanto más lejos. ==== */
-const LV_MAX = 10, LV_PASO = 0.1;
-const LV_COPIAS = [0, 1, 2, 3, 5, 8, 12, 16, 22, 30];          // copias para subir desde el nivel n (índice = nivel actual)
-const LV_ORO = [0, 50, 100, 180, 300, 450, 650, 900, 1250, 1700];
-const LV_RAR = { comun: 1, poco: 1.2, rara: 1.5, epica: 2, legendaria: 3, ascendida: 4 };
-const REINO_LV = { praderas: 1, bosque: 2, desierto: 3, nieve: 4, pantano: 5, volcan: 6, playa: 7, setas: 7, huesos: 8, engranajes: 8, cristal: 9, cementerio: 9, cielo: 10 };   // nivel de los ejércitos de cada reino
+/* ==== Promoción de unidades: dos cosas que mejorar.
+   NIVEL (1–100): se sube con oro; cada 10 niveles hay un salto que pide oro e insignias de mando. +3 % de vida y daño por nivel.
+   RANGO (E, D, C, B, A, S, S+): se sube con copias de la carta. Cada rango multiplica mucho sus estadísticas y en C, A y S+
+   la unidad aprende una habilidad nueva. Desde el rango B la unidad se ve más grande en batalla.
+   Los reinos enemigos también tienen nivel y rango: más altos cuanto más lejos. ==== */
+const LV_MAX = 100, LV_PASO = 0.03;
+const RANGOS = ['E', 'D', 'C', 'B', 'A', 'S', 'S+'];
+const RANGO_K = [1, 1.15, 1.3, 1.5, 1.75, 2.05, 2.4];            // multiplicador de vida y daño por rango
+const RANGO_COPIAS = [5, 10, 20, 40, 70, 120];                   // copias para pasar del rango i al i+1
+const SALTO_INS = { 10: 1, 20: 2, 30: 3, 40: 4, 50: 6, 60: 8, 70: 10, 80: 13, 90: 16 };   // insignias para pasar del nivel 10, 20…
+const LV_RAR = { comun: 1, poco: 1.15, rara: 1.3, epica: 1.5, legendaria: 1.8, ascendida: 2.2 };
+// [nivel, rango] de los ejércitos de cada reino (los castillos más avanzados suben algo, el real +3)
+const REINO_PODER = { praderas: [1, 0], bosque: [5, 0], desierto: [10, 0], nieve: [15, 1], pantano: [20, 1], volcan: [26, 1],
+  playa: [32, 2], setas: [36, 2], huesos: [42, 2], engranajes: [48, 3], cristal: [55, 3], cementerio: [62, 4], cielo: [70, 4] };
 const lvK = lv => 1 + LV_PASO * ((lv || 1) - 1);
 const lvOf = k => Math.max(1, Math.min(LV_MAX, (perfil.niveles || {})[k] || 1));
+const rangoOf = k => Math.max(0, Math.min(RANGOS.length - 1, (perfil.rangos || {})[k] || 0));
+const poderK = (lv, r) => lvK(lv) * RANGO_K[r || 0];
 const copiasOf = k => (perfil.copias || {})[k] || 0;
-const lvCoste = k => { const lv = lvOf(k); return lv >= LV_MAX ? null : { copias: LV_COPIAS[lv], oro: Math.round(LV_ORO[lv] * (LV_RAR[RARITY[k] || 'comun'] || 1) / 10) * 10 }; };
-const puedeMejorar = k => { const c = lvCoste(k); return !!c && owned().includes(k) && copiasOf(k) >= c.copias && perfil.gold >= c.oro; };
-const mejorables = () => owned().filter(puedeMejorar).length;
+const insignias = () => perfil.insignias || 0;
 function addCopias(k, n) { perfil.copias = perfil.copias || {}; perfil.copias[k] = (perfil.copias[k] || 0) + n; }
+function addInsignias(n) { perfil.insignias = insignias() + n; }
+const estrellas = r => r ? '★'.repeat(r) : '';
+const rangoHtml = r => '<span class="rk r' + r + '"><b>' + RANGOS[r] + '</b>' + (r ? '<i>' + estrellas(r) + '</i>' : '') + '</span>';
 
-/* ---- en batalla: cada unidad sale con las estadísticas de su nivel ---- */
-function applyLevel(u, lv) {
-  if (!u || !u.cfg || lv <= 1) return;
-  const k = lvK(lv), c = Object.assign({}, u.cfg);
-  c.hp = Math.round(c.hp * k); if (c.heal) c.heal = c.heal.map(x => Math.round(x * k));
-  u.cfg = c; u.lv = lv; u.lvK = k; u.hp = u.max = c.hp;
+/* ---- costes ---- */
+const oroNivel = (k, lv) => Math.round((20 + 8 * lv + 0.6 * lv * lv) * (LV_RAR[RARITY[k] || 'comun'] || 1) / 10) * 10;
+function lvCoste(k) {   // lo que cuesta subir del nivel actual al siguiente (null si está al máximo)
+  const lv = lvOf(k); if (lv >= LV_MAX) return null;
+  const salto = SALTO_INS[lv] || 0;
+  return { oro: oroNivel(k, lv) * (salto ? 3 : 1), insignias: salto, salto: !!salto };
+}
+const rkCoste = k => { const r = rangoOf(k); return r >= RANGOS.length - 1 ? null : { copias: RANGO_COPIAS[r] }; };
+const puedeNivel = k => { const c = lvCoste(k); return !!c && owned().includes(k) && perfil.gold >= c.oro && insignias() >= c.insignias; };
+const puedeRango = k => { const c = rkCoste(k); return !!c && owned().includes(k) && copiasOf(k) >= c.copias; };
+const puedeMejorar = k => puedeRango(k);
+const mejorables = () => owned().filter(puedeRango).length;
+
+/* ---- habilidades que se aprenden al subir de rango (C, A y S+). Tipos genéricos que entiende el motor:
+   crit (probabilidad de golpe doble), furia (+daño herido), ejecutar (+daño a enemigos tocados), aura (+daño a aliados cerca),
+   escudo (sale con escudo: fracción de su vida), aguante (sobrevive una vez a un golpe mortal), robo (se cura con el daño),
+   aturdir (probabilidad de aturdir), espinas (devuelve daño cuerpo a cuerpo), estallido (al caer explota), regen (vida por segundo),
+   veloz (anda y ataca más rápido), asedio (+daño a castillos) ---- */
+const PERK_TXT = {
+  crit: v => Math.round(v * 100) + ' % de probabilidad de golpe crítico (daño doble).',
+  furia: v => 'Herido por debajo de la mitad, hace un ' + Math.round(v * 100) + ' % más de daño.',
+  ejecutar: v => 'Hace un ' + Math.round(v * 100) + ' % más de daño a enemigos con menos del 30 % de vida.',
+  aura: v => 'Los aliados cercanos hacen un ' + Math.round(v * 100) + ' % más de daño.',
+  escudo: v => 'Sale al campo con un escudo del ' + Math.round(v * 100) + ' % de su vida.',
+  aguante: () => 'Una vez por batalla aguanta un golpe mortal y recupera el 40 % de su vida.',
+  robo: v => 'Se cura un ' + Math.round(v * 100) + ' % del daño que hace.',
+  aturdir: v => Math.round(v * 100) + ' % de probabilidad de aturdir al golpear.',
+  espinas: v => 'Devuelve el ' + Math.round(v * 100) + ' % del daño cuerpo a cuerpo que recibe.',
+  estallido: v => 'Al caer, estalla y hace ' + v + ' de daño a su alrededor.',
+  regen: v => 'Recupera un ' + (v * 100).toString().replace('.', ',') + ' % de su vida cada segundo.',
+  veloz: v => 'Anda y ataca un ' + Math.round(v * 100) + ' % más rápido.',
+  asedio: v => 'Hace un ' + Math.round(v * 100) + ' % más de daño a los castillos.',
+};
+// por unidad: [rango en que se aprende, nombre, tipo, valor]
+const PERKS = {
+  legionario: [[2, 'Muro de escudos', 'escudo', 0.25], [4, 'Disciplina de legión', 'aura', 0.1], [6, 'Última legión', 'aguante', 1]],
+  arquera: [[2, 'Ojo certero', 'crit', 0.2], [4, 'Flechas veloces', 'veloz', 0.2], [6, 'Puntería letal', 'ejecutar', 0.5]],
+  tercio: [[2, 'Picas firmes', 'espinas', 0.25], [4, 'Erizo', 'escudo', 0.3], [6, '¡Santiago y cierra!', 'aturdir', 0.2]],
+  valkiria: [[2, 'Galope', 'veloz', 0.2], [4, 'Furia nórdica', 'furia', 0.35], [6, 'Valhalla', 'aguante', 1]],
+  ninja: [[2, 'Golpe en la sombra', 'crit', 0.25], [4, 'Veneno', 'ejecutar', 0.5], [6, 'Paso de humo', 'veloz', 0.25]],
+  pistolero: [[2, 'Bala de plata', 'crit', 0.2], [4, 'Gatillo rápido', 'veloz', 0.25], [6, 'Duelo al sol', 'ejecutar', 0.6]],
+  lobo: [[2, 'Sed de sangre', 'robo', 0.2], [4, 'Jauría', 'aura', 0.1], [6, 'Alfa', 'furia', 0.4]],
+  samurai: [[2, 'Bushido', 'aguante', 1], [4, 'Filo del viento', 'veloz', 0.2], [6, 'Corte final', 'ejecutar', 0.6]],
+  kungfu: [[2, 'Puño de hierro', 'aturdir', 0.15], [4, 'Chi', 'regen', 0.02], [6, 'Gran maestro', 'veloz', 0.25]],
+  muerte: [[2, 'Cosecha', 'robo', 0.25], [4, 'Siega', 'ejecutar', 0.5], [6, 'Inmortal', 'aguante', 1]],
+  acorazado: [[2, 'Coraza de púas', 'espinas', 0.3], [4, 'Bastión', 'regen', 0.02], [6, 'Inamovible', 'escudo', 0.35]],
+  fraile: [[2, 'Fe', 'escudo', 0.3], [4, 'Bendición', 'aura', 0.1], [6, 'Milagro', 'aguante', 1]],
+  catapulta: [[2, 'Piedras gordas', 'asedio', 0.5], [4, 'Metralla', 'crit', 0.2], [6, 'Barril de pólvora', 'estallido', 120]],
+  centinela: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Sobrecarga', 'veloz', 0.2], [6, 'Autodestrucción', 'estallido', 150]],
+  desencadenado: [[2, 'Cadenas de sangre', 'robo', 0.2], [4, 'Ira', 'furia', 0.4], [6, 'Indomable', 'aguante', 1]],
+  imparable: [[2, 'Hambre', 'robo', 0.25], [4, 'Frenesí', 'crit', 0.2], [6, 'Devorador', 'ejecutar', 0.6]],
+};
+const perksDe = (k, r) => (PERKS[k] || []).filter(p => p[0] <= r);
+
+/* ---- en batalla: cada unidad sale con las estadísticas y habilidades de su nivel y rango ---- */
+function applyPromo(u, lv, r, extra = 1) {
+  if (!u || !u.cfg) return;
+  const k = poderK(lv, r) * extra; u.lv = lv; u.rk = r; u.pk = k;
+  if (k !== 1) {
+    const c = Object.assign({}, u.cfg); c.hp = Math.round(c.hp * k); if (c.heal) c.heal = c.heal.map(x => Math.round(x * k));
+    u.cfg = c; u.hp = u.max = c.hp;
+  }
+  const ps = perksDe(u.type, r); if (ps.length) { u.perk = {}; ps.forEach(([, , t, v]) => { u.perk[t] = v; }); }
+  if (u.perk && u.perk.escudo) u.shieldHp = Math.round(u.max * u.perk.escudo);
+  if (r >= 3 && u.root) u.root.setScale(1 + 0.03 * (r - 2));   // rango B o más: un poco más grande (luego, aspecto propio)
+}
+let thornLock = false;
+function auraBonus(src) {
+  let b = 0;
+  for (const v of units) if (v !== src && v.team === src.team && v.alive && v.perk && v.perk.aura && Math.abs(v.x - src.x) < H * 2.4) b = Math.max(b, v.perk.aura);
+  return b;
 }
 const _dmgLv = Unit.prototype.damage;
-Unit.prototype.damage = function (d, src, fromX, crit) { if (src && src.lvK > 1) d = Math.round(d * src.lvK); return _dmgLv.call(this, d, src, fromX, crit); };
+Unit.prototype.damage = function (d, src, fromX, crit) {
+  if (src && src.pk && src.pk !== 1) d = d * src.pk;
+  if (src && src.perk) {
+    const P = src.perk;
+    if (P.crit && !crit && Math.random() < P.crit) { d *= 2; crit = true; }
+    if (P.furia && src.hp < src.max * 0.5) d *= 1 + P.furia;
+    if (P.ejecutar && this.hp < this.max * 0.3) d *= 1 + P.ejecutar;
+  }
+  if (src && src.team && !src.isCastle && units.length) { const a = auraBonus(src); if (a) d *= 1 + a; }
+  if (typeof dmgMods === 'function') d = dmgMods(d, src, this);   // bestias y hechizos (reino.js)
+  d = Math.max(1, Math.round(d));
+  if (this.shieldHp > 0 && this.alive && this.state !== 'die') {   // el escudo para el golpe antes que la vida
+    const a = Math.min(this.shieldHp, d); this.shieldHp -= a; d -= a;
+    burst(this.x, this.gy - H * 0.6, 0x7fd0ff, 4, 110);
+    if (d <= 0) { if (this.shieldHp <= 0 && !(B && B.sim)) floatText(this.x, this.gy - H * 1.5, '¡Sin escudo!', '#7fd0ff'); return; }
+  }
+  if (this.perk && this.perk.aguante && !this.aguanteUsed && this.alive && this.state !== 'die' && this.hp - d <= 0) {
+    this.aguanteUsed = true; this.hp = Math.round(this.max * 0.4);
+    if (!B || !B.sim) { floatText(this.x, this.gy - H * 1.7, '¡Aguanta!', '#ffd84a'); burst(this.x, this.gy - H * 0.6, 0xffd84a, 16, 200); }
+    return;
+  }
+  const before = this.hp, dying = this.state === 'die';
+  _dmgLv.call(this, d, src, fromX, crit);
+  const dealt = Math.max(0, before - Math.max(0, this.hp));
+  if (src && src.perk && src.alive && src.state !== 'die') {
+    if (src.perk.robo && dealt > 0) src.hp = Math.min(src.max, src.hp + dealt * src.perk.robo);
+    if (src.perk.aturdir && this.stun && this.alive && this.state !== 'die' && Math.random() < src.perk.aturdir) this.stun(0.8);
+  }
+  if (this.perk && this.perk.espinas && src && src.damage && !src.isCastle && src.cfg && !src.cfg.ranged && !thornLock && dealt > 0) {
+    thornLock = true; src.damage(Math.max(1, Math.round(dealt * this.perk.espinas)), null, this.x); thornLock = false;
+  }
+  if (!dying && this.state === 'die' && this.perk && this.perk.estallido && !this.boom) {
+    this.boom = true; const R = H * 1.6, x = this.x;
+    if (!B || !B.sim) { burst(x, this.gy - H * 0.4, 0xff9a3a, 30, 320); burst(x, this.gy - H * 0.4, 0x3a3a3a, 16, 200); scene.cameras.main.shake(140, 0.004); }
+    units.filter(v => v.team !== this.team && v.alive && v.state !== 'die' && Math.abs(v.x - x) <= R).forEach(v => v.damage(Math.round(this.perk.estallido * (this.pk || 1)), null, x));
+  }
+};
 const _mkCastle = makeCastle;
 makeCastle = function (team, hp) {
   const c = _mkCastle(team, hp), f = c.damage;
-  c.damage = function (d, src) { if (src && src.lvK > 1) d = Math.round(d * src.lvK); return f.call(this, d, src); };
+  c.damage = function (d, src) {
+    if (src && src.pk && src.pk !== 1) d = d * src.pk;
+    if (src && src.perk && src.perk.asedio) d *= 1 + src.perk.asedio;
+    return f.call(this, Math.max(1, Math.round(d)), src);
+  };
   return c;
+};
+// regeneración y escudo: cada fotograma de batalla
+const _bsLv = battleStep;
+battleStep = function (dt) {
+  _bsLv(dt);
+  if (!B || B.idle || B.over) return;
+  for (const u of units) if (u.perk && u.perk.regen && u.alive && u.state !== 'die' && u.hp < u.max) u.hp = Math.min(u.max, u.hp + u.max * u.perk.regen * dt);
 };
 const _resetLv = resetBattle;
 resetBattle = function (o = {}) {
   _resetLv(o);
   const real = !o.demo && !o.sim;
-  B.blue.lv = real ? Object.fromEntries(owned().map(k => [k, lvOf(k)])) : {};
-  const d = B.blue.deck || [], media = d.length ? Math.round(d.reduce((s, k) => s + (B.blue.lv[k] || 1), 0) / d.length) : 1;
-  B.purple.lvAll = o.enemyLv || (o.run && o.run.kind === 'rapida' ? media : 1);
+  B.blue.pw = real ? Object.fromEntries(owned().map(k => [k, [lvOf(k), rangoOf(k)]])) : {};
+  const d = B.blue.deck || [], pw = d.map(k => B.blue.pw[k] || [1, 0]);
+  const media = pw.length ? [Math.round(pw.reduce((s, p) => s + p[0], 0) / pw.length), Math.round(pw.reduce((s, p) => s + p[1], 0) / pw.length)] : [1, 0];
+  B.purple.pwAll = o.enemyPw || (o.run && o.run.kind === 'rapida' ? media : [1, 0]);
 };
 const _levelOptsLv = levelOpts;
-levelOpts = function (kid, i) { return Object.assign(_levelOptsLv(kid, i), { enemyLv: enemyLevel(kid, i) }); };
-function enemyLevel(kid, i) { const base = REINO_LV[kid] || 1, lv = KD(kid).levels[i]; return Math.min(LV_MAX, base + (lv && lv.royal && base > 1 ? 1 : 0)); }
+levelOpts = function (kid, i) { return Object.assign(_levelOptsLv(kid, i), { enemyPw: enemyPower(kid, i) }); };
+function enemyPower(kid, i) {
+  const [lv, r] = REINO_PODER[kid] || [1, 0], L = KD(kid).levels[i];
+  return [Math.min(LV_MAX, lv + (lv > 1 ? Math.floor(i / 3) : 0) + (L && L.royal && lv > 1 ? 3 : 0)), r];
+}
+const enemyLevel = (kid, i) => enemyPower(kid, i)[0];
 const _playLv = play;
 play = function (team, idx) {
   const type = B && B[team] && B[team].hand[idx], n = units.length, ok = _playLv(team, idx);
-  if (ok && units.length > n) applyLevel(units[units.length - 1], team === 'blue' ? (B.blue.lv || {})[type] || 1 : B.purple.lvAll || 1);
+  if (ok && units.length > n) {
+    const [lv, r] = team === 'blue' ? (B.blue.pw || {})[type] || [1, 0] : B.purple.pwAll || [1, 0];
+    applyPromo(units[units.length - 1], lv, r, typeof teamBuffK === 'function' ? teamBuffK(team) : 1);
+  }
   return ok;
 };
 
-/* ---- recompensas: copias al ganar y en la expedición ---- */
+/* ---- recompensas: copias al ganar y en la expedición; insignias al conquistar ---- */
 function repartirCopias(pool, n) {
   const out = {}; pool = pool.filter(k => owned().includes(k)); if (!pool.length) return out;
-  // prioriza las que aún pueden subir de nivel
-  const vivas = pool.filter(k => lvOf(k) < LV_MAX), lista = vivas.length ? vivas : pool;
+  const vivas = pool.filter(k => rangoOf(k) < RANGOS.length - 1), lista = vivas.length ? vivas : pool;   // primero las que aún pueden subir de rango
   for (let i = 0; i < n; i++) { const k = lista[Math.floor(Math.random() * lista.length)]; out[k] = (out[k] || 0) + 1; addCopias(k, 1); }
   return out;
 }
 const _brLv = battleResult;
 battleResult = function (win) {
   const r = _brLv(win);
-  if (win && !B.auto) { const n = r.run.kind === 'nivel' ? (r.first ? 3 : 1) : 1; r.copias = repartirCopias(B.blue.deck, n); savePerfil(); }
+  if (win && !B.auto) {
+    const n = r.run.kind === 'nivel' ? (r.first ? 3 : 1) : 1; r.copias = repartirCopias(B.blue.deck, n);
+    if (r.run.kind === 'nivel' && r.first) { r.insignias = KD(r.run.k).levels[r.run.i].royal ? 5 : 1; addInsignias(r.insignias); }
+    savePerfil();
+  }
   return r;
 };
 const copiasHtml = c => Object.entries(c).map(([k, n]) => '<span class="cpgain">' + cardHtml(k) + '<b>+' + n + '</b></span>').join('');
+const insHtml = n => '<span class="oro ins"><i></i><b>' + (n === undefined ? insignias() : '+' + n) + '</b></span>';
 const _srLv = showResult;
 showResult = function (res) {
   _srLv(res);
+  if (res.insignias) $('over-prize').insertAdjacentHTML('afterbegin', '<div class="loot">' + insHtml(res.insignias) + '<span class="note">insignias de mando</span></div>');
   if (res.copias && Object.keys(res.copias).length) $('over-prize').insertAdjacentHTML('beforeend', '<div class="loot cps"><span class="note">Copias de cartas</span>' + copiasHtml(res.copias) + '</div>');
 };
 const _ceLv = collectExp;
@@ -4621,28 +4946,33 @@ collectExp = function (el) {
   _ceLv(el);
   if (perfil.exp !== t0) {
     const n = Math.floor(h / 2);
-    if (n > 0) { const c = repartirCopias(playerDeck(), n); savePerfil(); setTimeout(() => pop('<p class="eyebrow">Botín de la expedición</p><h2>Copias de cartas</h2><p class="note">Tu ejército ha traído copias de algunas cartas. Úsalas en Ejército para subir de nivel tus unidades.</p><div class="army">' + copiasHtml(c) + '</div>'), 900); }
+    if (n > 0) { const c = repartirCopias(playerDeck(), n); savePerfil(); setTimeout(() => pop('<p class="eyebrow">Botín de la expedición</p><h2>Copias de cartas</h2><p class="note">Tu ejército ha traído copias de algunas cartas. Úsalas en Tropas para subir de rango tus unidades.</p><div class="army">' + copiasHtml(c) + '</div>'), 900); }
   }
 };
+// misiones: completar las tres da también una insignia
+const _giveLv = give;
+give = function (r, el) { if (r.insignias) addInsignias(r.insignias); _giveLv(r, el); };
+const _rwLv = rewardTxt;
+rewardTxt = function (r) { const t = _rwLv(r); return r.insignias ? (t ? t + ' y ' : '') + r.insignias + (r.insignias === 1 ? ' insignia' : ' insignias') : t; };
 
-/* ---- insignias de nivel en las cartas ---- */
-const lvBadge = (lv, enemy) => '<span class="lvb' + (enemy ? ' foe' : '') + '">Nv ' + lv + '</span>';
-function marcaCartas(sel, lvFn) {
+/* ---- nivel y rango en las cartas ---- */
+const lvBadge = (lv, enemy, r) => '<span class="lvb' + (enemy ? ' foe' : '') + '">Nv ' + lv + '</span>' + (r ? '<span class="rkb">' + estrellas(r) + '</span>' : '');
+function marcaCartas(sel, fn) {
   document.querySelectorAll(sel).forEach(b => {
     const k = b.dataset.k || (B && B.blue.hand[+b.dataset.i]); if (!k || b.querySelector('.lvb') || b.classList.contains('lock')) return;
-    b.insertAdjacentHTML('beforeend', lvBadge(lvFn(k)));
+    const [lv, r] = fn(k); b.insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
   });
 }
 const _renderHandLv = renderHand;
-renderHand = function () { _renderHandLv(); marcaCartas('#hand .hc', k => (B.blue.lv || {})[k] || 1); };
+renderHand = function () { _renderHandLv(); marcaCartas('#hand .hc', k => (B.blue.pw || {})[k] || [1, 0]); };
 const _openDeckLv = openDeck;
-openDeck = function (from) { _openDeckLv(from); marcaCartas('#deckgrid .dk', lvOf); };
+openDeck = function (from) { _openDeckLv(from); marcaCartas('#deckgrid .dk', k => [lvOf(k), rangoOf(k)]); };
 const _openLevelLv = openLevel;
 openLevel = function (kid, i) {
   _openLevelLv(kid, i);
-  const lv = enemyLevel(kid, i);
-  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true)));
-  $('nv-desc').textContent += ' Su ejército es de nivel ' + lv + '.';
+  const [lv, r] = enemyPower(kid, i);
+  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true, r)));
+  $('nv-desc').textContent += ' Su ejército es de nivel ' + lv + ', rango ' + RANGOS[r] + '.';
 };
 const _openArmyLv = openArmy;
 openArmy = function (seg) {
@@ -4650,59 +4980,73 @@ openArmy = function (seg) {
   if (armySeg !== 'unidades') return;
   document.querySelectorAll('#ej-grid .dk').forEach(b => {
     const k = b.dataset.k; if (!owned().includes(k)) return;
-    const c = lvCoste(k), have = copiasOf(k);
-    b.insertAdjacentHTML('beforeend', lvBadge(lvOf(k)) + '<span class="cpbar' + (c && have >= c.copias ? ' full' : '') + '"><i style="width:' + (c ? Math.min(100, have / c.copias * 100) : 100) + '%"></i><b>' + (c ? have + '/' + c.copias : 'Máx.') + '</b></span>');
-    b.classList.toggle('up', puedeMejorar(k));
+    const c = rkCoste(k), have = copiasOf(k);
+    b.insertAdjacentHTML('beforeend', lvBadge(lvOf(k), false, rangoOf(k)) + '<span class="cpbar' + (c && have >= c.copias ? ' full' : '') + '"><i style="width:' + (c ? Math.min(100, have / c.copias * 100) : 100) + '%"></i><b>' + (c ? have + '/' + c.copias : 'Máx.') + '</b></span>');
+    b.classList.toggle('up', puedeRango(k));
   });
-  $('ej-note').textContent = 'Tienes ' + owned().length + ' de ' + ALL.length + ' unidades. Toca una para ver su ficha y mejorarla.' + (mejorables() ? ' Puedes mejorar ' + mejorables() + '.' : '');
+  $('ej-note').innerHTML = 'Tienes ' + owned().length + ' de ' + ALL.length + ' unidades. Toca una para subirla de nivel (oro) o de rango (copias).' + (mejorables() ? ' <b>Puedes promocionar ' + mejorables() + '.</b>' : '') + ' ' + insHtml();
 };
-// aviso en la pestaña Ejército cuando hay mejoras posibles
+// aviso en el botón de Tropas cuando hay un rango listo
 const _paintGoldLv = paintGold;
 paintGold = function () {
   _paintGoldLv();
-  const t = document.querySelector('#nav [data-tab="ejercito"]'); if (!t) return;
-  let d = t.querySelector('.ndot'); if (!d) { t.insertAdjacentHTML('beforeend', '<span class="ndot" hidden></span>'); d = t.querySelector('.ndot'); }
-  d.hidden = !mejorables();
+  document.querySelectorAll('.ins-n').forEach(e => { e.textContent = insignias(); });
+  const d = document.querySelector('#s-tropas .dot'); if (d) d.hidden = !mejorables();
 };
 
-/* ---- ficha de la unidad con su mejora ---- */
+/* ---- ficha de la unidad: nivel (oro) y rango (copias) ---- */
+const RK_ABBR = r => 'rango ' + RANGOS[r] + (r ? ' (' + r + '★)' : '');
 openUnit = function (k, subio) {
-  const c = CH[k], has = owned().includes(k), lv = lvOf(k), cost = lvCoste(k), k0 = lvK(lv), k1 = lvK(lv + 1), w = prizeWhere(k);
-  const spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta', f = x => Math.round(x);
-  const sube = (a, b) => has && cost ? a + ' <em>→ ' + b + '</em>' : a;
-  const rows = [
-    ['Vida', sube(f(c.hp * k0), f(c.hp * k1))],
-    c.heal ? ['Cura', sube(f(c.heal[0] * k0) + '–' + f(c.heal[1] * k0), f(c.heal[0] * k1) + '–' + f(c.heal[1] * k1))] : ['Daño', sube(f(c.dmg[0] * k0) + '–' + f(c.dmg[1] * k0), f(c.dmg[0] * k1) + '–' + f(c.dmg[1] * k1))],
-    ['Cadencia', 'cada ' + String(c.cd[0]).replace('.', ',') + '–' + String(c.cd[1]).replace('.', ',') + ' s'], ['Alcance', (c.range / H).toFixed(1).replace('.', ',')], ['Velocidad', spd], ['Coste', COST[k] + ' de energía'],
-  ];
+  const c = CH[k], has = owned().includes(k), lv = lvOf(k), r = rangoOf(k), lc = lvCoste(k), rc = rkCoste(k), w = prizeWhere(k);
+  const k0 = poderK(lv, r), kL = poderK(Math.min(LV_MAX, lv + 1), r), kR = poderK(lv, Math.min(RANGOS.length - 1, r + 1));
+  const spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta', f = x => fmt(Math.round(x));
+  const st = (a, kk) => c.heal ? f(c.heal[0] * kk) + '–' + f(c.heal[1] * kk) : f(c.dmg[0] * kk) + '–' + f(c.dmg[1] * kk);
+  const rows = [['Vida', f(c.hp * k0)], [c.heal ? 'Cura' : 'Daño', st(0, k0)],
+    ['Cadencia', 'cada ' + String(c.cd[0]).replace('.', ',') + '–' + String(c.cd[1]).replace('.', ',') + ' s'], ['Alcance', (c.range / H).toFixed(1).replace('.', ',')], ['Velocidad', spd], ['Coste', COST[k] + ' de energía']];
+  const perks = (PERKS[k] || []).map(([rr, nm, t, v]) => '<li class="' + (rr <= r ? 'on' : '') + '"><b>' + nm + '</b> <small>rango ' + RANGOS[rr] + '</small><br>' + PERK_TXT[t](v) + '</li>').join('');
   let mejora = '';
   if (has) {
     const have = copiasOf(k);
-    mejora = '<div class="mejora"><div class="mrow"><b>Nivel ' + lv + '</b><span class="note">de ' + LV_MAX + '</span></div>'
-      + (cost ? '<span class="cpbar wide' + (have >= cost.copias ? ' full' : '') + '"><i style="width:' + Math.min(100, have / cost.copias * 100) + '%"></i><b>Copias ' + have + '/' + cost.copias + '</b></span>'
-        + '<p class="note">' + (have < cost.copias ? 'Te faltan ' + (cost.copias - have) + ' copias. Salen al ganar batallas, en la expedición y en la taberna.' : perfil.gold < cost.oro ? 'Te faltan ' + fmt(cost.oro - perfil.gold) + ' de oro.' : 'Lista para subir: +10 % de vida y de ' + (c.heal ? 'curación' : 'daño') + '.') + '</p>'
-        : '<p class="note">Nivel máximo.</p>') + '</div>';
+    mejora = '<div class="promo">'
+      + '<div class="pcol"><div class="mrow"><b>Nivel ' + lv + '</b><span class="note">de ' + LV_MAX + '</span></div>'
+      + (lc ? '<p class="note">+3 % de vida y ' + (c.heal ? 'curación' : 'daño') + ': ' + f(c.hp * k0) + ' → <em>' + f(c.hp * kL) + '</em> de vida.' + (lc.salto ? ' <b>Salto de nivel:</b> pide ' + lc.insignias + (lc.insignias === 1 ? ' insignia' : ' insignias') + ' de mando (tienes ' + insignias() + ').' : '') + '</p>'
+        + '<button class="btn gold small" id="up-lv"' + (puedeNivel(k) ? '' : ' disabled') + '><span class="oro" style="border:0;background:none;padding:0"><i></i><b>' + fmt(lc.oro) + '</b></span>' + (lc.insignias ? ' + ' + insHtml(lc.insignias).replace('+', '') : '') + '</button>'
+        : '<p class="note">Nivel máximo.</p>') + '</div>'
+      + '<div class="pcol"><div class="mrow">' + rangoHtml(r) + '<span class="note">' + (rc ? 'siguiente: rango ' + RANGOS[r + 1] : 'rango máximo') + '</span></div>'
+      + (rc ? '<span class="cpbar wide' + (have >= rc.copias ? ' full' : '') + '"><i style="width:' + Math.min(100, have / rc.copias * 100) + '%"></i><b>Copias ' + have + '/' + rc.copias + '</b></span>'
+        + '<p class="note">×' + String(+(RANGO_K[r + 1] / RANGO_K[r]).toFixed(2)).replace('.', ',') + ' a todo: ' + f(c.hp * k0) + ' → <em>' + f(c.hp * kR) + '</em> de vida.' + ((PERKS[k] || []).find(p => p[0] === r + 1) ? ' Aprende <b>' + PERKS[k].find(p => p[0] === r + 1)[1] + '</b>.' : '') + (r + 1 === 3 ? ' Se ve más grande en batalla.' : '') + '</p>'
+        + '<button class="btn gold small" id="up-rk"' + (puedeRango(k) ? '' : ' disabled') + '>Promocionar</button>'
+        : '') + '</div></div>';
   }
-  pop('<div class="udetail' + (subio ? ' lvup' : '') + '">' + cardHtml(k, has ? '' : 'shadow') + '<div><p class="eyebrow">' + RAREZA[RARITY[k] || 'comun'] + '</p><h2>' + NAMES[k] + '</h2>'
+  pop('<div class="udetail' + (subio ? ' lvup' : '') + '">' + cardHtml(k, has ? '' : 'shadow') + '<div><p class="eyebrow">' + RAREZA[RARITY[k] || 'comun'] + (has ? ' · ' + RK_ABBR(r) : '') + '</p><h2>' + NAMES[k] + '</h2>'
     + '<table class="ustats">' + rows.map(([a, b]) => '<tr><th>' + a + '</th><td>' + b + '</td></tr>').join('') + '</table><p>' + HABILIDAD[k] + '</p>'
-    + (has ? '' : '<p class="note">' + (w ? 'Prisionero en ' + w + '.' : 'Se recluta en la Taberna del Multiverso.') + '</p>') + '</div></div>' + mejora,
-    has && cost ? 'Mejorar · ' + fmt(cost.oro) + ' de oro' : null, () => mejorar(k));
-  if (has) document.querySelector('#pop .udetail .dk').insertAdjacentHTML('beforeend', lvBadge(lv));
-  if (has && cost && !puedeMejorar(k)) $('pop-ok').disabled = true;
+    + (has ? '' : '<p class="note">' + (w ? 'Prisionero en ' + w + '.' : 'Se recluta en la Taberna del Multiverso o en las celdas.') + '</p>') + '</div></div>'
+    + mejora + (perks ? '<h3 class="ph">Habilidades de rango</h3><ul class="perks">' + perks + '</ul>' : ''));
+  if (has) document.querySelector('#pop .udetail .dk').insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
+  if ($('up-lv')) $('up-lv').onclick = () => subirNivel(k);
+  if ($('up-rk')) $('up-rk').onclick = () => subirRango(k);
 };
 const _popLv = pop;
 pop = function (...a) { $('pop-ok').disabled = false; return _popLv(...a); };
 $('pop-close').addEventListener('click', () => { if (!$('ejercito').hidden && armySeg === 'unidades') openArmy('unidades'); });
-function mejorar(k) {
-  if (!puedeMejorar(k)) return;
+function subirNivel(k) {
+  if (!puedeNivel(k)) return;
   const c = lvCoste(k);
-  perfil.gold -= c.oro; perfil.copias[k] -= c.copias; perfil.niveles = perfil.niveles || {}; perfil.niveles[k] = lvOf(k) + 1;
+  perfil.gold -= c.oro; perfil.insignias = insignias() - c.insignias; perfil.niveles = perfil.niveles || {}; perfil.niveles[k] = lvOf(k) + 1;
+  savePerfil(); paintGold(); toast(LABEL[k] + ' sube a nivel ' + lvOf(k) + '.'); openUnit(k, true);
+}
+function subirRango(k) {
+  if (!puedeRango(k)) return;
+  const c = rkCoste(k), r = rangoOf(k) + 1;
+  perfil.copias[k] -= c.copias; perfil.rangos = perfil.rangos || {}; perfil.rangos[k] = r;
   savePerfil(); paintGold();
-  toast('¡' + LABEL[k] + ' sube a nivel ' + lvOf(k) + '!');
+  const p = (PERKS[k] || []).find(x => x[0] === r);
+  toast('¡' + LABEL[k] + ' asciende a rango ' + RANGOS[r] + '!' + (p ? ' Aprende ' + p[1] + '.' : ''));
   openUnit(k, true);
 }
-window.__mejorar = mejorar; window.__lvOf = lvOf; window.__openLevel = openLevel;
-window.__unitsLv = () => units.map(u => u.type + ":" + u.team + ":" + u.max + ":nv" + (u.lv || 1));
+const mejorar = subirRango;
+window.__mejorar = subirRango; window.__subirNivel = subirNivel; window.__lvOf = lvOf; window.__rangoOf = rangoOf; window.__openLevel = openLevel;
+window.__unitsLv = () => units.map(u => u.type + ':' + u.team + ':' + u.max + ':nv' + (u.lv || 1) + ':r' + (u.rk || 0) + (u.perk ? ':' + Object.keys(u.perk).join('+') : ''));
 
 /* ==== Celdas de prisioneros: cinco calidades; al abrir una salen varias cartas de rarezas al azar, con copias.
    Si la unidad no la tenías, se une a tu ejército; si ya la tenías, son copias para mejorarla. ==== */
@@ -4842,7 +5186,7 @@ battleResult = function (win) {
 const _srCel = showResult;
 showResult = function (res) {
   _srCel(res);
-  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '_0.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde el inicio.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
+  if (res.celda) $('over-prize').insertAdjacentHTML('beforeend', '<div class="freed"><img class="celmini" src="img/celdas/celda_' + res.celda + '_0.png" alt=""><p><b>¡' + CELDA(res.celda).name + '!</b><br>Ábrela en Celdas, desde Campaña.' + (res.gemas ? ' Y +' + res.gemas + ' diamantes por conquistar el castillo real.' : '') + '</p></div>');
 };
 // expedición: una celda de madera cada 4 horas
 const _ceCel = collectExp;
@@ -4867,6 +5211,488 @@ const _phCel = paintHub;
 paintHub = function () { _phCel(); const d = document.querySelector('#s-jaulas .dot'); if (d) d.hidden = !nCeldas(); };
 $('pf-gemas').onclick = () => { perfil.gemas = (perfil.gemas || 0) + 500; CELDAS.forEach(c => darCelda(c.id)); savePerfil(); toast('Pruebas: +500 diamantes y una celda de cada.'); openPerfil(); };
 window.__abrirCelda = abrirCelda; window.__openCeldas = openCeldas; window.__darCelda = darCelda;
+
+/* ==== Tienda: ofertas de cartas que se renuevan cada día, celdas, oro, diamantes y lotes varios.
+   Los diamantes con dinero real llegarán cuando el juego tenga pagos: de momento se ven, pero no se compran. ==== */
+const TI = {
+  cartas: { comun: [10, { oro: 300 }], poco: [8, { oro: 500 }], rara: [5, { oro: 900 }], epica: [3, { gemas: 60 }], legendaria: [2, { gemas: 120 }], ascendida: [1, { gemas: 250 }] },
+  peso: [['comun', 30], ['poco', 26], ['rara', 22], ['epica', 13], ['legendaria', 7], ['ascendida', 2]],
+  renovar: 20,
+  oro: [[30, 500], [120, 2500], [400, 10000]],
+  gemas: [[80, '0,99 €'], [500, '4,99 €'], [1200, '9,99 €', 'Popular'], [6500, '49,99 €', 'Mejor valor']],
+  varios: [
+    { id: 'explorador', name: 'Lote del explorador', txt: '3 cuerdas y 2 antorchas para el Abismo', p: { gemas: 40 }, give: { cuerdas: 3, antorchas: 2 } },
+    { id: 'insignias', name: 'Insignias de mando ×5', txt: 'Para los saltos de nivel de tus unidades', p: { gemas: 60 }, give: { insignias: 5 } },
+    { id: 'bienvenida', name: 'Pack de bienvenida', txt: '500 diamantes, 5.000 de oro y una celda de oro', real: '2,99 €', once: true },
+  ],
+};
+function tiRoll() {
+  const out = [], pick = () => { let r = Math.random() * 100, rar = 'comun'; for (const [k, w] of TI.peso) { if (r < w) { rar = k; break; } r -= w; } return rar; };
+  while (out.length < 5) {
+    const rar = pick(), pool = ALL.filter(k => (RARITY[k] || 'comun') === rar && !out.some(o => o.k === k));
+    if (pool.length) out.push({ k: pool[Math.floor(Math.random() * pool.length)], sold: false });
+  }
+  return out;
+}
+function tiHoy(force) {
+  if (force || !perfil.tienda || perfil.tienda.f !== hoy()) { perfil.tienda = { f: hoy(), slots: tiRoll(), regalo: false }; savePerfil(); }
+  return perfil.tienda;
+}
+const hastaManana = () => { const d = new Date(), m = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), s = (m - d) / 1000; return Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min'; };
+function openTienda() {
+  const t = tiHoy(), own = owned();
+  const carta = (o, i) => {
+    const r = RARITY[o.k] || 'comun', [n, p] = TI.cartas[r], nueva = !own.includes(o.k);
+    return '<div class="offer' + (o.sold ? ' sold' : '') + '">' + (nueva ? '<span class="tag">¡Nueva!</span>' : '') + cardHtml(o.k) + '<b class="t">' + LABEL[o.k] + '</b><span class="cpx">×' + n + '</span><small>' + RAREZA[r] + (nueva ? ' · se une a tu ejército' : ' · copias') + '</small>'
+      + (o.sold ? '<span class="chip">Comprado</span>' : '<button class="btn gold" data-c="' + i + '">' + costeHtml(p) + '</button>') + '</div>';
+  };
+  $('ti-body').innerHTML =
+    '<div class="shsec"><h3>Ofertas del día <small>se renuevan en ' + hastaManana() + '</small></h3><div class="offers">'
+    + '<div class="offer' + (t.regalo ? ' sold' : '') + '"><span class="tag">Gratis</span><span class="pile"><img src="img/esc/moneda.png" alt=""></span><b class="t">Regalo del día</b><span class="cpx">100 de oro</span>' + (t.regalo ? '<span class="chip">Recogido</span>' : '<button class="btn gold" id="ti-regalo">Recoger</button>') + '</div>'
+    + t.slots.map(carta).join('') + '</div><div class="acts start"><button class="btn small" id="ti-renovar">Renovar ofertas · ' + gemBtn(TI.renovar) + '</button></div></div>'
+    + '<div class="shsec"><h3>Celdas <small>se abren en Campaña → Celdas</small></h3><div class="offers">' + CELDAS.map(c => '<div class="offer"><span class="pile"><img src="img/celdas/celda_' + c.id + '_0.png" alt=""></span><b class="t">' + c.name + '</b><small>' + c.cartas + ' cartas · tienes ' + (celdasDe()[c.id] || 0) + '</small><button class="btn gold" data-cel="' + c.id + '">' + gemBtn(c.precio) + '</button></div>').join('') + '</div></div>'
+    + '<div class="shsec"><h3>Oro</h3><div class="offers">' + TI.oro.map(([g, o], i) => '<div class="offer"><span class="pile"><img src="img/esc/moneda.png" alt=""></span><span class="big">' + fmt(o) + '</span><small>de oro</small><button class="btn gold" data-oro="' + i + '">' + gemBtn(g) + '</button></div>').join('') + '</div></div>'
+    + '<div class="shsec"><h3>Diamantes <small>los pagos llegarán más adelante</small></h3><div class="offers">' + TI.gemas.map(([g, e, tag]) => '<div class="offer">' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '<span class="pile"><img src="img/esc/gema.png" alt=""></span><span class="big">' + fmt(g) + '</span><small>diamantes</small><button class="btn" disabled>' + e + '</button></div>').join('') + '</div></div>'
+    + '<div class="shsec"><h3>Ofertas varias</h3><div class="offers">' + TI.varios.map(v => '<div class="offer"><b class="t">' + v.name + '</b><small>' + v.txt + '</small>'
+      + (v.real ? '<button class="btn" disabled>' + v.real + '</button><small>Próximamente</small>' : '<button class="btn gold" data-v="' + v.id + '">' + costeHtml(v.p) + '</button>') + '</div>').join('') + '</div></div>';
+  if ($('ti-regalo')) $('ti-regalo').onclick = e => { t.regalo = true; perfil.gold += 100; savePerfil(); coinFly(e.currentTarget, 100); openTienda(); };
+  $('ti-renovar').onclick = () => { if (paga({ gemas: TI.renovar })) { tiHoy(true); toast('Ofertas nuevas.'); openTienda(); } };
+  document.querySelectorAll('#ti-body [data-c]').forEach(b => { b.onclick = () => {
+    const o = t.slots[+b.dataset.c], [n, p] = TI.cartas[RARITY[o.k] || 'comun']; if (o.sold || !paga(p)) return;
+    o.sold = true;
+    if (!perfil.owned.includes(o.k)) { perfil.owned.push(o.k); if (n > 1) addCopias(o.k, n - 1); savePerfil(); pop('<div class="freed">' + cardHtml(o.k, 'reveal') + '<p><b>¡' + NAMES[o.k] + ' se une a tu ejército!</b><br>Y ' + (n - 1) + ' copias más de su carta.</p></div>'); }
+    else { addCopias(o.k, n); savePerfil(); toast('+' + n + ' copias de ' + LABEL[o.k] + '.'); }
+    openTienda();
+  }; });
+  document.querySelectorAll('#ti-body [data-cel]').forEach(b => { b.onclick = () => { const c = CELDA(b.dataset.cel); if (paga({ gemas: c.precio })) { darCelda(c.id); savePerfil(); toast('Has conseguido una ' + c.name.toLowerCase() + '.'); openTienda(); } }; });
+  document.querySelectorAll('#ti-body [data-oro]').forEach(b => { b.onclick = () => { const [g, o] = TI.oro[+b.dataset.oro]; if (paga({ gemas: g })) { perfil.gold += o; savePerfil(); coinFly(b, o); openTienda(); } }; });
+  document.querySelectorAll('#ti-body [data-v]').forEach(b => { b.onclick = () => {
+    const v = TI.varios.find(x => x.id === b.dataset.v); if (!paga(v.p)) return;
+    const g = v.give; if (g.cuerdas) perfil.cuerdas = (perfil.cuerdas || 0) + g.cuerdas; if (g.antorchas) perfil.antorchas = (perfil.antorchas || 0) + g.antorchas; if (g.insignias) addInsignias(g.insignias);
+    savePerfil(); toast(v.name + ': comprado.'); openTienda();
+  }; });
+  paintGold(); show('tienda');
+}
+window.__openTienda = openTienda;
+
+/* ==== Reino: tu castillo y sus lugares. Taberna, Murallas (estandarte, aspecto y defensas), Sanctum Arcano (hechizos),
+   El Trono (héroes; se abre al terminar la campaña del Mundo 1), Cripta (bestias), Cuartel (entrenamiento que da copias)
+   y Alto Consulado Bélico (clan). Hechizo y bestia van contigo a la batalla. ==== */
+const ICO = {
+  taberna: '<path d="M5 7h10v13H5z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 7c0-3 10-3 10 0"/><path d="M8 11v6M12 11v6"/>',
+  murallas: '<path d="M3 21V9h3V6h3v3h2V6h2v3h2V6h3v3h3v12z"/><path d="M10 21v-5a2 2 0 0 1 4 0v5"/><path d="M3 13h18"/>',
+  sanctum: '<path d="M12 2l3 7-3 13-3-13z"/><path d="M5 9h14"/><path d="M4 18l3-2M20 18l-3-2M6 5l2 2M18 5l-2 2"/>',
+  trono: '<path d="M4 8l4 3 4-6 4 6 4-3-2 9H6z"/><path d="M6 20h12"/>',
+  cripta: '<path d="M4 21V11a8 8 0 0 1 16 0v10z"/><circle cx="9.5" cy="12" r="1.6"/><circle cx="14.5" cy="12" r="1.6"/><path d="M10 17h4M12 15v2"/>',
+  cuartel: '<path d="M4 20L16 8M8 20l12-12"/><path d="M14 6l2-2 4 4-2 2M4 16l4 4"/><path d="M3 4l7 7M21 20l-7-7" opacity=".5"/>',
+  consulado: '<path d="M4 21h16M5 18h14M6 18V10M10 18V10M14 18V10M18 18V10M3 10h18L12 4z"/>',
+  rayos: '<path d="M13 2L5 13h6l-1 9 8-12h-6z"/>',
+  cuerno: '<path d="M4 15c6 0 10-4 12-10l4 2c-1 8-7 13-15 13z"/><path d="M4 15v5"/>',
+  luz: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+  ventisca: '<path d="M12 2v20M4 6l16 12M20 6L4 18"/><path d="M9 3l3 2 3-2M9 21l3-2 3 2"/>',
+  meteoro: '<circle cx="15" cy="15" r="5"/><path d="M11 11L3 3M13 9L7 3M9 13L3 7"/>',
+  grifo: '<path d="M3 13c3-1 5-4 6-8 2 3 4 4 7 4l5-2-2 5c0 5-4 9-9 9-3 0-5-2-5-4z"/><circle cx="16" cy="11" r="1"/>',
+  basilisco: '<path d="M3 17c3 3 7 3 9 0s6-3 9 0"/><path d="M5 13c2-6 12-6 14 0"/><circle cx="9" cy="10" r="1.3"/><circle cx="15" cy="10" r="1.3"/>',
+  dragon: '<path d="M3 20c2-6 6-9 11-9l3-6 2 5 3 1-4 3c0 4-4 6-8 6z"/><path d="M9 14c-2 1-3 3-3 5"/>',
+  huargo: '<path d="M4 20l2-9-3-6 5 2 4-3 4 3 5-2-3 6 2 9z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/><path d="M11 16h2"/>',
+  cuerda: '<path d="M6 3c8 0 8 6 0 6s-8 6 0 6 8 6 0 6"/>',
+  antorcha: '<path d="M10 22l1-11h2l1 11z"/><path d="M12 10c-3-2-2-6 0-8 0 3 3 3 2 6-1 2-2 2-2 2z"/>',
+};
+const svg = (k, cls = '') => '<svg viewBox="0 0 24 24"' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true">' + (ICO[k] || '') + '</svg>';
+const oroBtn = n => '<span class="oro"><i></i><b>' + fmt(n) + '</b></span>';
+const gemBtn = n => '<span class="oro gema"><i></i><b>' + fmt(n) + '</b></span>';
+const costeHtml = c => [c.oro ? oroBtn(c.oro) : '', c.gemas ? gemBtn(c.gemas) : ''].join(' ');
+function paga(c) {   // cobra oro y diamantes si llegan; si no, avisa
+  if ((c.oro || 0) > perfil.gold) { toast('Te faltan ' + fmt(c.oro - perfil.gold) + ' de oro.'); return false; }
+  if ((c.gemas || 0) > (perfil.gemas || 0)) { toast('Te faltan ' + fmt(c.gemas - (perfil.gemas || 0)) + ' diamantes.'); return false; }
+  perfil.gold -= c.oro || 0; perfil.gemas = (perfil.gemas || 0) - (c.gemas || 0); savePerfil(); paintGold(); paintHub(); return true;
+}
+const lordLv = () => nivelDe(perfil.xp || 0).lv;
+const campana1 = () => perfil.all || kingdomDone('volcan');
+
+/* ---- el mapa del reino: castillo en el centro y los lugares alrededor (cuando llegue el dibujo, solo cambian las posiciones) ---- */
+const EDIFICIOS = [
+  { id: 'trono', name: 'El Trono', pos: [50, 27], txt: 'Tus héroes: quién te acompaña a la batalla y, más adelante, sus niveles y su equipo.' },
+  { id: 'murallas', name: 'Murallas', pos: [50, 52], txt: 'El estandarte y el aspecto de tu castillo, y sus defensas: vida de la muralla y fuerza de las torres.' },
+  { id: 'sanctum', name: 'Sanctum Arcano', pos: [83, 38], txt: 'Crea hechizos y elige uno para llevarlo a la batalla.' },
+  { id: 'cripta', name: 'Cripta', pos: [17, 38], txt: 'Las bestias del reino. Elige una para que te acompañe en las batallas.' },
+  { id: 'taberna', name: 'Taberna', pos: [20, 67], txt: 'Mercenarios de otros mundos. Se pagan con oro.' },
+  { id: 'cuartel', name: 'Cuartel', pos: [80, 67], txt: 'Hasta tres unidades en entrenamiento intensivo: ganan copias de su carta con el tiempo.' },
+  { id: 'consulado', name: 'Alto Consulado Bélico', pos: [50, 86], txt: 'Tu clan: miembros, donaciones y guerras de clanes.' },
+];
+const HOGAR_ART = null;   // 'img/reino/reino.jpg' cuando llegue el dibujo del reino
+function openHogar() {
+  $('hg-name').textContent = perfil.nombre || 'Tu reino';
+  const m = $('hg-map'); m.classList.toggle('art', !!HOGAR_ART); if (HOGAR_ART) m.style.backgroundImage = 'url(' + HOGAR_ART + ')';
+  m.innerHTML = (HOGAR_ART ? '' : '<span class="hill" style="left:-18%;top:30%;width:60%;height:16%"></span><span class="hill" style="right:-20%;top:29%;width:64%;height:18%"></span><span class="road"></span>'
+    + '<img class="castle" src="' + colorURL(ICON.casa, myColor(), myEmb()) + '" alt="Tu castillo">')
+    + EDIFICIOS.map(e => {
+      const lock = e.id === 'trono' && !campana1(), dot = edifDot(e.id);
+      return '<button type="button" class="bld' + (lock ? ' lock' : '') + '" data-e="' + e.id + '" style="left:' + e.pos[0] + '%;top:' + e.pos[1] + '%" aria-label="' + e.name + (lock ? ', bloqueado' : '') + '">'
+        + '<span class="bico">' + svg(e.id) + (dot ? '<span class="dot"></span>' : '') + '</span><span class="blbl">' + e.name + '</span></button>';
+    }).join('');
+  m.querySelectorAll('.bld').forEach(b => { b.onclick = () => openEdif(b.dataset.e); });
+  show('hogar');
+}
+function edifDot(id) {
+  if (id === 'cuartel') return cuartelListo() > 0;
+  if (id === 'cripta') return !Object.keys(perfil.bestias || {}).length;
+  return false;
+}
+const ESTANDARTE = $('seg-estandarte');
+let EDIF = null;
+function openEdif(id) {
+  if (id === 'taberna') return openTaberna();
+  const e = EDIFICIOS.find(x => x.id === id);
+  if (id === 'trono' && !campana1()) return pop('<p class="eyebrow">Bloqueado</p><h2>El Trono</h2><p class="note">Se abre al conquistar los siete reinos del Mundo 1. Hasta entonces eliges a tu héroe en la pantalla del mazo.</p>');
+  EDIF = id; ESTANDARTE.remove();
+  $('ed-title').textContent = e.name;
+  $('ed-body').innerHTML = '<div class="bhead"><span class="bico">' + svg(id) + '</span><p>' + e.txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
+  ({ murallas, sanctum, trono, cripta, cuartel, consulado })[id]($('ed-in'));
+  show('edif');
+}
+$('ed-back').onclick = () => openHogar();
+const reEdif = () => { if (EDIF && !$('edif').hidden) openEdif(EDIF); };
+
+/* ---- Murallas: estandarte, aspecto del castillo y defensas ---- */
+const DEFENSAS = {
+  muralla: { name: 'Muralla', txt: lv => 'Vida del castillo: +' + lv * 6 + ' %', max: 20, base: 150 },
+  torres: { name: 'Arqueros de las torres', txt: lv => 'Daño de las torres: +' + lv * 10 + ' %', max: 20, base: 180 },
+  atalaya: { name: 'Atalaya', txt: lv => 'Cadencia de las torres: +' + lv * 2 + ' %', max: 20, base: 220 },
+};
+const defLv = k => (perfil.def || {})[k] || 0;
+const defCoste = k => Math.round(DEFENSAS[k].base * Math.pow(1.32, defLv(k)) / 10) * 10;
+const ASPECTOS = [['piedra', 'Castillo de piedra', true], ['obsidiana', 'Fortaleza de obsidiana'], ['marfil', 'Alcázar de marfil'], ['bosque', 'Bastión del bosque']];
+function murallas(el) {
+  el.innerHTML = '<h3>Defensas <small>solo en tu castillo; las del rival dependen de su reino</small></h3><div class="col full" id="mu-def"></div>'
+    + '<h3>Aspecto del castillo</h3><div class="cards3">' + ASPECTOS.map(([id, n, own]) => '<div class="kcard' + (id === 'piedra' ? ' sel' : ' lock') + '"><header><b>' + n + '</b></header>' + (own ? '<span class="kind">En uso</span>' : '<span class="chip">Próximamente</span>') + '</div>').join('') + '</div>'
+    + '<div id="mu-est"></div>';
+  $('mu-def').innerHTML = Object.entries(DEFENSAS).map(([k, d]) => {
+    const lv = defLv(k), max = lv >= d.max;
+    return '<div class="uprow"><b>' + d.name + ' <span class="lvl">Nv ' + lv + '</span></b>' + (max ? '<span class="chip">Máx.</span>' : '<button class="btn gold small" data-d="' + k + '">' + oroBtn(defCoste(k)) + '</button>')
+      + '<small>' + d.txt(lv) + (max ? '' : ' → ' + d.txt(lv + 1).split(': ').pop()) + '</small></div>';
+  }).join('');
+  el.querySelectorAll('[data-d]').forEach(b => { b.onclick = () => { const k = b.dataset.d; if (paga({ oro: defCoste(k) })) { perfil.def = perfil.def || {}; perfil.def[k] = defLv(k) + 1; savePerfil(); toast(DEFENSAS[k].name + ' sube a nivel ' + defLv(k) + '.'); reEdif(); } }; });
+  $('mu-est').appendChild(ESTANDARTE); ESTANDARTE.hidden = false; paintColors();
+}
+
+/* ---- Sanctum Arcano: hechizos (se crean una vez y luego se suben de nivel; uno va contigo a la batalla) ---- */
+const HECHIZOS = {
+  cuerno: { name: 'Cuerno de la victoria', c: '#ffc83d', cd: 40, t0: 12, crear: { oro: 300 }, haste: 0.35, t: 8,
+    txt: k => 'Tus unidades andan y atacan un ' + Math.round(35 * k) + ' % más rápido durante 8 s.' },
+  rayos: { name: 'Tormenta de rayos', c: '#7fb2ff', cd: 35, t0: 15, crear: { oro: 500 }, n: 5, dmg: 70, stun: 0.7,
+    txt: k => 'Caen 5 rayos sobre los enemigos más adelantados: ' + Math.round(70 * k) + ' de daño cada uno y los aturden.' },
+  luz: { name: 'Luz sagrada', c: '#7dffa0', cd: 45, t0: 20, crear: { oro: 700 }, heal: 0.3,
+    txt: k => 'Cura a todas tus unidades un ' + Math.round(30 * k) + ' % de su vida.' },
+  ventisca: { name: 'Ventisca', c: '#a8e8ff', cd: 40, t0: 15, crear: { oro: 900, gemas: 20 }, slow: 0.5, t: 6,
+    txt: k => 'Los enemigos van a la mitad de velocidad durante ' + (6 * k).toFixed(1).replace('.0', '').replace('.', ',') + ' s.' },
+  meteoro: { name: 'Meteoro', c: '#ff7a3a', cd: 55, t0: 25, crear: { oro: 1500, gemas: 50 }, dmg: 160, r: H * 1.6,
+    txt: k => 'Cae donde más enemigos hay: ' + Math.round(160 * k) + ' de daño en área y, si lo alcanza, al castillo rival.' },
+};
+const SP_MAX = 10, spLv = id => (perfil.hechizos || {})[id] || 0, spK = id => 1 + 0.1 * (Math.max(1, spLv(id)) - 1);
+const spUp = id => Math.round(250 * Math.pow(spLv(id), 1.6) / 10) * 10;
+const myHechizo = () => spLv(perfil.hechizo) ? perfil.hechizo : null;
+function sanctum(el) {
+  el.innerHTML = '<p class="note">El hechizo elegido sale en la batalla como un botón encima de tus cartas. Se carga solo con el tiempo.</p><div class="cards3">' + Object.entries(HECHIZOS).map(([id, h]) => {
+    const lv = spLv(id), sel = myHechizo() === id;
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
+      + '<p>' + h.txt(spK(id)) + '</p><div class="acts">'
+      + (!lv ? '<button class="btn gold small" data-c="' + id + '">Crear · ' + costeHtml(h.crear) + '</button>'
+        : (sel ? '<span class="kind">En batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < SP_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(spUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
+      + '</div></div>';
+  }).join('') + '</div>';
+  el.querySelectorAll('[data-c]').forEach(b => { b.onclick = () => { const id = b.dataset.c; if (paga(HECHIZOS[id].crear)) { perfil.hechizos = perfil.hechizos || {}; perfil.hechizos[id] = 1; if (!myHechizo()) perfil.hechizo = id; savePerfil(); toast('Has creado ' + HECHIZOS[id].name + '.'); reEdif(); } }; });
+  el.querySelectorAll('[data-s]').forEach(b => { b.onclick = () => { perfil.hechizo = b.dataset.s; savePerfil(); reEdif(); }; });
+  el.querySelectorAll('[data-u]').forEach(b => { b.onclick = () => { const id = b.dataset.u; if (paga({ oro: spUp(id) })) { perfil.hechizos[id]++; savePerfil(); toast(HECHIZOS[id].name + ' sube a nivel ' + spLv(id) + '.'); reEdif(); } }; });
+}
+
+/* ---- El Trono: héroes ---- */
+function trono(el) {
+  const hs = heroesOwned();
+  el.innerHTML = '<div class="hgrid">' + Object.entries(HEROES).map(([k, h]) => {
+    const has = hs.includes(k), c = CH[k], q = KINGDOMS.find(z => z.ruler === k), sel = playerHero() === k;
+    return '<div class="hcard' + (has ? '' : ' lock') + '"><header><img class="hport" src="img/' + h.portrait + '.png" alt=""><div><b>' + NAMES_H[k] + '</b><span class="note">' + (has ? (sel ? 'Tu héroe en batalla' : 'Disponible') : 'Conquista el ' + (q ? q.name : 'reino de su rey')) + '</span></div></header>'
+      + '<div class="statrow"><span>Vida ' + c.hp + '</span><span>Daño ' + c.dmg[0] + '–' + c.dmg[1] + '</span><span>Salta a las ' + c.goal + ' bajas</span></div>'
+      + '<p><em>Pasiva.</em> ' + HERO_TXT[k][0] + '</p><p><em>Activa.</em> ' + HERO_TXT[k][1] + '</p>'
+      + (has && !sel ? '<button class="btn gold small" data-h="' + k + '">Llevar a la batalla</button>' : '') + '</div>';
+  }).join('') + '</div><div class="infocard"><h3>Próximamente</h3><p>Niveles y rangos de los héroes, su equipo y sus talentos.</p></div>';
+  el.querySelectorAll('[data-h]').forEach(b => { b.onclick = () => { myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (e) {} reEdif(); }; });
+}
+
+/* ---- Cripta: bestias. Una va contigo: bendice a los tuyos, maldice al rival, lanza su habilidad o lucha a tu lado ---- */
+const BESTIAS = {
+  grifo: { name: 'Grifo real', kind: 'Bendición', c: '#ffc83d', v: lv => 0.10 + 0.02 * (lv - 1),
+    txt: v => 'Tus unidades salen con un ' + Math.round(v * 100) + ' % más de vida y daño.' },
+  basilisco: { name: 'Basilisco', kind: 'Maldición', c: '#5fcf6a', v: lv => 0.12 + 0.015 * (lv - 1),
+    txt: v => 'Las unidades enemigas andan y atacan un ' + Math.round(v * 100) + ' % más lento.' },
+  dragon: { name: 'Dragón de ceniza', kind: 'Habilidad', c: '#ff7a3a', cd: 30, t0: 20, v: lv => Math.round(80 * (1 + 0.12 * (lv - 1))),
+    txt: v => 'Aliento de fuego (cada 30 s, tú decides cuándo): ' + v + ' de daño a todos los enemigos de tu mitad del campo.' },
+  huargo: { name: 'Huargo de la cripta', kind: 'Lucha', c: '#9aa4c7', every: 25, v: lv => lv,
+    txt: v => 'Cada 25 s se une a la batalla un lobo de la cripta de nivel ' + huargoPw(v)[0] + ', rango ' + RANGOS[huargoPw(v)[1]] + '.' },
+};
+const huargoPw = lv => [1 + (lv - 1) * 8, Math.min(4, Math.floor((lv - 1) / 2))];
+const BE_MAX = 10, beLv = id => (perfil.bestias || {})[id] || 0, beUp = id => Math.round(300 * Math.pow(beLv(id), 1.6) / 10) * 10, BE_PRECIO = 150;
+const myBestia = () => beLv(perfil.bestia) ? perfil.bestia : null;
+function cripta(el) {
+  const first = !Object.keys(perfil.bestias || {}).length;
+  el.innerHTML = (first ? '<div class="infocard"><h3>Elige tu primera bestia</h3><p>La primera es gratis. Las demás se pueden despertar con diamantes.</p></div>' : '') + '<div class="cards3">' + Object.entries(BESTIAS).map(([id, b]) => {
+    const lv = beLv(id), sel = myBestia() === id;
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
+      + '<span class="kind">' + b.kind + '</span><p>' + b.txt(b.v(Math.max(1, lv))) + '</p><div class="acts">'
+      + (!lv ? '<button class="btn gold small" data-w="' + id + '">' + (first ? 'Elegir · gratis' : 'Despertar · ' + gemBtn(BE_PRECIO)) + '</button>'
+        : (sel ? '<span class="kind">Contigo en batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < BE_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(beUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
+      + '</div></div>';
+  }).join('') + '</div><p class="note">Las bestias tendrán su dibujo y aparecerán en el campo; de momento se notan por su efecto.</p>';
+  el.querySelectorAll('[data-w]').forEach(b => { b.onclick = () => { const id = b.dataset.w; if (first || paga({ gemas: BE_PRECIO })) { perfil.bestias = perfil.bestias || {}; perfil.bestias[id] = 1; perfil.bestia = id; savePerfil(); toast(BESTIAS[id].name + ' despierta y te acompañará en batalla.'); reEdif(); } }; });
+  el.querySelectorAll('[data-s]').forEach(b => { b.onclick = () => { perfil.bestia = b.dataset.s; savePerfil(); reEdif(); }; });
+  el.querySelectorAll('[data-u]').forEach(b => { b.onclick = () => { const id = b.dataset.u; if (paga({ oro: beUp(id) })) { perfil.bestias[id]++; savePerfil(); toast(BESTIAS[id].name + ' sube a nivel ' + beLv(id) + '.'); reEdif(); } }; });
+}
+
+/* ---- Cuartel: hasta tres unidades entrenando; dan copias de su carta con el tiempo (se guardan hasta 12 h) ---- */
+const CU = { slots: [1, 5, 12], horas: { comun: 1, poco: 1.5, rara: 2, epica: 3, legendaria: 5, ascendida: 8 }, cap: 12 };
+const cuSlots = () => { perfil.cuartel = perfil.cuartel || [null, null, null]; return perfil.cuartel; };
+const cuRate = k => CU.horas[RARITY[k] || 'comun'];
+function cuPend(s) { if (!s) return 0; const h = Math.min(CU.cap, (Date.now() - s.t0) / 3.6e6); return Math.floor(h / cuRate(s.k)); }
+const cuartelListo = () => cuSlots().reduce((n, s) => n + cuPend(s), 0);
+function cuCobra(i) {
+  const s = cuSlots()[i], n = cuPend(s); if (!n) return 0;
+  addCopias(s.k, n);
+  const h = (Date.now() - s.t0) / 3.6e6; s.t0 = h >= CU.cap ? Date.now() : s.t0 + n * cuRate(s.k) * 3.6e6;
+  savePerfil(); return n;
+}
+function cuartel(el) {
+  const lv = lordLv(), sl = cuSlots();
+  el.innerHTML = '<div class="trslots">' + sl.map((s, i) => {
+    if (lv < CU.slots[i]) return '<div class="trslot lock"><b>Puesto ' + (i + 1) + '</b><small>Se abre con tu reino a nivel ' + CU.slots[i] + '</small></div>';
+    if (!s) return '<button type="button" class="trslot empty" data-p="' + i + '"><b>Puesto libre</b><small>Toca para poner una unidad a entrenar</small></button>';
+    const n = cuPend(s), h = (Date.now() - s.t0) / 3.6e6, prog = Math.min(1, (h % cuRate(s.k)) / cuRate(s.k)), full = h >= CU.cap;
+    return '<div class="trslot">' + cardHtml(s.k) + '<b>' + LABEL[s.k] + '</b><small>1 copia cada ' + String(cuRate(s.k)).replace('.', ',') + ' h' + (full ? ' · ¡lleno!' : '') + '</small>'
+      + '<span class="cpbar wide"><i style="width:' + (full ? 100 : prog * 100) + '%"></i><b>' + n + ' listas</b></span>'
+      + '<div class="acts start"><button class="btn gold small" data-c="' + i + '"' + (n ? '' : ' disabled') + '>Recoger</button><button class="btn small" data-x="' + i + '">Cambiar</button></div></div>';
+  }).join('') + '</div><p class="note">Cuanto más rara la unidad, más tarda cada copia. El entrenamiento se para a las 12 horas si no recoges. Las unidades siguen pudiendo luchar mientras entrenan.</p>';
+  el.querySelectorAll('[data-p],[data-x]').forEach(b => { b.onclick = () => cuElegir(+(b.dataset.p ?? b.dataset.x)); });
+  el.querySelectorAll('[data-c]').forEach(b => { b.onclick = () => { const i = +b.dataset.c, k = cuSlots()[i].k, n = cuCobra(i); if (n) { toast('+' + n + ' copias de ' + LABEL[k] + '.'); paintGold(); reEdif(); } }; });
+}
+function cuElegir(i) {
+  const usados = cuSlots().filter((s, j) => s && j !== i).map(s => s.k), lista = owned().filter(k => !usados.includes(k));
+  pop('<p class="eyebrow">Cuartel · puesto ' + (i + 1) + '</p><h2>¿Quién entrena?</h2><div class="pickgrid">' + lista.map(k => '<button type="button" class="dk ' + (RARITY[k] || 'comun') + '" data-k="' + k + '"><span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span></button>').join('') + '</div><p class="note">Si cambias a una unidad, primero recoges lo que lleve entrenado.</p>');
+  document.querySelectorAll('#pop-body [data-k]').forEach(b => { b.onclick = () => { if (cuSlots()[i]) cuCobra(i); cuSlots()[i] = { k: b.dataset.k, t0: Date.now() }; savePerfil(); $('pop').hidden = true; reEdif(); }; });
+}
+setInterval(() => { if (EDIF === 'cuartel' && !$('edif').hidden && $('pop').hidden) reEdif(); }, 30000);
+
+/* ---- Alto Consulado Bélico: el clan (necesita servidor: de momento, cómo será) ---- */
+function consulado(el) {
+  el.innerHTML = '<div class="grid2">' + [['Tu clan', 'Crea un clan con tu estandarte o únete al de otros señores (hasta 30 miembros).'], ['Donaciones', 'Pide copias de cartas y dalas a tus compañeros: cada donación te da oro y experiencia.'],
+    ['Guerra de clanes', 'Tres días de batallas contra otro clan. Cada victoria suma estandartes; el clan ganador se lleva celdas.'], ['Asedio cooperativo', 'Todo el clan contra un rey gigante, sumando el daño de todos.']]
+    .map(([t, p]) => '<div class="infocard"><h3>' + t + '</h3><p>' + p + '</p><span class="chip">Próximamente</span></div>').join('') + '</div>';
+}
+
+/* ==== en batalla: defensas, hechizo y bestia ==== */
+function moveK(u) {
+  let k = u.perk && u.perk.veloz ? 1 + u.perk.veloz : 1;
+  const bf = B && B.buff && B.buff[u.team]; if (bf) { if (bf.hasteT > 0) k *= 1 + bf.haste; if (bf.slowT > 0) k *= bf.slow; }
+  if (B && B.curse && B.curse.team === u.team) k *= 1 - B.curse.k;
+  return k;
+}
+function atkK(u) { return moveK(u); }   // la velocidad de ataque sigue a la de movimiento (cuerno, ventisca, basilisco, veloz)
+const _ghR = gullHaste;
+gullHaste = function (u) { return _ghR(u) * (mode === 'fight' && B && !B.idle ? moveK(u) : 1); };
+const teamBuffK = team => team === 'blue' && B && B.beast && B.beast.id === 'grifo' ? 1 + B.beast.v : 1;
+const _resetR = resetBattle;
+resetBattle = function (o = {}) {
+  _resetR(o);
+  const real = !o.demo && !o.sim;
+  B.buff = { blue: {}, purple: {} }; B.curse = null; B.spell = null; B.beast = null;
+  if (real) {
+    castles.blue.max = castles.blue.hp = Math.round(CASTLE_HP * (1 + 0.06 * defLv('muralla')));
+    B.blue.towerK = 1 + 0.1 * defLv('torres'); B.blue.towerCd = 1 / (1 + 0.02 * defLv('atalaya'));
+    const sp = myHechizo(); if (sp) B.spell = { id: sp, k: spK(sp), t: HECHIZOS[sp].t0 };
+    const be = myBestia(); if (be) { const lv = beLv(be); B.beast = { id: be, lv, v: BESTIAS[be].v(lv), t: BESTIAS[be].t0 || BESTIAS[be].every || 0 }; if (be === 'basilisco') B.curse = { team: 'purple', k: B.beast.v }; }
+  }
+  abilUI(true);
+};
+const _bsR = battleStep;
+battleStep = function (dt) {
+  _bsR(dt);
+  if (!B || B.idle || B.over || paused) return;
+  for (const t of ['blue', 'purple']) { const bf = B.buff[t]; if (bf.hasteT > 0) bf.hasteT -= dt; if (bf.slowT > 0) bf.slowT -= dt; }
+  if (B.spell && B.spell.t > 0) B.spell.t -= dt;
+  if (B.beast) {
+    B.beast.t -= dt;
+    if (B.beast.id === 'huargo' && B.beast.t <= 0) {   // llega un lobo de la cripta
+      B.beast.t = BESTIAS.huargo.every;
+      const u = new Unit(scene, 'lobo', 'blue', FIELD_L); units.push(u); const [lv, r] = huargoPw(B.beast.lv); applyPromo(u, lv, r, teamBuffK('blue'));
+      if (u.parts) u.parts.forEach(p => p.setTint(0xc4ccff));
+      if (!B.auto) floatText(FIELD_L, GROUND - H * 1.6, '¡Auuu!', '#c4ccff');
+    }
+  }
+};
+// el botón del hechizo y el de la bestia (si su bestia tiene habilidad que se lanza)
+function abilUI(reset) {
+  const sb = $('ab-spell'), bb = $('ab-beast'); if (!sb) return;
+  const real = B && !B.auto && !B.idle;
+  sb.hidden = !(real && B.spell); bb.hidden = !(real && B.beast && B.beast.id === 'dragon');
+  if (!sb.hidden && sb.dataset.id !== B.spell.id) { const h = HECHIZOS[B.spell.id]; sb.dataset.id = B.spell.id; sb.style.setProperty('--c', h.c); sb.querySelector('.aico').innerHTML = svg(B.spell.id); sb.setAttribute('aria-label', h.name); }
+  if (!bb.hidden && bb.dataset.id !== 'dragon') { const b = BESTIAS.dragon; bb.dataset.id = 'dragon'; bb.style.setProperty('--c', b.c); bb.querySelector('.aico').innerHTML = svg('dragon'); bb.setAttribute('aria-label', b.name + ': aliento de fuego'); }
+  const one = (btn, t, cd, label) => { const ready = t <= 0; btn.disabled = !ready || B.over; btn.classList.toggle('ready', ready); btn.style.setProperty('--p', Math.max(0, Math.min(1, 1 - t / cd)).toFixed(3)); const txt = ready ? label : Math.ceil(t) + ' s'; if (btn.lastChild.textContent !== txt) btn.lastChild.textContent = txt; };
+  if (!sb.hidden) one(sb, B.spell.t, HECHIZOS[B.spell.id].cd, '¡Hechizo!');
+  if (!bb.hidden) one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!');
+  const d = $('dock').getBoundingClientRect(); $('abils').style.bottom = (window.innerHeight - d.top + 10) + 'px';
+}
+const _uiTickR = uiTick;
+uiTick = function () { _uiTickR(); abilUI(false); };
+$('ab-spell').onclick = () => { if (B && B.spell && B.spell.t <= 0 && !B.over && !paused) { lanzar(B.spell.id, 'blue', B.spell.k); B.spell.t = HECHIZOS[B.spell.id].cd; abilUI(); } };
+$('ab-beast').onclick = () => { if (B && B.beast && B.beast.id === 'dragon' && B.beast.t <= 0 && !B.over && !paused) { alientoDragon('blue', B.beast.v); B.beast.t = BESTIAS.dragon.cd; abilUI(); } };
+
+/* ---- efectos de los hechizos ---- */
+const foesOf = team => units.filter(v => v.team !== team && v.alive && v.state !== 'die' && v.state !== 'spawn');
+const alliesOf = team => units.filter(v => v.team === team && v.alive && v.state !== 'die');
+function banner(txt, col) { if (!B.auto) floatText(W / 2, GROUND - H * 2.6, txt, col); }
+function rayo(x, y) {
+  const g = scene.add.graphics().setDepth(1500); let px = x + rand(-30, 30), py = y - 700;
+  g.lineStyle(10, 0x7fb2ff, 0.5).beginPath().moveTo(px, py);
+  const pts = []; for (let i = 0; i < 7; i++) { px = x + rand(-26, 26) * (1 - i / 7); py += (y - (y - 700)) / 7; pts.push([px, py]); }
+  pts.forEach(p => g.lineTo(p[0], p[1])); g.strokePath();
+  g.lineStyle(4, 0xffffff, 1).beginPath().moveTo(x, y - 700); pts.forEach(p => g.lineTo(p[0], p[1])); g.strokePath();
+  scene.tweens.add({ targets: g, alpha: 0, duration: 380, ease: 'Quad.in', onComplete: () => g.destroy() });
+  burst(x, y, 0xbfd8ff, 14, 240);
+}
+function lanzar(id, team, k = 1) {
+  const h = HECHIZOS[id], dir = team === 'blue' ? 1 : -1;
+  if (id === 'cuerno') { B.buff[team].hasteT = h.t; B.buff[team].haste = h.haste * k; alliesOf(team).forEach(u => burst(u.x, u.gy - H * 0.5, 0xffd36b, 8, 160)); banner('¡Cuerno de la victoria!', '#ffd36b'); }
+  else if (id === 'luz') { alliesOf(team).forEach(u => { if (!u.isCastle) u.healBy(Math.round(u.max * h.heal * k)); }); banner('¡Luz sagrada!', '#7dffa0'); }
+  else if (id === 'ventisca') {
+    const o = team === 'blue' ? 'purple' : 'blue'; B.buff[o].slowT = h.t * k; B.buff[o].slow = h.slow;
+    foesOf(team).forEach(u => { for (let i = 0; i < 6; i++) fx.push({ x: u.x + rand(-30, 30), y: u.gy - rand(20, 120), vx: rand(-60, -20) * dir, vy: rand(10, 40), g: 0, r: rand(2.5, 4.5), life: 1.2, t: 1.2, color: 0xe8f8ff }); });
+    banner('¡Ventisca!', '#a8e8ff');
+  } else if (id === 'rayos') {
+    const tg = foesOf(team).sort((a, b) => (b.x - a.x) * -dir).slice(0, h.n);   // los más adelantados hacia tu castillo
+    tg.forEach((u, i) => scene.time.delayedCall(i * 110, () => { if (!u.alive || u.state === 'die') return; rayo(u.x, u.gy - H * 0.3); u.damage(Math.round(h.dmg * k), null, u.x); if (u.stun) u.stun(h.stun); }));
+    if (!tg.length) rayo(W / 2 + rand(-200, 200), GROUND);
+    scene.cameras.main.flash(120, 200, 220, 255); banner('¡Tormenta de rayos!', '#bfd8ff');
+  } else if (id === 'meteoro') {
+    const fs = foesOf(team); let x = team === 'blue' ? W * 0.7 : W * 0.3, best = -1;
+    for (const u of fs) { const n = fs.filter(v => Math.abs(v.x - u.x) <= h.r).length; if (n > best) { best = n; x = u.x; } }
+    const m = scene.add.circle(x - dir * 400, GROUND - 900, 34, 0xff7a3a).setStrokeStyle(8, 0x1e2235).setDepth(1500);
+    scene.tweens.add({ targets: m, x, y: GROUND - 20, duration: 650, ease: 'Quad.in', onComplete: () => {
+      m.destroy(); burst(x, GROUND - 30, 0xff9a3a, 40, 380); burst(x, GROUND - 30, 0x3a3030, 20, 260); scene.cameras.main.shake(220, 0.008);
+      if (!B || B.over) return;
+      foesOf(team).filter(v => Math.abs(v.x - x) <= h.r).forEach(v => v.damage(Math.round(h.dmg * k), null, x));
+      const c = castles[team === 'blue' ? 'purple' : 'blue']; if (c && Math.abs(c.x - x) <= h.r * 1.4) c.damage(Math.round(h.dmg * k * 0.6), null);
+    } });
+    banner('¡Meteoro!', '#ffb35a');
+  }
+}
+function alientoDragon(team, dmg) {
+  const L = team === 'blue' ? FIELD_L : W / 2, R = team === 'blue' ? W / 2 : FIELD_R;
+  for (let x = L; x < R; x += 38) for (let i = 0; i < 3; i++) fx.push({ x: x + rand(-15, 15), y: GROUND - rand(10, 150), vx: rand(-30, 30), vy: rand(-90, -30), g: -40, r: rand(5, 10), life: 0.8, t: 0.8, color: [0xff7a1a, 0xffc83d, 0xff3a1a][i] });
+  foesOf(team).filter(v => v.x >= L && v.x <= R).forEach(v => v.damage(dmg, null, v.x));
+  scene.cameras.main.shake(260, 0.006); banner('¡Aliento del dragón!', '#ff9a3a');
+}
+
+/* ---- enganches: pestaña Reino con aviso y perfil ---- */
+const _phR = paintHub;
+paintHub = function () {
+  _phR();
+  const d = document.querySelector('#nav [data-tab="hogar"] .ndot'); if (d) d.hidden = !(cuartelListo() > 0 || !Object.keys(perfil.bestias || {}).length);
+};
+window.__B = () => B; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
+
+/* ==== Eventos. Fijo: el Abismo del Despertar. Cada día espera en el fondo una unidad distinta: si es legendaria hay que bajar
+   50 niveles; si es ascendida, 60. En cada nivel hay 4 caminos: 3 bajan (y dan botín) y 1 lleva al vacío o a la lava.
+   Cuerdas: si caes, te sujetan (y ya sabes cuál era la trampa). Antorchas: iluminan el nivel y enseñan la trampa.
+   Cada 10 niveles hay un rellano con cuerdas, antorchas, insignias y una celda. Si caes sin cuerdas, se acaba el descenso
+   del día (puedes volver al último rellano pagando diamantes). ==== */
+const ABI = {
+  cuerdas: 3, antorchas: 1, rellano: { cuerdas: 2, antorchas: 1, insignias: 2 },
+  reintento: [50, 100, 200],
+  premios: ['imparable', 'muerte', 'kungfu', 'centinela', 'desencadenado'],   // uno por día, en este orden
+  prof: { legendaria: 50, ascendida: 60 }, copias: { legendaria: 15, ascendida: 8 },
+  celda: { 10: 'hierro', 20: 'runica', 30: 'oro', 40: 'oro', 50: 'diamante', 60: 'diamante' },
+};
+const ABI_CAMINOS = ['Gruta', 'Cueva', 'Grieta', 'Túnel'];
+const ABI_PISTAS = ['húmeda', 'oscura', 'con eco', 'estrecha', 'con raíces', 'con huesos', 'cálida', 'ventosa', 'de cristal', 'con runas', 'silenciosa', 'con goteras'];
+const diaN = () => { const d = new Date(); return Math.floor((d - d.getTimezoneOffset() * 6e4) / 864e5); };
+const abiPremio = () => ABI.premios[diaN() % ABI.premios.length];
+const abiMeta = k => ABI.prof[RARITY[k]] || 50;
+function abiNivel(s) { s.trap = Math.floor(Math.random() * 4); s.luz = false; s.vista = false; s.pistas = shuffle(ABI_PISTAS.slice()).slice(0, 4); }
+function abi() {
+  if (!perfil.abismo || perfil.abismo.f !== hoy()) { perfil.abismo = { f: hoy(), prof: 0, cuerdas: ABI.cuerdas, antorchas: ABI.antorchas, caido: false, reint: 0, fin: false, oro: 0, gemas: 0 }; abiNivel(perfil.abismo); savePerfil(); }
+  return perfil.abismo;
+}
+const abiPeligro = p => p < 20 ? ['el vacío', 'al vacío'] : p < 40 ? ['la lava', 'a la lava'] : ['las sombras', 'a las sombras'];
+const cuerdasTot = s => s.cuerdas + (perfil.cuerdas || 0), antorchasTot = s => s.antorchas + (perfil.antorchas || 0);
+function gasta(s, k) { if (s[k] > 0) s[k]--; else perfil[k] = (perfil[k] || 0) - 1; }
+let abiMsg = ['', ''];
+
+function openEventos() {
+  const s = abi(), k = abiPremio(), meta = abiMeta(k);
+  $('ev-body').innerHTML = '<div class="evcard">' + cardHtml(k) + '<h3>Abismo del Despertar</h3><p>Hoy espera en el fondo <b>' + NAMES[k] + '</b> (' + RAREZA[RARITY[k]].toLowerCase() + '). Baja ' + meta + ' niveles eligiendo bien el camino: uno de cada cuatro lleva ' + abiPeligro(0)[1] + '.</p>'
+    + '<p>' + (s.fin ? '¡Premio conseguido! Mañana, otro.' : s.caido ? 'Has caído en el nivel ' + (s.prof + 1) + '.' : s.prof ? 'Vas por el nivel ' + s.prof + ' de ' + meta + '.' : 'Aún no has bajado hoy.') + '</p><button class="btn gold" id="ev-abismo">' + (s.fin ? 'Ver' : s.prof || s.caido ? 'Seguir' : 'Entrar') + '</button></div>'
+    + '<div class="grid2"><div class="evcard soon"><h3>Invasión del Rey Exiliado</h3><p>Evento de fin de semana: un rey sin trono asalta tus castillos conquistados. Defiéndelos para ganar celdas.</p><span class="chip">Próximamente</span></div>'
+    + '<div class="evcard soon"><h3>Torneo del Multiverso</h3><p>Mazos prestados y reglas especiales cada semana.</p><span class="chip">Próximamente</span></div></div>';
+  $('ev-abismo').onclick = () => openAbismo();
+  show('eventos');
+}
+function openAbismo() {
+  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel] = abiPeligro(s.prof);
+  const marcas = Array.from({ length: Math.floor(meta / 10) - 1 }, (_, i) => '<i style="left:' + ((i + 1) * 10 / meta * 100) + '%"></i>').join('');
+  let h = '<div class="abhud"><div class="abprize">' + cardHtml(k) + '<div><b>' + NAMES[k] + '</b><small>' + (perfil.owned.includes(k) ? ABI.copias[RARITY[k]] + ' copias' : 'Se une a tu ejército') + ' al llegar al fondo</small></div></div>'
+    + '<div class="depth"><b>' + s.prof + '</b><small>de ' + meta + '</small></div><div class="abbar"><span style="width:' + (s.prof / meta * 100) + '%"></span>' + marcas + '</div></div>'
+    + '<div class="abres"><span class="res"><svg viewBox="0 0 24 24" stroke="#e3c48a">' + ICO.cuerda + '</svg>' + cuerdasTot(s) + (cuerdasTot(s) === 1 ? ' cuerda' : ' cuerdas') + '</span><span class="res"><svg viewBox="0 0 24 24" stroke="#ffb35a">' + ICO.antorcha + '</svg>' + antorchasTot(s) + (antorchasTot(s) === 1 ? ' antorcha' : ' antorchas') + '</span>'
+    + '<span class="note">Botín de hoy: ' + fmt(s.oro) + ' de oro' + (s.gemas ? ', ' + s.gemas + ' diamantes' : '') + '</span></div>';
+  if (s.fin) h += '<p class="abmsg good">¡Has llegado al fondo! ' + NAMES[k] + ' es tuyo. Mañana espera otra unidad.</p>';
+  else if (s.caido) {
+    const c = ABI.reintento[s.reint];
+    h += '<p class="abmsg bad">Has caído ' + a_pel + ' sin cuerdas.</p><p class="note" style="text-align:center">El descenso de hoy ha terminado. Te quedas con el botín.</p><div class="abacts">'
+      + (c ? '<button class="btn gold" id="abi-re">Volver al nivel ' + (Math.floor(s.prof / 10) * 10) + ' con 2 cuerdas · ' + gemBtn(c) + '</button>' : '') + '<button class="btn" id="abi-sal">Volver mañana</button></div>';
+  } else {
+    h += '<p class="abmsg ' + (abiMsg[1] || '') + '">' + (abiMsg[0] || 'Nivel ' + (s.prof + 1) + ': uno de estos caminos lleva ' + a_pel + '.') + '</p><div class="paths" id="abi-paths">'
+      + ABI_CAMINOS.map((n, i) => { const trap = (s.luz || s.vista) && i === s.trap; return '<button type="button" class="path' + (trap ? ' trap' : (s.luz ? ' safe' : '')) + '" data-i="' + i + '"' + (trap ? ' disabled' : '') + '><span class="mouth"></span><b>' + n + '</b><small>' + (trap ? '¡Aquí está ' + pel + '!' : s.pistas[i]) + '</small></button>'; }).join('')
+      + '</div><div class="abacts"><button class="btn" id="abi-luz"' + (s.luz || s.vista || !antorchasTot(s) ? ' disabled' : '') + '>Encender antorcha</button></div>';
+  }
+  h += '<p class="note">Rellanos cada 10 niveles: +' + ABI.rellano.cuerdas + ' cuerdas, +' + ABI.rellano.antorchas + ' antorcha, +' + ABI.rellano.insignias + ' insignias y una celda. Cuerdas y antorchas también se compran en la Tienda.</p>';
+  $('abi-body').innerHTML = h; abiMsg = ['', ''];
+  document.querySelectorAll('#abi-paths .path:not([disabled])').forEach(b => { b.onclick = () => abiElige(+b.dataset.i, b); });
+  if ($('abi-luz')) $('abi-luz').onclick = () => { gasta(s, 'antorchas'); s.luz = true; savePerfil(); abiMsg = ['La antorcha ilumina el nivel: ya ves la trampa.', 'good']; openAbismo(); };
+  if ($('abi-re')) $('abi-re').onclick = () => { if (paga({ gemas: ABI.reintento[s.reint] })) { s.reint++; s.caido = false; s.prof = Math.floor(s.prof / 10) * 10; s.cuerdas += 2; abiNivel(s); savePerfil(); openAbismo(); } };
+  if ($('abi-sal')) $('abi-sal').onclick = () => openEventos();
+  show('abismo');
+}
+function abiElige(i, btn) {
+  const s = abi(), k = abiPremio(), meta = abiMeta(k), [pel, a_pel] = abiPeligro(s.prof);
+  document.querySelectorAll('#abi-paths .path').forEach(b => { b.disabled = true; }); btn.classList.add('picked');
+  if (i === s.trap) {
+    btn.classList.add('trap'); $('abi-paths').classList.add('falling');
+    setTimeout(() => {
+      if (cuerdasTot(s) > 0) { gasta(s, 'cuerdas'); s.vista = true; abiMsg = ['¡' + pel[0].toUpperCase() + pel.slice(1) + '! Tu cuerda te sujeta. Ya sabes dónde está la trampa: elige otro camino.', 'bad']; }
+      else s.caido = true;
+      savePerfil(); openAbismo();
+    }, 900);
+    return;
+  }
+  s.prof++;
+  const oro = 10 + s.prof * 3; s.oro += oro; perfil.gold += oro; let extra = [];
+  if (s.prof % 5 === 0) { s.gemas += 5; perfil.gemas = (perfil.gemas || 0) + 5; extra.push('5 diamantes'); }
+  if (s.prof % 10 === 0) {
+    const R = ABI.rellano; s.cuerdas += R.cuerdas; s.antorchas += R.antorchas; addInsignias(R.insignias); const c = ABI.celda[s.prof]; if (c) darCelda(c);
+    extra.push(R.cuerdas + ' cuerdas, ' + R.antorchas + ' antorcha, ' + R.insignias + ' insignias' + (c ? ' y una ' + CELDA(c).name.toLowerCase() : ''));
+  }
+  if (s.prof >= meta) {
+    s.fin = true;
+    if (!perfil.owned.includes(k)) { perfil.owned.push(k); addCopias(k, ABI.copias[RARITY[k]] - 1); } else addCopias(k, ABI.copias[RARITY[k]]);
+    savePerfil(); openAbismo();
+    pop('<div class="freed">' + cardHtml(k, 'reveal') + '<p><b>¡Has llegado al fondo del Abismo!</b><br>' + NAMES[k] + ' despierta y se une a ti con ' + ABI.copias[RARITY[k]] + ' copias de su carta.</p></div>');
+    return;
+  }
+  abiNivel(s); savePerfil();
+  abiMsg = [(s.prof % 10 === 0 ? '¡Rellano! ' : 'Bajas al nivel ' + (s.prof + 1) + '. ') + '+' + oro + ' de oro' + (extra.length ? ', ' + extra.join(', ') : '') + '.', 'good'];
+  openAbismo(); $('abi-paths') && $('abi-paths').classList.add('descend');
+}
+$('ab-back').onclick = () => openEventos();
+const _phEv = paintHub;
+paintHub = function () { _phEv(); const d = document.querySelector('#nav [data-tab="eventos"] .ndot'); if (d) { const s = perfil.abismo; d.hidden = !!(s && s.f === hoy() && (s.prof || s.caido || s.fin)); } };
+window.__abi = () => abi(); window.__openAbismo = openAbismo; window.__abiElige = i => abiElige(i, document.querySelectorAll('#abi-paths .path')[i]);
 
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(start, start);
 })();

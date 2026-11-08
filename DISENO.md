@@ -100,24 +100,34 @@ Cristal, Cementerio y Cielo, con sus 10 castillos cada uno (nombres propios, dif
 Se llega tras conquistar el Volcán. Ejércitos de nivel 7 (Playa) a 10 (Cielo). Sus reyes aún no
 tienen héroe. En la pestaña Campaña se cambia entre Mundo 1 y Mundo 2.
 
-## Mejora de unidades
+## Promoción de unidades
 
-- Cada unidad va del **nivel 1 al 10**. Cada nivel le da un **10 % más de vida, daño y curación**
-  (nivel 10 = ×1,9). El daño extra cuenta también en sus habilidades (shuriken, misiles, cadenas…).
-- Subir de nivel cuesta **copias de su carta y oro**:
+Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 
-  | Del nivel | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-  |---|---|---|---|---|---|---|---|---|---|
-  | Copias | 1 | 2 | 3 | 5 | 8 | 12 | 16 | 22 | 30 |
-  | Oro (común) | 50 | 100 | 180 | 300 | 450 | 650 | 900 | 1.250 | 1.700 |
-
-  El oro se multiplica según la rareza: poco común ×1,2, rara ×1,5, épica ×2, legendaria ×3, ascendida ×4.
-- **Copias**: 3 al conquistar un castillo por primera vez y 1 al repetirlo o ganar una batalla rápida
-  (de cartas de tu mazo); 1 cada 2 horas de expedición; y en la taberna, si el mercenario ya lo tenías.
-- **Rivales con nivel**: los ejércitos del Reino de las Praderas son de nivel 1, Bosque 2, Desierto 3,
-  Nieves 4, Pantano 5 y Volcán 6 (el castillo real, uno más desde el Bosque). En la batalla rápida, el
-  rival lleva el nivel medio de tu mazo.
-- Los héroes aún no suben de nivel.
+- **Nivel (1–100)**: se sube con **oro**. Cada nivel da un **3 % más de vida, daño y curación**
+  (nivel 100 = ×3,97). El oro crece con el nivel (20 + 8·n + 0,6·n², redondeado, × rareza:
+  poco común ×1,15, rara ×1,3, épica ×1,5, legendaria ×1,8, ascendida ×2,2).
+  - **Saltos de nivel**: para pasar del 10, 20, 30… hay que pagar el triple de oro y **insignias de mando**
+    (1, 2, 3, 4, 6, 8, 10, 13 y 16). *Las insignias son el «otro objeto» provisional; se pueden cambiar.*
+  - Insignias: 1 al conquistar un castillo vasallo y 5 el real (la primera vez), 2 en cada rellano del
+    Abismo, 1 al completar las tres misiones del día y en la Tienda (5 por 60 diamantes).
+- **Rango (E → D → C → B → A → S → S+)**: se sube con **copias de su carta** (5, 10, 20, 40, 70 y 120).
+  Cada rango multiplica vida y daño: D ×1,15 · C ×1,3 · B ×1,5 · A ×1,75 · S ×2,05 · S+ ×2,4
+  (de E a S+ sin estrellas → 6 ★).
+  - **Habilidades de rango**: en **C, A y S+** la unidad aprende una habilidad nueva. Tipos que entiende el
+    motor: golpe crítico, furia (más daño herido), ejecutar (más daño a enemigos tocados), aura (más daño a los
+    aliados cercanos), escudo inicial, aguante (sobrevive una vez a un golpe mortal), robo de vida, aturdir,
+    espinas, estallido al caer, regeneración, veloz (anda y ataca más rápido) y asedio (más daño a castillos).
+    Ejemplo, Tulio: Muro de escudos (C), Disciplina de legión (A), Última legión (S+).
+  - **Aspecto**: desde el rango B la unidad sale algo más grande. *Pendiente de arte: versión oscura de cada
+    unidad para el rango B (armadura, escudo y arma con otro diseño).*
+- **Copias**: 3 al conquistar un castillo por primera vez y 1 al repetirlo o ganar una batalla rápida, 1 cada
+  2 horas de expedición, celdas, taberna, ofertas de la Tienda, Cuartel y el premio del Abismo.
+- **Rivales con nivel y rango**: Praderas 1·E, Bosque 5·E, Desierto 10·E, Nieves 15·D, Pantano 20·D,
+  Volcán 26·D; Playa 32·C, Setas 36·C, Huesos 42·C, Engranajes 48·B, Cristal 55·B, Cementerio 62·A,
+  Cielo 70·A. Dentro de cada reino suben un nivel cada 3 castillos y el real +3. En la batalla rápida el
+  rival lleva el nivel y el rango medios de tu mazo. *Falta ajustar la economía de oro con simulaciones.*
+- Los héroes aún no suben de nivel (llegará con el Trono).
 
 ## Conseguir personajes
 
@@ -162,22 +172,47 @@ tienen héroe. En la pestaña Campaña se cambia entre Mundo 1 y Mundo 2.
 
 ## Estructura de la app
 
-- **Barra de pestañas** (abajo): Inicio, Campaña, Ejército, Taberna y Arena.
-- **Inicio**: arriba tu perfil (retrato de tu héroe, nivel y experiencia del reino, nombre), oro y diamantes.
-  En el centro, la **expedición**: tu mazo avanza por el camino y despacha enemigos de un golpe; acumula oro
-  y experiencia hasta 12 horas aunque no juegues, y se recoge en el cofre. Abajo, **¡Batalla!** (abre el
-  siguiente castillo de la campaña) y **Mazo**. A los lados: Diario, Misiones, Jaulas y Ofertas; Correo,
-  Clasificación y Práctica.
-- **Diario**: premio por entrar cada día, 7 días (el séptimo, el mejor). **Misiones diarias**: ganar 2 batallas,
-  sacar 25 cartas y recoger 2 veces; premio extra por completar las tres.
-- **Ejército**: Unidades (ficha con estadísticas y habilidad; las que faltan dicen dónde conseguirlas), Héroes
-  (pasiva, activa y elegir el de batalla) y Estandarte (color y emblema).
-- **Taberna del Multiverso**: 2 mercenarios cada 4 horas, se pagan con oro (común 200 … legendaria 3.200);
-  si ya lo tienes, guardas una copia de su carta.
-- **Arena**: duelos contra jugadores (próximamente) y batalla rápida contra la IA.
-- **Perfil**: nombre del reino, estadísticas y ajustes.
-- **Experiencia del reino**: por ganar batallas (más la primera vez que conquistas un castillo), por la
-  expedición y por las misiones.
+- **Barra de pestañas** (abajo): **Tienda · Reino · Campaña · Ejército · Eventos**. Se entra por Campaña.
+- **Tienda**: regalo diario (100 de oro), 5 ofertas de cartas que se renuevan cada día (copias o la unidad
+  si no la tienes; comunes a raras con oro, épicas y mejores con diamantes; renovar por 20 diamantes),
+  celdas, oro por diamantes, diamantes con dinero real (se ven, pero los pagos llegarán más adelante) y lotes
+  varios (cuerdas y antorchas para el Abismo, insignias, pack de bienvenida).
+- **Reino**: tu castillo con sus lugares (dibujo pendiente; ahora un fondo provisional con botones):
+  - **Taberna**: 2 mercenarios cada 4 horas, con oro.
+  - **Murallas**: estandarte (color y emblema), aspecto del castillo (otros castillos: pendiente de arte) y
+    defensas: Muralla (+6 % de vida del castillo por nivel), Arqueros de las torres (+10 % de daño) y
+    Atalaya (+2 % de cadencia), hasta nivel 20, con oro.
+  - **Sanctum Arcano**: hechizos que se crean una vez y se suben de nivel (+10 % por nivel, hasta 10).
+    Uno va contigo: botón encima de las cartas que se recarga con el tiempo.
+    Cuerno de la victoria (+35 % de velocidad de movimiento y ataque, 8 s), Tormenta de rayos (5 rayos de
+    70 que aturden), Luz sagrada (cura el 30 %), Ventisca (enemigos a mitad de velocidad 6 s) y Meteoro
+    (160 en área, también al castillo).
+  - **El Trono**: los héroes. Se abre al conquistar los siete reinos del Mundo 1 (hasta entonces el héroe se
+    elige en el mazo). Más adelante: niveles, equipo y talentos de los héroes.
+  - **Cripta**: bestias (la primera es gratis, las demás 150 diamantes; suben de nivel con oro). Una va
+    contigo: Grifo real (bendición: +10 % de vida y daño a los tuyos), Basilisco (maldición: enemigos un
+    12 % más lentos), Dragón de ceniza (habilidad: aliento de fuego en tu mitad del campo cada 30 s) y Huargo
+    de la cripta (lucha: un lobo se une a la batalla cada 25 s).
+  - **Cuartel**: 3 puestos (se abren con el reino a nivel 1, 5 y 12). Una unidad en cada uno gana copias:
+    1 cada hora (común) … 8 horas (ascendida), hasta 12 horas sin recoger.
+  - **Alto Consulado Bélico**: el clan (miembros, donaciones, guerras y asedios de clan). Necesita servidor.
+- **Campaña**: la página principal. Arriba tu perfil, oro y diamantes; en el centro, la **expedición**
+  (oro, experiencia, copias y celdas aunque no juegues, hasta 12 horas); abajo **¡Batalla!** (siguiente
+  castillo) y **Mapa** (la campaña). A los lados: Tropas (unidades, mazo y promoción), Diario, Misiones,
+  Celdas y Ofertas; Correo, Clasificación y Práctica.
+- **Ejército** *(nombre provisional)*: lo competitivo. Batalla rápida contra la IA; duelos, torneo semanal,
+  guerra de clanes y clasificación, próximamente.
+- **Eventos**: el **Abismo del Despertar** (fijo) y los eventos que vayan saliendo.
+  - Cada día espera en el fondo una unidad: legendaria → 50 niveles; ascendida → 60. En cada nivel, 4 caminos
+    (gruta, cueva, grieta, túnel): 3 bajan y dan oro (y diamantes cada 5), 1 lleva al vacío, a la lava o a las
+    sombras según la profundidad.
+  - **Cuerdas** (3 al día): si caes, te sujetan y ya sabes cuál era la trampa. **Antorchas** (1 al día):
+    iluminan el nivel y enseñan la trampa. Rellano cada 10 niveles: +2 cuerdas, +1 antorcha, +2 insignias y
+    una celda (de hierro a diamante). Si caes sin cuerdas, se acaba el descenso del día; puedes volver al último
+    rellano por 50, 100 y 200 diamantes.
+  - Con lo que se gana bajando, sin comprar nada, se llega al fondo en torno a 4 de cada 10 días
+    (simulado: 42 % los días de 50 niveles y 38 % los de 60).
+- **Diario**, **misiones**, **perfil** y **experiencia del reino**: como antes.
 
 ## Plataforma y aspecto
 

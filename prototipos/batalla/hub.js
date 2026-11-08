@@ -101,9 +101,9 @@ function openMisiones() {
     const v = Math.min(m.n, d[m.id]), done = v >= m.n, got = d.ok[m.id];
     return '<div class="mis' + (got ? ' got' : '') + '"><b>' + m.txt + '</b><small>' + (got ? 'Recogida' : rewardTxt(m)) + '</small><span class="xpbar"><span style="width:' + (v / m.n * 100) + '%"></span></span>'
       + (done && !got ? '<button class="btn gold small" data-m="' + m.id + '">Recoger</button>' : '<small>' + v + '/' + m.n + '</small>') + '</div>';
-  }).join('') + '<div class="mis' + (d.ok.todas ? ' got' : '') + '"><b>Completa las 3 misiones</b><small>' + (d.ok.todas ? 'Recogida' : '5 diamantes') + '</small>'
+  }).join('') + '<div class="mis' + (d.ok.todas ? ' got' : '') + '"><b>Completa las 3 misiones</b><small>' + (d.ok.todas ? 'Recogida' : '5 diamantes y 1 insignia') + '</small>'
     + (MISIONES.every(m => d.ok[m.id]) && !d.ok.todas ? '<button class="btn gold small" data-m="todas">Recoger</button>' : '<small>' + MISIONES.filter(m => d.ok[m.id]).length + '/3</small>') + '</div></div>');
-  document.querySelectorAll('#pop-body [data-m]').forEach(b => { b.onclick = () => { const id = b.dataset.m; d.ok[id] = true; give(id === 'todas' ? { gemas: 5 } : MISIONES.find(m => m.id === id), b); openMisiones(); }; });
+  document.querySelectorAll('#pop-body [data-m]').forEach(b => { b.onclick = () => { const id = b.dataset.m; d.ok[id] = true; give(id === 'todas' ? { gemas: 5, insignias: 1 } : MISIONES.find(m => m.id === id), b); openMisiones(); }; });
 }
 // contadores para las misiones
 const _br = battleResult;
@@ -158,27 +158,32 @@ setInterval(() => { if (!$('menu').hidden) paintHub(); }, 5000);
 $('h-perfil').onclick = () => openPerfil();
 $('h-botin').onclick = e => collectExp(e.currentTarget);
 $('h-batalla').onclick = () => { const nx = nextLevel(); if (nx) { nivelFrom = 'menu'; openLevel(nx.k, nx.i); } else openWorld(); };
-$('h-mazo').onclick = () => openDeck('menu');
+$('h-mazo').onclick = () => openWorld();
+$('s-tropas').onclick = () => openArmy('unidades');
+$('ej-back').onclick = () => goTab('menu');
+$('tab-back').onclick = () => goTab('hogar');
 $('s-diario').onclick = openDiario;
 $('s-misiones').onclick = openMisiones;
 $('s-jaulas').onclick = () => proximamente('jaulas');
-$('s-ofertas').onclick = () => proximamente('ofertas');
+$('s-ofertas').onclick = () => goTab('tienda');
 $('s-correo').onclick = () => proximamente('correo');
-$('s-ranking').onclick = () => proximamente('ranking');
+$('s-ranking').onclick = () => goTab('arena');
 $('s-practica').onclick = () => { location.href = 'practica.html'; };
 $('pf-practica').onclick = () => { location.href = 'practica.html'; };
 
-/* ---- barra de pestañas ---- */
+/* ---- barra de pestañas: Tienda · Reino · Campaña · Ejército · Eventos ---- */
 function goTab(t) {
   if (t === 'menu') { show('menu'); startDemo(); }
   else if (t === 'mundo') openWorld();
-  
-  else if (t === 'ejercito') openArmy();
-  else if (t === 'taberna') openTaberna();
+  else if (t === 'tienda') openTienda();
+  else if (t === 'hogar') openHogar();
   else if (t === 'arena') show('arena');
+  else if (t === 'eventos') openEventos();
+  else if (t === 'ejercito') openArmy('unidades');
+  else if (t === 'taberna') openTaberna();
 }
 document.querySelectorAll('#nav button').forEach(b => { b.onclick = () => goTab(b.dataset.tab); });
-$('mundo-back').textContent = '← Inicio';
+$('mundo-back').textContent = '← Campaña';
 $('mundo-back').onclick = () => goTab('menu');
 let nivelFrom = 'reino';
 const _openKingdom = openKingdom;
@@ -194,7 +199,7 @@ let armySeg = 'unidades';
 function openArmy(seg = armySeg) {
   armySeg = seg;
   document.querySelectorAll('#ejercito .seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.seg === seg));
-  ['unidades', 'heroes', 'estandarte'].forEach(s => { $('seg-' + s).hidden = s !== seg; });
+  ['unidades', 'heroes', 'estandarte'].forEach(s => { const el = $('seg-' + s); if (el) el.hidden = s !== seg; });
   const own = owned();
   if (seg === 'unidades') {
     $('ej-note').textContent = 'Tienes ' + own.length + ' de ' + ALL.length + ' unidades. Toca una para ver su ficha.';
@@ -277,7 +282,7 @@ function openPerfil() {
 }
 $('pf-back').onclick = () => goTab('menu');
 $('pf-name').onchange = e => { perfil.nombre = e.target.value.trim().slice(0, 22) || 'Señor del Reino'; savePerfil(); paintHub(); };
-$('pf-estandarte').onclick = () => openArmy('estandarte');
+$('pf-estandarte').onclick = () => openEdif('murallas');
 $('deckall').onclick = () => { perfil.all = !perfil.all; savePerfil(); openPerfil(); };
 $('deckwipe').onclick = e => {
   const b = e.currentTarget;

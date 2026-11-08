@@ -112,8 +112,8 @@ function towers(dt) {
     const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
     const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
-    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: TOWER.dmg, stuck: 0 });
-    s.towerT = TOWER.cd;
+    arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: Math.round(TOWER.dmg * (s.towerK || 1)), stuck: 0 });
+    s.towerT = TOWER.cd * (s.towerCd || 1);
   }
 }
 function drawCastleUI(dt) {
@@ -363,19 +363,21 @@ __PRELOAD__
 }
 
 /* ---- pantallas: carga → menú (con una partida de la IA contra sí misma de fondo) → mazo → batalla → pausa / final ---- */
-const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over', 'ejercito', 'taberna', 'arena', 'perfil'];
-const TABS = ['menu', 'mundo', 'ejercito', 'taberna', 'arena'];   // pantallas con la barra de pestañas abajo
+const SCREENS = ['carga', 'menu', 'deck', 'mundo', 'reino', 'nivel', 'pausa', 'over', 'ejercito', 'taberna', 'arena', 'perfil', 'tienda', 'hogar', 'edif', 'eventos', 'abismo'];
+// pantallas con la barra de pestañas abajo y la pestaña que se ilumina en cada una
+const TAB_OF = { tienda: 'tienda', hogar: 'hogar', edif: 'hogar', taberna: 'hogar', menu: 'menu', mundo: 'menu', ejercito: 'menu', arena: 'arena', eventos: 'eventos', abismo: 'eventos' };
+const TABS = Object.keys(TAB_OF);
 function show(id) {
   SCREENS.forEach(s => { $(s).hidden = s !== id; });
   const hud = id === null || id === 'pausa' || id === 'over', changed = $('hud').hidden === hud;
   $('hud').hidden = !hud;
   if (changed) requestAnimationFrame(frameCamera);
   document.body.classList.toggle('nav', TABS.includes(id)); $('nav').hidden = !TABS.includes(id);
-  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === TAB_OF[id]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintGold(); if (typeof paintHub === 'function') paintHub();
   if (id === 'menu') requestAnimationFrame(frameCamera);
   // en las pantallas opacas no se ve el campo: se detiene el bucle del juego para ahorrar batería
-  const gm = window.__game; if (gm && gm.loop) { if (['mundo', 'reino', 'ejercito', 'taberna', 'arena', 'perfil'].includes(id)) gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
+  const gm = window.__game; if (gm && gm.loop) { if (['mundo', 'reino', 'ejercito', 'taberna', 'arena', 'perfil', 'tienda', 'hogar', 'edif', 'eventos', 'abismo', 'celdas'].includes(id)) gm.loop.sleep(); else if (!gm.loop.running) gm.loop.wake(); }
 }
 function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
