@@ -269,9 +269,87 @@ function drawScenery(sc) {
     }
   }
 }
-/* ---- subsuelo: bajo el camino, tierra, piedras, raíces y roca (en batalla, con la cripta de tu bestia bajo tu castillo) ----
-   De momento es un dibujo provisional hecho aquí, con el mismo estilo: contorno oscuro y colores planos. */
-let SUB_Y = GROUND + 200;   // dónde empieza el subsuelo (lo usa la cripta)
+/* ---- subsuelo: bajo el camino, la tierra con las dos criptas (la tuya a la izquierda, bajo tu castillo, y la del rival a la
+   derecha), dibujada para cada aspecto del castillo (img/subsuelo). Se coloca para que tu cripta quepa entera en lo que se ve:
+   en vertical, entre el camino y el panel de cartas; en horizontal, en la esquina libre. Si el dibujo no llega a cubrir todo
+   el ancho, la tierra del medio se repite en espejo. Mientras se carga, uno provisional hecho aquí. ---- */
+const SUBSUELO = __SUBSUELO__;
+let SUB_Y = GROUND + 200, SUB_TEMA = 'piedra', SUB_L = null, subColorKey = null;   // dónde empieza, su tema y cómo se ha colocado (lo usa la cripta)
+const subCarga = {};
+function subTex(tema, cb) {   // carga el dibujo de un tema con sus tres franjas: cripta, tierra y cripta
+  const key = 'sub_' + tema; if (!scene || !SUBSUELO.temas[tema]) return;
+  if (scene.textures.exists(key)) { if (cb) cb(); return; }
+  if (subCarga[tema]) { if (cb) subCarga[tema].push(cb); return; }
+  subCarga[tema] = cb ? [cb] : [];
+  const im = new Image();
+  im.onload = () => { if (!scene.textures.exists(key)) subFranjas(scene.textures.addImage(key, im)); const l = subCarga[tema] || []; delete subCarga[tema]; l.forEach(f => f()); };
+  im.onerror = () => { delete subCarga[tema]; };
+  im.src = 'img/subsuelo/' + tema + '.jpg';
+}
+function subFranjas(tex) {
+  const w = tex.source[0].width, h = tex.source[0].height, { xa, xb } = SUBSUELO;
+  tex.add('L', 0, 0, 0, xa, h); tex.add('M', 0, xa, 0, xb - xa, h); tex.add('R', 0, xb, 0, w - xb, h); return tex;
+}
+function subColor(sc, tema) {   // las gemas de cada cripta, con el color de su bando (cian y morado son los de siempre)
+  const base = 'sub_' + tema, cb = TEAM_COLOR.blue, cp = TEAM_COLOR.purple;
+  if (cb === 'azul' && cp === 'morado') return base;
+  const key = base + '@' + cb + ',' + cp; if (sc.textures.exists(key)) return key;
+  if (subColorKey && sc.textures.exists(subColorKey)) sc.textures.remove(subColorKey);   // solo se guarda la última
+  const src = sc.textures.get(base).getSourceImage(), cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height;
+  const c = cv.getContext('2d', { willReadFrequently: true }), T = SUBSUELO.temas[tema]; c.drawImage(src, 0, 0);
+  for (const [lado, col, def, h0, h1] of [['L', cb, 'azul', 0.44, 0.58], ['R', cp, 'morado', 0.70, 0.86]]) {
+    if (col === def || !COLORES[col]) continue;
+    const t = [1, 3, 5].map(i => parseInt(COLORES[col][1].slice(i, i + 2), 16) / 255), dark = Math.max(...t) < 0.25, light = Math.min(...t) > 0.85;
+    for (const [x, y, w, h] of T[lado].gemas) {
+      const d = c.getImageData(x, y, w, h), p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
+        if ((mx - mn) / (mx + 1e-9) < 0.3 || mx < 0.25) continue;   // los brillos blancos y el contorno se quedan
+        const hu = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
+        if (hu < h0 || hu > h1) continue;
+        const l = mx / 0.85;
+        for (let q = 0; q < 3; q++) p[i + q] = 255 * Math.min(1, dark ? 0.1 + 0.13 * l + t[q] * 0.3 : light ? t[q] * (0.55 + 0.42 * l) : t[q] * l);
+      }
+      c.putImageData(d, x, y);
+    }
+  }
+  subColorKey = key; subFranjas(sc.textures.addCanvas(key, cv)); return key;
+}
+function subBorde(sc) {   // el borde de hierba que cuelga sobre la tierra (blanco: se tiñe con el césped de cada escena)
+  if (sc.textures.exists('sub_borde')) return;
+  const CW = 1084, CH = 44, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const c = cv.getContext('2d'), e = x => 15 + Math.sin(x / CW * Math.PI * 14) * 5 + Math.sin(x / CW * Math.PI * 46 + 1) * 2.5;
+  c.beginPath(); c.moveTo(0, 0); for (let x = 0; x <= CW; x += 4) c.lineTo(x, e(x)); c.lineTo(CW, 0); c.closePath(); c.fillStyle = '#fff'; c.fill();
+  c.beginPath(); for (let x = 0; x <= CW; x += 4) c[x ? 'lineTo' : 'moveTo'](x, e(x)); c.lineWidth = 6; c.strokeStyle = '#1e2235'; c.stroke();
+  sc.textures.addCanvas('sub_borde', cv);
+}
+function drawSubsuelo(sc, ytop, add, cx, vw, bot, grass) {
+  SUB_Y = ytop; SUB_L = null;
+  const T = SUBSUELO.temas[SUB_TEMA];
+  if (!T || !sc.textures.exists('sub_' + SUB_TEMA)) { subTex(SUB_TEMA, () => drawScenery(scene)); return subsueloProv(sc, ytop, add, cx, vw, bot, grass); }
+  const key = subColor(sc, SUB_TEMA), src = sc.textures.get(key).getSourceImage(), IW = src.width, IH = src.height, { xa, xb } = SUBSUELO;
+  // lo que se ve del subsuelo (en píxeles css): en batalla, hasta el panel de cartas o, en horizontal, la esquina libre a su lado
+  const z = cam.zoom, k = DPR / z, left = cx - vw / 2, top = bot - cam.height / z, ug = (ytop - top) / k, ih = window.innerHeight;
+  let Hc = (ih - ug) * k, Wc = vw, esq = false;
+  if (!$('hud').hidden && $('menu').hidden) {
+    const d = $('dock').getBoundingClientRect(), enBanda = d.top - ug, enEsq = d.left >= 74 ? ih - ug : 0;
+    esq = enEsq > enBanda * 1.25; Hc = Math.max(40, esq ? enEsq : enBanda) * k; if (esq) Wc = d.left * k;
+  }
+  // tamaño: todo el ancho si cabe tu cripta entera (de la clave del arco a la losa del suelo); si no, más pequeño
+  const [x0, y0, x1, y1] = T.L.muro, arriba = y0 - 75, abajo = y1 + 16;
+  const s = Math.max(0.25, Math.min((vw + 4) / IW, Hc * 0.97 / (abajo - arriba), esq ? Wc * 1.08 / (x1 - x0) : Infinity));
+  const yi = Math.min(ytop - 2, ytop + Hc - abajo * s - 3 * k);   // el suelo de la cripta, justo encima del panel
+  const Lx = esq ? Math.min(left - 2, left + Wc / 2 - (x0 + x1) / 2 * s) : left - 2;   // en la esquina, la cripta en su centro
+  const Rx = Math.max(left + vw + 2, Lx + IW * s) - (IW - xb) * s, mx0 = Lx + xa * s, Mw = (xb - xa) * s, r = (Rx - mx0) / Mw;
+  let n = 1; while (Math.abs(Math.log(r / (n + 2))) < Math.abs(Math.log(r / n))) n += 2;   // un número impar de tramos: así encajan los bordes
+  const pon = (x, f, sx, flip) => add(sc.add.image(x, yi, key, f).setOrigin(0, 0).setScale(sx, s).setFlipX(!!flip).setDepth(-30));
+  pon(Lx, 'L', s); for (let i = 0; i < n; i++) pon(mx0 + i * Mw * r / n, 'M', s * r / n, i % 2); pon(Rx, 'R', s);
+  const fondo = Phaser.Display.Color.HexStringToColor(T.fondo).color;
+  if (yi + IH * s < bot + 60) add(sc.add.rectangle(cx, (yi + IH * s + bot + 60) / 2 - 2, vw + 200, bot + 64 - yi - IH * s, fondo).setDepth(-31));
+  subBorde(sc); const sb = (W + 8) / 1084;
+  for (let x = W / 2 - 3 * 1084 * sb; x < cx + vw / 2 + 1084 * sb; x += 1084 * sb) if (x + 1084 * sb > cx - vw / 2) add(sc.add.image(x, ytop - 3, 'sub_borde').setOrigin(0, 0).setScale(sb).setTint(grass).setDepth(-29.5));
+  SUB_L = { s, yi, Lx, Rx, T, esq };
+}
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function subsueloTex(sc) {
   if (sc.textures.exists('subsuelo')) return;
@@ -321,8 +399,7 @@ function subsueloTex(sc) {
   }
   sc.textures.addCanvas('subsuelo', cv);
 }
-function drawSubsuelo(sc, ytop, add, cx, vw, bot, grass) {
-  SUB_Y = ytop;
+function subsueloProv(sc, ytop, add, cx, vw, bot, grass) {   // el provisional, mientras llega el dibujo
   subsueloTex(sc);
   const key = 'subsuelo', src = sc.textures.get(key).getSourceImage(), s = (W + 8) / src.width, iw = src.width * s, ih = src.height * s;
   add(sc.add.rectangle(cx, ytop + 40, vw + 200, 90, grass).setDepth(-31));   // la hierba se ve por el borde ondulado

@@ -98,24 +98,17 @@ de la cabeza.
 > (Reino), mapa enrollado con una espada (Campaña), dos espadas cruzadas sobre un escudo (Ejército) y una
 > estrella con una bandera (Eventos).
 
-## 8. Subsuelo y cripta (batalla)
+## 8. Subsuelo y cripta (batalla) *(hecho: un subsuelo por aspecto del castillo)*
 
-El camino de la batalla está más arriba y debajo se ve el subsuelo, con la cripta de tu bestia bajo tu castillo.
-Ahora hay dibujos provisionales hechos en el juego; estos los sustituyen.
+Ya están en el juego los 20 subsuelos (1536×1024, sin transparencia) con las dos criptas: la tuya a la izquierda
+(gemas cian) y la del rival a la derecha (gemas moradas). El juego pinta esas gemas con el color de cada bando y
+pone tu bestia en el suelo de tu cripta. Para un aspecto nuevo, pide uno igual adjuntando uno de los que hay:
 
-> **Subsuelo** (horizontal, 1536×1024, sin transparencia): corte del terreno visto de lado, como una tarta por
-> capas. Arriba del todo, una franja fina de hierba verde con el borde de arriba recto (encaja justo debajo del
-> camino) y raíces que cuelgan. Debajo, tierra marrón clara con piedras redondeadas; más abajo, tierra oscura con
-> algún hueso y un fósil de caracola; al fondo, roca morada oscura con racimos de cristales azules y violetas.
-> Sin personajes, sin cuevas grandes y sin nada importante pegado a los bordes izquierdo y derecho: se repite en
-> espejo a los lados.
-
-> **Cripta** (PNG con fondo transparente, 1280×1024): una cripta de piedra bajo tierra vista de frente, cortada
-> como una casa de muñecas. Es una sala abovedada de sillares grises con un borde grueso de piedra alrededor, el
-> interior oscuro (azul y morado) y un brillo verde suave al fondo. Tiene suelo de losas, dos antorchas encendidas
-> en los muros, dos cadenas colgando del techo, telarañas en las esquinas y una calavera y unos huesos en los
-> rincones. Arriba a la izquierda, una escalera estrecha sube hasta el borde de arriba de la imagen (lleva a tu
-> castillo). La sala va **vacía** y con el centro del suelo despejado: la bestia se pone encima en el juego.
+> **Subsuelo**: el mismo encuadre que la imagen adjunta: corte de tierra por capas onduladas, con dos criptas de
+> piedra iguales a la misma altura (una arriba a la izquierda y otra arriba a la derecha), cada una con su escalera
+> que sube hasta el borde de arriba, el muro del fondo claro y vacío, y una gema CIAN en cada pilar de la de la
+> izquierda y MORADA en cada pilar de la de la derecha. Tema: [el del castillo]. Entre las dos criptas, un adorno
+> del tema; abajo, rocas redondeadas. Sin personajes ni texto.
 
 ## 9. Aspectos del castillo: dañado y en ruinas *(hecho: los 18 ya están en el juego)*
 

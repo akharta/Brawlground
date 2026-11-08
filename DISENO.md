@@ -233,8 +233,14 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
   - Horizontal: campo completo; la cripta asoma en la esquina izquierda, junto al panel de cartas, y el hechizo
     y la bestia van en la esquina derecha.
   - Vertical: campo comprimido (escalado al ancho) con la interfaz y las cartas abajo. El camino sube hasta un
-    tercio de la pantalla y debajo se ve el **subsuelo** (tierra, raíces, piedras, huesos y cristales en la roca)
-    con la cripta de tu bestia bajo tu castillo. Subsuelo y cripta son provisionales hasta que lleguen sus dibujos.
+    tercio de la pantalla y debajo se ve el **subsuelo**, dibujado para cada aspecto del castillo: tu cripta a la
+    izquierda, bajo tu castillo, con tu bestia dentro, y la del rival a la derecha, cada una con las gemas de los
+    pilares del color de su bando. El dibujo se encoge para que tu cripta quepa entera en lo que se ve; si no
+    llega a cubrir todo el ancho (tableta), la tierra del medio se repite en espejo.
+    Temas: piedra (el de siempre), roble (raíces), luna, vitrales (cuarzo rosa), mareas (arena y coral), dragón
+    (lava), engranajes, hielo, grifo (mármol), arena (ámbar), trueno, pagoda (rubíes), faroles (vetas de oro),
+    carnero (cobre), escarabajo (lapislázuli), gólem, murciélago (amatistas), loto y sol (fósiles). Hay uno más,
+    con setas, guardado para el castillo de las Setas.
 - **Tecnología**: Phaser (HTML5), instalable como app (PWA) y jugable sin conexión.
 - **Arte propio**, original y exclusivo de Brawlground. Estilo cartoon chibi: cabeza
   grande, sin brazos (manos flotantes), contorno grueso azul marino, colores planos.

@@ -340,6 +340,8 @@ const _resetR = resetBattle;
 resetBattle = function (o = {}) {
   _resetR(o);
   const sk = mySkin(); CASTLE_SKIN.blue = sk && scene && scene.textures.exists('cas_' + sk) ? Object.assign({ id: sk }, ASPECTOS_POS[sk]) : null;
+  SUB_TEMA = SUBSUELO.temas[sk] ? sk : 'piedra';   // el subsuelo, con las criptas a juego con tu castillo
+  if (!o.sim && scene) subTex(SUB_TEMA, () => drawScenery(scene));
   if (sk && !CASTLE_SKIN.blue) skinTex(sk);
   if (castleImg.blue) castleImg.blue.state = undefined;   // se vuelve a pintar con su aspecto
   const real = !o.demo && !o.sim;
@@ -357,8 +359,9 @@ resetBattle = function (o = {}) {
 };
 let BST = null, CRIPTA = null;
 /* ---- la cripta: una sala de piedra bajo tu castillo, en el subsuelo, donde vive tu bestia ----
-   Se coloca en el trozo de subsuelo que se ve: en vertical, entre el camino y el panel de cartas; en horizontal,
-   en la esquina libre a la izquierda del panel. Dibujo provisional hasta que llegue el definitivo. */
+   Viene dibujada en el subsuelo de cada aspecto (la de la izquierda, con gemas de tu color); mientras se carga, una
+   provisional hecha aquí, en el trozo de subsuelo que se ve: en vertical, entre el camino y el panel de cartas; en
+   horizontal, en la esquina libre a la izquierda del panel. */
 function criptaTex() {
   if (scene.textures.exists('cripta')) return;
   const CW = 640, CH = 520, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
@@ -414,6 +417,15 @@ function colocaCripta() {
   if (CRIPTA) { CRIPTA.objs.forEach(o => o.destroy()); CRIPTA = null; }
   if (BST) BST.setVisible(false);
   if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
+  if (SUB_L) {   // la cripta dibujada en el subsuelo: la bestia, en el suelo de la tuya, a la izquierda de la escalera
+    const { s, yi, Lx, T } = SUB_L, [x0, y0, x1, y1] = T.L.muro, base = (y1 - y0) * s * 0.72;
+    CRIPTA = { objs: [], x: Lx + x0 * s, y: yi + y0 * s, w: (x1 - x0) * s, h: base / 0.47, s, antorchas: [] };
+    if (BST) {
+      BST.x0 = Lx + (x0 + (x1 - x0) * 0.42) * s; BST.y0 = yi + (y1 + 2) * s; BST.hh = base * BST.art.h;
+      BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
+    }
+    return;
+  }
   criptaTex();
   const T = CRIPTA_TEX, gm = window.__game, z = cam.zoom, k = DPR / z;   // unidades del mundo por píxel css
   const left = cam.scrollX + cam.width / 2 - gm.scale.width / 2 / z, top = cam.scrollY + cam.height / 2 - gm.scale.height / 2 / z;
@@ -438,6 +450,7 @@ function bestiaEnCampo(id) {
 }
 function bstRespira() {   // en reposo, respira (se estira un poco hacia arriba y vuelve)
   scene.tweens.killTweensOf(BST); BST.setScale(BST.k);
+  if (BST.alpha < 1) scene.tweens.add({ targets: BST, alpha: 1, duration: 300 });   // si se recolocó a medio aparecer, termina de aparecer
   scene.tweens.add({ targets: BST, scaleY: BST.k * 1.04, duration: 850, ease: 'Sine.inOut', yoyo: true, repeat: -1 });
 }
 function bestiaPose(n, t, quieta) {   // cambia de dibujo (con un pequeño salto) y vuelve al de reposo pasados t segundos
@@ -591,8 +604,9 @@ const _pcR = paintColors;
 paintColors = function () { _pcR(); if (EDIF === 'murallas' && !$('edif').hidden) reinoColor('img/reino/murallas.png', myColor(), url => { const im = document.querySelector('#ed-body .bimg'); if (im) im.src = url; }); };
 // al arrancar, el aspecto elegido ya queda cargado para la primera batalla
 const _loadedR = loaded;
-loaded = function () { _loadedR(); skinTex(mySkin()); };
+loaded = function () { _loadedR(); skinTex(mySkin()); subTex(SUBSUELO.temas[mySkin()] ? mySkin() : 'piedra'); };
 // la cripta se recoloca cada vez que la cámara cambia (al girar el móvil, al entrar en batalla…)
 const _dsR = drawScenery;
 drawScenery = function (sc) { _dsR(sc); colocaCripta(); };
+window.__sub = () => { const gm = window.__game, z = cam.zoom, k = DPR / z; return { SUB_Y, k, left: cam.scrollX + cam.width / 2 - gm.scale.width / 2 / z, top: cam.scrollY + cam.height / 2 - gm.scale.height / 2 / z, vw: gm.scale.width / z, cripta: CRIPTA && { x: CRIPTA.x, y: CRIPTA.y, w: CRIPTA.w, h: CRIPTA.h }, tema: SUB_TEMA, capa: SUB_L && { s: SUB_L.s, yi: SUB_L.yi, Lx: SUB_L.Lx, Rx: SUB_L.Rx, esq: SUB_L.esq }, bst: BST && { x: BST.x, y: BST.y, h: BST.displayHeight, v: BST.visible } }; };
 window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
