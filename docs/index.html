@@ -572,8 +572,8 @@ body.nav .screen.hogar { padding-bottom: calc(var(--navh) + var(--sb) + 8px); }
 .kcard.lock { opacity: .72; }
 .kcard .btn { display: inline-flex; align-items: center; gap: 4px; }
 .kcard .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
-.kico { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff8, transparent 55%), var(--c, #4a5a92); }
-.kico svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.kcico { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--outline); display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff8, transparent 55%), var(--c, #4a5a92); }
+.kcico svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .kind { font-family: var(--font-display); font-size: .72rem; color: var(--outline); background: var(--gold); border-radius: 999px; padding: 0 8px; justify-self: start; }
 .lvl { font-family: var(--font-display); color: var(--gold); }
 .uprow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--panel); border: 3px solid var(--outline); border-radius: 14px; padding: 10px; }
@@ -5459,7 +5459,7 @@ const myHechizo = () => spLv(perfil.hechizo) ? perfil.hechizo : null;
 function sanctum(el) {
   el.innerHTML = '<p class="note">El hechizo elegido sale en la batalla como un botón encima de tus cartas. Se carga solo con el tiempo.</p><div class="cards3">' + Object.entries(HECHIZOS).map(([id, h]) => {
     const lv = spLv(id), sel = myHechizo() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
       + '<p>' + h.txt(spK(id)) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-c="' + id + '">Crear · ' + costeHtml(h.crear) + '</button>'
         : (sel ? '<span class="kind">En batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < SP_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(spUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
@@ -5501,7 +5501,7 @@ function cripta(el) {
   const first = !Object.keys(perfil.bestias || {}).length;
   el.innerHTML = (first ? '<div class="infocard"><h3>Elige tu primera bestia</h3><p>La primera es gratis. Las demás se pueden despertar con diamantes.</p></div>' : '') + '<div class="cards3">' + Object.entries(BESTIAS).map(([id, b]) => {
     const lv = beLv(id), sel = myBestia() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
       + '<span class="kind">' + b.kind + '</span><p>' + b.txt(b.v(Math.max(1, lv))) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-w="' + id + '">' + (first ? 'Elegir · gratis' : 'Despertar · ' + gemBtn(BE_PRECIO)) + '</button>'
         : (sel ? '<span class="kind">Contigo en batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < BE_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(beUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))

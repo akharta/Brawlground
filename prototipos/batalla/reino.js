@@ -161,7 +161,7 @@ const myHechizo = () => spLv(perfil.hechizo) ? perfil.hechizo : null;
 function sanctum(el) {
   el.innerHTML = '<p class="note">El hechizo elegido sale en la batalla como un botón encima de tus cartas. Se carga solo con el tiempo.</p><div class="cards3">' + Object.entries(HECHIZOS).map(([id, h]) => {
     const lv = spLv(id), sel = myHechizo() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
       + '<p>' + h.txt(spK(id)) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-c="' + id + '">Crear · ' + costeHtml(h.crear) + '</button>'
         : (sel ? '<span class="kind">En batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < SP_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(spUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
@@ -203,7 +203,7 @@ function cripta(el) {
   const first = !Object.keys(perfil.bestias || {}).length;
   el.innerHTML = (first ? '<div class="infocard"><h3>Elige tu primera bestia</h3><p>La primera es gratis. Las demás se pueden despertar con diamantes.</p></div>' : '') + '<div class="cards3">' + Object.entries(BESTIAS).map(([id, b]) => {
     const lv = beLv(id), sel = myBestia() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + b.c + '">' + svg(id) + '</span><div><b>' + b.name + '</b><small>' + (lv ? 'Nivel ' + lv : 'Dormida') + '</small></div></header>'
       + '<span class="kind">' + b.kind + '</span><p>' + b.txt(b.v(Math.max(1, lv))) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-w="' + id + '">' + (first ? 'Elegir · gratis' : 'Despertar · ' + gemBtn(BE_PRECIO)) + '</button>'
         : (sel ? '<span class="kind">Contigo en batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < BE_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(beUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
