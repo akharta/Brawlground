@@ -116,3 +116,22 @@ Ahora hay dibujos provisionales hechos en el juego; estos los sustituyen.
 > en los muros, dos cadenas colgando del techo, telarañas en las esquinas y una calavera y unos huesos en los
 > rincones. Arriba a la izquierda, una escalera estrecha sube hasta el borde de arriba de la imagen (lleva a tu
 > castillo). La sala va **vacía** y con el centro del suelo despejado: la bestia se pone encima en el juego.
+
+## 9. Aspectos del castillo: dañado y en ruinas *(10 de 18 hechos)*
+
+Ya están en el juego, dañado y en ruinas: Roble, Luna, Vitrales, Mareas, Dragón, Engranajes, Hielo, Grifo, Arena y
+Trueno. Faltan **Pagoda, Faroles, Carnero, Escarabajo, Gólem, Murciélago, Loto y Sol**; hasta que lleguen, se ven
+dañados con unas grietas hechas en el juego y, al caer, con las ruinas genéricas.
+
+Adjunta también el dibujo del castillo intacto. Pide los dos con su **mismo encuadre** (1254×1254, fondo
+transparente, el castillo en el mismo sitio y del mismo tamaño): así encajan solos sobre el intacto.
+
+> **Dañado**: el mismo castillo de la imagen adjunta, igual de grande y en la misma posición, pero muy castigado:
+> grietas, agujeros negros en los muros, almenas rotas, un fuego pequeño con humo en lo alto y cascotes al pie. El
+> estandarte grande del centro, rasgado; los estandartes de las torres y los dos arqueros, igual que en el intacto.
+> Los estandartes y las capuchas siguen AZULES (se recolorean después).
+
+> **En ruinas**: lo que queda de ese mismo castillo derrumbado: un montón de cascotes con sus piedras y adornos
+> propios, con el estandarte azul (#1e4fe0) y dorado caído encima en el centro, el asta partida delante y tres
+> nubecitas de humo. El montón ocupa todo el ancho del castillo y apoya en la misma línea del suelo; la mitad de
+> arriba de la imagen, vacía.

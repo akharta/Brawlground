@@ -133,18 +133,25 @@ const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Rob
   ['trueno', 'Castillo del Trueno'], ['pagoda', 'Castillo Pagoda'], ['farol', 'Castillo de los Faroles'], ['carnero', 'Fortín del Carnero'], ['escarabajo', 'Templo del Escarabajo'],
   ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol']];
 const ASP_PRECIO = 150;
-for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = v.ban; }
+for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = (v.d && v.d.ban) || v.ban; }
 const aspTiene = id => id === 'piedra' || perfil.all || (perfil.aspectos || []).includes(id);
 const mySkin = () => perfil.aspecto && ASPECTOS_POS[perfil.aspecto] && aspTiene(perfil.aspecto) ? perfil.aspecto : null;
-function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) y prepara su versión dañada
-  if (!id || !scene) return; const k = 'cas_' + id;
+const skinCarga = {};
+function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) con sus versiones dañada y en ruinas
+  if (!id || !scene) return; const k = 'cas_' + id, P = ASPECTOS_POS[id] || {};
   if (scene.textures.exists(k)) { if (cb) cb(); return; }
-  const im = new Image();
-  im.onload = () => { if (!scene.textures.exists(k)) { scene.textures.addImage(k, im); castilloDanado(id, im); } if (cb) cb(); };
-  im.src = 'img/castillos/' + id + '.png';
+  if (skinCarga[id]) { if (cb) skinCarga[id].push(cb); return; }   // ya se está cargando: avisa a todos al terminar
+  skinCarga[id] = cb ? [cb] : [];
+  const pide = (suf, ok, mal) => { const im = new Image(); im.onload = () => ok(im); im.onerror = mal; im.src = 'img/castillos/' + id + suf + '.png'; };
+  let falta = 1 + !!P.d + !!P.r;
+  const listo = () => { if (--falta) return; const l = skinCarga[id] || []; delete skinCarga[id]; l.forEach(f => f()); };
+  const pon = (key, im) => { if (!scene.textures.exists(key)) scene.textures.addImage(key, im); };
+  pide('', im => { pon(k, im); if (!P.d) castilloDanado(id, im); listo(); }, () => { delete skinCarga[id]; });
+  if (P.d) pide('_d', im => { pon(k + '_d', im); listo(); }, listo);   // si falla, el castillo sigue entero hasta caer
+  if (P.r) pide('_r', im => { pon(k + '_r', im); listo(); }, listo);   // si falla, las ruinas genéricas
 }
 function castilloDanado(id, im) {
-  // dañado: más oscuro, con grietas y hollín (hasta que llegue su dibujo propio)
+  // dañado sin dibujo propio: más oscuro, con grietas y hollín (hasta que llegue el suyo)
   let sd = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7); const rn = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
   const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const cx = cv.getContext('2d'), Wd = cv.width, Hd = cv.height;
   cx.drawImage(im, 0, 0); cx.globalCompositeOperation = 'source-atop';

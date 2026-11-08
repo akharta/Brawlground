@@ -3494,11 +3494,15 @@ const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.4
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
-// aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch); en ruinas, el genérico
+// aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch), también
+// dañado (_d) y en ruinas (_r); dy: lo que el dibujo dañado asoma por arriba. Sin su dibujo de ruinas, las genéricas
 let CASTLE_SKIN = { blue: null, purple: null };
 function castleArt(team, st = '') {
   const sk = CASTLE_SKIN[team];
-  if (sk && st !== '_destruido') return { key: 'cas_' + sk.id + (st === '_danado' ? '_d' : ''), plat: sk.plat, arch: sk.arch };
+  if (sk) {
+    const s = st === '_danado' ? 'd' : st === '_destruido' ? 'r' : '', key = 'cas_' + sk.id + (s ? '_' + s : ''), ok = !s || (scene && scene.textures.exists(key));
+    if (ok || s === 'd') { const dy = ok && s && sk[s] ? sk[s].dy : 0; return { key: ok ? key : 'cas_' + sk.id, plat: [sk.plat[0], sk.plat[1] + dy], arch: [sk.arch[0], sk.arch[1] + dy] }; }
+  }
   return { key: CASTLE_ART[team].key + st, plat: CASTLE_ART[team].plat, arch: CASTLE_ART[team].arch };
 }
 let cam, db = null;
@@ -5535,24 +5539,31 @@ const DEFENSAS = {
 const defLv = k => (perfil.def || {})[k] || 0;
 const defCoste = k => Math.round(DEFENSAS[k].base * Math.pow(1.32, defLv(k)) / 10) * 10;
 // aspectos del castillo: dibujos propios (img/castillos) con el suelo del torreón, el arquero y el estandarte grande de cada uno
-const ASPECTOS_POS = {"arena": {"h": 456, "plat": [260, 91], "arch": [489, 131], "ban": [0.3942, 0.3772, 0.0885, 0.2061]}, "carnero": {"h": 434, "plat": [260, 87], "arch": [485, 99], "ban": [0.4615, 0.3571, 0.075, 0.1705]}, "dragon": {"h": 450, "plat": [260, 90], "arch": [477, 129], "ban": [0.4058, 0.3978, 0.0865, 0.1822]}, "engranaje": {"h": 449, "plat": [260, 90], "arch": [479, 122], "ban": [0.4115, 0.3608, 0.0788, 0.2183]}, "escarabajo": {"h": 444, "plat": [260, 89], "arch": [485, 125], "ban": [0.4346, 0.3401, 0.0712, 0.1644]}, "farol": {"h": 462, "plat": [260, 92], "arch": [485, 135], "ban": [0.4365, 0.3853, 0.0827, 0.1667]}, "golem": {"h": 455, "plat": [260, 91], "arch": [482, 132], "ban": [0.4577, 0.3736, 0.0827, 0.156]}, "grifo": {"h": 456, "plat": [260, 91], "arch": [486, 131], "ban": [0.4019, 0.3991, 0.0981, 0.2061]}, "hielo": {"h": 472, "plat": [260, 94], "arch": [486, 136], "ban": [0.4038, 0.3792, 0.0923, 0.2055]}, "loto": {"h": 456, "plat": [260, 91], "arch": [483, 136], "ban": [0.4538, 0.3684, 0.0788, 0.1776]}, "luna": {"h": 467, "plat": [260, 93], "arch": [481, 135], "ban": [0.3904, 0.3919, 0.0808, 0.197]}, "marea": {"h": 463, "plat": [260, 93], "arch": [482, 138], "ban": [0.4019, 0.3888, 0.0846, 0.203]}, "murcielago": {"h": 447, "plat": [260, 89], "arch": [480, 129], "ban": [0.4596, 0.3714, 0.0808, 0.179]}, "pagoda": {"h": 440, "plat": [260, 88], "arch": [482, 122], "ban": [0.4654, 0.4205, 0.0692, 0.1523]}, "roble": {"h": 458, "plat": [260, 92], "arch": [480, 140], "ban": [0.4038, 0.3908, 0.0827, 0.2074]}, "sol": {"h": 427, "plat": [260, 85], "arch": [484, 115], "ban": [0.4481, 0.3653, 0.0654, 0.1522]}, "trueno": {"h": 434, "plat": [260, 87], "arch": [478, 130], "ban": [0.4212, 0.3917, 0.0827, 0.2166]}, "vitral": {"h": 468, "plat": [260, 94], "arch": [482, 146], "ban": [0.4269, 0.3697, 0.0827, 0.1752]}};
+const ASPECTOS_POS = {"arena": {"h": 456, "plat": [260, 91], "arch": [489, 131], "ban": [0.3942, 0.3772, 0.0885, 0.2061], "d": {"dy": 0, "h": 459, "ban": [0.3942, 0.3747, 0.0904, 0.1852]}, "r": {"dy": 0, "h": 458}}, "carnero": {"h": 434, "plat": [260, 87], "arch": [485, 99], "ban": [0.4615, 0.3571, 0.075, 0.1705]}, "dragon": {"h": 450, "plat": [260, 90], "arch": [477, 129], "ban": [0.4058, 0.3978, 0.0865, 0.1822], "d": {"dy": 1, "h": 456, "ban": [0.4038, 0.3925, 0.0904, 0.1601]}, "r": {"dy": 0, "h": 457}}, "engranaje": {"h": 449, "plat": [260, 90], "arch": [479, 122], "ban": [0.4115, 0.3608, 0.0788, 0.2183], "d": {"dy": 1, "h": 457, "ban": [0.4096, 0.3567, 0.0846, 0.1904]}, "r": {"dy": 0, "h": 456}}, "escarabajo": {"h": 444, "plat": [260, 89], "arch": [485, 125], "ban": [0.4346, 0.3401, 0.0712, 0.1644]}, "farol": {"h": 462, "plat": [260, 92], "arch": [485, 135], "ban": [0.4365, 0.3853, 0.0827, 0.1667]}, "golem": {"h": 455, "plat": [260, 91], "arch": [482, 132], "ban": [0.4577, 0.3736, 0.0827, 0.156]}, "grifo": {"h": 456, "plat": [260, 91], "arch": [486, 131], "ban": [0.4019, 0.3991, 0.0981, 0.2061], "d": {"dy": 3, "h": 462, "ban": [0.4019, 0.4004, 0.1, 0.1797]}, "r": {"dy": 0, "h": 461}}, "hielo": {"h": 472, "plat": [260, 94], "arch": [486, 136], "ban": [0.4038, 0.3792, 0.0923, 0.2055], "d": {"dy": 1, "h": 477, "ban": [0.4038, 0.3774, 0.0942, 0.1866]}, "r": {"dy": 0, "h": 474}}, "loto": {"h": 456, "plat": [260, 91], "arch": [483, 136], "ban": [0.4538, 0.3684, 0.0788, 0.1776]}, "luna": {"h": 467, "plat": [260, 93], "arch": [481, 135], "ban": [0.3904, 0.3919, 0.0808, 0.197], "d": {"dy": 2, "h": 472, "ban": [0.3904, 0.3919, 0.0846, 0.1801]}, "r": {"dy": 0, "h": 467}}, "marea": {"h": 463, "plat": [260, 93], "arch": [482, 138], "ban": [0.4019, 0.3888, 0.0846, 0.203], "d": {"dy": 0, "h": 463, "ban": [0.4, 0.3888, 0.0885, 0.1836]}, "r": {"dy": 0, "h": 463}}, "murcielago": {"h": 447, "plat": [260, 89], "arch": [480, 129], "ban": [0.4596, 0.3714, 0.0808, 0.179]}, "pagoda": {"h": 440, "plat": [260, 88], "arch": [482, 122], "ban": [0.4654, 0.4205, 0.0692, 0.1523]}, "roble": {"h": 458, "plat": [260, 92], "arch": [480, 140], "ban": [0.4038, 0.3908, 0.0827, 0.2074], "d": {"dy": 0, "h": 459, "ban": [0.4038, 0.39, 0.0846, 0.1743]}, "r": {"dy": 0, "h": 459}}, "sol": {"h": 427, "plat": [260, 85], "arch": [484, 115], "ban": [0.4481, 0.3653, 0.0654, 0.1522]}, "trueno": {"h": 434, "plat": [260, 87], "arch": [478, 130], "ban": [0.4212, 0.3917, 0.0827, 0.2166], "d": {"dy": 5, "h": 441, "ban": [0.4212, 0.3968, 0.0885, 0.1701]}, "r": {"dy": 0, "h": 434}}, "vitral": {"h": 468, "plat": [260, 94], "arch": [482, 146], "ban": [0.4269, 0.3697, 0.0827, 0.1752], "d": {"dy": 3, "h": 473, "ban": [0.4288, 0.3721, 0.0808, 0.1522]}, "r": {"dy": 0, "h": 468}}};
 const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Roble'], ['luna', 'Castillo Lunar'], ['vitral', 'Catedral de Vitrales'], ['marea', 'Alcázar de las Mareas'],
   ['dragon', 'Fortaleza del Dragón'], ['engranaje', 'Castillo de Engranajes'], ['hielo', 'Fortaleza de Hielo'], ['grifo', 'Alcázar del Grifo'], ['arena', 'Fortaleza de Arena'],
   ['trueno', 'Castillo del Trueno'], ['pagoda', 'Castillo Pagoda'], ['farol', 'Castillo de los Faroles'], ['carnero', 'Fortín del Carnero'], ['escarabajo', 'Templo del Escarabajo'],
   ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol']];
 const ASP_PRECIO = 150;
-for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = v.ban; }
+for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = (v.d && v.d.ban) || v.ban; }
 const aspTiene = id => id === 'piedra' || perfil.all || (perfil.aspectos || []).includes(id);
 const mySkin = () => perfil.aspecto && ASPECTOS_POS[perfil.aspecto] && aspTiene(perfil.aspecto) ? perfil.aspecto : null;
-function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) y prepara su versión dañada
-  if (!id || !scene) return; const k = 'cas_' + id;
+const skinCarga = {};
+function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) con sus versiones dañada y en ruinas
+  if (!id || !scene) return; const k = 'cas_' + id, P = ASPECTOS_POS[id] || {};
   if (scene.textures.exists(k)) { if (cb) cb(); return; }
-  const im = new Image();
-  im.onload = () => { if (!scene.textures.exists(k)) { scene.textures.addImage(k, im); castilloDanado(id, im); } if (cb) cb(); };
-  im.src = 'img/castillos/' + id + '.png';
+  if (skinCarga[id]) { if (cb) skinCarga[id].push(cb); return; }   // ya se está cargando: avisa a todos al terminar
+  skinCarga[id] = cb ? [cb] : [];
+  const pide = (suf, ok, mal) => { const im = new Image(); im.onload = () => ok(im); im.onerror = mal; im.src = 'img/castillos/' + id + suf + '.png'; };
+  let falta = 1 + !!P.d + !!P.r;
+  const listo = () => { if (--falta) return; const l = skinCarga[id] || []; delete skinCarga[id]; l.forEach(f => f()); };
+  const pon = (key, im) => { if (!scene.textures.exists(key)) scene.textures.addImage(key, im); };
+  pide('', im => { pon(k, im); if (!P.d) castilloDanado(id, im); listo(); }, () => { delete skinCarga[id]; });
+  if (P.d) pide('_d', im => { pon(k + '_d', im); listo(); }, listo);   // si falla, el castillo sigue entero hasta caer
+  if (P.r) pide('_r', im => { pon(k + '_r', im); listo(); }, listo);   // si falla, las ruinas genéricas
 }
 function castilloDanado(id, im) {
-  // dañado: más oscuro, con grietas y hollín (hasta que llegue su dibujo propio)
+  // dañado sin dibujo propio: más oscuro, con grietas y hollín (hasta que llegue el suyo)
   let sd = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7); const rn = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
   const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const cx = cv.getContext('2d'), Wd = cv.width, Hd = cv.height;
   cx.drawImage(im, 0, 0); cx.globalCompositeOperation = 'source-atop';

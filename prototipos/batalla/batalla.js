@@ -20,11 +20,15 @@ const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.4
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
-// aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch); en ruinas, el genérico
+// aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch), también
+// dañado (_d) y en ruinas (_r); dy: lo que el dibujo dañado asoma por arriba. Sin su dibujo de ruinas, las genéricas
 let CASTLE_SKIN = { blue: null, purple: null };
 function castleArt(team, st = '') {
   const sk = CASTLE_SKIN[team];
-  if (sk && st !== '_destruido') return { key: 'cas_' + sk.id + (st === '_danado' ? '_d' : ''), plat: sk.plat, arch: sk.arch };
+  if (sk) {
+    const s = st === '_danado' ? 'd' : st === '_destruido' ? 'r' : '', key = 'cas_' + sk.id + (s ? '_' + s : ''), ok = !s || (scene && scene.textures.exists(key));
+    if (ok || s === 'd') { const dy = ok && s && sk[s] ? sk[s].dy : 0; return { key: ok ? key : 'cas_' + sk.id, plat: [sk.plat[0], sk.plat[1] + dy], arch: [sk.arch[0], sk.arch[1] + dy] }; }
+  }
   return { key: CASTLE_ART[team].key + st, plat: CASTLE_ART[team].plat, arch: CASTLE_ART[team].arch };
 }
 let cam, db = null;

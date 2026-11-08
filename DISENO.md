@@ -183,8 +183,9 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
   lugar se toca en el dibujo o en su cartel, la vista se acerca y se entra. Cada lugar lleva su dibujo arriba:
   - **Taberna**: 2 mercenarios cada 4 horas, con oro.
   - **Murallas**: estandarte (color y emblema), aspecto del castillo (18 castillos además del de piedra, 150 diamantes
-    cada uno; con tu color y tu emblema en sus estandartes y arqueros; dañado: versión oscurecida con grietas hasta que
-    tenga dibujo propio; en ruinas, el montón genérico) y
+    cada uno; con tu color y tu emblema en sus estandartes y arqueros. Con media vida pasa a su dibujo dañado
+    (estandarte rasgado, grietas, fuego) y al caer, a sus ruinas con el estandarte caído en tu color; los que aún
+    no tienen esos dibujos se oscurecen con grietas y caen en el montón genérico) y
     defensas: Muralla (+6 % de vida del castillo por nivel), Arqueros de las torres (+10 % de daño) y
     Atalaya (+2 % de cadencia), hasta nivel 20, con oro.
   - **Sanctum Arcano** (iconos dibujados): hechizos que se crean una vez y se suben de nivel (+10 % por nivel, hasta 10).
