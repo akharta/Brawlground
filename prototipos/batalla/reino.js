@@ -575,7 +575,7 @@ function colocaAbils() {
   const ab = $('abils'), d = $('dock').getBoundingClientRect(), ih = window.innerHeight;
   // en horizontal, la esquina izquierda es para la cripta: los botones van a la derecha del panel
   if (d.left >= 74) { ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'var(--sr)'; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
-  ab.style.left = ''; ab.style.right = '';
+  ab.style.left = 'calc(var(--sl) + 66px)'; ab.style.right = '';   // a la derecha del círculo del héroe, que va sobre el trono
   const z = cam.zoom / DPR, y = (THRONE.y - 175 - cam.worldView.y) * z, top = $('hudtop').getBoundingClientRect().bottom + 8, hh = ab.offsetHeight || 130;
   const t = Math.max(top, y - hh);
   if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
