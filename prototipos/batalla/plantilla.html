@@ -369,7 +369,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 #toast.in { animation: toastin .25s ease-out; }
 @keyframes toastin { from { transform: translate(-50%, 16px); opacity: 0; } }
 /* ---- centro de la app: menú con la expedición en marcha y barra de pestañas ---- */
-:root { --navh: 64px; }
+:root { --navh: 78px; }
 .screen.hub { place-items: stretch; padding: 0; background: linear-gradient(rgba(12,15,28,.55), transparent 22%, transparent 70%, rgba(12,15,28,.6)); pointer-events: none; }
 .hub > * { pointer-events: auto; }
 .hubtop { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 8px; padding: calc(var(--st) + 8px) var(--sr) 6px var(--sl); }
@@ -388,7 +388,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .side.l { left: var(--sl); } .side.r { right: var(--sr); }
 .sbtn { background: none; border: 0; padding: 0; display: grid; justify-items: center; gap: 2px; width: 62px; }
 .sico { position: relative; width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(#3d4a78, #283253); border: 3px solid var(--outline); box-shadow: inset 0 3px 0 rgba(255,255,255,.15), 0 3px 0 var(--outline); display: grid; place-items: center; }
-.sico svg, .nico svg { width: 26px; height: 26px; fill: none; stroke: #f4e7c4; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.sico svg { width: 26px; height: 26px; fill: none; stroke: #f4e7c4; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .sico .dot { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: #e2363b; border: 2px solid var(--outline); }
 .slbl { font-family: var(--font-display); font-size: .72rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
 .hubbot { position: absolute; left: 0; right: 0; bottom: calc(var(--navh) + var(--sb) + 10px); display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 0 var(--sr) 0 var(--sl); }
@@ -402,12 +402,17 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .btxt small { font-size: .62rem; color: #fff; text-shadow: 0 1px 0 #000; }
 .btxt b { display: inline-flex; align-items: center; gap: 3px; background: rgba(15,19,34,.85); border: 2px solid var(--outline); border-radius: 999px; padding: 0 7px 0 2px; font-family: var(--font-display); font-weight: 400; font-size: .85rem; color: #fff; }
 .btxt b i { width: 16px; height: 17px; background: url(img/esc/moneda.png) center / contain no-repeat; }
-#nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: linear-gradient(#2f3a60, #1f2742); border-top: 4px solid var(--outline);
-  padding: 4px var(--sr) calc(var(--sb) + 4px) var(--sl); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
-#nav button { position: relative; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 1px; color: var(--muted); font-family: var(--font-display); font-size: .78rem; border-radius: 12px; }
-#nav button[aria-current="page"] { color: var(--gold); background: rgba(255,200,61,.12); }
-#nav button[aria-current="page"] .nico svg { stroke: var(--gold); }
-#nav .badge { top: 0; right: 4px; font-size: .7rem; padding: 0 5px; }
+/* barra de abajo dibujada: el marco (se estira por el centro; las esquinas y los remaches se quedan) y una baldosa por botón */
+#nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: #1e2440;
+  border-style: solid; border-width: 0; border-image: url(img/barra/marco.png) 52 70 46 70 fill / 18px 24px 16px 24px;
+  padding: 9px calc(var(--sr) + 10px) calc(var(--sb) + 6px) calc(var(--sl) + 10px); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
+#nav button { position: relative; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 1px; color: #c9d0ea; font-family: var(--font-display); font-size: .68rem; text-shadow: 0 1px 0 #0b0e1a; }
+#nav .nico { width: 48px; height: 45px; display: grid; place-items: center; background: url(img/barra/boton.png) center / 100% 100% no-repeat; transition: transform .15s; }
+#nav .nico img { max-width: 34px; max-height: 31px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+#nav button[aria-current="page"] { color: var(--gold); }
+#nav button[aria-current="page"] .nico { background-image: url(img/barra/boton_sel.png); transform: translateY(-2px) scale(1.08); }
+#nav button[aria-current="page"] .nico img { max-width: 36px; max-height: 33px; }
+#nav .badge { top: 0; right: auto; left: calc(50% + 12px); font-size: .7rem; padding: 0 5px; }
 .screen.tabscr { background: #141a2e; place-items: start center; }
 .screen.maps { grid-template-columns: minmax(0, 1fr); }
 #mundo-back { display: none; }   /* en la campaña ya está la barra de pestañas para volver */
@@ -503,7 +508,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .perks li { background: #0f1322; border: 2px solid var(--outline); border-radius: 10px; padding: 6px 10px; font-size: .82rem; color: var(--muted); opacity: .7; }
 .perks li b { color: #fff; } .perks li small { color: var(--gold); }
 .perks li.on { opacity: 1; border-color: var(--gold); }
-#nav .ndot { right: 26%; }
+#nav .ndot { right: auto; left: calc(50% + 14px); top: 3px; }   /* pegado a la esquina de su baldosa */
 /* tienda */
 .shsec { display: grid; gap: 8px; margin-bottom: 14px; }
 .shsec > h3 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -865,7 +870,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
   </div>
 </section>
 
-<nav id="nav" hidden><button data-tab="tienda" aria-label="Tienda"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1.5 11h-13z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/><path d="M9 13v3M15 13v3"/></svg></span><span>Tienda</span></button><button data-tab="hogar" aria-label="Reino"><span class="nico"><svg viewBox="0 0 24 24"><path d="M4 21V9l3 2V6l5 3 5-3v5l3-2v12z"/><path d="M10 21v-5h4v5"/></svg></span><span>Reino</span><span class="ndot" hidden></span></button><button data-tab="menu" aria-label="Campaña"><span class="nico"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="arena" aria-label="Ejército"><span class="nico"><svg viewBox="0 0 24 24"><path d="M5 4l11 11M15 15l-2 3 3-1 3 3 1-1-3-3 1-3z"/><path d="M19 4L8 15M9 15l2 3-3-1-3 3-1-1 3-3-1-3z"/></svg></span><span>Ejército</span></button><button data-tab="eventos" aria-label="Eventos"><span class="nico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></span><span>Eventos</span><span class="ndot" hidden></span></button></nav>
+<nav id="nav" hidden><button data-tab="tienda" aria-label="Tienda"><span class="nico"><img src="img/barra/tienda.png" alt=""></span><span>Tienda</span></button><button data-tab="hogar" aria-label="Reino"><span class="nico"><img src="img/barra/reino.png" alt=""></span><span>Reino</span><span class="ndot" hidden></span></button><button data-tab="menu" aria-label="Campaña"><span class="nico"><img src="img/barra/campana.png" alt=""></span><span>Campaña</span><span class="badge" id="m-badge" hidden></span></button><button data-tab="arena" aria-label="Ejército"><span class="nico"><img src="img/barra/ejercito.png" alt=""></span><span>Ejército</span></button><button data-tab="eventos" aria-label="Eventos"><span class="nico"><img src="img/barra/eventos.png" alt=""></span><span>Eventos</span><span class="ndot" hidden></span></button></nav>
 
 <div id="pop" class="screen dim pop" hidden>
   <div class="panel popbox">

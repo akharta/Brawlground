@@ -319,7 +319,7 @@ let subRedKey = null;
 function subReducido(sc, key, wDev) {   // el dibujo ya encogido al tamaño con que se ve: así sus contornos no salen dentados
   const src = sc.textures.get(key).getSourceImage(), IW = src.width;
   if (wDev >= IW * 0.85) return { key, f: 1 };
-  const w = Math.min(IW, Math.ceil(wDev / 64) * 64), rk = key + '~' + w;
+  const w = Math.min(IW, Math.ceil(wDev)), rk = key + '~' + w;   // justo al ancho con que se ve: sin volver a reescalar
   if (!sc.textures.exists(rk)) {
     if (subRedKey && sc.textures.exists(subRedKey)) sc.textures.remove(subRedKey);   // solo se guarda el último
     let cv = src, cw = IW, ch = src.height;
@@ -438,7 +438,7 @@ function setScenery(e) {
 window.__setScenery = setScenery;
 
 /* ---- cámara: el campo entero cabe entre el marcador y el panel de cartas, en vertical y en horizontal ---- */
-const DPR = Math.min(2, window.devicePixelRatio || 1);
+const DPR = Math.min(3, window.devicePixelRatio || 1);   // a la densidad real de la pantalla (hasta 3): si no, el navegador estira el dibujo y se ve borroso
 let zoomCss = 0.5, TXT_K = 1;
 function frameCamera() {
   if (!cam) return;
@@ -617,5 +617,6 @@ $('selfondo').onchange = e => { if (scene) setScenery(e.target.value); };
 window.__debugBattle = () => ({ t: B.t, demo: B.demo, run: B.run, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, max: castles.purple.max, deck: B.purple.deck }, heroP: B.heroP.type, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over, zoom: zoomCss });
 window.__play = (team, i) => play(team, i);
 window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, x)); };
+window.__units = () => units;
 window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
 window.__show = show;

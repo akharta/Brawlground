@@ -2727,8 +2727,8 @@ function fightLogic(dt) {
       u.shadeT -= dt;
       if (u.shadeT <= 0 && o && dist > u.cfg.range && dist < H * 3.8 && (u.state === 'walk' || u.state === 'idle')) { u.shadeTarget = o; u.set('shadeOut'); continue; }
     }
-    if (u.type === 'lobo' && o && !u.dashed && u.state === 'walk' && dist > u.cfg.range && dist < H * 2.8) {
-      u.dashed = true; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.85; u.set('dash'); continue;
+    if (u.type === 'lobo' && o && u.dashed !== o && u.state === 'walk' && dist > u.cfg.range && dist < H * 2.8) {   // embiste a cada enemigo nuevo: si lo mata, embiste al siguiente
+      u.dashed = o; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.85; u.set('dash'); continue;
     }
     if (u.type === 'kungfu' && o && !o.isCastle && (u.kdT || 0) <= 0 && (u.state === 'walk' || u.state === 'idle') && dist > u.cfg.range && dist < u.cfg.kdash) {
       u.kdT = u.cfg.kdashCd; u.dashFrom = u.x; u.dashTo = o.x - u.dir * u.cfg.range * 0.8; u.set('kfdash'); continue;

@@ -52,6 +52,6 @@ for f in sorted(os.listdir(SRC)):
         for l in 'LR': t[l]['gemas'] = [g for g in t[l]['gemas'] if g[1] >= 380]
     t['fondo'] = '#%02x%02x%02x' % tuple(int(c) for c in np.asarray(im)[-24:].reshape(-1, 3).mean(0))
     res['temas'][n] = t
-    im.save(os.path.join(OUT, n + '.jpg'), quality=88, optimize=True, progressive=True)
+    im.save(os.path.join(OUT, n + '.jpg'), quality=95, optimize=True, progressive=True, subsampling=0)
     print(n, t['L']['muro'], len(t['L']['gemas']), '|', t['R']['muro'], len(t['R']['gemas']), t['fondo'], os.path.getsize(os.path.join(OUT, n + '.jpg')) // 1024, 'KB')
 json.dump(res, open(os.path.join(OUT, 'subsuelo.json'), 'w'), separators=(',', ':'))
