@@ -85,13 +85,13 @@ const KD = id => KINGDOMS.find(k => k.id === id);
 const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
-const SRC_HUE = { icono_: [0.70, 0.86, 'morado'], castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
+const SRC_HUE = { cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
 // emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
 const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
   'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
 const BANNERS = { castillo_azul: [0.3981, 0.4034, 0.0904, 0.2122], castillo_azul_danado: [0.3923, 0.4013, 0.1038, 0.2059], castillo_morado: [0.5077, 0.4289, 0.0923, 0.2124], castillo_morado_danado: [0.5019, 0.4289, 0.1, 0.1938] };
 const bannersOf = base => BANNERS[base] ? [BANNERS[base]] : ICONOS[base] ? ICONOS[base].banners : [];
-function recolorImage(img, [h0, h1], hex, base, emb) {
+function recolorImage(img, [h0, h1, , s0 = 0.35, v0 = 0.2], hex, base, emb) {
   // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
   const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
@@ -99,7 +99,7 @@ function recolorImage(img, [h0, h1], hex, base, emb) {
   for (let i = 0; i < p.length; i += 4) {
     if (p[i + 3] === 0) continue;
     const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn + 1e-9;
-    if ((mx - mn) / (mx + 1e-9) <= 0.35 || mx <= 0.2) continue;
+    if ((mx - mn) / (mx + 1e-9) <= s0 || mx <= v0) continue;
     const h = (mx === r ? (((g - b) / dd) % 6 + 6) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4) / 6;
     if (h >= h0 && h <= h1) { idx.push(i); vals.push(mx); }
   }
@@ -126,7 +126,7 @@ function colorTex(base, color, emb) {
 }
 const colorURLs = {};
 function colorURL(base, color, emb) {
-  const key = colorTex(base, color, emb); if (key === base) return (base.startsWith('icono_') ? 'img/campana/' : 'img/esc/') + base + '.png';
+  const key = colorTex(base, color, emb); if (key === base) return base.startsWith('cas_') ? 'img/castillos/' + base.slice(4) + '.png' : (base.startsWith('icono_') ? 'img/campana/' : 'img/esc/') + base + '.png';
   return colorURLs[key] || (colorURLs[key] = scene.textures.get(key).getSourceImage().toDataURL());
 }
 let TEAM_COLOR = { blue: 'azul', purple: 'morado' }, TEAM_EMB = { blue: '', purple: '' };

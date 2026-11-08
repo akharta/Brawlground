@@ -20,6 +20,13 @@ const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.4
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
+// aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch); en ruinas, el genérico
+let CASTLE_SKIN = { blue: null, purple: null };
+function castleArt(team, st = '') {
+  const sk = CASTLE_SKIN[team];
+  if (sk && st !== '_destruido') return { key: 'cas_' + sk.id + (st === '_danado' ? '_d' : ''), plat: sk.plat, arch: sk.arch };
+  return { key: CASTLE_ART[team].key + st, plat: CASTLE_ART[team].plat, arch: CASTLE_ART[team].arch };
+}
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -109,7 +116,7 @@ function towers(dt) {
     const foes = units.filter(v => v.team !== team && v.alive && v.state !== 'die' && v.state !== 'spawn' && Math.abs(v.x - c.x) <= TOWER.range);
     if (!foes.length) { s.towerT = 0.2; continue; }
     const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
-    const ci = castleImg[team], A = CASTLE_ART[team], k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
+    const ci = castleImg[team], A = castleArt(team, ci.state || ''), k = ci.scaleX, sx = ci.x + (A.arch[0] - A.plat[0]) * k, sy = ci.y + (A.arch[1] - A.plat[1]) * k;
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
     const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
     arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: Math.round(TOWER.dmg * (s.towerK || 1)), stuck: 0 });
@@ -123,7 +130,8 @@ function drawCastleUI(dt) {
     const ci = castleImg[team], st = !c.alive ? '_destruido' : c.hp / c.max <= 0.5 ? '_danado' : '';
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
-      ci.state = st; ci.setTexture(colorTex(CASTLE_ART[team].key + st, TEAM_COLOR[team], TEAM_EMB[team]));
+      ci.state = st; const A = castleArt(team, st); ci.setTexture(colorTex(A.key, TEAM_COLOR[team], TEAM_EMB[team]));
+      ci.setOrigin(A.plat[0] / ci.width, A.plat[1] / ci.height).setScale(CASTLE_W / ci.width);
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 110, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }

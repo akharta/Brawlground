@@ -128,11 +128,61 @@ const DEFENSAS = {
 };
 const defLv = k => (perfil.def || {})[k] || 0;
 const defCoste = k => Math.round(DEFENSAS[k].base * Math.pow(1.32, defLv(k)) / 10) * 10;
-const ASPECTOS = [['piedra', 'Castillo de piedra', true], ['obsidiana', 'Fortaleza de obsidiana'], ['marfil', 'Alcázar de marfil'], ['bosque', 'Bastión del bosque']];
+// aspectos del castillo: dibujos propios (img/castillos) con el suelo del torreón, el arquero y el estandarte grande de cada uno
+const ASPECTOS_POS = __ASPECTOS__;
+const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Roble'], ['luna', 'Castillo Lunar'], ['vitral', 'Catedral de Vitrales'], ['marea', 'Alcázar de las Mareas'],
+  ['dragon', 'Fortaleza del Dragón'], ['engranaje', 'Castillo de Engranajes'], ['hielo', 'Fortaleza de Hielo'], ['grifo', 'Alcázar del Grifo'], ['arena', 'Fortaleza de Arena'],
+  ['trueno', 'Castillo del Trueno'], ['pagoda', 'Castillo Pagoda'], ['farol', 'Castillo de los Faroles'], ['carnero', 'Fortín del Carnero'], ['escarabajo', 'Templo del Escarabajo'],
+  ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol']];
+const ASP_PRECIO = 150;
+for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = v.ban; }
+const aspTiene = id => id === 'piedra' || perfil.all || (perfil.aspectos || []).includes(id);
+const mySkin = () => perfil.aspecto && ASPECTOS_POS[perfil.aspecto] && aspTiene(perfil.aspecto) ? perfil.aspecto : null;
+function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) y prepara su versión dañada
+  if (!id || !scene) return; const k = 'cas_' + id;
+  if (scene.textures.exists(k)) { if (cb) cb(); return; }
+  const im = new Image();
+  im.onload = () => { if (!scene.textures.exists(k)) { scene.textures.addImage(k, im); castilloDanado(id, im); } if (cb) cb(); };
+  im.src = 'img/castillos/' + id + '.png';
+}
+function castilloDanado(id, im) {
+  // dañado: más oscuro, con grietas y hollín (hasta que llegue su dibujo propio)
+  let sd = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7); const rn = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
+  const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const cx = cv.getContext('2d'), Wd = cv.width, Hd = cv.height;
+  cx.drawImage(im, 0, 0); cx.globalCompositeOperation = 'source-atop';
+  cx.fillStyle = 'rgba(40,28,28,.2)'; cx.fillRect(0, 0, Wd, Hd);
+  for (let i = 0; i < 7; i++) {
+    const x = Wd * (0.12 + rn() * 0.76), y = Hd * (0.3 + rn() * 0.55), r = 22 + rn() * 30, g = cx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, 'rgba(20,16,18,.55)'); g.addColorStop(1, 'rgba(20,16,18,0)'); cx.fillStyle = g; cx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  cx.strokeStyle = '#1e2235'; cx.lineJoin = 'round'; cx.lineCap = 'round';
+  for (let i = 0; i < 8; i++) {
+    let x = Wd * (0.1 + rn() * 0.8), y = Hd * (0.25 + rn() * 0.6), a = rn() * Math.PI * 2;
+    cx.lineWidth = 4 + rn() * 3; cx.beginPath(); cx.moveTo(x, y);
+    for (let j = 0; j < 4; j++) { a += (rn() - 0.5) * 1.6; x += Math.cos(a) * (12 + rn() * 16); y += Math.sin(a) * (12 + rn() * 16); cx.lineTo(x, y); }
+    cx.stroke();
+  }
+  scene.textures.addCanvas('cas_' + id + '_d', cv);
+}
+const aspSrc = id => id === 'piedra' ? colorURL(ICON.casa, myColor(), myEmb()) : scene && scene.textures.exists('cas_' + id) ? colorURL('cas_' + id, myColor(), myEmb()) : 'img/castillos/' + id + '.png';
+function elegirAspecto(id) {
+  const n = ASPECTOS.find(a => a[0] === id)[1];
+  const usar = () => { perfil.aspecto = id === 'piedra' ? null : id; savePerfil(); if (id !== 'piedra') skinTex(id); toast(n + ': ahora es tu castillo.'); reEdif(); };
+  if (aspTiene(id)) return usar();
+  pop('<p class="eyebrow">Aspecto del castillo</p><h2>' + n + '</h2><img class="aspbig" src="' + aspSrc(id) + '" alt=""><p class="note">Con tu color y tu emblema. Se ve en todas tus batallas.</p>',
+    'Comprar · ' + ASP_PRECIO + ' diamantes', () => { if (!paga({ gemas: ASP_PRECIO })) return; perfil.aspectos = (perfil.aspectos || []).concat(id); $('pop').hidden = true; usar(); });
+}
 function murallas(el) {
+  const cur = mySkin() || 'piedra';
   el.innerHTML = '<h3>Defensas <small>solo en tu castillo; las del rival dependen de su reino</small></h3><div class="col full" id="mu-def"></div>'
-    + '<h3>Aspecto del castillo</h3><div class="cards3">' + ASPECTOS.map(([id, n, own]) => '<div class="kcard' + (id === 'piedra' ? ' sel' : ' lock') + '"><header><b>' + n + '</b></header>' + (own ? '<span class="kind">En uso</span>' : '<span class="chip">Próximamente</span>') + '</div>').join('') + '</div>'
+    + '<h3>Aspecto del castillo <small>con tu color y tu emblema; se ve en las batallas</small></h3><div class="aspgrid">' + ASPECTOS.map(([id, n]) => {
+      const has = aspTiene(id), sel = id === cur;
+      return '<button type="button" class="asp' + (sel ? ' sel' : '') + (has ? '' : ' lock') + '" data-a="' + id + '"><img data-asp="' + id + '" src="' + aspSrc(id) + '" alt=""><b>' + n + '</b>'
+        + (sel ? '<span class="kind">En uso</span>' : has ? '<small>Tuyo</small>' : gemBtn(ASP_PRECIO)) + '</button>';
+    }).join('') + '</div>'
     + '<div id="mu-est"></div>';
+  ASPECTOS.forEach(([id]) => { if (id !== 'piedra' && !scene.textures.exists('cas_' + id)) skinTex(id, () => { const im = el.querySelector('[data-asp="' + id + '"]'); if (im) im.src = aspSrc(id); }); });
+  el.querySelectorAll('[data-a]').forEach(b => { b.onclick = () => elegirAspecto(b.dataset.a); });
   $('mu-def').innerHTML = Object.entries(DEFENSAS).map(([k, d]) => {
     const lv = defLv(k), max = lv >= d.max;
     return '<div class="uprow"><b>' + d.name + ' <span class="lvl">Nv ' + lv + '</span></b>' + (max ? '<span class="chip">Máx.</span>' : '<button class="btn gold small" data-d="' + k + '">' + oroBtn(defCoste(k)) + '</button>')
@@ -161,7 +211,7 @@ const myHechizo = () => spLv(perfil.hechizo) ? perfil.hechizo : null;
 function sanctum(el) {
   el.innerHTML = '<p class="note">El hechizo elegido sale en la batalla como un botón encima de tus cartas. Se carga solo con el tiempo.</p><div class="cards3">' + Object.entries(HECHIZOS).map(([id, h]) => {
     const lv = spLv(id), sel = myHechizo() === id;
-    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><span class="kcico" style="--c:' + h.c + '">' + svg(id) + '</span><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
+    return '<div class="kcard' + (sel ? ' sel' : '') + (lv ? '' : ' lock') + '"><header><img class="kcimg" src="img/hechizos/' + id + '.png" alt=""><div><b>' + h.name + '</b><small>' + (lv ? 'Nivel ' + lv + ' · recarga ' + h.cd + ' s' : 'Sin crear · recarga ' + h.cd + ' s') + '</small></div></header>'
       + '<p>' + h.txt(spK(id)) + '</p><div class="acts">'
       + (!lv ? '<button class="btn gold small" data-c="' + id + '">Crear · ' + costeHtml(h.crear) + '</button>'
         : (sel ? '<span class="kind">En batalla</span>' : '<button class="btn small" data-s="' + id + '">Llevar a la batalla</button>') + (lv < SP_MAX ? '<button class="btn gold small" data-u="' + id + '">Nv ' + (lv + 1) + ' · ' + oroBtn(spUp(id)) + '</button>' : '<span class="chip">Máx.</span>'))
@@ -267,6 +317,9 @@ const teamBuffK = team => team === 'blue' && B && B.beast && B.beast.id === 'gri
 const _resetR = resetBattle;
 resetBattle = function (o = {}) {
   _resetR(o);
+  const sk = mySkin(); CASTLE_SKIN.blue = sk && scene && scene.textures.exists('cas_' + sk) ? Object.assign({ id: sk }, ASPECTOS_POS[sk]) : null;
+  if (sk && !CASTLE_SKIN.blue) skinTex(sk);
+  if (castleImg.blue) castleImg.blue.state = undefined;   // se vuelve a pintar con su aspecto
   const real = !o.demo && !o.sim;
   B.buff = { blue: {}, purple: {} }; B.curse = null; B.spell = null; B.beast = null;
   if (real) {
@@ -298,12 +351,20 @@ function abilUI(reset) {
   const sb = $('ab-spell'), bb = $('ab-beast'); if (!sb) return;
   const real = B && !B.auto && !B.idle;
   sb.hidden = !(real && B.spell); bb.hidden = !(real && B.beast && B.beast.id === 'dragon');
-  if (!sb.hidden && sb.dataset.id !== B.spell.id) { const h = HECHIZOS[B.spell.id]; sb.dataset.id = B.spell.id; sb.style.setProperty('--c', h.c); sb.querySelector('.aico').innerHTML = svg(B.spell.id); sb.setAttribute('aria-label', h.name); }
+  if (!sb.hidden && sb.dataset.id !== B.spell.id) { const h = HECHIZOS[B.spell.id]; sb.dataset.id = B.spell.id; sb.style.setProperty('--c', h.c); sb.querySelector('.aico').innerHTML = '<img src="img/hechizos/' + B.spell.id + '.png" alt="">'; sb.setAttribute('aria-label', h.name); }
   if (!bb.hidden && bb.dataset.id !== 'dragon') { const b = BESTIAS.dragon; bb.dataset.id = 'dragon'; bb.style.setProperty('--c', b.c); bb.querySelector('.aico').innerHTML = svg('dragon'); bb.setAttribute('aria-label', b.name + ': aliento de fuego'); }
   const one = (btn, t, cd, label) => { const ready = t <= 0; btn.disabled = !ready || B.over; btn.classList.toggle('ready', ready); btn.style.setProperty('--p', Math.max(0, Math.min(1, 1 - t / cd)).toFixed(3)); const txt = ready ? label : Math.ceil(t) + ' s'; if (btn.lastChild.textContent !== txt) btn.lastChild.textContent = txt; };
   if (!sb.hidden) one(sb, B.spell.t, HECHIZOS[B.spell.id].cd, '¡Hechizo!');
   if (!bb.hidden) one(bb, B.beast.t, BESTIAS.dragon.cd, '¡Fuego!');
-  const d = $('dock').getBoundingClientRect(); $('abils').style.bottom = (window.innerHeight - d.top + 10) + 'px';
+  colocaAbils();
+}
+// dónde van: en horizontal, en la esquina libre junto al panel de cartas; en vertical, en el cielo encima de tu trono
+function colocaAbils() {
+  const ab = $('abils'), d = $('dock').getBoundingClientRect(), ih = window.innerHeight;
+  if (d.left >= 74) { ab.style.top = ''; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
+  const z = cam.zoom / DPR, y = (THRONE.y - 175 - cam.worldView.y) * z, top = $('hudtop').getBoundingClientRect().bottom + 8, hh = ab.offsetHeight || 130;
+  const t = Math.max(top, y - hh);
+  if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
 }
 const _uiTickR = uiTick;
 uiTick = function () { _uiTickR(); abilUI(false); };
@@ -367,4 +428,7 @@ paintHub = function () {
 // al cambiar de color en las Murallas, el reino se repinta
 const _pcR = paintColors;
 paintColors = function () { _pcR(); if (EDIF === 'murallas' && !$('edif').hidden) reinoColor('img/reino/murallas.png', myColor(), url => { const im = document.querySelector('#ed-body .bimg'); if (im) im.src = url; }); };
-window.__B = () => B; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
+// al arrancar, el aspecto elegido ya queda cargado para la primera batalla
+const _loadedR = loaded;
+loaded = function () { _loadedR(); skinTex(mySkin()); };
+window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__openHogar = openHogar; window.__openEdif = openEdif; window.__lanzar = lanzar; window.__cuartel = () => cuSlots();
