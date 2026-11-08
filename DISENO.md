@@ -174,7 +174,7 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 
 ## Estructura de la app
 
-- **Barra de pestañas** (abajo): **Tienda · Reino · Campaña · Ejército · Eventos**. Se entra por Campaña. Dibujada: marco azul con remaches dorados y una baldosa con su icono por pestaña (la de la pestaña abierta, dorada y un poco más grande).
+- **Barra de pestañas** (abajo): **Tienda · Reino · Campaña · Ejército · Eventos**. Se entra por Campaña. Dibujada: marco azul con remaches dorados y una baldosa con su icono por pestaña (la de la pestaña abierta, dorada y un poco más grande). Los botones de los lados de Campaña, el avatar con su nivel, las cápsulas de oro y diamantes y las barras (experiencia y carga) también van dibujados; la carga lleva su fondo de héroes con el logo en el centro y las demás pantallas, el fondo azul de héroes oscurecido.
 - **Tienda**: regalo diario (100 de oro), 5 ofertas de cartas que se renuevan cada día (copias o la unidad
   si no la tienes; comunes a raras con oro, épicas y mejores con diamantes; renovar por 20 diamantes),
   celdas, oro por diamantes, diamantes con dinero real (se ven, pero los pagos llegarán más adelante; cada pack con su dibujo: montón, pila y cofre de oro; puñado, saco, cofre y carreta de diamantes) y lotes

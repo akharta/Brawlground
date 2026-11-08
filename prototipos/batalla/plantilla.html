@@ -479,6 +479,32 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .udetail .dk { width: 110px; opacity: 1; }
 .udetail h2 { font-size: 1.5rem !important; }
 .udetail p { margin: 4px 0 0; font-size: .88rem; }
+/* ==== arte de la interfaz (img/ui): botones de Campaña, avatar, cápsulas de oro y diamantes, barras y fondos ==== */
+.sico { border: 0; border-radius: 0; box-shadow: none; background: center / contain no-repeat; width: 50px; height: 52px; }
+#s-tropas .sico { background-image: url(img/ui/b_tropas.png); }
+#s-diario .sico { background-image: url(img/ui/b_diario.png); }
+#s-misiones .sico { background-image: url(img/ui/b_misiones.png); }
+#s-jaulas .sico { background-image: url(img/ui/b_jaulas.png); }
+#s-ofertas .sico { background-image: url(img/ui/b_ofertas.png); }
+#s-correo .sico { background-image: url(img/ui/b_correo.png); }
+#s-ranking .sico { background-image: url(img/ui/b_ranking.png); }
+#s-practica .sico { background-image: url(img/ui/b_practica.png); }
+.sico .dot { top: -3px; right: -3px; }
+.avatar { width: 64px; height: 62px; }
+.avatar .ring { position: absolute; left: 10.9%; top: 11.3%; width: 70%; height: 73.4%; padding: 0; border: 0; box-shadow: none; background: #3a3f62; box-sizing: border-box; }
+.avatar::after { content: ''; position: absolute; inset: 0; background: url(img/ui/avatar.png) center / 100% 100% no-repeat; pointer-events: none; }
+.avatar b { z-index: 1; left: 53.8%; top: 67.3%; right: auto; bottom: auto; width: 41.7%; height: 28%; min-width: 0; padding: 0; border: 0; background: none; color: #1e2235; font-size: .78rem; }
+.oro { border: 0; background: none; border-style: solid; border-image: url(img/ui/capsula_oro.png) 28 34 fill / 14px 17px; }
+.oro.gema { border-image-source: url(img/ui/capsula_gema.png); }
+.xpbar, .loadbar { border: 0; border-radius: 0; background: none; overflow: visible; border-style: solid; border-image: url(img/ui/barra.png) 18 22 fill / 8px 10px; padding: 3px 4px; box-sizing: border-box; }
+.xpbar { height: 14px; }
+.loadbar { height: 22px; padding: 5px 7px; }
+.xpbar span, #loadfill { background: none; border-style: solid; border-image: url(img/ui/barra_relleno.png) 11 12 fill / 5px 6px; box-sizing: border-box; }
+/* fondos: la carga, con los héroes arriba y abajo y el logo en el hueco del centro; las demás pantallas, el azul */
+#carga { background: #131a31 url(img/ui/fondo_carga.jpg) center / cover no-repeat; }
+@media (orientation: landscape) { #carga { background: url(img/ui/fondo_carga.jpg) center / auto 100% no-repeat, linear-gradient(rgba(16,22,46,.72), rgba(16,22,46,.8)), #17306e url(img/ui/fondo_azul.jpg) center / cover no-repeat; } }   /* entero en el centro y, a los lados, el azul */
+#carga #loadtxt, #carga .tip { background: rgba(16,21,42,.78); border-radius: 12px; padding: 4px 12px; text-shadow: 0 1px 0 #000; }   /* legibles aunque pasen sobre los héroes */
+.screen.tabscr, .screen.hogar { background: linear-gradient(rgba(16,22,46,.62), rgba(16,22,46,.72)), #17306e url(img/ui/fondo_azul.jpg) center / cover no-repeat; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
 @media (prefers-reduced-motion: reduce) { .sello.big, .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 
@@ -701,8 +727,8 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
     <span class="oro"><i></i><b class="oro-n">0</b></span>
     <span class="oro gema"><i></i><b class="gema-n">0</b></span>
   </div>
-  <div class="side l"><button class="sbtn" id="s-tropas" aria-label="Tropas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 11l2 2 4-4"/></svg><span class="dot" hidden></span></span><span class="slbl">Tropas</span></button><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/></svg><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><svg viewBox="0 0 24 24"><path d="M5 9a7 5 0 0 1 14 0v11H5z"/><path d="M9 9v11M12 9v11M15 9v11M5 14h14"/><circle cx="12" cy="4" r="1.6"/></svg><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3 7h18v3H3zM12 7v13"/><path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/></svg><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
-  <div class="side r"><button class="sbtn" id="s-correo" aria-label="Correo"><span class="sico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span class="dot" hidden></span></span><span class="slbl">Correo</span></button><button class="sbtn" id="s-ranking" aria-label="Clasificación"><span class="sico"><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M9 18h6"/></svg><span class="dot" hidden></span></span><span class="slbl">Clasificación</span></button><button class="sbtn" id="s-practica" aria-label="Práctica"><span class="sico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/></svg><span class="dot" hidden></span></span><span class="slbl">Práctica</span></button></div>
+  <div class="side l"><button class="sbtn" id="s-tropas" aria-label="Tropas"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Tropas</span></button><button class="sbtn" id="s-diario" aria-label="Diario"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Diario</span></button><button class="sbtn" id="s-misiones" aria-label="Misiones"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Misiones</span></button><button class="sbtn" id="s-jaulas" aria-label="Jaulas"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Jaulas</span></button><button class="sbtn" id="s-ofertas" aria-label="Ofertas"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Ofertas</span></button></div>
+  <div class="side r"><button class="sbtn" id="s-correo" aria-label="Correo"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Correo</span></button><button class="sbtn" id="s-ranking" aria-label="Clasificación"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Clasificación</span></button><button class="sbtn" id="s-practica" aria-label="Práctica"><span class="sico"><span class="dot" hidden></span></span><span class="slbl">Práctica</span></button></div>
   <div class="hubbot" id="hubbot">
     <button class="botin" id="h-botin" aria-label="Recoger el botín de la expedición"><span class="chest"></span><span class="btxt"><small>Expedición</small><b><i></i><span id="h-botin-n">0</span></b></span></button>
     <button class="btn gold big golpe" id="h-batalla"><span>¡Batalla!</span><small id="h-next">Reino de las Praderas · Castillo 1</small></button>
