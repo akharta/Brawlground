@@ -177,7 +177,7 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - **Barra de pestañas** (abajo): **Tienda · Reino · Campaña · Ejército · Eventos**. Se entra por Campaña.
 - **Tienda**: regalo diario (100 de oro), 5 ofertas de cartas que se renuevan cada día (copias o la unidad
   si no la tienes; comunes a raras con oro, épicas y mejores con diamantes; renovar por 20 diamantes),
-  celdas, oro por diamantes, diamantes con dinero real (se ven, pero los pagos llegarán más adelante) y lotes
+  celdas, oro por diamantes, diamantes con dinero real (se ven, pero los pagos llegarán más adelante; cada pack con su dibujo: montón, pila y cofre de oro; puñado, saco, cofre y carreta de diamantes) y lotes
   varios (cuerdas y antorchas para el Abismo, insignias, pack de bienvenida).
 - **Reino**: el dibujo del reino de fondo (tejados, banderas y estandartes con el color de tu estandarte); cada
   lugar se toca en el dibujo o en su cartel, la vista se acerca y se entra. Cada lugar lleva su dibujo arriba:
@@ -232,11 +232,12 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - **Móvil**, jugable en horizontal y en vertical.
   - Horizontal: campo completo; la cripta asoma en la esquina izquierda, junto al panel de cartas, y el hechizo
     y la bestia van en la esquina derecha.
-  - Vertical: campo comprimido (escalado al ancho) con la interfaz y las cartas abajo. El camino sube hasta un
-    tercio de la pantalla y debajo se ve el **subsuelo**, dibujado para cada aspecto del castillo: tu cripta a la
+  - Vertical: campo comprimido (escalado al ancho) con la interfaz y las cartas abajo. El camino sube lo justo
+    (quitando cielo) para que debajo se vea entero el **subsuelo**, dibujado para cada aspecto del castillo: tu cripta a la
     izquierda, bajo tu castillo, con tu bestia dentro, y la del rival a la derecha, cada una con las gemas de los
     pilares del color de su bando. El dibujo se encoge para que tu cripta quepa entera en lo que se ve; si no
-    llega a cubrir todo el ancho (tableta), la tierra del medio se repite en espejo.
+    llega a cubrir todo el ancho, la tierra del medio se repite en espejo. Se encoge con suavizado al tamaño con
+    que se ve, para que sus contornos no salgan dentados.
     Temas: piedra (el de siempre), roble (raíces), luna, vitrales (cuarzo rosa), mareas (arena y coral), dragón
     (lava), engranajes, hielo, grifo (mármol), arena (ámbar), trueno, pagoda (rubíes), faroles (vetas de oro),
     carnero (cobre), escarabajo (lapislázuli), gólem, murciélago (amatistas), loto y sol (fósiles). Hay uno más,

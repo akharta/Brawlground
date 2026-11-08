@@ -518,6 +518,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 .offer .pile { width: 64px; height: 48px; display: grid; place-items: center; }
 .offer .pile img { max-width: 100%; max-height: 48px; }
 .offer .pile.two { display: flex; gap: 2px; } .offer .pile.two img { max-width: 50%; }
+.offer .pile.pack { width: 92px; height: 74px; } .offer .pile.pack img { max-height: 74px; }   /* packs de oro y diamantes: más grandes cuanto más traen */
 .offer .btn { width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: .95rem; display: inline-flex; justify-content: center; align-items: center; gap: 4px; }
 .offer .btn .oro { font-size: .95rem; padding: 0; border: 0; background: none; }
 .cpx { font-family: var(--font-display); color: var(--gold); font-size: 1.05rem; }
@@ -3789,6 +3790,25 @@ function subColor(sc, tema) {   // las gemas de cada cripta, con el color de su 
   }
   subColorKey = key; subFranjas(sc.textures.addCanvas(key, cv)); return key;
 }
+let subRedKey = null;
+function subReducido(sc, key, wDev) {   // el dibujo ya encogido al tamaño con que se ve: así sus contornos no salen dentados
+  const src = sc.textures.get(key).getSourceImage(), IW = src.width;
+  if (wDev >= IW * 0.85) return { key, f: 1 };
+  const w = Math.min(IW, Math.ceil(wDev / 64) * 64), rk = key + '~' + w;
+  if (!sc.textures.exists(rk)) {
+    if (subRedKey && sc.textures.exists(subRedKey)) sc.textures.remove(subRedKey);   // solo se guarda el último
+    let cv = src, cw = IW, ch = src.height;
+    while (cw > w) {   // a mitades, con suavizado: queda limpio aunque se encoja mucho
+      const nw = Math.max(w, Math.round(cw / 2)), nh = Math.round(ch * nw / cw), c2 = document.createElement('canvas'); c2.width = nw; c2.height = nh;
+      const x = c2.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(cv, 0, 0, nw, nh);
+      cv = c2; cw = nw; ch = nh;
+    }
+    const tex = sc.textures.addCanvas(rk, cv), f = w / IW, xa = Math.round(SUBSUELO.xa * f), xb = Math.round(SUBSUELO.xb * f);
+    tex.add('L', 0, 0, 0, xa, ch); tex.add('M', 0, xa, 0, xb - xa, ch); tex.add('R', 0, xb, 0, w - xb, ch);
+    subRedKey = rk;
+  }
+  return { key: rk, f: w / IW };
+}
 function subBorde(sc) {   // el borde de hierba que cuelga sobre la tierra (blanco: se tiñe con el césped de cada escena)
   if (sc.textures.exists('sub_borde')) return;
   const CW = 1084, CH = 44, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
@@ -3816,7 +3836,8 @@ function drawSubsuelo(sc, ytop, add, cx, vw, bot, grass) {
   const Lx = esq ? Math.min(left - 2, left + Wc / 2 - (x0 + x1) / 2 * s) : left - 2;   // en la esquina, la cripta en su centro
   const Rx = Math.max(left + vw + 2, Lx + IW * s) - (IW - xb) * s, mx0 = Lx + xa * s, Mw = (xb - xa) * s, r = (Rx - mx0) / Mw;
   let n = 1; while (Math.abs(Math.log(r / (n + 2))) < Math.abs(Math.log(r / n))) n += 2;   // un número impar de tramos: así encajan los bordes
-  const pon = (x, f, sx, flip) => add(sc.add.image(x, yi, key, f).setOrigin(0, 0).setScale(sx, s).setFlipX(!!flip).setDepth(-30));
+  const red = subReducido(sc, key, IW * s * z), sf = s / red.f;
+  const pon = (x, f, sx, flip) => add(sc.add.image(x, yi, red.key, f).setOrigin(0, 0).setScale(sx / red.f, sf).setFlipX(!!flip).setDepth(-30));
   pon(Lx, 'L', s); for (let i = 0; i < n; i++) pon(mx0 + i * Mw * r / n, 'M', s * r / n, i % 2); pon(Rx, 'R', s);
   const fondo = Phaser.Display.Color.HexStringToColor(T.fondo).color;
   if (yi + IH * s < bot + 60) add(sc.add.rectangle(cx, (yi + IH * s + bot + 60) / 2 - 2, vw + 200, bot + 64 - yi - IH * s, fondo).setDepth(-31));
@@ -3907,7 +3928,10 @@ function frameCamera() {
   const X0 = 20, X1 = W - 20, Y0 = THRONE.y - 150, Y1 = GROUND + 120;   // de los tronos al borde del camino
   const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
   // si sobra alto (móvil en vertical), el camino sube hasta un tercio de la pantalla y debajo se ve el subsuelo
-  const yCss = battle ? Math.max(Math.min(botCss, window.innerHeight * 2 / 3), topCss + (Y1 - Y0) * z / DPR) : botCss;
+  // en vertical sube más si hace falta para que se vea el subsuelo entero (con sus dos criptas): sobra cielo
+  const ih = window.innerHeight, pano = ((cw / z + 4) * 1024 / 1536 + Math.max(60, SUB_Y - Y1)) * z / DPR;
+  const quiere = ih > window.innerWidth ? botCss - pano : ih * 2 / 3;
+  const yCss = battle ? Math.max(Math.min(botCss, ih * 2 / 3, quiere), topCss + (Y1 - Y0) * z / DPR) : botCss;
   cam.setZoom(z); cam.centerOn(W / 2, Y1 - (yCss * DPR - ch / 2) / z);
   zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss));
   drawScenery(scene);
@@ -5464,8 +5488,8 @@ function openTienda() {
     + '<div class="offer' + (t.regalo ? ' sold' : '') + '"><span class="tag">Gratis</span><span class="pile"><img src="img/esc/moneda.png" alt=""></span><b class="t">Regalo del día</b><span class="cpx">100 de oro</span>' + (t.regalo ? '<span class="chip">Recogido</span>' : '<button class="btn gold" id="ti-regalo">Recoger</button>') + '</div>'
     + t.slots.map(carta).join('') + '</div><div class="acts start"><button class="btn small" id="ti-renovar">Renovar ofertas · ' + gemBtn(TI.renovar) + '</button></div></div>'
     + '<div class="shsec"><h3>Celdas <small>se abren en Campaña → Celdas</small></h3><div class="offers">' + CELDAS.map(c => '<div class="offer"><span class="pile"><img src="img/celdas/celda_' + c.id + '_0.png" alt=""></span><b class="t">' + c.name + '</b><small>' + c.cartas + ' cartas · tienes ' + (celdasDe()[c.id] || 0) + '</small><button class="btn gold" data-cel="' + c.id + '">' + gemBtn(c.precio) + '</button></div>').join('') + '</div></div>'
-    + '<div class="shsec"><h3>Oro</h3><div class="offers">' + TI.oro.map(([g, o], i) => '<div class="offer"><span class="pile"><img src="img/esc/moneda.png" alt=""></span><span class="big">' + fmt(o) + '</span><small>de oro</small><button class="btn gold" data-oro="' + i + '">' + gemBtn(g) + '</button></div>').join('') + '</div></div>'
-    + '<div class="shsec"><h3>Diamantes <small>los pagos llegarán más adelante</small></h3><div class="offers">' + TI.gemas.map(([g, e, tag]) => '<div class="offer">' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '<span class="pile"><img src="img/esc/gema.png" alt=""></span><span class="big">' + fmt(g) + '</span><small>diamantes</small><button class="btn" disabled>' + e + '</button></div>').join('') + '</div></div>'
+    + '<div class="shsec"><h3>Oro</h3><div class="offers">' + TI.oro.map(([g, o], i) => '<div class="offer"><span class="pile pack"><img src="img/tienda/oro_' + (i + 1) + '.png" alt=""></span><span class="big">' + fmt(o) + '</span><small>de oro</small><button class="btn gold" data-oro="' + i + '">' + gemBtn(g) + '</button></div>').join('') + '</div></div>'
+    + '<div class="shsec"><h3>Diamantes <small>los pagos llegarán más adelante</small></h3><div class="offers">' + TI.gemas.map(([g, e, tag], i) => '<div class="offer">' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '<span class="pile pack"><img src="img/tienda/gemas_' + (i + 1) + '.png" alt=""></span><span class="big">' + fmt(g) + '</span><small>diamantes</small><button class="btn" disabled>' + e + '</button></div>').join('') + '</div></div>'
     + '<div class="shsec"><h3>Ofertas varias</h3><div class="offers">' + TI.varios.map(v => '<div class="offer"><span class="pile' + (v.img.length > 1 ? ' two' : '') + '">' + v.img.map(n => '<img src="img/' + n + '.png" alt="">').join('') + '</span><b class="t">' + v.name + '</b><small>' + v.txt + '</small>'
       + (v.real ? '<button class="btn" disabled>' + v.real + '</button><small>Próximamente</small>' : '<button class="btn gold" data-v="' + v.id + '">' + costeHtml(v.p) + '</button>') + '</div>').join('') + '</div></div>';
   if ($('ti-regalo')) $('ti-regalo').onclick = e => { t.regalo = true; perfil.gold += 100; savePerfil(); coinFly(e.currentTarget, 100); openTienda(); };
