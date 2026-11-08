@@ -133,3 +133,13 @@ guardados en `assets/castillos_aspecto/sin_intacto/`. Para que sean aspectos nue
 > **Intacto**: el mismo castillo de la imagen adjunta (la versión dañada), igual de grande y en la misma posición,
 > pero nuevo y sin un rasguño: sin grietas, sin agujeros, sin fuego ni humo, con todas las almenas enteras y el
 > estandarte grande del centro completo. Estandartes y capuchas AZULES. Fondo transparente, 1254×1254.
+
+## 10. Arrabal del reino *(pendiente: ahora hay dibujos provisionales)*
+
+Bajo el mapa del reino, el camino sigue con dos lugares nuevos. Adjunta el dibujo del reino como referencia de estilo.
+
+> **Arrabal** (vertical, 1200×900, sin transparencia): continuación hacia abajo del dibujo del reino adjunto: pradera
+> verde con el camino de tierra que baja recto por el centro desde el borde de arriba hasta el de abajo. A la
+> izquierda del camino, un **Mercado negro**: una tienda de lona morada oscura con farolillos, cajas y un comerciante
+> encapuchado. A la derecha, un **Altar del Retorno**: un altar de piedra clara con un círculo de runas turquesas que
+> brillan y una llama turquesa encima. Algunos árboles y rocas en los bordes. Sin texto.

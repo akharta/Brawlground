@@ -181,6 +181,13 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
   varios (cuerdas y antorchas para el Abismo, insignias, pack de bienvenida).
 - **Reino**: el dibujo del reino de fondo (tejados, banderas y estandartes con el color de tu estandarte); cada
   lugar se toca en el dibujo o en su cartel, la vista se acerca y se entra. Cada lugar lleva su dibujo arriba:
+  - **Arrabal** (bajo las murallas, el camino sigue con dos lugares más; dibujos provisionales):
+    **Mercado negro** (3 ofertas cada 8 horas: copias de cartas, insignias o celdas, con oro o diamantes) y
+    **Altar del Retorno** (devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias gastados).
+  - **El Trono**: tus héroes suben de nivel con oro (hasta 30, +3 % de vida y daño por nivel). El héroe rival
+    llega con el nivel del poder de su reino (en la batalla rápida, con el del tuyo).
+  - **Rivales**: cada reino lleva sus aspectos de castillo (dos de su tema en los vasallos y uno en el real) y su
+    subsuelo; en la batalla rápida, uno al azar.
   - **Taberna**: 2 mercenarios cada 4 horas, con oro.
   - **Murallas**: estandarte (color y emblema), aspecto del castillo (20 castillos además del de piedra, 150 diamantes
     cada uno; con tu color y tu emblema en sus estandartes y arqueros. Con media vida pasa a su dibujo dañado

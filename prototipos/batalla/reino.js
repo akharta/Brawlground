@@ -86,6 +86,8 @@ function openHogar() {
   reinoColor(HOGAR_ART, myColor(), url => { const bg = m.querySelector('.hgbg'); if (bg && bg.getAttribute('src') !== url) bg.src = url; });
   EDIFICIOS.forEach(e => reinoColor('img/reino/sel_' + e.id + '.png', myColor(), url => { const im = m.querySelector('[data-sel="' + e.id + '"]'); if (im && im.getAttribute('src') !== url) im.src = url; }));
   m.querySelectorAll('[data-e]').forEach(b => { b.onclick = () => entraEdif(b.dataset.e); });
+  const vx = $('hg-ext'); if (vx) vx.remove(); m.insertAdjacentHTML('afterend', arrabal());
+  document.querySelectorAll('#hg-ext [data-x]').forEach(b => { b.onclick = () => openEdif(b.dataset.x); });
   show('hogar');
 }
 let entrando = false;
@@ -102,10 +104,78 @@ function edifDot(id) {
   if (id === 'cripta') return !Object.keys(perfil.bestias || {}).length;
   return false;
 }
+/* ---- el arrabal: bajo las murallas, el reino sigue camino abajo con dos lugares más.
+   Mercado negro: tres ofertas que cambian cada 8 horas (copias de cartas, insignias y celdas, con oro o diamantes).
+   Altar del Retorno: devuelve una unidad al nivel 1 y te da el 60 % del oro y las insignias que gastaste en subirla.
+   Dibujos provisionales hechos aquí hasta que lleguen los definitivos. ---- */
+const SVG_MERCADO = '<svg viewBox="0 0 200 170"><g stroke="#1e2235" stroke-width="6" stroke-linejoin="round"><rect x="38" y="78" width="124" height="70" rx="6" fill="#6b4a33"/><rect x="58" y="96" width="34" height="52" fill="#2a1d2f"/><rect x="108" y="96" width="38" height="28" rx="3" fill="#ffc83d"/><path d="M22 80 L100 22 L178 80 Z" fill="#4b2a6e"/><path d="M48 80 L100 22 L74 80 Z M126 80 L100 22 L152 80 Z" fill="#7a3fb3"/><path d="M22 80 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0 q13 16 26 0" fill="#3a1f55"/><circle cx="100" cy="18" r="7" fill="#ffc83d"/><circle cx="127" cy="110" r="7" fill="#a66bff"/></g><path d="M112 104 l6 -5 m10 0 l6 5" stroke="#fff6" stroke-width="3"/></svg>';
+const SVG_RETORNO = '<svg viewBox="0 0 200 170"><g stroke="#1e2235" stroke-width="6" stroke-linejoin="round"><path d="M40 150 h120 l-10 -22 h-100 z" fill="#8f93a8"/><rect x="62" y="70" width="76" height="58" rx="6" fill="#b9bdd0"/><path d="M50 72 h100 l-12 -16 h-76 z" fill="#d4d7e4"/><circle cx="100" cy="99" r="17" fill="#5fe0d0"/><path d="M100 30 c-10 12 -10 22 0 30 c10 -8 10 -18 0 -30z" fill="#7dfff0"/></g><path d="M92 99 a8 8 0 1 1 8 8" fill="none" stroke="#1e2235" stroke-width="4"/><path d="M98 103 l2 4 l-5 1" fill="none" stroke="#1e2235" stroke-width="4"/></svg>';
+const EXTRA = {
+  mercado: { name: 'Mercado negro', svg: SVG_MERCADO, txt: 'Un comerciante que no hace preguntas. Tres ofertas que cambian cada 8 horas.' },
+  retorno: { name: 'Altar del Retorno', svg: SVG_RETORNO, txt: 'Devuelve una unidad al nivel 1 y recuperas el 60 % del oro y las insignias que gastaste en subirla.' },
+};
+function arrabal() {   // el terreno bajo el mapa del reino, con el camino que sigue y sus dos lugares
+  return '<div class="hgext" id="hg-ext"><span class="hxroad"></span>'
+    + Object.entries(EXTRA).map(([id, e], i) => '<button type="button" class="hxb ' + (i ? 'r' : 'l') + '" data-x="' + id + '" aria-label="' + e.name + '">' + e.svg
+      + '<span class="blabel hxl"><span>' + e.name + '</span>' + (id === 'mercado' && mnNuevo() ? '<i class="dot"></i>' : '') + '</span></button>').join('') + '</div>';
+}
+// mercado negro
+const MN_H = 8, mnTanda = () => Math.floor(Date.now() / (MN_H * 3600e3));
+function mnRoll() {
+  const own = owned(), rnd = arr => arr[Math.floor(Math.random() * arr.length)], out = [];
+  const k1 = rnd(own.filter(k => ['epica', 'legendaria', 'ascendida'].includes(RARITY[k])).concat(own).slice(0, Math.max(1, own.length)));
+  out.push({ t: 'copias', k: k1, n: ['epica', 'legendaria', 'ascendida'].includes(RARITY[k1]) ? 6 : 12, p: { gemas: ['legendaria', 'ascendida'].includes(RARITY[k1]) ? 90 : 45 } });
+  const k2 = rnd(own.filter(k => k !== k1)) || k1;
+  out.push({ t: 'copias', k: k2, n: 8, p: { oro: Math.round(260 * 8 * (LV_RAR[RARITY[k2]] || 1) / 10) * 10 } });
+  out.push(Math.random() < 0.5 ? { t: 'insignias', n: 3, p: { oro: 2400 } } : { t: 'celda', id: Math.random() < 0.7 ? 'runica' : 'oro', p: { oro: Math.random() < 0.7 ? 2600 : 5200 } });
+  return out.map(o => Object.assign(o, { sold: false }));
+}
+function mnHoy() { if (!perfil.mercado || perfil.mercado.f !== mnTanda()) { perfil.mercado = { f: mnTanda(), ofs: mnRoll(), visto: false }; savePerfil(); } return perfil.mercado; }
+const mnNuevo = () => !perfil.mercado || perfil.mercado.f !== mnTanda() || !perfil.mercado.visto;
+const mnQueda = () => { const s = ((mnTanda() + 1) * MN_H * 3600e3 - Date.now()) / 1000; return Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min'; };
+function mercado(el) {
+  const m = mnHoy(); if (!m.visto) { m.visto = true; savePerfil(); }
+  const pre = p => p.gemas ? gemBtn(p.gemas) : oroBtn(p.oro);
+  el.innerHTML = '<h3>Ofertas <small>cambian en ' + mnQueda() + '</small></h3><div class="offers">' + m.ofs.map((o, i) => {
+    const img = o.t === 'copias' ? 'img/' + o.k + '_carta.png' : o.t === 'insignias' ? 'img/insignia.png' : 'img/celdas/celda_' + o.id + '_0.png';
+    const t = o.t === 'copias' ? LABEL[o.k] + ' ×' + o.n : o.t === 'insignias' ? 'Insignias de mando ×' + o.n : CELDA(o.id).name;
+    const sub = o.t === 'copias' ? 'copias de su carta, para subir de rango' : o.t === 'insignias' ? 'para los saltos de nivel' : 'se abre en Campaña → Celdas';
+    return '<div class="offer' + (o.sold ? ' sold' : '') + '"><span class="pile pack"><img src="' + img + '" alt=""></span><b class="t">' + t + '</b><small>' + sub + '</small>'
+      + (o.sold ? '<span class="chip">Vendido</span>' : '<button class="btn gold" data-mn="' + i + '">' + pre(o.p) + '</button>') + '</div>';
+  }).join('') + '</div>';
+  el.querySelectorAll('[data-mn]').forEach(b => { b.onclick = () => {
+    const o = m.ofs[+b.dataset.mn]; if (o.sold || !paga(o.p)) return;
+    if (o.t === 'copias') addCopias(o.k, o.n); else if (o.t === 'insignias') addInsignias(o.n); else darCelda(o.id);
+    o.sold = true; savePerfil(); toast('Trato hecho.'); reEdif();
+  }; });
+}
+// altar del retorno
+function gastoNivel(k) {   // oro e insignias que costó llevar la unidad del nivel 1 a su nivel actual
+  let oro = 0, ins = 0; for (let l = 1; l < lvOf(k); l++) { const s = SALTO_INS[l] || 0; oro += oroNivel(k, l) * (s ? 3 : 1); ins += s; }
+  return { oro, ins };
+}
+function retorno(el) {
+  const us = owned().filter(k => lvOf(k) > 1).sort((a, b) => lvOf(b) - lvOf(a));
+  el.innerHTML = '<p class="note">Elige una unidad: vuelve al nivel 1 y el altar te devuelve el 60 %. Su rango y sus copias no cambian.</p>'
+    + (us.length ? '<div class="col full">' + us.map(k => { const g = gastoNivel(k), o = Math.floor(g.oro * 0.6), i = Math.floor(g.ins * 0.6);
+      return '<div class="uprow"><b><img class="mini" src="img/' + k + '_carta.png" alt=""> ' + LABEL[k] + ' <span class="lvl">Nv ' + lvOf(k) + '</span></b><button class="btn small" data-rt="' + k + '">Devolver</button><small>Recuperas ' + fmt(o) + ' de oro' + (i ? ' y ' + i + ' insignia' + (i > 1 ? 's' : '') : '') + '</small></div>';
+    }).join('') + '</div>' : '<div class="infocard"><p>Aún no has subido de nivel a ninguna unidad.</p></div>');
+  el.querySelectorAll('[data-rt]').forEach(b => { b.onclick = () => {
+    const k = b.dataset.rt, g = gastoNivel(k), o = Math.floor(g.oro * 0.6), i = Math.floor(g.ins * 0.6);
+    pop('<p class="eyebrow">Altar del Retorno</p><h2>' + LABEL[k] + '</h2><p>Vuelve del nivel ' + lvOf(k) + ' al 1. Recuperas <b>' + fmt(o) + ' de oro</b>' + (i ? ' y <b>' + i + ' insignias</b>' : '') + '.</p>', 'Devolver', () => {
+      perfil.niveles[k] = 1; perfil.gold += o; addInsignias(i); savePerfil(); paintGold(); paintHub(); $('pop').hidden = true; toast(LABEL[k] + ' vuelve al nivel 1. +' + fmt(o) + ' de oro.'); reEdif();
+    });
+  }; });
+}
 const ESTANDARTE = $('seg-estandarte');
 let EDIF = null;
 function openEdif(id) {
   if (id === 'taberna') return openTaberna();
+  if (EXTRA[id]) {
+    EDIF = id; ESTANDARTE.remove(); $('ed-title').textContent = EXTRA[id].name;
+    $('ed-body').innerHTML = '<div class="bhead"><span class="bimg bsvg">' + EXTRA[id].svg + '</span><p>' + EXTRA[id].txt + '</p></div><div id="ed-in" class="sheet" style="width:100%"></div>';
+    ({ mercado, retorno })[id]($('ed-in')); return show('edif');
+  }
   const e = EDIFICIOS.find(x => x.id === id);
   if (id === 'trono' && !campana1()) return pop('<p class="eyebrow">Bloqueado</p><h2>El Trono</h2><p class="note">Se abre al conquistar los siete reinos del Mundo 1. Hasta entonces eliges a tu héroe en la pantalla del mazo.</p>');
   EDIF = id; ESTANDARTE.remove();
@@ -228,18 +298,33 @@ function sanctum(el) {
   el.querySelectorAll('[data-u]').forEach(b => { b.onclick = () => { const id = b.dataset.u; if (paga({ oro: spUp(id) })) { perfil.hechizos[id]++; savePerfil(); toast(HECHIZOS[id].name + ' sube a nivel ' + spLv(id) + '.'); reEdif(); } }; });
 }
 
-/* ---- El Trono: héroes ---- */
+/* ---- El Trono: héroes, con su nivel (como las unidades: +3 % de vida y daño por nivel), que se sube con oro ---- */
+const HERO_MAX = 30;
+const heroLv = h => Math.max(1, Math.min(HERO_MAX, (perfil.heroLv || {})[h] || 1));
+const heroCoste = h => Math.round(400 * Math.pow(1.22, heroLv(h) - 1) / 10) * 10;
 function trono(el) {
   const hs = heroesOwned();
   el.innerHTML = '<div class="hgrid">' + Object.entries(HEROES).map(([k, h]) => {
     const has = hs.includes(k), c = CH[k], q = KINGDOMS.find(z => z.ruler === k), sel = playerHero() === k;
     return '<div class="hcard' + (has ? '' : ' lock') + '"><header><img class="hport" src="img/' + h.portrait + '.png" alt=""><div><b>' + NAMES_H[k] + '</b><span class="note">' + (has ? (sel ? 'Tu héroe en batalla' : 'Disponible') : 'Conquista el ' + (q ? q.name : 'reino de su rey')) + '</span></div></header>'
-      + '<div class="statrow"><span>Vida ' + c.hp + '</span><span>Daño ' + c.dmg[0] + '–' + c.dmg[1] + '</span><span>Salta a las ' + c.goal + ' bajas</span></div>'
+      + '<div class="statrow"><span class="lvl">Nv ' + heroLv(k) + '</span><span>Vida ' + Math.round(c.hp * lvK(heroLv(k))) + '</span><span>Daño ' + Math.round(c.dmg[0] * lvK(heroLv(k))) + '–' + Math.round(c.dmg[1] * lvK(heroLv(k))) + '</span><span>Salta a las ' + c.goal + ' bajas</span></div>'
       + '<p><em>Pasiva.</em> ' + HERO_TXT[k][0] + '</p><p><em>Activa.</em> ' + HERO_TXT[k][1] + '</p>'
-      + (has && !sel ? '<button class="btn gold small" data-h="' + k + '">Llevar a la batalla</button>' : '') + '</div>';
-  }).join('') + '</div><div class="infocard"><h3>Próximamente</h3><p>Niveles y rangos de los héroes, su equipo y sus talentos.</p></div>';
+      + '<div class="acts">' + (has && !sel ? '<button class="btn small" data-h="' + k + '">Llevar a la batalla</button>' : '')
+      + (has ? (heroLv(k) >= HERO_MAX ? '<span class="chip">Nivel máximo</span>' : '<button class="btn gold small" data-hl="' + k + '">Subir a Nv ' + (heroLv(k) + 1) + ' · ' + oroBtn(heroCoste(k)) + '</button>') : '') + '</div></div>';
+  }).join('') + '</div><div class="infocard"><h3>Próximamente</h3><p>Rangos de los héroes, su equipo y sus talentos.</p></div>';
   el.querySelectorAll('[data-h]').forEach(b => { b.onclick = () => { myHero = b.dataset.h; try { localStorage.setItem('bg-hero', myHero); } catch (e) {} reEdif(); }; });
+  el.querySelectorAll('[data-hl]').forEach(b => { b.onclick = () => { const h = b.dataset.hl; if (paga({ oro: heroCoste(h) })) { perfil.heroLv = perfil.heroLv || {}; perfil.heroLv[h] = heroLv(h) + 1; savePerfil(); toast(NAMES_H[h] + ' sube a nivel ' + heroLv(h) + '.'); reEdif(); } }; });
 }
+// en la batalla, los héroes saltan con su nivel: el tuyo, el que le has subido; el rival, el poder de su reino
+const _heroActLv = heroAct;
+heroAct = function (team) {
+  const hr = team === 'blue' ? B.hero : B.heroP, antes = hr && hr.state, ok = _heroActLv(team);
+  if (ok && antes === 'throne' && hr.unit && !B.sim) {
+    const lv = team === 'blue' ? (B.auto ? 1 : heroLv(hr.type)) : (B.heroPLv || 1);
+    if (lv > 1) applyPromo(hr.unit, lv, 0);
+  }
+  return ok;
+};
 
 /* ---- Cripta: bestias. Una va contigo: bendice a los tuyos, maldice al rival, lanza su habilidad o lucha a tu lado ---- */
 const BESTIAS = {
@@ -354,6 +439,7 @@ resetBattle = function (o = {}) {
   SUB_TEMA = SUBSUELO.temas[sk] ? sk : 'piedra';   // el subsuelo, con las criptas a juego con tu castillo
   if (!o.sim && scene) subTex(SUB_TEMA, () => drawScenery(scene));
   // el rival, con su aspecto, su subsuelo y su cripta
+  B.heroPLv = o.run && o.run.kind === 'nivel' ? Math.min(HERO_MAX, enemyLevel(o.run.k, o.run.i)) : Math.min(HERO_MAX, heroLv(myHero));   // nivel del héroe rival
   const ps = o.sim ? null : rivalAspecto(o), esta = B; CASTLE_SKIN.purple = null; if (castleImg.purple) castleImg.purple.state = undefined;
   SUB_TEMA_P = SUBSUELO.temas[ps] ? ps : 'piedra';
   if (ps && ps !== 'piedra' && ASPECTOS_POS[ps] && scene) skinTex(ps, () => { if (B !== esta) return; CASTLE_SKIN.purple = Object.assign({ id: ps }, ASPECTOS_POS[ps]); if (castleImg.purple) castleImg.purple.state = undefined; });
