@@ -378,7 +378,7 @@ const CH = {
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
+  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
@@ -843,6 +843,26 @@ class Unit {
     this.shadow.setSize(H * 0.62 * F.k, H * 0.15 * Math.sqrt(F.k));
     const M = F.mul; this.dmgK = M.dmg; this.cdK = M.cd; this.spdK = M.spd; this.animK = M.anim; this.steal = M.steal;
   }
+  flail(o, now) {
+    // colgando: se balancea desde la cabeza (this.swing) y agita los brazos y el arma como puede
+    const q = now * 13 + this.homeX, w = Math.sin(now * 6.5) * 0.08;
+    o.rot = (this.swing || 0) * this.dir + w; o.dx = -0.9 * (this.cfg.h || 1) * Math.sin(o.rot);   // el giro, alrededor de la cabeza
+    o.sx = 1 + Math.sin(q * 0.5) * 0.03; o.sy = 1.05 + Math.sin(q * 0.5 + 1) * 0.03;              // estirada, como si tiraran de ella
+    o.bh = [o.bh[0] + Math.sin(q) * 0.1, o.bh[1] - 0.2 + Math.cos(q) * 0.09];
+    if (o.fh) o.fh = [o.fh[0] - Math.sin(q + 1.7) * 0.1, o.fh[1] - 0.18 + Math.cos(q + 1.7) * 0.09];
+    if (o.sw !== undefined) o.sw += Math.sin(q * 0.9) * 0.9 - 0.3;
+    if (o.sh) o.sh = [o.sh[0] + Math.sin(q + 2.4) * 0.06, o.sh[1] - 0.1 + Math.cos(q + 2.4) * 0.05];
+    if (o.pr !== undefined) o.pr += Math.sin(q * 0.7) * 0.5;
+    if (o.mc !== undefined) o.mc += Math.sin(q * 0.8) * 0.7;
+    if (o.hr !== undefined) o.hr += Math.sin(q * 0.8) * 0.7;
+    if (o.st !== undefined) o.st += Math.sin(q * 0.8) * 0.5;
+    if (o.bg !== undefined) { o.bg += Math.sin(q) * 0.6; o.fg -= Math.sin(q) * 0.6; }
+    if (o.bs !== undefined) { o.bs += Math.sin(q) * 0.6; o.fs -= Math.sin(q) * 0.6; }
+    if (o.bk !== undefined) { o.bk += Math.sin(q) * 0.5; o.fk -= Math.sin(q) * 0.5; }
+    if (o.scarf) o.scarf.r = Math.sin(q) * 0.35;
+    if (o.tail !== undefined) { o.tail = Math.sin(q * 1.4) * 0.45; o.headR = Math.sin(q * 0.8) * 0.15; }
+    if (o.bow) { o.bow = bowRestFromHand(o.fh, this.bw); o.bowR = Math.sin(q * 0.9) * 0.4; }
+  }
   restPose() {
     const r = this.type === 'imparable' ? this.F.rest : this.cfg.rest;
     const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
@@ -875,7 +895,18 @@ class Unit {
     const o = this.restPose();
     const now = this.sc.time.now / 1000, breathe = Math.sin(now * 3.2 + this.homeX + this.lane);
     switch (this.state) {
+      case 'held':                   // cogida por la mano de un gigante: cuelga, se balancea y patalea (ver arrastre.js)
+        o.hop = this.heldH || H * 0.6; this.flail(o, now);
+        break;
       case 'spawn': {
+        if (this.dropH !== undefined) {   // soltada desde la mano: cae por su peso pataleando, choca, polvo y a por ellos
+          const g = H * 34, hop = this.dropH - 0.5 * g * t * t;
+          if (hop > 0) { o.hop = hop; this.swing = (this.swing || 0) * Math.max(0, 1 - dt * 8); this.flail(o, now); break; }
+          if (!this.landT) { this.landT = t; burst(this.x, this.gy, 0xe8d3b0, 16, 170); burst(this.x, this.gy - 4, 0xb9a585, 10, 120); }
+          const q = Math.min(1, (t - this.landT) / 0.2); o.sx = 1 + 0.18 * (1 - q); o.sy = 1 - 0.2 * (1 - q);
+          if (q >= 1) { this.dropH = undefined; this.landT = 0; this.set(mode === 'fight' ? 'walk' : 'idle'); }
+          break;
+        }
         const p = ease(t / 0.35);
         o.sx = o.sy = lerp(0.2, 1, p); o.hop = (1 - p) * H * 0.5;
         if (t >= 0.35) { burst(this.x, this.gy, 0xe8d3b0, 10, 120); this.set(mode === 'fight' ? 'walk' : 'idle'); }

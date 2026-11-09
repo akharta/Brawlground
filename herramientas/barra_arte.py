@@ -27,3 +27,14 @@ for n, (x0, y0, x1, y1) in (('boton', (1704, 214, 2103, 589)), ('boton_sel', (89
 for n in ('tienda', 'reino', 'campana', 'ejercito', 'eventos'):
     im = Image.open(os.path.join(SRC, n + '.png')).convert('RGBA'); im = im.crop(abox(im))
     k = 128 / max(im.size); im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS); guarda(im, n); print(n, im.size)
+# baldosa activa (la pestaña en la que estás): la seleccionada con el interior en amarillo pastel, más clara que las demás,
+# liso, con un degradado suave de arriba abajo (sin textura: al estirarse por trozos no se le notan las costuras)
+t = np.asarray(Image.open(os.path.join(OUT, 'boton_sel.png')).convert('RGBA')).astype(np.float32); H, W = t.shape[:2]
+ref = np.median(t[H // 2 - 8:H // 2 + 8, W // 2 - 8:W // 2 + 8, :3].reshape(-1, 3), 0)
+lab, _ = ndimage.label(np.abs(t[..., :3] - ref).max(-1) < 34); fon = ndimage.binary_fill_holes(lab == lab[H // 2, W // 2])
+sat = t[..., :3].max(-1) - t[..., :3].min(-1); fon = fon | (ndimage.binary_dilation(fon, iterations=5) & (sat < 60))   # y el canto gris de dentro (no el dorado)
+borde = ndimage.distance_transform_edt(fon); w = np.clip(borde, 0, 1)[..., None]
+lum = t[..., :3].mean(-1, keepdims=True) / ref.mean(); yy = np.linspace(0, 1, H)[:, None, None]
+pastel = (np.array([255, 246, 205]) * (1 - yy) + np.array([248, 222, 140]) * yy)
+t[..., :3] = t[..., :3] * (1 - w) + pastel * w
+guarda(Image.fromarray(np.clip(t, 0, 255).astype(np.uint8)), 'boton_act'); print('boton_act')

@@ -25,6 +25,15 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
   jugar una entra la siguiente.
 - **Cartas**: guerreros cuerpo a cuerpo, tiradores, máquinas de asedio… cada una con su
   coste de energía.
+- **Desplegar**: tocar la carta saca la unidad delante de tu castillo. **Pulsa y arrastra**:
+  mantén la carta y llévala al campo; al salir del panel se convierte en la unidad, que cuelga
+  del dedo como si la cogiera un gigante (se balancea y agita el arma), y al soltarla en **tu
+  mitad** cae, levanta polvo y sigue su marcha. Si la llevas a la mitad rival se queda en la
+  frontera. Sirve para meter un asesino entre la primera línea y la retaguardia enemigas, o
+  para ganar tiempo cuando vas atacando. De momento solo los **asesinos** (clase nueva):
+  el legionario, para probar. Kazú también es asesino, pero su shuriken va aparte (pendiente).
+- **Hacia atrás no**: las unidades no retroceden salvo que una habilidad suya lo diga (el
+  tercio ya no da pasos atrás para mantener la distancia de pica).
 - **Energía**: máximo 10, se empieza con 5 y solo se recarga con el tiempo: 1 cada 3,5 s, y el doble
   a partir de los 2 minutos de partida. Abatir enemigos no da energía.
 - **Castillo**: tiene defensas propias (p. ej. torres que disparan) y mejoras propias.
@@ -173,6 +182,10 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
 - *Pendiente*: cómo se consiguen.
 
 ## Estructura de la app
+
+- **Barra de abajo**: cinco baldosas que casi se tocan; la de la pantalla en la que estás, en
+  amarillo pastel. Deslizando el dedo de lado pasas a la pestaña de al lado: la pantalla sigue
+  al dedo 1:1 y, al soltar, termina a la velocidad del gesto (o vuelve si no pasaste un tercio).
 
 - **Barra de pestañas** (abajo): **Tienda · Reino · Campaña · Ejército · Eventos**. Se entra por Campaña. Dibujada: marco azul con remaches dorados y una baldosa con su icono por pestaña (la de la pestaña abierta, dorada y un poco más grande). Los botones de los lados de Campaña, el avatar con su nivel, las cápsulas de oro y diamantes y las barras (experiencia y carga) también van dibujados; la carga lleva su fondo de héroes con el logo en el centro y las demás pantallas, el fondo azul de héroes oscurecido.
 - **Tienda**: regalo diario (100 de oro), 5 ofertas de cartas que se renuevan cada día (copias o la unidad

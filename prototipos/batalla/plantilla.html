@@ -413,12 +413,24 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   border-style: solid; border-width: 0; border-image: url(img/barra/marco.png) 52 70 46 70 fill / 18px 24px 16px 24px;
   padding: 9px calc(var(--sr) + 8px) calc(var(--sb) + 6px) calc(var(--sl) + 8px); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
 #nav button { position: relative; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 1px; color: #c9d0ea; font-family: var(--font-display); font-size: .68rem; text-shadow: 0 1px 0 #0b0e1a; }
-#nav { column-gap: 4px; }
-#nav .nico { width: 100%; height: 46px; box-sizing: border-box; display: grid; place-items: center; border-style: solid; border-width: 0; border-image: url(img/barra/boton.png) 44 fill / 14px; transition: transform .15s; }   /* las baldosas llenan la barra: casi se tocan */
-#nav .nico img { max-width: 34px; max-height: 31px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
-#nav button[aria-current="page"] { color: var(--gold); }
-#nav button[aria-current="page"] .nico { border-image-source: url(img/barra/boton_sel.png); transform: translateY(-2px) scale(1.04); }
-#nav button[aria-current="page"] .nico img { max-width: 36px; max-height: 33px; }
+/* pulsa y arrastra: la carta sigue al dedo; fuera del panel se convierte en la unidad (la carta se oculta) */
+.hc { touch-action: none; }
+.hc.drag { z-index: 6; transition: none; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+.hc.fuera { opacity: 0; }
+.hc.nope { filter: grayscale(.7) brightness(.8) drop-shadow(0 0 6px #ff4a4a); }
+/* deslizar entre pestañas: solo el gesto horizontal es nuestro, el vertical sigue desplazando la pantalla */
+.screen.tabscr, .screen.hogar, #game { touch-action: pan-y; }
+#nav { column-gap: 3px; padding-top: 6px; padding-left: calc(var(--sl) + 5px); padding-right: calc(var(--sr) + 5px); }
+/* cada botón es una baldosa entera (icono y nombre dentro) que llena su hueco: casi se tocan; la de la pantalla en la que
+   estás, en amarillo pastel, más clara que las demás */
+#nav button { min-width: 0; box-sizing: border-box; padding: 3px 0 5px; gap: 0; border-style: solid; border-width: 0; border-image: url(img/barra/boton.png) 44 fill / 14px; transition: transform .15s; }
+/* debajo de la baldosa, su mismo color: tapa las costuras finas que deja el navegador entre los trozos del dibujo */
+#nav button::before { content: ''; position: absolute; inset: 6px; border-radius: 8px; z-index: -1; background: linear-gradient(#39425f, #323d5a); }
+#nav button[aria-current="page"]::before { background: linear-gradient(#fef2c4, #f8e194); }
+#nav .nico { display: grid; place-items: center; height: 36px; }
+#nav .nico img { max-width: 40px; max-height: 36px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+#nav button[aria-current="page"] { border-image-source: url(img/barra/boton_act.png); color: #6a4210; text-shadow: 0 1px 0 rgba(255,255,255,.55); transform: translateY(-3px) scale(1.04); }
+#nav button[aria-current="page"] .nico img { max-width: 42px; max-height: 38px; }
 #nav .badge { top: 0; right: 0; left: auto; font-size: .7rem; padding: 0 5px; }
 .screen.tabscr { background: #141a2e; place-items: start center; }
 .screen.maps { grid-template-columns: minmax(0, 1fr); }

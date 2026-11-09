@@ -94,12 +94,16 @@ function onDead(u) {            // en batalla las bajas no vuelven
   if (B && !B.over) onKill(u);
   units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
+let PLAY_AT = null;
 function play(team, idx) {
   const side = B[team], type = side.hand[idx];
   if (!type || B.over || side.energy < COST[type]) return false;
   side.energy -= COST[type];
   side.queue.push(type); side.hand[idx] = side.queue.shift();
-  units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
+  const at = PLAY_AT && team === 'blue' ? PLAY_AT : null;   // arrastrada al campo (arrastre.js): cae donde la sueltas
+  const u = new Unit(scene, type, team, at ? at.x : team === 'blue' ? FIELD_L : FIELD_R);   // si no, aparece justo delante de su muralla
+  if (at) { u.lane = at.lane; u.root.y = u.gy; u.root.setDepth(u.gy); u.dropH = at.hop; u.swing = at.swing; }
+  units.push(u);
   stat(team, type).played++;
   if (team === 'blue' && !B.auto) renderHand();
   return true;
@@ -575,7 +579,7 @@ function show(id) {
 }
 function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
-const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
+const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'Arrastra a un asesino desde su carta y suéltalo en tu mitad del campo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
   'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.',
   'Cada castillo vasallo que conquistas libera a un prisionero de sus mazmorras.', 'Gana con tu castillo casi intacto para llevarte las tres estrellas.'];
 let tipI = Math.floor(Math.random() * TIPS.length);

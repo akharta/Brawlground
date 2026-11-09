@@ -413,12 +413,24 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   border-style: solid; border-width: 0; border-image: url(img/barra/marco.png) 52 70 46 70 fill / 18px 24px 16px 24px;
   padding: 9px calc(var(--sr) + 8px) calc(var(--sb) + 6px) calc(var(--sl) + 8px); height: calc(var(--navh) + var(--sb)); box-sizing: border-box; }
 #nav button { position: relative; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 1px; color: #c9d0ea; font-family: var(--font-display); font-size: .68rem; text-shadow: 0 1px 0 #0b0e1a; }
-#nav { column-gap: 4px; }
-#nav .nico { width: 100%; height: 46px; box-sizing: border-box; display: grid; place-items: center; border-style: solid; border-width: 0; border-image: url(img/barra/boton.png) 44 fill / 14px; transition: transform .15s; }   /* las baldosas llenan la barra: casi se tocan */
-#nav .nico img { max-width: 34px; max-height: 31px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
-#nav button[aria-current="page"] { color: var(--gold); }
-#nav button[aria-current="page"] .nico { border-image-source: url(img/barra/boton_sel.png); transform: translateY(-2px) scale(1.04); }
-#nav button[aria-current="page"] .nico img { max-width: 36px; max-height: 33px; }
+/* pulsa y arrastra: la carta sigue al dedo; fuera del panel se convierte en la unidad (la carta se oculta) */
+.hc { touch-action: none; }
+.hc.drag { z-index: 6; transition: none; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+.hc.fuera { opacity: 0; }
+.hc.nope { filter: grayscale(.7) brightness(.8) drop-shadow(0 0 6px #ff4a4a); }
+/* deslizar entre pestañas: solo el gesto horizontal es nuestro, el vertical sigue desplazando la pantalla */
+.screen.tabscr, .screen.hogar, #game { touch-action: pan-y; }
+#nav { column-gap: 3px; padding-top: 6px; padding-left: calc(var(--sl) + 5px); padding-right: calc(var(--sr) + 5px); }
+/* cada botón es una baldosa entera (icono y nombre dentro) que llena su hueco: casi se tocan; la de la pantalla en la que
+   estás, en amarillo pastel, más clara que las demás */
+#nav button { min-width: 0; box-sizing: border-box; padding: 3px 0 5px; gap: 0; border-style: solid; border-width: 0; border-image: url(img/barra/boton.png) 44 fill / 14px; transition: transform .15s; }
+/* debajo de la baldosa, su mismo color: tapa las costuras finas que deja el navegador entre los trozos del dibujo */
+#nav button::before { content: ''; position: absolute; inset: 6px; border-radius: 8px; z-index: -1; background: linear-gradient(#39425f, #323d5a); }
+#nav button[aria-current="page"]::before { background: linear-gradient(#fef2c4, #f8e194); }
+#nav .nico { display: grid; place-items: center; height: 36px; }
+#nav .nico img { max-width: 40px; max-height: 36px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+#nav button[aria-current="page"] { border-image-source: url(img/barra/boton_act.png); color: #6a4210; text-shadow: 0 1px 0 rgba(255,255,255,.55); transform: translateY(-3px) scale(1.04); }
+#nav button[aria-current="page"] .nico img { max-width: 42px; max-height: 38px; }
 #nav .badge { top: 0; right: 0; left: auto; font-size: .7rem; padding: 0 5px; }
 .screen.tabscr { background: #141a2e; place-items: start center; }
 .screen.maps { grid-template-columns: minmax(0, 1fr); }
@@ -962,7 +974,7 @@ const CH = {
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
+  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
@@ -1427,6 +1439,26 @@ class Unit {
     this.shadow.setSize(H * 0.62 * F.k, H * 0.15 * Math.sqrt(F.k));
     const M = F.mul; this.dmgK = M.dmg; this.cdK = M.cd; this.spdK = M.spd; this.animK = M.anim; this.steal = M.steal;
   }
+  flail(o, now) {
+    // colgando: se balancea desde la cabeza (this.swing) y agita los brazos y el arma como puede
+    const q = now * 13 + this.homeX, w = Math.sin(now * 6.5) * 0.08;
+    o.rot = (this.swing || 0) * this.dir + w; o.dx = -0.9 * (this.cfg.h || 1) * Math.sin(o.rot);   // el giro, alrededor de la cabeza
+    o.sx = 1 + Math.sin(q * 0.5) * 0.03; o.sy = 1.05 + Math.sin(q * 0.5 + 1) * 0.03;              // estirada, como si tiraran de ella
+    o.bh = [o.bh[0] + Math.sin(q) * 0.1, o.bh[1] - 0.2 + Math.cos(q) * 0.09];
+    if (o.fh) o.fh = [o.fh[0] - Math.sin(q + 1.7) * 0.1, o.fh[1] - 0.18 + Math.cos(q + 1.7) * 0.09];
+    if (o.sw !== undefined) o.sw += Math.sin(q * 0.9) * 0.9 - 0.3;
+    if (o.sh) o.sh = [o.sh[0] + Math.sin(q + 2.4) * 0.06, o.sh[1] - 0.1 + Math.cos(q + 2.4) * 0.05];
+    if (o.pr !== undefined) o.pr += Math.sin(q * 0.7) * 0.5;
+    if (o.mc !== undefined) o.mc += Math.sin(q * 0.8) * 0.7;
+    if (o.hr !== undefined) o.hr += Math.sin(q * 0.8) * 0.7;
+    if (o.st !== undefined) o.st += Math.sin(q * 0.8) * 0.5;
+    if (o.bg !== undefined) { o.bg += Math.sin(q) * 0.6; o.fg -= Math.sin(q) * 0.6; }
+    if (o.bs !== undefined) { o.bs += Math.sin(q) * 0.6; o.fs -= Math.sin(q) * 0.6; }
+    if (o.bk !== undefined) { o.bk += Math.sin(q) * 0.5; o.fk -= Math.sin(q) * 0.5; }
+    if (o.scarf) o.scarf.r = Math.sin(q) * 0.35;
+    if (o.tail !== undefined) { o.tail = Math.sin(q * 1.4) * 0.45; o.headR = Math.sin(q * 0.8) * 0.15; }
+    if (o.bow) { o.bow = bowRestFromHand(o.fh, this.bw); o.bowR = Math.sin(q * 0.9) * 0.4; }
+  }
   restPose() {
     const r = this.type === 'imparable' ? this.F.rest : this.cfg.rest;
     const o = { hop: 0, rot: 0, sx: 1, sy: 1, dx: 0, bh: [...r.bh], fh: r.fh ? [...r.fh] : null };
@@ -1459,7 +1491,18 @@ class Unit {
     const o = this.restPose();
     const now = this.sc.time.now / 1000, breathe = Math.sin(now * 3.2 + this.homeX + this.lane);
     switch (this.state) {
+      case 'held':                   // cogida por la mano de un gigante: cuelga, se balancea y patalea (ver arrastre.js)
+        o.hop = this.heldH || H * 0.6; this.flail(o, now);
+        break;
       case 'spawn': {
+        if (this.dropH !== undefined) {   // soltada desde la mano: cae por su peso pataleando, choca, polvo y a por ellos
+          const g = H * 34, hop = this.dropH - 0.5 * g * t * t;
+          if (hop > 0) { o.hop = hop; this.swing = (this.swing || 0) * Math.max(0, 1 - dt * 8); this.flail(o, now); break; }
+          if (!this.landT) { this.landT = t; burst(this.x, this.gy, 0xe8d3b0, 16, 170); burst(this.x, this.gy - 4, 0xb9a585, 10, 120); }
+          const q = Math.min(1, (t - this.landT) / 0.2); o.sx = 1 + 0.18 * (1 - q); o.sy = 1 - 0.2 * (1 - q);
+          if (q >= 1) { this.dropH = undefined; this.landT = 0; this.set(mode === 'fight' ? 'walk' : 'idle'); }
+          break;
+        }
         const p = ease(t / 0.35);
         o.sx = o.sy = lerp(0.2, 1, p); o.hop = (1 - p) * H * 0.5;
         if (t >= 0.35) { burst(this.x, this.gy, 0xe8d3b0, 10, 120); this.set(mode === 'fight' ? 'walk' : 'idle'); }
@@ -3611,12 +3654,16 @@ function onDead(u) {            // en batalla las bajas no vuelven
   if (B && !B.over) onKill(u);
   units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
+let PLAY_AT = null;
 function play(team, idx) {
   const side = B[team], type = side.hand[idx];
   if (!type || B.over || side.energy < COST[type]) return false;
   side.energy -= COST[type];
   side.queue.push(type); side.hand[idx] = side.queue.shift();
-  units.push(new Unit(scene, type, team, team === 'blue' ? FIELD_L : FIELD_R));   // aparecen justo delante de su muralla
+  const at = PLAY_AT && team === 'blue' ? PLAY_AT : null;   // arrastrada al campo (arrastre.js): cae donde la sueltas
+  const u = new Unit(scene, type, team, at ? at.x : team === 'blue' ? FIELD_L : FIELD_R);   // si no, aparece justo delante de su muralla
+  if (at) { u.lane = at.lane; u.root.y = u.gy; u.root.setDepth(u.gy); u.dropH = at.hop; u.swing = at.swing; }
+  units.push(u);
   stat(team, type).played++;
   if (team === 'blue' && !B.auto) renderHand();
   return true;
@@ -4116,7 +4163,7 @@ function show(id) {
 }
 function startDemo() { resetBattle({ demo: true }); }
 function setPaused(on) { $('coach').hidden = true; paused = on; if (scene) on ? scene.tweens.pauseAll() : scene.tweens.resumeAll(); show(on ? 'pausa' : null); }
-const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
+const TIPS = ['Toca una carta para sacar la unidad delante de tu castillo.', 'Arrastra a un asesino desde su carta y suéltalo en tu mitad del campo.', 'A las 15 bajas tu héroe salta del trono: tócalo y luego usa su habilidad.',
   'La energía se recarga sola; a partir de los 2 minutos, el doble de rápido.', 'Las torres del castillo disparan a quien se acerca.', 'Espera a que una unidad se adelante y lánzale apoyo por detrás.',
   'Cada castillo vasallo que conquistas libera a un prisionero de sus mazmorras.', 'Gana con tu castillo casi intacto para llevarte las tres estrellas.'];
 let tipI = Math.floor(Math.random() * TIPS.length);
@@ -6426,6 +6473,171 @@ $('ab-back').onclick = () => openEventos();
 const _phEv = paintHub;
 paintHub = function () { _phEv(); const d = document.querySelector('#nav [data-tab="eventos"] .ndot'); if (d) { const s = perfil.abismo; d.hidden = !!(s && s.f === hoy() && (s.prof || s.caido || s.fin)); } };
 window.__abi = () => abi(); window.__openAbismo = openAbismo; window.__abiElige = i => abiElige(i, document.querySelectorAll('#abi-paths .path')[i]);
+
+/* ==== Arrastrar una carta al campo ("pulsa y arrastra"): tocar la carta la saca del castillo como siempre; mantenerla y
+   arrastrarla fuera del panel la convierte en la unidad, que cuelga de tu dedo como si la cogiera un gigante (se balancea
+   y patalea agitando el arma). Al soltarla en TU mitad del campo cae por su peso, levanta polvo y sigue su marcha.
+   Si la llevas a la mitad rival se queda en la frontera, lo más cerca que se puede. De momento solo los asesinos. ==== */
+const CLASE = { legionario: 'asesino', ninja: 'asesino' };            // clases de las unidades (de momento solo asesinos)
+const ARRASTRA = t => CLASE[t] === 'asesino' && t !== 'ninja';      // Kazú es asesino, pero con su shuriken va aparte
+const DR_UMBRAL = 9;                                                 // px que hay que mover el dedo para que sea arrastre
+let DR = null, drClick = 0;
+const drMid = () => W / 2 - H * 0.25;                                // hasta dónde llega tu mitad
+const drWorld = (cx, cy) => { const z = cam.zoom / DPR; return [cx / z + cam.worldView.x, cy / z + cam.worldView.y]; };
+function drDentro(x, y) { const r = $('dock').getBoundingClientRect(); return x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4; }
+function drFantasma(t) {
+  // la unidad que cuelga del dedo: una de verdad, pero fuera de la batalla (no está en la lista de unidades)
+  const g = new Unit(scene, t, 'blue', FIELD_L); g.set('held'); g.heldH = H * 0.6; g.swing = 0; g.w = 0;
+  g.root.setDepth(1500); g.bar.clear(); g.root.setScale(0.2); g.pop = 0; g.nuevo = true;
+  return g;
+}
+function drQuita(g) { if (!g) return; g.root.destroy(); g.bar.destroy(); ['laserG', 'ultIcon', 'plasmaG', 'beamG'].forEach(k => { if (g[k]) g[k].destroy(); }); }
+function drFin(soltar) {
+  const d = DR; if (!d) return; DR = null;
+  const c = d.c; c.classList.remove('drag', 'fuera', 'nope'); c.style.transform = '';
+  if (d.g2) d.g2.destroy();
+  if (soltar && d.g && d.g.root.visible && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
+    PLAY_AT = { x: d.g.x, hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
+    try { play('blue', d.i); } finally { PLAY_AT = null; }
+  }
+  drQuita(d.g);
+}
+$('hand').addEventListener('pointerdown', e => {
+  const c = e.target.closest('.hc');
+  if (!c || e.button > 0 || DR || !B || B.over || B.auto || paused) return;
+  DR = { c, i: +c.dataset.i, t: B.blue.hand[+c.dataset.i], id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, out: false, g: null, g2: null, avisado: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DR; if (!d || e.pointerId !== d.id) return;
+  d.x = e.clientX; d.y = e.clientY;
+  const dx = d.x - d.x0, dy = d.y - d.y0;
+  if (!d.on) { if (Math.hypot(dx, dy) < DR_UMBRAL) return; d.on = true; d.c.classList.add('drag'); }
+  d.out = !drDentro(d.x, d.y);
+  const vale = ARRASTRA(d.t) && COST[d.t] <= B.blue.energy;
+  // la carta sigue al dedo dentro del panel; fuera, si se puede, se convierte en la unidad
+  d.c.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)';
+  d.c.classList.toggle('fuera', d.out && vale); d.c.classList.toggle('nope', d.out && !vale);
+  if (d.out && !vale && !d.avisado) {
+    d.avisado = true; const [wx, wy] = drWorld(d.x, d.y - 70);
+    floatText(wx, wy, ARRASTRA(d.t) ? 'Falta energía' : 'Solo los asesinos se sueltan en el campo', '#ffb4b4');
+  }
+  if (d.out && vale && !d.g) d.g = drFantasma(d.t);
+  if (d.g) d.g.root.setVisible(d.out && vale);
+});
+document.addEventListener('pointerup', e => { if (!DR || e.pointerId !== DR.id) return; if (DR.on) drClick = performance.now(); drFin(DR.on && DR.out); });
+document.addEventListener('pointercancel', e => { if (DR && e.pointerId === DR.id) drFin(false); });
+// tras un arrastre no cuenta como toque (la carta no sale del castillo)
+$('hand').addEventListener('click', e => { if (performance.now() - drClick < 400) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+
+function arrastreTick(dt) {
+  const d = DR; if (!d) return;
+  if (!B || B.over || paused || $('hud').hidden) { drFin(false); return; }
+  const g = d.g; if (!g || !g.root.visible) { if (d.g2) d.g2.clear(); return; }
+  const rdt = Math.max(dt, 1 / 120), z = cam.zoom / DPR;
+  const [wx, wy] = drWorld(d.x, d.y), mid = drMid();
+  // donde caería: en tu mitad, entre tu muralla y la frontera; cuelga un poco por encima del dedo para que se vea
+  const tx = Math.max(FIELD_L, Math.min(mid, wx));
+  if (g.nuevo) { g.nuevo = false; g.x = tx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
+  const ph = g.x; g.x += (tx - g.x) * (1 - Math.exp(-rdt * 22));
+  g.heldH = Math.max(H * 0.45, Math.min(H * 4, g.gy - (wy - 26 / z)));
+  // péndulo: al moverla, los pies se quedan atrás y luego se mece
+  const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
+  g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
+  g.root.setScale(0.2 + 0.8 * ease(g.pop));
+  g.update(rdt); g.root.y = g.gy;
+  // la mitad rival, en rojo (ahí no se puede), la frontera y la marca del suelo donde caerá
+  if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
+  const G = d.g2, top = GROUND - H * 4.5, pegada = wx > mid;
+  G.clear();
+  G.fillStyle(0xff3b3b, 0.22).fillRect(mid, top, FIELD_R - mid + H, GROUND + 40 - top);
+  for (let y = top; y < GROUND + 30; y += 22) G.fillStyle(pegada ? 0xff6b6b : 0xffffff, pegada ? 0.85 : 0.5).fillRect(mid - 2, y, 4, 12);
+  G.lineStyle(3, 0xffffff, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(0x4aa8ff, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+}
+const _battleStepDr = battleStep;
+battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };
+
+/* ==== Deslizar entre las pestañas de la barra (Tienda · Reino · Campaña · Ejército · Eventos): la pantalla sigue al dedo
+   1:1 (si lo mueves despacio y poco, se mueve despacio y poco) y la de al lado entra a la vez. Al soltar, si pasaste
+   un tercio o lo lanzaste rápido, termina de entrar a la velocidad del gesto; si no, vuelve a su sitio. ==== */
+const SW_TABS = ['tienda', 'hogar', 'menu', 'arena', 'eventos'];
+const SW_UMBRAL = 12;
+let SW = null, swClick = 0;
+const swPaginas = id => id === 'menu' ? [$('menu'), $('game')] : [$(id)];   // la campaña lleva el campo de fondo
+const swActual = () => SW_TABS.find(id => !$(id).hidden);
+function swNav(id) { document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.tab === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
+function swEvita(t) {
+  // no se cambia de pestaña desde la barra, un campo de texto, algo que se desplaza de lado o con una ventana encima
+  if (document.querySelector('.screen.pop:not([hidden]), .screen.dim:not([hidden])')) return true;
+  for (let e = t; e && e !== document.body; e = e.parentElement) {
+    if (e.id === 'nav' || e.matches('input, select, textarea, [data-nodesliza]')) return true;
+    const cs = getComputedStyle(e);
+    if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && e.scrollWidth > e.clientWidth + 2) return true;
+  }
+  return false;
+}
+function swPon(off) {
+  const d = SW, w = innerWidth;
+  swPaginas(d.cur).forEach(el => { el.style.transform = 'translate3d(' + off + 'px,0,0)'; });
+  if (d.nb) swPaginas(d.nb).forEach(el => { el.style.transform = 'translate3d(' + (off + d.dir * w) + 'px,0,0)'; });
+}
+function swLimpia(ids) { ids.forEach(id => swPaginas(id).forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.willChange = ''; })); }
+function swEmpieza() {
+  const d = SW; d.on = true;
+  d.dir = d.dx < 0 ? 1 : -1;                                   // 1: entra la de la derecha
+  const i = SW_TABS.indexOf(d.cur); d.nb = SW_TABS[i + d.dir] || null;
+  if (d.nb) {
+    goTab(d.nb);                                              // prepara la de al lado (la pinta) …
+    $(d.cur).hidden = false; swNav(d.cur);                     // … pero aún estás en la tuya
+    if (d.cur === 'menu' || d.nb === 'menu') { const gm = window.__game; if (gm && gm.loop && !gm.loop.running) gm.loop.wake(); }
+    swPaginas(d.nb).forEach(el => { el.style.willChange = 'transform'; el.style.transition = 'none'; });
+  }
+  swPaginas(d.cur).forEach(el => { el.style.willChange = 'transform'; el.style.transition = 'none'; });
+}
+function swOff() {
+  const d = SW; let off = d.dx - Math.sign(d.dx) * SW_UMBRAL;
+  if (!d.nb || Math.sign(off) === d.dir) off = d.nb ? 0 : off * 0.25;   // sin pestaña a ese lado: tira con resistencia
+  return off;
+}
+document.addEventListener('pointerdown', e => {
+  if (SW || e.button > 0 || !e.isPrimary) return;
+  const cur = swActual(); if (!cur || !$('hud').hidden || swEvita(e.target)) return;
+  SW = { id: e.pointerId, cur, x0: e.clientX, y0: e.clientY, dx: 0, on: false, muestras: [[performance.now(), e.clientX]] };
+}, true);
+document.addEventListener('pointermove', e => {
+  const d = SW; if (!d || e.pointerId !== d.id || d.anim) return;
+  d.dx = e.clientX - d.x0; const dy = e.clientY - d.y0;
+  if (!d.on) {
+    if (Math.abs(dy) > SW_UMBRAL && Math.abs(dy) > Math.abs(d.dx)) { SW = null; return; }   // es un desplazamiento vertical
+    if (Math.abs(d.dx) < SW_UMBRAL || Math.abs(d.dx) < Math.abs(dy) * 1.3) return;
+    swEmpieza();
+  }
+  const now = performance.now(); d.muestras.push([now, e.clientX]); while (d.muestras.length > 2 && now - d.muestras[0][0] > 90) d.muestras.shift();
+  swPon(swOff());
+}, true);
+function swSuelta(cancel) {
+  const d = SW; if (!d) return;
+  if (!d.on) { SW = null; return; }
+  swClick = performance.now(); d.anim = true;
+  const w = innerWidth, off = swOff(), m = d.muestras, a = m[0], b = m[m.length - 1];
+  const v = b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0;          // px/ms; hacia la nueva pestaña es -dir
+  const hacia = -d.dir * v, prog = -d.dir * off / w;
+  const pasa = !cancel && d.nb && (prog > 0.33 || (hacia > 0.35 && prog > 0.04)) && hacia > -0.3;
+  const fin = pasa ? -d.dir * w : 0, falta = Math.abs(fin - off);
+  const ms = Math.max(120, Math.min(340, falta / Math.max(Math.abs(v), 1.4)));   // sigue a la velocidad del gesto
+  const ids = [d.cur].concat(d.nb ? [d.nb] : []);
+  ids.forEach(id => swPaginas(id).forEach(el => { el.style.transition = 'transform ' + Math.round(ms) + 'ms cubic-bezier(.2,.75,.3,1)'; }));
+  requestAnimationFrame(() => swPon(fin));
+  setTimeout(() => {
+    swLimpia(ids); SW = null;
+    if (pasa) show(d.nb);                                    // ya estás en la nueva (barra, bucle del juego…)
+    else if (d.nb) show(d.cur);                              // vuelves a la tuya
+  }, ms + 30);
+}
+document.addEventListener('pointerup', e => { if (SW && e.pointerId === SW.id) swSuelta(false); }, true);
+document.addEventListener('pointercancel', e => { if (SW && e.pointerId === SW.id) swSuelta(!SW.on); }, true);
+// lo que empieza en un botón y acaba en deslizar no es un toque
+document.addEventListener('click', e => { if (performance.now() - swClick < 400) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 
 /* ==== Toque: todo lo que se pulsa (botones, cartas, castillos del mapa, pestañas…) se ilumina por su contorno y crece
    un poco, igual que los lugares del reino. Fuera de la batalla, la acción espera un instante para que se vea el gesto;
