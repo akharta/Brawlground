@@ -5143,7 +5143,7 @@ function lvCoste(k) {   // lo que cuesta subir del nivel actual al siguiente (nu
 }
 // lo que cuesta llenar la siguiente punta: la quinta parte de las copias del rango (el coste total no cambia)
 const rkCoste = k => { const r = rangoOf(k); return r >= RANGOS.length - 1 ? null : { copias: Math.ceil(RANGO_COPIAS[r] / PUNTAS), punta: puntasOf(k) + 1, total: RANGO_COPIAS[r] }; };
-const puntasHtml = (n, cls, rk) => '<span class="puntas' + (cls ? ' ' + cls : '') + '" aria-label="' + n + ' de ' + PUNTAS + ' puntas">' + Array.from({ length: PUNTAS }, (_, i) => '<img src="img/estrellas/punta' + Math.min(RANGOS.length - 1, rk + 1) + '.png" alt="" style="transform:rotate(' + i * 72 + 'deg)"' + (i < n ? ' class="on"' : '') + '>').join('') + '</span>';
+const puntasHtml = (n, cls, rk) => '<span class="puntas' + (cls ? ' ' + cls : '') + '" aria-label="' + n + ' de ' + PUNTAS + ' puntas">' + Array.from({ length: PUNTAS }, (_, i) => '<img src="img/estrellas/punta' + (rk || 0) + '.png" alt="" style="transform:rotate(' + i * 72 + 'deg)"' + (i < n ? ' class="on"' : '') + '>').join('') + '</span>';
 const puedeNivel = k => { const c = lvCoste(k); return !!c && owned().includes(k) && perfil.gold >= c.oro && insignias() >= c.insignias; };
 const puedeRango = k => { const c = rkCoste(k); return !!c && owned().includes(k) && copiasOf(k) >= c.copias; };
 const puedeMejorar = k => puedeRango(k);
