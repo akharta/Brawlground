@@ -27,13 +27,20 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
   coste de energía.
 - **Desplegar**: tocar la carta saca la unidad delante de tu castillo. **Pulsa y arrastra**:
   mantén la carta y llévala al campo; al salir del panel se convierte en la unidad, que cuelga
-  del dedo como si la cogiera un gigante (se balancea y agita el arma), y al soltarla en **tu
-  mitad** cae, levanta polvo y sigue su marcha. Si la llevas a la mitad rival se queda en la
-  frontera. Sirve para meter un asesino entre la primera línea y la retaguardia enemigas, o
-  para ganar tiempo cuando vas atacando. De momento solo los **asesinos** (clase nueva):
-  el legionario, para probar. Kazú también es asesino, pero su shuriken va aparte (pendiente).
-- **Hacia atrás no**: las unidades no retroceden salvo que una habilidad suya lo diga (el
-  tercio ya no da pasos atrás para mantener la distancia de pica).
+  del dedo como si la cogiera un gigante (se balancea y agita el arma), y al soltarla cae,
+  levanta polvo y sigue su marcha. Se arrastran **todas**, con dos reglas:
+  1. Solo se sueltan en **tu mitad** (si la llevas más allá, se queda en la frontera).
+  2. Nunca **detrás de un enemigo** que ya esté en tu mitad: siempre por delante de él.
+  Los **asesinos** (clase nueva) se saltan la regla 2: pueden caer a la espalda de los enemigos,
+  entre su primera línea y su retaguardia (de momento, el legionario; Kazú también es asesino,
+  pero con su shuriken va aparte y se arrastra como los demás). Ninguna unidad ni habilidad
+  permite aún soltar en la mitad rival.
+- **Hacia atrás no se camina**: nadie camina hacia atrás para perseguir a un enemigo que tiene a
+  la espalda; solo se da la vuelta para atacarle si lo tiene a tiro, y si no, sigue adelante (así
+  funcionan los ataques sorpresa). Lo que sí se mantiene: el pasito atrás del tercio tras cada
+  estocada y el mortal de Cole (habilidades).
+- **A distancia**: los tiradores (arquera, pistolero, catapulta, centinela, Lyra) atacan a todo lo
+  que esté a tres cuartos del terreno de juego. El fraile cura con su alcance de siempre.
 - **Energía**: máximo 10, se empieza con 5 y solo se recarga con el tiempo: 1 cada 3,5 s, y el doble
   a partir de los 2 minutos de partida. Abatir enemigos no da energía.
 - **Castillo**: tiene defensas propias (p. ej. torres que disparan) y mejoras propias.

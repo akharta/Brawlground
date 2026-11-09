@@ -974,7 +974,7 @@ const CH = {
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32,
+  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
@@ -3298,11 +3298,18 @@ function floatText(x, y, txt, color) {
 /* ---- combate ---- */
 const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn').concat(enemyCastle(u));
 function nearestEnemy(u) {
-  // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo
-  let best = null, bd = Infinity;
+  // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo. Nadie camina hacia atrás para
+  // perseguir: a un enemigo que tiene a la espalda solo se vuelve a atacarle si lo tiene a tiro; si no, sigue hacia
+  // delante (al siguiente enemigo por delante o al castillo). Una unidad con cfg.vuelve sí podría perseguirlo.
+  let best = null, bd = Infinity, back = null, bb = Infinity;
   const all = enemiesOf(u), foes = all.some(v => !v.isCastle) ? all.filter(v => !v.isCastle) : all;
-  for (const v of foes) { const d = Math.abs(v.x - u.x); if (d < bd) { bd = d; best = v; } }
-  return best;
+  for (const v of foes) {
+    const d = Math.abs(v.x - u.x);
+    if (mode !== 'fight' || u.cfg.vuelve || (v.x - u.x) * u.teamDir > -H * 0.3) { if (d < bd) { bd = d; best = v; } }
+    else if (d < bb) { bb = d; back = v; }
+  }
+  if (back && bb <= u.cfg.range && bb < bd) return back;       // a tiro por la espalda: se da la vuelta
+  return best || (back ? all.find(v => v.isCastle) || null : null);
 }
 function onMelee(u) {
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
@@ -3378,8 +3385,11 @@ function fightLogic(dt) {
         if (u.state !== 'walk' || !u.backing) { u.set('walk'); u.backing = true; }   // retrocede para mantener la distancia de pica
       }
       else if (u.state === 'walk') { u.backing = false; u.set('idle'); }
-    } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
-    else if (u.state === 'walk' && atWall) u.set('idle');
+    } else {
+      u.backing = false;   // el pasito atrás es solo con el enemigo a tiro: si se aleja (o lo ha empujado), vuelve a avanzar
+      if (u.state === 'idle' && !atWall) u.set('walk');
+      else if (u.state === 'walk' && atWall) u.set('idle');
+    }
   }
 }
 function sentinelLogic(u, dt) {
@@ -3578,6 +3588,9 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 const CASTLE_VX = 140, CASTLE_W = 360, CASTLE_FRONT = CASTLE_VX + CASTLE_W * 0.47;   // frente de la muralla
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
+// las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile cura con su alcance de siempre)
+const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 const CASTLE_ART = { blue: { key: 'castillo_azul', plat: [260, 105], arch: [490, 150] }, purple: { key: 'castillo_morado', plat: [260, 95], arch: [30, 162] } };
 let castleImg = {};
 // aspecto del castillo de cada bando (reino.js): dibujo propio con su suelo del torreón (plat) y su arquero (arch), también
@@ -6476,13 +6489,22 @@ window.__abi = () => abi(); window.__openAbismo = openAbismo; window.__abiElige 
 
 /* ==== Arrastrar una carta al campo ("pulsa y arrastra"): tocar la carta la saca del castillo como siempre; mantenerla y
    arrastrarla fuera del panel la convierte en la unidad, que cuelga de tu dedo como si la cogiera un gigante (se balancea
-   y patalea agitando el arma). Al soltarla en TU mitad del campo cae por su peso, levanta polvo y sigue su marcha.
-   Si la llevas a la mitad rival se queda en la frontera, lo más cerca que se puede. De momento solo los asesinos. ==== */
+   y patalea agitando el arma). Al soltarla cae por su peso, levanta polvo y sigue su marcha. Se arrastran todas, pero:
+   - solo se sueltan en TU mitad del campo (si la llevas más allá, se queda en la frontera);
+   - nunca detrás de un enemigo que ya esté en tu mitad: siempre por delante de él (se queda justo delante);
+   - salvo los asesinos, que sí pueden caer a la espalda de los enemigos (entre su primera línea y su retaguardia).
+   Ninguna unidad ni habilidad permite aún soltarlas en la mitad rival. ==== */
 const CLASE = { legionario: 'asesino', ninja: 'asesino' };            // clases de las unidades (de momento solo asesinos)
-const ARRASTRA = t => CLASE[t] === 'asesino' && t !== 'ninja';      // Kazú es asesino, pero con su shuriken va aparte
+const ASESINO = t => CLASE[t] === 'asesino' && t !== 'ninja';       // Kazú es asesino, pero con su shuriken va aparte (de momento, como las demás)
 const DR_UMBRAL = 9;                                                 // px que hay que mover el dedo para que sea arrastre
 let DR = null, drClick = 0;
 const drMid = () => W / 2 - H * 0.25;                                // hasta dónde llega tu mitad
+function drLimite(t) {
+  // lo más lejos que puede caer: tu mitad y, si no es asesina, por delante del primer enemigo que ya esté en ella
+  let lim = drMid();
+  if (!ASESINO(t)) for (const v of units) if (v.team === 'purple' && v.alive && v.state !== 'die' && !v.isCastle && v.x - H * 0.45 < lim) lim = v.x - H * 0.45;
+  return lim;
+}
 const drWorld = (cx, cy) => { const z = cam.zoom / DPR; return [cx / z + cam.worldView.x, cy / z + cam.worldView.y]; };
 function drDentro(x, y) { const r = $('dock').getBoundingClientRect(); return x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4; }
 function drFantasma(t) {
@@ -6496,8 +6518,9 @@ function drFin(soltar) {
   const d = DR; if (!d) return; DR = null;
   const c = d.c; c.classList.remove('drag', 'fuera', 'nope'); c.style.transform = '';
   if (d.g2) d.g2.destroy();
-  if (soltar && d.g && d.g.root.visible && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
-    PLAY_AT = { x: d.g.x, hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
+  const lim = d.g ? drLimite(d.t) : 0;
+  if (soltar && d.g && d.g.root.visible && lim >= FIELD_L && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
+    PLAY_AT = { x: Math.min(d.g.x, lim), hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
     try { play('blue', d.i); } finally { PLAY_AT = null; }
   }
   drQuita(d.g);
@@ -6513,13 +6536,13 @@ document.addEventListener('pointermove', e => {
   const dx = d.x - d.x0, dy = d.y - d.y0;
   if (!d.on) { if (Math.hypot(dx, dy) < DR_UMBRAL) return; d.on = true; d.c.classList.add('drag'); }
   d.out = !drDentro(d.x, d.y);
-  const vale = ARRASTRA(d.t) && COST[d.t] <= B.blue.energy;
+  const vale = COST[d.t] <= B.blue.energy;
   // la carta sigue al dedo dentro del panel; fuera, si se puede, se convierte en la unidad
   d.c.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)';
   d.c.classList.toggle('fuera', d.out && vale); d.c.classList.toggle('nope', d.out && !vale);
   if (d.out && !vale && !d.avisado) {
     d.avisado = true; const [wx, wy] = drWorld(d.x, d.y - 70);
-    floatText(wx, wy, ARRASTRA(d.t) ? 'Falta energía' : 'Solo los asesinos se sueltan en el campo', '#ffb4b4');
+    floatText(wx, wy, 'Falta energía', '#ffb4b4');
   }
   if (d.out && vale && !d.g) d.g = drFantasma(d.t);
   if (d.g) d.g.root.setVisible(d.out && vale);
@@ -6534,9 +6557,9 @@ function arrastreTick(dt) {
   if (!B || B.over || paused || $('hud').hidden) { drFin(false); return; }
   const g = d.g; if (!g || !g.root.visible) { if (d.g2) d.g2.clear(); return; }
   const rdt = Math.max(dt, 1 / 120), z = cam.zoom / DPR;
-  const [wx, wy] = drWorld(d.x, d.y), mid = drMid();
-  // donde caería: en tu mitad, entre tu muralla y la frontera; cuelga un poco por encima del dedo para que se vea
-  const tx = Math.max(FIELD_L, Math.min(mid, wx));
+  const [wx, wy] = drWorld(d.x, d.y), lim = drLimite(d.t), hueco = lim >= FIELD_L;
+  // donde caería: entre tu muralla y el límite; cuelga un poco por encima del dedo para que se vea
+  const tx = Math.max(FIELD_L, Math.min(lim, wx));
   if (g.nuevo) { g.nuevo = false; g.x = tx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
   const ph = g.x; g.x += (tx - g.x) * (1 - Math.exp(-rdt * 22));
   g.heldH = Math.max(H * 0.45, Math.min(H * 4, g.gy - (wy - 26 / z)));
@@ -6545,14 +6568,14 @@ function arrastreTick(dt) {
   g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
   g.root.setScale(0.2 + 0.8 * ease(g.pop));
   g.update(rdt); g.root.y = g.gy;
-  // la mitad rival, en rojo (ahí no se puede), la frontera y la marca del suelo donde caerá
+  // en rojo, donde no se puede (más allá del límite), la línea del límite y la marca del suelo donde caerá
   if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
-  const G = d.g2, top = GROUND - H * 4.5, pegada = wx > mid;
+  const G = d.g2, top = GROUND - H * 4.5, x0 = hueco ? lim : FIELD_L - H, pegada = wx > lim;
   G.clear();
-  G.fillStyle(0xff3b3b, 0.22).fillRect(mid, top, FIELD_R - mid + H, GROUND + 40 - top);
-  for (let y = top; y < GROUND + 30; y += 22) G.fillStyle(pegada ? 0xff6b6b : 0xffffff, pegada ? 0.85 : 0.5).fillRect(mid - 2, y, 4, 12);
-  G.lineStyle(3, 0xffffff, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
-  G.fillStyle(0x4aa8ff, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(0xff3b3b, 0.22).fillRect(x0, top, W - x0, GROUND + 40 - top);
+  if (hueco) for (let y = top; y < GROUND + 30; y += 22) G.fillStyle(pegada ? 0xff6b6b : 0xffffff, pegada ? 0.85 : 0.5).fillRect(lim - 2, y, 4, 12);
+  G.lineStyle(3, hueco ? 0xffffff : 0xff6b6b, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(hueco ? 0x4aa8ff : 0xff3b3b, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
 }
 const _battleStepDr = battleStep;
 battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };

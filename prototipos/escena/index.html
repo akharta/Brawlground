@@ -378,7 +378,7 @@ const CH = {
     rest: { bh: [-0.208, -0.468], fh: [0.3, -0.481] }, braid: [-0.135, -0.95], braidR: 0.25,
     torso: [-0.249, -1.01], hipB: [-0.091, -0.234], hipF: [0.083, -0.234] },
   // Pica larguísima: estocada desde lejos y daño extra contra unidades grandes y rápidas.
-  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32,
+  tercio: { hp: 100, dmg: [12, 16], speed: 34, cd: [2, 2.4], range: H * 2.05, ranged: false, h: 1, bonusVs: { valkiria: 1.8, lobo: 1.8 }, push: 32, keepAway: H * 1.5,
     rest: { bh: [0.029, -0.187], fh: [0.176, -0.341], pr: -0.877 } },
   // Flota; guadañazo en área y corte de oscuridad: se disuelve en sombras y reaparece junto al enemigo.
   esqueleto: { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 0.9, rest: { sw: -0.62, bh: [0.204, -0.219], fh: [-0.226, -0.254] } },
@@ -2702,11 +2702,18 @@ function floatText(x, y, txt, color) {
 /* ---- combate ---- */
 const enemiesOf = u => units.filter(v => v.team !== u.team && v.alive && v.state !== 'die' && v.state !== 'spawn');
 function nearestEnemy(u) {
-  // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo
-  let best = null, bd = Infinity;
+  // mientras quede un enemigo vivo en el campo, se le ataca a él antes que al castillo. Nadie camina hacia atrás para
+  // perseguir: a un enemigo que tiene a la espalda solo se vuelve a atacarle si lo tiene a tiro; si no, sigue hacia
+  // delante (al siguiente enemigo por delante o al castillo). Una unidad con cfg.vuelve sí podría perseguirlo.
+  let best = null, bd = Infinity, back = null, bb = Infinity;
   const all = enemiesOf(u), foes = all.some(v => !v.isCastle) ? all.filter(v => !v.isCastle) : all;
-  for (const v of foes) { const d = Math.abs(v.x - u.x); if (d < bd) { bd = d; best = v; } }
-  return best;
+  for (const v of foes) {
+    const d = Math.abs(v.x - u.x);
+    if (mode !== 'fight' || u.cfg.vuelve || (v.x - u.x) * u.teamDir > -H * 0.3) { if (d < bd) { bd = d; best = v; } }
+    else if (d < bb) { bb = d; back = v; }
+  }
+  if (back && bb <= u.cfg.range && bb < bd) return back;       // a tiro por la espalda: se da la vuelta
+  return best || (back ? all.find(v => v.isCastle) || null : null);
 }
 function onMelee(u) {
   if (mode === 'anim') { burst(u.x + u.dir * H * 0.55, u.gy - H * 0.35, 0xffffff, 5, 120); return; }
@@ -2787,8 +2794,11 @@ function fightLogic(dt) {
         if (u.state !== 'walk' || !u.backing) { u.set('walk'); u.backing = true; }   // retrocede para mantener la distancia de pica
       }
       else if (u.state === 'walk') { u.backing = false; u.set('idle'); }
-    } else if (u.state === 'idle' && !atWall) { u.backing = false; u.set('walk'); }
-    else if (u.state === 'walk' && atWall) u.set('idle');
+    } else {
+      u.backing = false;   // el pasito atrás es solo con el enemigo a tiro: si se aleja (o lo ha empujado), vuelve a avanzar
+      if (u.state === 'idle' && !atWall) u.set('walk');
+      else if (u.state === 'walk' && atWall) u.set('idle');
+    }
   }
 }
 function sentinelLogic(u, dt) {
