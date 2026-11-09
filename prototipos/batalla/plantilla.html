@@ -269,10 +269,15 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .cpbar.wide b { font-size: .78rem; }
 /* las 5 puntas de la estrella del rango: se van llenando con las copias */
 .puntas { display: inline-flex; gap: 3px; align-items: center; }
-.puntas i { width: 13px; height: 13px; background: #3a4366; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-.puntas i.on { background: #ffd84a; filter: drop-shadow(0 0 2px #ff9c1a); }
+.puntas img { height: 24px; width: auto; filter: grayscale(1) brightness(.32) contrast(.9); opacity: .7; }
+.puntas img.on { filter: drop-shadow(0 0 3px rgba(255,220,120,.8)); opacity: 1; }
 .puntas.mini { position: absolute; left: 0; right: 0; bottom: -31px; justify-content: center; gap: 1px; }
-.puntas.mini i { width: 10px; height: 10px; }
+.puntas.mini img { height: 14px; }
+.ests { display: inline-flex; gap: 1px; align-items: center; }
+.est { height: 19px; width: auto; filter: drop-shadow(0 1px 0 rgba(0,0,0,.5)); }
+.rkb .est { height: 10px; }
+.dk.mini .rkb .est { height: 7px; }
+.rk .ests { margin-left: 2px; }
 #up-lv, #up-rk { touch-action: none; user-select: none; -webkit-user-select: none; }
 .dk.up::before { content: '▲'; position: absolute; z-index: 3; right: -6px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: #3ccf86; color: #fff; border: 2px solid var(--outline);
   display: grid; place-items: center; font-size: .7rem; line-height: 1; animation: pulse 1s ease-in-out infinite; }
