@@ -268,11 +268,13 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .cpbar.wide { position: relative; left: auto; right: auto; bottom: auto; height: 20px; width: 100%; }
 .cpbar.wide b { font-size: .78rem; }
 /* las 5 puntas de la estrella del rango: se van llenando con las copias */
-.puntas { display: inline-flex; gap: 3px; align-items: center; }
-.puntas img { height: 24px; width: auto; filter: grayscale(1) brightness(.32) contrast(.9); opacity: .7; }
-.puntas img.on { filter: drop-shadow(0 0 3px rgba(255,220,120,.8)); opacity: 1; }
-.puntas.mini { position: absolute; left: 0; right: 0; bottom: -31px; justify-content: center; gap: 1px; }
-.puntas.mini img { height: 14px; }
+/* la estrella que se está ganando: 5 puntas alrededor del centro, vacías (oscuras) hasta que se rellenan, como quesitos */
+.puntas { position: relative; display: inline-block; flex: none; font-size: 30px; width: 1.9em; height: 1.81em; vertical-align: middle; }
+.puntas img { position: absolute; left: 50%; top: 0; height: 1em; width: auto; margin-left: -.349em; transform-origin: 50% 100%; filter: grayscale(1) brightness(.3); opacity: .75; }
+.puntas img.on { filter: none; opacity: 1; }
+.puntas.mini { position: absolute; z-index: 3; right: 0; top: 27%; font-size: 13px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); pointer-events: none; }
+.dk .puntas img, .hc .puntas img { left: 50%; top: 0; width: auto; height: 1em; object-fit: initial; border-radius: 0; background: none; }
+.dk .est, .hc .est { position: static; width: auto; object-fit: initial; border-radius: 0; background: none; }
 .ests { display: inline-flex; gap: 1px; align-items: center; }
 .est { height: 19px; width: auto; filter: drop-shadow(0 1px 0 rgba(0,0,0,.5)); }
 .rkb .est { height: 10px; }
@@ -5141,7 +5143,7 @@ function lvCoste(k) {   // lo que cuesta subir del nivel actual al siguiente (nu
 }
 // lo que cuesta llenar la siguiente punta: la quinta parte de las copias del rango (el coste total no cambia)
 const rkCoste = k => { const r = rangoOf(k); return r >= RANGOS.length - 1 ? null : { copias: Math.ceil(RANGO_COPIAS[r] / PUNTAS), punta: puntasOf(k) + 1, total: RANGO_COPIAS[r] }; };
-const puntasHtml = (n, cls, rk) => '<span class="puntas' + (cls ? ' ' + cls : '') + '" aria-label="' + n + ' de ' + PUNTAS + ' puntas">' + Array.from({ length: PUNTAS }, (_, i) => '<img src="img/estrellas/punta' + Math.min(RANGOS.length - 1, rk + 1) + '.png" alt=""' + (i < n ? ' class="on"' : '') + '>').join('') + '</span>';
+const puntasHtml = (n, cls, rk) => '<span class="puntas' + (cls ? ' ' + cls : '') + '" aria-label="' + n + ' de ' + PUNTAS + ' puntas">' + Array.from({ length: PUNTAS }, (_, i) => '<img src="img/estrellas/punta' + Math.min(RANGOS.length - 1, rk + 1) + '.png" alt="" style="transform:rotate(' + i * 72 + 'deg)"' + (i < n ? ' class="on"' : '') + '>').join('') + '</span>';
 const puedeNivel = k => { const c = lvCoste(k); return !!c && owned().includes(k) && perfil.gold >= c.oro && insignias() >= c.insignias; };
 const puedeRango = k => { const c = rkCoste(k); return !!c && owned().includes(k) && copiasOf(k) >= c.copias; };
 const puedeMejorar = k => puedeRango(k);
