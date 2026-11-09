@@ -6,7 +6,8 @@
 const LV_MAX = 100, LV_PASO = 0.03;
 const RANGOS = ['E', 'D', 'C', 'B', 'A', 'S', 'S+'];
 const RANGO_K = [1, 1.15, 1.3, 1.5, 1.75, 2.05, 2.4];            // multiplicador de vida y daño por rango
-const RANGO_COPIAS = [5, 10, 20, 40, 70, 120];                   // copias para pasar del rango i al i+1
+const RANGO_COPIAS = [5, 10, 20, 40, 70, 120];                   // copias para pasar del rango i al i+1 (en total)
+const PUNTAS = 5;                                                 // cada estrella tiene 5 puntas: cada tanda de copias llena una, y con las 5 sube la estrella entera
 const SALTO_INS = { 10: 1, 20: 2, 30: 3, 40: 4, 50: 6, 60: 8, 70: 10, 80: 13, 90: 16 };   // insignias para pasar del nivel 10, 20…
 const LV_RAR = { comun: 1, poco: 1.15, rara: 1.3, epica: 1.5, legendaria: 1.8, ascendida: 2.2 };
 // [nivel, rango] de los ejércitos de cada reino (los castillos más avanzados suben algo, el real +3)
@@ -15,7 +16,10 @@ const REINO_PODER = { praderas: [1, 0], bosque: [5, 0], desierto: [10, 0], nieve
 const lvK = lv => 1 + LV_PASO * ((lv || 1) - 1);
 const lvOf = k => Math.max(1, Math.min(LV_MAX, (perfil.niveles || {})[k] || 1));
 const rangoOf = k => Math.max(0, Math.min(RANGOS.length - 1, (perfil.rangos || {})[k] || 0));
-const poderK = (lv, r) => lvK(lv) * RANGO_K[r || 0];
+const rkK = r => { r = r || 0; const i = Math.min(RANGO_K.length - 1, Math.floor(r)), f = r - i; return i >= RANGO_K.length - 1 ? RANGO_K[i] : RANGO_K[i] + (RANGO_K[i + 1] - RANGO_K[i]) * f; };   // las puntas ya cuentan un poco
+const poderK = (lv, r) => lvK(lv) * rkK(r);
+const puntasOf = k => rangoOf(k) >= RANGOS.length - 1 ? 0 : Math.max(0, Math.min(PUNTAS - 1, (perfil.puntas || {})[k] || 0));
+const rangoF = k => rangoOf(k) + puntasOf(k) / PUNTAS;           // rango con sus puntas (para la fuerza en batalla)
 const copiasOf = k => (perfil.copias || {})[k] || 0;
 const insignias = () => perfil.insignias || 0;
 function addCopias(k, n) { perfil.copias = perfil.copias || {}; perfil.copias[k] = (perfil.copias[k] || 0) + n; }
@@ -33,7 +37,9 @@ function lvCoste(k) {   // lo que cuesta subir del nivel actual al siguiente (nu
   const salto = SALTO_INS[lv] || 0;
   return { oro: oroNivel(k, lv) * (salto ? 3 : 1), insignias: salto, salto: !!salto };
 }
-const rkCoste = k => { const r = rangoOf(k); return r >= RANGOS.length - 1 ? null : { copias: RANGO_COPIAS[r] }; };
+// lo que cuesta llenar la siguiente punta: la quinta parte de las copias del rango (el coste total no cambia)
+const rkCoste = k => { const r = rangoOf(k); return r >= RANGOS.length - 1 ? null : { copias: Math.ceil(RANGO_COPIAS[r] / PUNTAS), punta: puntasOf(k) + 1, total: RANGO_COPIAS[r] }; };
+const puntasHtml = (n, cls) => '<span class="puntas' + (cls ? ' ' + cls : '') + '" aria-label="' + n + ' de ' + PUNTAS + ' puntas">' + Array.from({ length: PUNTAS }, (_, i) => '<i' + (i < n ? ' class="on"' : '') + '></i>').join('') + '</span>';
 const puedeNivel = k => { const c = lvCoste(k); return !!c && owned().includes(k) && perfil.gold >= c.oro && insignias() >= c.insignias; };
 const puedeRango = k => { const c = rkCoste(k); return !!c && owned().includes(k) && copiasOf(k) >= c.copias; };
 const puedeMejorar = k => puedeRango(k);
@@ -83,14 +89,14 @@ const perksDe = (k, r) => (PERKS[k] || []).filter(p => p[0] <= r);
 /* ---- en batalla: cada unidad sale con las estadísticas y habilidades de su nivel y rango ---- */
 function applyPromo(u, lv, r, extra = 1) {
   if (!u || !u.cfg) return;
-  const k = poderK(lv, r) * extra; u.lv = lv; u.rk = r; u.pk = k;
+  const k = poderK(lv, r) * extra; u.lv = lv; u.rk = Math.floor(r); u.pk = k;
   if (k !== 1) {
     const c = Object.assign({}, u.cfg); c.hp = Math.round(c.hp * k); if (c.heal) c.heal = c.heal.map(x => Math.round(x * k));
     u.cfg = c; u.hp = u.max = c.hp;
   }
   const ps = perksDe(u.type, r); if (ps.length) { u.perk = {}; ps.forEach(([, , t, v]) => { u.perk[t] = v; }); }
   if (u.perk && u.perk.escudo) u.shieldHp = Math.round(u.max * u.perk.escudo);
-  if (r >= 3 && u.root) u.root.setScale(1 + 0.03 * (r - 2));   // rango B o más: un poco más grande (luego, aspecto propio)
+  if (r >= 3 && u.root) u.root.setScale(1 + 0.03 * (Math.floor(r) - 2));   // rango B o más: un poco más grande (luego, aspecto propio)
 }
 let thornLock = false;
 function auraBonus(src) {
@@ -157,7 +163,7 @@ const _resetLv = resetBattle;
 resetBattle = function (o = {}) {
   _resetLv(o);
   const real = !o.demo && !o.sim;
-  B.blue.pw = real ? Object.fromEntries(owned().map(k => [k, [lvOf(k), rangoOf(k)]])) : {};
+  B.blue.pw = real ? Object.fromEntries(owned().map(k => [k, [lvOf(k), rangoF(k)]])) : {};
   const d = B.blue.deck || [], pw = d.map(k => B.blue.pw[k] || [1, 0]);
   const media = pw.length ? [Math.round(pw.reduce((s, p) => s + p[0], 0) / pw.length), Math.round(pw.reduce((s, p) => s + p[1], 0) / pw.length)] : [1, 0];
   B.purple.pwAll = o.enemyPw || (o.run && o.run.kind === 'rapida' ? media : [1, 0]);
@@ -247,7 +253,7 @@ openArmy = function (seg) {
   document.querySelectorAll('#ej-grid .dk').forEach(b => {
     const k = b.dataset.k; if (!owned().includes(k)) return;
     const c = rkCoste(k), have = copiasOf(k);
-    b.insertAdjacentHTML('beforeend', lvBadge(lvOf(k), false, rangoOf(k)) + '<span class="cpbar' + (c && have >= c.copias ? ' full' : '') + '"><i style="width:' + (c ? Math.min(100, have / c.copias * 100) : 100) + '%"></i><b>' + (c ? have + '/' + c.copias : 'Máx.') + '</b></span>');
+    b.insertAdjacentHTML('beforeend', lvBadge(lvOf(k), false, rangoOf(k)) + '<span class="cpbar' + (c && have >= c.copias ? ' full' : '') + '"><i style="width:' + (c ? Math.min(100, have / c.copias * 100) : 100) + '%"></i><b>' + (c ? have + '/' + c.copias : 'Máx.') + '</b></span>' + (c ? puntasHtml(puntasOf(k), 'mini') : ''));
     b.classList.toggle('up', puedeRango(k));
   });
   $('ej-note').innerHTML = 'Tienes ' + owned().length + ' de ' + ALL.length + ' unidades. Toca una para subirla de nivel (oro) o de rango (copias).' + (mejorables() ? ' <b>Puedes promocionar ' + mejorables() + '.</b>' : '') + ' ' + insHtml();
@@ -264,7 +270,7 @@ paintGold = function () {
 const RK_ABBR = r => 'rango ' + RANGOS[r] + (r ? ' (' + r + '★)' : '');
 openUnit = function (k, subio) {
   const c = CH[k], has = owned().includes(k), lv = lvOf(k), r = rangoOf(k), lc = lvCoste(k), rc = rkCoste(k), w = prizeWhere(k);
-  const k0 = poderK(lv, r), kL = poderK(Math.min(LV_MAX, lv + 1), r), kR = poderK(lv, Math.min(RANGOS.length - 1, r + 1));
+  const k0 = poderK(lv, rangoF(k)), kL = poderK(Math.min(LV_MAX, lv + 1), rangoF(k)), kR = poderK(lv, rc ? rangoF(k) + 1 / PUNTAS : r);
   const spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta', f = x => fmt(Math.round(x));
   const st = (a, kk) => c.heal ? f(c.heal[0] * kk) + '–' + f(c.heal[1] * kk) : f(c.dmg[0] * kk) + '–' + f(c.dmg[1] * kk);
   const rows = [['Vida', f(c.hp * k0)], [c.heal ? 'Cura' : 'Daño', st(0, k0)],
@@ -278,9 +284,9 @@ openUnit = function (k, subio) {
       + (lc ? '<p class="note">+3 % de vida y ' + (c.heal ? 'curación' : 'daño') + ': ' + f(c.hp * k0) + ' → <em>' + f(c.hp * kL) + '</em> de vida.' + (lc.salto ? ' <b>Salto de nivel:</b> pide ' + lc.insignias + (lc.insignias === 1 ? ' insignia' : ' insignias') + ' de mando (tienes ' + insignias() + ').' : '') + '</p>'
         + '<button class="btn gold small" id="up-lv"' + (puedeNivel(k) ? '' : ' disabled') + '><span class="oro" style="border:0;background:none;padding:0"><i></i><b>' + fmt(lc.oro) + '</b></span>' + (lc.insignias ? ' + ' + insHtml(lc.insignias).replace('+', '') : '') + '</button>'
         : '<p class="note">Nivel máximo.</p>') + '</div>'
-      + '<div class="pcol"><div class="mrow">' + rangoHtml(r) + '<span class="note">' + (rc ? 'siguiente: rango ' + RANGOS[r + 1] : 'rango máximo') + '</span></div>'
+      + '<div class="pcol"><div class="mrow">' + rangoHtml(r) + (rc ? puntasHtml(puntasOf(k)) : '') + '<span class="note">' + (rc ? 'con las 5 puntas, rango ' + RANGOS[r + 1] : 'rango máximo') + '</span></div>'
       + (rc ? '<span class="cpbar wide' + (have >= rc.copias ? ' full' : '') + '"><i style="width:' + Math.min(100, have / rc.copias * 100) + '%"></i><b>Copias ' + have + '/' + rc.copias + '</b></span>'
-        + '<p class="note">×' + String(+(RANGO_K[r + 1] / RANGO_K[r]).toFixed(2)).replace('.', ',') + ' a todo: ' + f(c.hp * k0) + ' → <em>' + f(c.hp * kR) + '</em> de vida.' + ((PERKS[k] || []).find(p => p[0] === r + 1) ? ' Aprende <b>' + PERKS[k].find(p => p[0] === r + 1)[1] + '</b>.' : '') + (r + 1 === 3 ? ' Se ve más grande en batalla.' : '') + '</p>'
+        + '<p class="note">Cada punta pide ' + rc.copias + (rc.copias === 1 ? ' copia' : ' copias') + ' (punta ' + rc.punta + ' de ' + PUNTAS + '): ' + f(c.hp * k0) + ' → <em>' + f(c.hp * kR) + '</em> de vida. Con las 5, ×' + String(+(RANGO_K[r + 1] / RANGO_K[r]).toFixed(2)).replace('.', ',') + ' a todo.' + ((PERKS[k] || []).find(p => p[0] === r + 1) ? ' Aprende <b>' + PERKS[k].find(p => p[0] === r + 1)[1] + '</b>.' : '') + (r + 1 === 3 ? ' Se ve más grande en batalla.' : '') + '</p>'
         + '<button class="btn gold small" id="up-rk"' + (puedeRango(k) ? '' : ' disabled') + '>Promocionar</button>'
         : '') + '</div></div>';
   }
@@ -289,29 +295,48 @@ openUnit = function (k, subio) {
     + (has ? '' : '<p class="note">' + (w ? 'Prisionero en ' + w + '.' : 'Se recluta en la Taberna del Multiverso o en las celdas.') + '</p>') + '</div></div>'
     + mejora + (perks ? '<h3 class="ph">Habilidades de rango</h3><ul class="perks">' + perks + '</ul>' : ''));
   if (has) document.querySelector('#pop .udetail .dk').insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
-  if ($('up-lv')) $('up-lv').onclick = () => subirNivel(k);
-  if ($('up-rk')) $('up-rk').onclick = () => subirRango(k);
+  // pulsar sube una vez; mantener pulsado sigue subiendo hasta el límite o hasta que pida un recurso nuevo (ver holdUp)
+  if ($('up-lv')) { $('up-lv').onpointerdown = e => holdUp(e, () => subirNivel(k, true)); $('up-lv').onclick = () => { if (performance.now() - HOLD_T > 3000) subirNivel(k); }; }
+  if ($('up-rk')) { $('up-rk').onpointerdown = e => holdUp(e, () => subirRango(k, true)); $('up-rk').onclick = () => { if (performance.now() - HOLD_T > 3000) subirRango(k); }; }
 };
 const _popLv = pop;
 pop = function (...a) { $('pop-ok').disabled = false; return _popLv(...a); };
 $('pop-close').addEventListener('click', () => { if (!$('ejercito').hidden && armySeg === 'unidades') openArmy('unidades'); });
-function subirNivel(k) {
-  if (!puedeNivel(k)) return;
+// mantener pulsado el botón de subir: repite cada vez más rápido. Devuelve false para parar (sin recursos, en el máximo o
+// ante un recurso nuevo: el salto de nivel pide insignias de mando y hay que volver a pulsar).
+let HOLD = null, HOLD_T = 0;
+function holdUp(e, fn) {
+  if (e.button > 0 || HOLD) return;
+  HOLD_T = performance.now();
+  e.preventDefault(); HOLD = { n: 0, t: 0 };
+  const paso = () => { if (!HOLD) return; const seguir = fn(); if (seguir === false) { HOLD = null; return; } HOLD.n++; HOLD.t = setTimeout(paso, Math.max(60, 320 - HOLD.n * 28)); };
+  fn() === false ? (HOLD = null) : (HOLD.t = setTimeout(paso, 420));
+}
+const holdSuelta = () => { HOLD_T = performance.now(); if (HOLD) { clearTimeout(HOLD.t); HOLD = null; } };
+['pointerup', 'pointercancel', 'blur'].forEach(ev => window.addEventListener(ev, holdSuelta, true));
+function subirNivel(k, rep) {
+  if (!puedeNivel(k)) return false;
   const c = lvCoste(k);
   perfil.gold -= c.oro; perfil.insignias = insignias() - c.insignias; perfil.niveles = perfil.niveles || {}; perfil.niveles[k] = lvOf(k) + 1;
-  savePerfil(); paintGold(); toast(LABEL[k] + ' sube a nivel ' + lvOf(k) + '.'); openUnit(k, true);
+  savePerfil(); paintGold(); if (!rep) toast(LABEL[k] + ' sube a nivel ' + lvOf(k) + '.'); openUnit(k, true);
+  if (!rep) return true;
+  const sig = lvCoste(k); return !!sig && puedeNivel(k) && !(sig.insignias && !c.insignias);   // el salto de nivel pide un recurso nuevo: se para
 }
-function subirRango(k) {
-  if (!puedeRango(k)) return;
-  const c = rkCoste(k), r = rangoOf(k) + 1;
-  perfil.copias[k] -= c.copias; perfil.rangos = perfil.rangos || {}; perfil.rangos[k] = r;
+function subirRango(k, rep) {
+  if (!puedeRango(k)) return false;
+  const c = rkCoste(k); let r = rangoOf(k);
+  perfil.copias[k] -= c.copias; perfil.puntas = perfil.puntas || {}; perfil.rangos = perfil.rangos || {};
+  const pt = puntasOf(k) + 1, sube = pt >= PUNTAS;
+  if (sube) { r++; perfil.rangos[k] = r; perfil.puntas[k] = 0; } else perfil.puntas[k] = pt;
   savePerfil(); paintGold();
+  if (!sube) { if (!rep) toast(LABEL[k] + ': punta ' + pt + ' de ' + PUNTAS + ' del rango ' + RANGOS[r + 1] + '.'); openUnit(k, true); return rep ? puedeRango(k) : true; }
   const p = (PERKS[k] || []).find(x => x[0] === r);
   openUnit(k, true);
   // arriba de la ficha, el sello nuevo (la ficha sigue abierta para seguir promocionando)
   $('pop-body').insertAdjacentHTML('afterbegin', '<div class="ascenso">' + sello(r, 'big') + '<p><b>¡' + LABEL[k] + ' asciende a rango ' + RANGOS[r] + '!</b> ' + estrellas(r)
     + '<br>×' + RANGO_K[r].toString().replace('.', ',') + ' a vida y daño' + (p ? '. Aprende <b>' + p[1] + '</b>: ' + PERK_TXT[p[2]](p[3]).replace(/\.$/, '') : '') + '.</p></div>');
   $('pop-body').firstElementChild.scrollIntoView({ block: 'start' });
+  return rep ? puedeRango(k) : true;
 }
 const mejorar = subirRango;
 window.__mejorar = subirRango; window.__subirNivel = subirNivel; window.__lvOf = lvOf; window.__rangoOf = rangoOf; window.__openLevel = openLevel;

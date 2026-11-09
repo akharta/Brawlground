@@ -147,6 +147,24 @@ Cada unidad mejora por dos caminos: el **nivel** y el **rango**.
   rival lleva el nivel y el rango medios de tu mazo. *Falta ajustar la economía de oro con simulaciones.*
 - Los héroes aún no suben de nivel (llegará con el Trono).
 
+### Rango por puntas y subida continua
+- Cada estrella (rango) tiene **5 puntas**. Al reunir las copias de una punta se llena una; con las
+  5 sube la estrella entera. Cada punta cuesta la quinta parte de las copias del rango (el total no
+  cambia: 1, 2, 4, 8, 14 y 24 copias por punta de E a S) y ya da una parte de la mejora de fuerza.
+  Las habilidades de rango se aprenden al completar la estrella.
+- **Mantener pulsado** el botón de subir nivel o de promocionar sube sin parar (cada vez más rápido)
+  hasta el límite, hasta que falte un recurso o hasta que pida uno nuevo (el salto de nivel pide
+  insignias: hay que volver a pulsar).
+
+## Los cuatro consejeros (pendiente de diseñar)
+Personajes que explican la app en los tutoriales y avisos. Cada uno se encarga de su parte:
+- **El general de los ejércitos**: todo lo de batallas y guerra (despliegue, héroe, hechizos, bestias, mazo, campaña).
+- **El consejero de los rumores**: todo lo relacionado con los eventos.
+- **El consejero de la moneda**: todo lo de las compras dentro del juego, en la tienda.
+- **La consejera real**: da la bienvenida al juego una vez instalado y explica todo lo demás que no
+  cubran los otros tres (reino, taberna, ejército, perfil…).
+Aún no existen en el juego: primero hay que diseñarlos (arte) y escribir sus tutoriales.
+
 ## Conseguir personajes
 
 - Empiezas con **Tulio, Ailin y Rodrigo**. Los demás se reclutan en las **jaulas de
