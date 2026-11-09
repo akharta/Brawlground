@@ -39,8 +39,8 @@ resto del ejército lo reclutas por el camino (jaulas de prisioneros y Taberna d
   la espalda; solo se da la vuelta para atacarle si lo tiene a tiro, y si no, sigue adelante (así
   funcionan los ataques sorpresa). Lo que sí se mantiene: el pasito atrás del tercio tras cada
   estocada y el mortal de Cole (habilidades).
-- **A distancia**: los tiradores (arquera, pistolero, catapulta, centinela, Lyra) atacan a todo lo
-  que esté a tres cuartos del terreno de juego. El fraile cura con su alcance de siempre.
+- **A distancia**: los tiradores (arquera, catapulta, centinela (solo el francotirador), Lyra) atacan a todo lo
+  que esté a tres cuartos del terreno de juego. El fraile y Cole conservan su alcance de siempre; la minigun del centinela también.
 - **Energía**: máximo 10, se empieza con 5 y solo se recarga con el tiempo: 1 cada 3,5 s, y el doble
   a partir de los 2 minutos de partida. Abatir enemigos no da energía.
 - **Castillo**: tiene defensas propias (p. ej. torres que disparan) y mejoras propias.
