@@ -405,7 +405,8 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 1.7, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.32,
+    ringCd: 20, ringR: H * 1.7, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.26,   // fly: vuela a 0,20 de su altura
+   
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
@@ -2529,6 +2530,7 @@ class Unit {
     }
     if (!A) return;
     const dead = this.state === 'die', now = this.sc.time.now / 1000;
+    if (this.cfg.fly) { const y = dead ? 0 : -H * this.cfg.fly; this.flameBack.y = y; this.flameCore.y = y; this.flameFront.y = y; }   // el aura vuela con él
     for (const em of this.auraFx) { em.timeScale = timeScale; if (dead && em.emitting) em.stop(); else if (!dead && !em.emitting) em.start(); }
     if (this.halo) {
       const a = dead ? 0 : 0.42 + 0.12 * Math.sin(now * 4 + this.homeX);
