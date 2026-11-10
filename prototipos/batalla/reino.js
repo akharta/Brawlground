@@ -187,49 +187,13 @@ const defLv = k => (perfil.def || {})[k] || 0;
 const defCoste = k => Math.round(DEFENSAS[k].base * Math.pow(1.32, defLv(k)) / 10) * 10;
 // aspectos del castillo: dibujos propios (img/castillos) con el suelo del torreón, el arquero y el estandarte grande de cada uno
 const ASPECTOS_POS = __ASPECTOS__;
-const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Roble'], ['luna', 'Castillo Lunar'], ['vitral', 'Catedral de Vitrales'], ['marea', 'Alcázar de las Mareas'],
-  ['dragon', 'Fortaleza del Dragón'], ['engranaje', 'Castillo de Engranajes'], ['hielo', 'Fortaleza de Hielo'], ['grifo', 'Alcázar del Grifo'], ['arena', 'Fortaleza de Arena'],
-  ['trueno', 'Castillo del Trueno'], ['pagoda', 'Castillo Pagoda'], ['farol', 'Castillo de los Faroles'], ['carnero', 'Fortín del Carnero'], ['escarabajo', 'Templo del Escarabajo'],
-  ['golem', 'Fortaleza Gólem'], ['murcielago', 'Castillo del Murciélago'], ['loto', 'Palacio del Loto'], ['sol', 'Ciudadela del Sol'],
-  ['candado', 'Fortaleza del Candado'], ['setas', 'Castillo de las Setas']];
+const ASPECTOS = [['piedra', 'Castillo de piedra'], ['roble', 'Fortaleza del Bosque'], ['hielo', 'Fortaleza de Hielo'], ['hierro', 'Ciudadela de Hierro']];
 const ASP_PRECIO = 150;
-for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) { BANNERS['cas_' + id] = v.ban; BANNERS['cas_' + id + '_d'] = (v.d && v.d.ban) || v.ban; }
+for (const [id, v] of Object.entries(ASPECTOS_POS)) if (v.ban) for (const suf of ['', '_d', '_r']) BANNERS['cas_' + id + suf] = v.ban;
 const aspTiene = id => id === 'piedra' || perfil.all || (perfil.aspectos || []).includes(id);
 const mySkin = () => perfil.aspecto && ASPECTOS_POS[perfil.aspecto] && aspTiene(perfil.aspecto) ? perfil.aspecto : null;
-const skinCarga = {};
-function skinTex(id, cb) {   // carga el dibujo (sin pasar por el cargador de Phaser) con sus versiones dañada y en ruinas
-  if (!id || !scene) return; const k = 'cas_' + id, P = ASPECTOS_POS[id] || {};
-  if (scene.textures.exists(k)) { if (cb) cb(); return; }
-  if (skinCarga[id]) { if (cb) skinCarga[id].push(cb); return; }   // ya se está cargando: avisa a todos al terminar
-  skinCarga[id] = cb ? [cb] : [];
-  const pide = (suf, ok, mal) => { const im = new Image(); im.onload = () => ok(im); im.onerror = mal; im.src = 'img/castillos/' + id + suf + '.png'; };
-  let falta = 1 + !!P.d + !!P.r;
-  const listo = () => { if (--falta) return; const l = skinCarga[id] || []; delete skinCarga[id]; l.forEach(f => f()); };
-  const pon = (key, im) => { if (!scene.textures.exists(key)) scene.textures.addImage(key, im); };
-  pide('', im => { pon(k, im); if (!P.d) castilloDanado(id, im); listo(); }, () => { delete skinCarga[id]; });
-  if (P.d) pide('_d', im => { pon(k + '_d', im); listo(); }, listo);   // si falla, el castillo sigue entero hasta caer
-  if (P.r) pide('_r', im => { pon(k + '_r', im); listo(); }, listo);   // si falla, las ruinas genéricas
-}
-function castilloDanado(id, im) {
-  // dañado sin dibujo propio: más oscuro, con grietas y hollín (hasta que llegue el suyo)
-  let sd = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7); const rn = () => (sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296;
-  const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const cx = cv.getContext('2d'), Wd = cv.width, Hd = cv.height;
-  cx.drawImage(im, 0, 0); cx.globalCompositeOperation = 'source-atop';
-  cx.fillStyle = 'rgba(40,28,28,.2)'; cx.fillRect(0, 0, Wd, Hd);
-  for (let i = 0; i < 7; i++) {
-    const x = Wd * (0.12 + rn() * 0.76), y = Hd * (0.3 + rn() * 0.55), r = 22 + rn() * 30, g = cx.createRadialGradient(x, y, 2, x, y, r);
-    g.addColorStop(0, 'rgba(20,16,18,.55)'); g.addColorStop(1, 'rgba(20,16,18,0)'); cx.fillStyle = g; cx.fillRect(x - r, y - r, 2 * r, 2 * r);
-  }
-  cx.strokeStyle = '#1e2235'; cx.lineJoin = 'round'; cx.lineCap = 'round';
-  for (let i = 0; i < 8; i++) {
-    let x = Wd * (0.1 + rn() * 0.8), y = Hd * (0.25 + rn() * 0.6), a = rn() * Math.PI * 2;
-    cx.lineWidth = 4 + rn() * 3; cx.beginPath(); cx.moveTo(x, y);
-    for (let j = 0; j < 4; j++) { a += (rn() - 0.5) * 1.6; x += Math.cos(a) * (12 + rn() * 16); y += Math.sin(a) * (12 + rn() * 16); cx.lineTo(x, y); }
-    cx.stroke();
-  }
-  scene.textures.addCanvas('cas_' + id + '_d', cv);
-}
-const aspSrc = id => id === 'piedra' ? colorURL(ICON.casa, myColor(), myEmb()) : scene && scene.textures.exists('cas_' + id) ? colorURL('cas_' + id, myColor(), myEmb()) : 'img/castillos/' + id + '.png';
+function skinTex(id, cb) { if (cb) cb(); }   // los cuatro castillos se cargan al empezar
+const aspSrc = id => scene && scene.textures.exists('cas_' + id) ? colorURL('cas_' + id, myColor(), myEmb()) : 'img/castillos/' + id + '.png';
 function elegirAspecto(id) {
   const n = ASPECTOS.find(a => a[0] === id)[1];
   const usar = () => { perfil.aspecto = id === 'piedra' ? null : id; savePerfil(); if (id !== 'piedra') skinTex(id); toast(n + ': ahora es tu castillo.'); reEdif(); };
@@ -413,10 +377,9 @@ gullHaste = function (u) { return _ghR(u) * (mode === 'fight' && B && !B.idle ? 
 const teamBuffK = team => team === 'blue' && B && B.beast && B.beast.id === 'grifo' ? 1 + B.beast.v : 1;
 // aspecto de los castillos rivales: los vasallos de cada reino alternan dos de su tema y el castillo real lleva el suyo;
 // en la batalla rápida (y en la del menú), uno al azar. 'piedra' es el castillo de siempre
-const RIVAL_ASP = { praderas: [['piedra', 'roble'], 'grifo'], bosque: [['roble', 'pagoda'], 'golem'], desierto: [['arena', 'escarabajo'], 'sol'],
-  nieve: [['hielo', 'luna'], 'trueno'], pantano: [['loto', 'murcielago'], 'golem'], volcan: [['farol', 'dragon'], 'dragon'], playa: [['marea', 'vitral'], 'marea'],
-  setas: [['setas', 'loto'], 'setas'], huesos: [['carnero', 'murcielago'], 'dragon'], engranajes: [['engranaje', 'candado'], 'engranaje'],
-  cristal: [['vitral', 'luna'], 'vitral'], cementerio: [['murcielago', 'candado'], 'murcielago'], cielo: [['grifo', 'sol'], 'pagoda'] };
+const RIVAL_ASP = { praderas: [['piedra', 'roble'], 'piedra'], bosque: [['roble'], 'roble'], desierto: [['piedra'], 'hierro'], nieve: [['hielo'], 'hielo'],
+  pantano: [['roble', 'piedra'], 'roble'], volcan: [['hierro'], 'hierro'], playa: [['piedra'], 'hielo'], setas: [['roble'], 'roble'], huesos: [['piedra', 'hierro'], 'hierro'],
+  engranajes: [['hierro'], 'hierro'], cristal: [['hielo'], 'hielo'], cementerio: [['piedra', 'hierro'], 'hierro'], cielo: [['hielo', 'piedra'], 'hielo'] };
 function rivalAspecto(o) {
   if (o.run && o.run.kind === 'nivel') { const r = RIVAL_ASP[o.run.k], lv = KD(o.run.k).levels[o.run.i]; return !r ? null : lv.royal ? r[1] : r[0][o.run.i % r[0].length]; }
   const ids = ASPECTOS.map(a => a[0]); return ids[Math.floor(Math.random() * ids.length)];
@@ -424,16 +387,10 @@ function rivalAspecto(o) {
 const _resetR = resetBattle;
 resetBattle = function (o = {}) {
   _resetR(o);
-  const sk = mySkin(); CASTLE_SKIN.blue = sk && scene && scene.textures.exists('cas_' + sk) ? Object.assign({ id: sk }, ASPECTOS_POS[sk]) : null;
-  SUB_TEMA = SUBSUELO.temas[sk] ? sk : 'piedra';   // el subsuelo, con las criptas a juego con tu castillo
-  if (!o.sim && scene) subTex(SUB_TEMA, () => drawScenery(scene));
+  const sk = mySkin(); CASTLE_SKIN.blue = sk ? { id: sk } : null;
   // el rival, con su aspecto, su subsuelo y su cripta
   B.heroPLv = o.run && o.run.kind === 'nivel' ? Math.min(HERO_MAX, enemyLevel(o.run.k, o.run.i)) : Math.min(HERO_MAX, heroLv(myHero));   // nivel del héroe rival
-  const ps = o.sim ? null : rivalAspecto(o), esta = B; CASTLE_SKIN.purple = null; if (castleImg.purple) castleImg.purple.state = undefined;
-  SUB_TEMA_P = SUBSUELO.temas[ps] ? ps : 'piedra';
-  if (ps && ps !== 'piedra' && ASPECTOS_POS[ps] && scene) skinTex(ps, () => { if (B !== esta) return; CASTLE_SKIN.purple = Object.assign({ id: ps }, ASPECTOS_POS[ps]); if (castleImg.purple) castleImg.purple.state = undefined; });
-  if (!o.sim && scene) subTex(SUB_TEMA_P, () => { if (B === esta) drawScenery(scene); });
-  if (sk && !CASTLE_SKIN.blue) skinTex(sk);
+  const ps = o.sim ? null : rivalAspecto(o); CASTLE_SKIN.purple = ps && CASTILLOS.includes(ps) ? { id: ps } : null; if (castleImg.purple) castleImg.purple.state = undefined;
   if (castleImg.blue) castleImg.blue.state = undefined;   // se vuelve a pintar con su aspecto
   const real = !o.demo && !o.sim;
   B.buff = { blue: {}, purple: {} }; B.curse = null; B.spell = null; B.beast = null;
@@ -453,84 +410,14 @@ let BST = null, CRIPTA = null;
    Viene dibujada en el subsuelo de cada aspecto (la de la izquierda, con gemas de tu color); mientras se carga, una
    provisional hecha aquí, en el trozo de subsuelo que se ve: en vertical, entre el camino y el panel de cartas; en
    horizontal, en la esquina libre a la izquierda del panel. */
-function criptaTex() {
-  if (scene.textures.exists('cripta')) return;
-  const CW = 640, CH = 520, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
-  const c = cv.getContext('2d'), O = '#1e2235', R = rng(11), r = (a, b) => a + R() * (b - a);
-  const sala = g => { c.beginPath(); c.moveTo(70 - g, CH + 10); c.lineTo(70 - g, 250); c.ellipse(320, 250, 250 + g, 130 + g, 0, Math.PI, Math.PI * 2); c.lineTo(570 + g, CH + 10); c.closePath(); };
-  const pozo = g => { c.beginPath(); c.rect(152 - g, -10, 64 + g * 2, 175); };   // la escalera que sube a tu castillo
-  const union = (g, lw, fill) => { c.lineWidth = lw; c.strokeStyle = O; sala(g); c.stroke(); pozo(g); c.stroke(); c.fillStyle = fill; sala(g); c.fill(); pozo(g); c.fill(); };
-  union(30, 12, '#8b8fa5');
-  // juntas de los sillares: en la bóveda, radiales; en los muros y en el pozo, en hileras
-  c.strokeStyle = 'rgba(30,34,53,.55)'; c.lineWidth = 4;
-  for (let a = Math.PI + 0.12; a < Math.PI * 2 - 0.05; a += 0.2) { c.beginPath(); c.moveTo(320 + Math.cos(a) * 250, 250 + Math.sin(a) * 130); c.lineTo(320 + Math.cos(a) * 280, 250 + Math.sin(a) * 160); c.stroke(); }
-  for (let y = 280, i = 0; y < CH; y += 46, i++) for (const x0 of [40, 570]) { c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + 30, y); c.stroke(); c.beginPath(); c.moveTo(x0 + (i % 2 ? 12 : 20), y); c.lineTo(x0 + (i % 2 ? 12 : 20), y + 46); c.stroke(); }
-  for (let y = 18; y < 150; y += 34) for (const x0 of [122, 216]) { c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + 30, y); c.stroke(); }
-  c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.ellipse(320, 250, 268, 148, 0, Math.PI * 1.08, Math.PI * 1.4); c.ellipse(320, 250, 258, 138, 0, Math.PI * 1.4, Math.PI * 1.08, true); c.fill();
-  // dentro: oscuro, con el muro del fondo y un brillo verde detrás de la bestia
-  const gr = c.createLinearGradient(0, 120, 0, CH); gr.addColorStop(0, '#2e2947'); gr.addColorStop(1, '#1c1a2d');
-  union(0, 10, gr);
-  c.save(); sala(0); c.clip();
-  c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = 3;
-  for (let y = 140, i = 0; y < 440; y += 38, i++) { c.beginPath(); c.moveTo(60, y); c.lineTo(580, y); c.stroke(); for (let x = 60 + (i % 2) * 40; x < 580; x += 80) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 38); c.stroke(); } }
-  const gl = c.createRadialGradient(320, 380, 10, 320, 380, 240); gl.addColorStop(0, 'rgba(110,230,130,.30)'); gl.addColorStop(1, 'rgba(110,230,130,0)'); c.fillStyle = gl; c.fillRect(0, 0, CW, CH);
-  // cadenas que cuelgan de la bóveda
-  for (const [x, n] of [[255, 6], [420, 4]]) for (let i = 0; i < n; i++) {
-    const y = 132 + i * 22 + (x > 300 ? 8 : 0); c.beginPath(); if (i % 2) c.ellipse(x, y, 4, 11, 0, 0, Math.PI * 2); else c.ellipse(x, y, 9, 11, 0, 0, Math.PI * 2);
-    c.lineWidth = 7; c.strokeStyle = O; c.stroke(); c.lineWidth = 3.5; c.strokeStyle = '#a3a9bf'; c.stroke();
-  }
-  // telarañas en las esquinas de la bóveda
-  c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 2;
-  for (const [x, y, d] of [[96, 196, 1], [544, 196, -1]]) { for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + d * (20 + k * 16), y - 60 + k * 20); c.stroke(); } for (const q of [18, 34]) { c.beginPath(); c.arc(x, y, q, d > 0 ? -1.4 : Math.PI + 0.3, d > 0 ? -0.3 : Math.PI + 1.4); c.stroke(); } }
-  // suelo de losas
-  c.fillStyle = '#6c6d85'; c.fillRect(0, 446, CW, CH); c.fillStyle = '#9a9cb3'; c.fillRect(0, 446, CW, 9);
-  c.strokeStyle = O; c.lineWidth = 5; c.beginPath(); c.moveTo(0, 446); c.lineTo(CW, 446); c.stroke();
-  c.lineWidth = 4; c.strokeStyle = 'rgba(30,34,53,.6)'; for (let x = 100; x < CW; x += 92) { c.beginPath(); c.moveTo(x, 455); c.lineTo(x - 10, CH); c.stroke(); }
-  c.beginPath(); c.moveTo(0, 488); c.lineTo(CW, 488); c.stroke();
-  c.restore();
-  // escalones del pozo
-  c.save(); pozo(0); c.clip(); for (let y = 10; y < 165; y += 26) { c.fillStyle = '#4a4664'; c.fillRect(150, y, 70, 9); c.fillStyle = '#6f6a8f'; c.fillRect(150, y, 70, 3); } c.restore();
-  // huesos y una calavera en el suelo
-  const hueso = (x, y, l, a) => { c.save(); c.translate(x, y); c.rotate(a); for (const [e, col] of [[3, O], [0, '#efe6d2']]) { c.fillStyle = col; c.fillRect(-l / 2, -4 - e, l, 8 + e * 2); [[-l / 2, -5], [-l / 2, 5], [l / 2, -5], [l / 2, 5]].forEach(([a2, b2]) => { c.beginPath(); c.arc(a2, b2, 6 + e, 0, Math.PI * 2); c.fill(); }); } c.restore(); };
-  hueso(130, 452, 40, -0.15); hueso(505, 455, 34, 0.3); hueso(530, 446, 30, -0.5);
-  c.beginPath(); c.arc(112, 432, 17, 0, Math.PI * 2); c.fillStyle = '#efe6d2'; c.fill(); c.lineWidth = 5; c.strokeStyle = O; c.stroke();
-  c.fillStyle = O; c.beginPath(); c.arc(106, 430, 4.5, 0, Math.PI * 2); c.arc(119, 430, 4.5, 0, Math.PI * 2); c.fill();
-  // antorchas en los muros (la llama la pone la batalla)
-  for (const x of [108, 532]) {
-    c.lineWidth = 5; c.strokeStyle = O; c.fillStyle = '#7a5434'; c.beginPath(); c.rect(x - 7, 268, 14, 46); c.fill(); c.stroke();
-    c.fillStyle = '#8f93a8'; c.beginPath(); c.moveTo(x - 16, 258); c.lineTo(x + 16, 258); c.lineTo(x + 10, 274); c.lineTo(x - 10, 274); c.closePath(); c.fill(); c.stroke();
-    c.beginPath(); c.rect(x - 12, 300, 24, 8); c.fill(); c.stroke();
-  }
-  scene.textures.addCanvas('cripta', cv);
-}
-const CRIPTA_TEX = { w: 640, h: 520, suelo: 450, antorchas: [[108, 256], [532, 256]] };
 function colocaCripta() {
+  // sin subsuelo ni cripta: la bestia está en el prado, por debajo del camino, junto a tu castillo, y se pasea por ahí
   if (CRIPTA) { CRIPTA.objs.forEach(o => o.destroy()); CRIPTA = null; }
   if (BST) { BST.setVisible(false); if (BST.sombra) BST.sombra.setVisible(false); }
   if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
-  if (SUB_L) {   // la cripta dibujada en el subsuelo: la bestia, en el suelo de la tuya, a la izquierda de la escalera
-    const { s, yi, Lx, T } = SUB_L, [x0, y0, x1, y1] = T.L.muro, base = (y1 - y0) * s * 0.72;
-    CRIPTA = { objs: [], x: Lx + x0 * s, y: yi + y0 * s, w: (x1 - x0) * s, h: base / 0.47, s, antorchas: [] };
-    if (BST) {
-      BST.x0 = Lx + (x0 + (x1 - x0) * 0.42) * s; BST.y0 = yi + (y1 + 2) * s; BST.hh = base * BST.art.h;
-      BST.minX = Lx + (x0 + (x1 - x0) * 0.24) * s; BST.maxX = Lx + (x0 + (x1 - x0) * 0.56) * s;   // se pasea por el suelo libre, sin subir la escalera
-      BST.paseo = null; BST.setFlipX(false);
-      BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
-    }
-    return;
-  }
-  criptaTex();
-  const T = CRIPTA_TEX, gm = window.__game, z = cam.zoom, k = DPR / z;   // unidades del mundo por píxel css
-  const left = cam.scrollX + cam.width / 2 - gm.scale.width / 2 / z, top = cam.scrollY + cam.height / 2 - gm.scale.height / 2 / z;
-  const d = $('dock').getBoundingClientRect(), ih = window.innerHeight, ug = (SUB_Y - top) / k;
-  const enBanda = d.top - ug, enEsquina = d.left >= 74 ? ih - ug : 0;
-  const esquina = enEsquina > enBanda * 1.25, hCss = Math.max(64, Math.min(240, (esquina ? enEsquina : enBanda) * 0.94));
-  const h = hCss * k, w = h * T.w / T.h, s = h / T.h;
-  const cx = esquina ? left + d.left / 2 * k : Math.max(CASTLE_VX + 40, left + 12 * k + w / 2), y = SUB_Y - 6;
-  const img = scene.add.image(cx, y, 'cripta').setOrigin(0.5, 0).setScale(s).setDepth(-28);
-  CRIPTA = { objs: [img], x: cx - w / 2, y, w, h, s, antorchas: T.antorchas.map(([ax, ay]) => [cx - w / 2 + ax * s, y + ay * s]) };
   if (BST) {
-    BST.x0 = cx + w * 0.02; BST.y0 = y + T.suelo * s; BST.hh = h * 0.47 * BST.art.h;
+    BST.x0 = CASTLE_FRONT + H * 0.3; BST.y0 = GROUND + ROAD_HALF + H * 1.1; BST.hh = H * 1.25 * BST.art.h;
+    BST.minX = CASTLE_FRONT - H * 0.6; BST.maxX = CASTLE_FRONT + H * 1.6; BST.paseo = null; BST.setFlipX(false); BST.setDepth(BST.y0);
     BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
   }
 }

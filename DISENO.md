@@ -427,3 +427,16 @@ Arte en bruto en `arte/chacal/`; piezas del juego en `docs/img/anubek/`.
 - Al morir se rompe en pedazos y queda un montón de arcilla; a los 2 s los trozos se levantan y se rehace (una vez por vida),
   con el 60 % de su vida y los trozos algo separados. La segunda vez se queda en el montón y desaparece.
 - Provisional: 150 de vida, 12–16. Habilidades de rango: Arcilla dura (escudo), Maldición del desierto (espinas), Eterno (aguanta).
+
+## Escenario nuevo (vista aérea)
+
+Se borraron los fondos de batalla, caminos, castillos (y sus 20 aspectos) y subsuelos anteriores. Ahora:
+- Cuatro fondos con camino ancho: Cerezos, Otoño, Oasis y Pinos (`docs/img/esc/`). El camino ocupa 430 unidades de ancho y
+  se repite en espejo a los lados; arriba sobra cielo con nubes y abajo prado (una franja de hierba de la propia escena).
+- Cuatro castillos vistos desde arriba, con el trono dentro y dos torres con arqueros mirando al camino: piedra, roble (Fortaleza
+  del Bosque), hielo y hierro (Ciudadela de Hierro). Son los aspectos del castillo. El del rival va volteado y con su color.
+  Dañado y en ruinas se generan del propio dibujo (más oscuro, grietas y hollín). Disparan los dos arqueros, por turnos.
+- El héroe se ve sentado en el trono (Aldric con su dibujo sentado; Lyra y Gūll, con su trono de antes hasta tener el suyo).
+  Al saltar al campo, el trono queda vacío.
+- Sin subsuelo ni cripta: la bestia se pasea por el prado, bajo el camino, junto a tu castillo.
+- Los tronos sueltos de cada castillo están en `docs/img/castillos/trono_*.png` (aún sin uso).

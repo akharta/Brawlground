@@ -7,19 +7,19 @@ const STARTERS = ['legionario', 'arquera', 'tercio'];   // los guerreros origina
 // prize: prisionero que liberas la primera vez; hero: héroe en el trono rival (solo el castillo real).
 // hp y aiK ajustados simulando: la IA que juega tu bando (con el ejército que tendrías al llegar) gana de ~90 % en el 1 a ~30 % en el 10
 const PRADERAS = [
-  { name: 'Granja del Camino', esc: 'escena_06', deck: ['legionario', 'arquera'], hp: 800, aiK: 0.77, gold: 60, prize: 'lobo' },
-  { name: 'Torre del Cartel', esc: 'escena_07', deck: ['legionario', 'arquera', 'tercio'], hp: 900, aiK: 1.16, gold: 70, prize: null },
-  { name: 'Fortín del Molino', esc: 'escena_08', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 1000, aiK: 1.3, gold: 80, prize: 'valkiria' },
-  { name: 'Torre del Pozo', esc: 'escena_02', deck: ['legionario', 'arquera', 'lobo', 'valkiria'], hp: 1100, aiK: 1.5, gold: 90, prize: null },
-  { name: 'Granja Fortificada', esc: 'escena_03', deck: ['tercio', 'lobo', 'valkiria', 'ninja', 'arquera'], hp: 1200, aiK: 1.89, gold: 100, prize: 'ninja' },
-  { name: 'Castillo del Lago', esc: 'escena_09', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1300, aiK: 1.4, gold: 110, prize: 'samurai' },
-  { name: 'Bastión del Otoño', esc: 'escena_05', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja'], hp: 1400, aiK: 1.25, gold: 120, prize: null },
-  { name: 'Atalaya del Alba', esc: 'escena_04', deck: ['legionario', 'fraile', 'acorazado', 'samurai', 'arquera', 'valkiria'], hp: 1500, aiK: 1.28, gold: 130, prize: 'fraile' },
-  { name: 'Muralla de los Pinos', esc: 'escena_10', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1600, aiK: 1.67, gold: 140, prize: 'acorazado' },
-  { name: 'Castillo Real de las Praderas', esc: 'escena_01', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2200, aiK: 1.12, gold: 300, prize: null, hero: 'lyra', royal: true },
+  { name: 'Granja del Camino', esc: 'cerezos', deck: ['legionario', 'arquera'], hp: 800, aiK: 0.77, gold: 60, prize: 'lobo' },
+  { name: 'Torre del Cartel', esc: 'pinos', deck: ['legionario', 'arquera', 'tercio'], hp: 900, aiK: 1.16, gold: 70, prize: null },
+  { name: 'Fortín del Molino', esc: 'otono', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 1000, aiK: 1.3, gold: 80, prize: 'valkiria' },
+  { name: 'Torre del Pozo', esc: 'cerezos', deck: ['legionario', 'arquera', 'lobo', 'valkiria'], hp: 1100, aiK: 1.5, gold: 90, prize: null },
+  { name: 'Granja Fortificada', esc: 'oasis', deck: ['tercio', 'lobo', 'valkiria', 'ninja', 'arquera'], hp: 1200, aiK: 1.89, gold: 100, prize: 'ninja' },
+  { name: 'Castillo del Lago', esc: 'pinos', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1300, aiK: 1.4, gold: 110, prize: 'samurai' },
+  { name: 'Bastión del Otoño', esc: 'otono', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja'], hp: 1400, aiK: 1.25, gold: 120, prize: null },
+  { name: 'Atalaya del Alba', esc: 'oasis', deck: ['legionario', 'fraile', 'acorazado', 'samurai', 'arquera', 'valkiria'], hp: 1500, aiK: 1.28, gold: 130, prize: 'fraile' },
+  { name: 'Muralla de los Pinos', esc: 'pinos', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1600, aiK: 1.67, gold: 140, prize: 'acorazado' },
+  { name: 'Castillo Real de las Praderas', esc: 'cerezos', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2200, aiK: 1.12, gold: 300, prize: null, hero: 'lyra', royal: true },
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
-const ESCENAS = ['escena_01', 'escena_02', 'escena_03', 'escena_04', 'escena_05', 'escena_06', 'escena_07', 'escena_08', 'escena_09', 'escena_10'];
+const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
 const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
@@ -27,7 +27,7 @@ function genReino(n, nombres, premios, rey) {
     const royal = i === 9, top = Math.min(FUERZA.length, 6 + n + Math.floor(i / 2)), pool = FUERZA.slice(Math.max(0, top - 9), top);
     const deck = []; for (let k = 0; deck.length < Math.min(8, 4 + Math.floor((i + n) / 2)) && k < 60; k++) { const u = pool[(k * 5 + i * 3 + n) % pool.length]; if (!deck.includes(u)) deck.push(u); }
     if (royal && n >= 5) deck[deck.length - 1] = n === 6 ? 'imparable' : 'centinela';
-    return { name, esc: ESCENAS[(i * 3 + n * 7) % 10], deck, hp: royal ? 2200 + Math.min(300 * (n - 1), 1500 + 120 * (n - 6)) : 1300 + Math.min(120 * n, 720 + 40 * n) + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
+    return { name, esc: ESCENAS[(i * 3 + n * 7) % ESCENAS.length], deck, hp: royal ? 2200 + Math.min(300 * (n - 1), 1500 + 120 * (n - 6)) : 1300 + Math.min(120 * n, 720 + 40 * n) + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
       gold: royal ? 300 + 100 * (n - 1) : 80 + 30 * n + 10 * i, prize: premios[i] || null, hero: royal ? rey : undefined, royal: royal || undefined };
   });
 }
@@ -72,7 +72,7 @@ const MAP_ART = { mundo: 'img/campana/mapa_mundo.jpg' };
 for (const k of ['hogar', 'praderas', 'bosque', 'desierto', 'nieve', 'pantano', 'volcan', 'playa', 'setas', 'huesos', 'engranajes', 'cristal', 'cementerio', 'cielo']) MAP_ART[k] = 'img/campana/mapa_' + k + '.jpg';
 // iconos de castillo del mapa (texturas con banderas moradas que se repintan del color de su dueño).
 // Mientras no lleguen los dibujos se usan los castillos de batalla; tu castillo de origen es el azul.
-const ICON = { vasallo: 'castillo_morado', real: 'castillo_morado', casa: 'castillo_azul' };
+const ICON = { vasallo: 'cas_piedra', real: 'cas_piedra', casa: 'cas_piedra' };
 // castillos dibujados de cada reino para su mapa (img/campana/icono_<reino>_<vasallo|real>.png); banners = estandartes donde va el emblema
 const ICONOS = __ICONOS__;
 const iconFor = (kid, royal) => { const k = 'icono_' + kid + '_' + (royal ? 'real' : 'vasallo'); return ICONOS[k] ? k : royal ? ICON.real : ICON.vasallo; };
@@ -85,11 +85,11 @@ const KD = id => KINGDOMS.find(k => k.id === id);
 const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
-const SRC_HUE = { cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], castillo_azul: [0.53, 0.70, 'azul'], flecha_azul: [0.53, 0.70, 'azul'], castillo_morado: [0.70, 0.86, 'morado'], flecha_morada: [0.70, 0.86, 'morado'] };
+const SRC_HUE = { cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], flecha_azul: [0.53, 0.70, 'azul'], flecha_morada: [0.70, 0.86, 'morado'] };
 // emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
 const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
   'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
-const BANNERS = { castillo_azul: [0.3981, 0.4034, 0.0904, 0.2122], castillo_azul_danado: [0.3923, 0.4013, 0.1038, 0.2059], castillo_morado: [0.5077, 0.4289, 0.0923, 0.2124], castillo_morado_danado: [0.5019, 0.4289, 0.1, 0.1938] };
+const BANNERS = {};   // dónde va el emblema en cada castillo (los pone reino.js con sus aspectos)
 const bannersOf = base => BANNERS[base] ? [BANNERS[base]] : ICONOS[base] ? ICONOS[base].banners : [];
 function recolorImage(img, [h0, h1, , s0 = 0.35, v0 = 0.2], hex, base, emb) {
   // cambia solo los píxeles del tono de las banderas, conservando sus luces y sombras
