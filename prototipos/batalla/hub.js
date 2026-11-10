@@ -233,7 +233,7 @@ document.querySelectorAll('#ejercito .seg button').forEach(b => { b.onclick = ()
 $('ej-mazo').onclick = () => openDeck('ejercito');
 function openUnit(k) {
   const c = CH[k], has = owned().includes(k), w = prizeWhere(k), spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta';
-  const stats = ['Vida ' + c.hp, c.heal ? 'Cura ' + c.heal[0] + '–' + c.heal[1] : 'Daño ' + c.dmg[0] + '–' + c.dmg[1], 'Cada ' + c.cd[0].toString().replace('.', ',') + '–' + c.cd[1].toString().replace('.', ',') + ' s',
+  const stats = ['Vida ' + c.hp, c.heal ? 'Cura ' + c.heal[0] + '–' + c.heal[1] : (c.dmg || c.snipe) ? 'Daño ' + (c.dmg || c.snipe)[0] + '–' + (c.dmg || c.snipe)[1] : 'No ataca', 'Cada ' + c.cd[0].toString().replace('.', ',') + '–' + c.cd[1].toString().replace('.', ',') + ' s',
     'Alcance ' + (c.range / H).toFixed(1).replace('.', ','), 'Velocidad ' + spd, 'Coste ' + COST[k]];
   pop('<div class="udetail">' + cardHtml(k, has ? '' : 'shadow') + '<div><p class="eyebrow">' + RAREZA[RARITY[k] || 'comun'] + '</p><h2>' + NAMES[k] + '</h2><div class="statrow">' + stats.map(s => '<span>' + s + '</span>').join('') + '</div><p>' + HABILIDAD[k] + '</p>'
     + (has ? ((perfil.copias || {})[k] ? '<p class="note">Copias guardadas: ' + perfil.copias[k] + '</p>' : '') : '<p class="note">' + (w ? 'Prisionero en ' + w + '.' : 'Se recluta en la Taberna del Multiverso.') + '</p>') + '</div></div>');

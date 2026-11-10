@@ -282,7 +282,8 @@ openUnit = function (k, subio) {
   const c = CH[k], has = owned().includes(k), lv = lvOf(k), r = rangoOf(k), lc = lvCoste(k), rc = rkCoste(k), w = prizeWhere(k);
   const k0 = poderK(lv, rangoF(k)), kL = poderK(Math.min(LV_MAX, lv + 1), rangoF(k)), kR = poderK(lv, rc ? rangoF(k) + 1 / PUNTAS : r);
   const spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta', f = x => fmt(Math.round(x));
-  const st = (a, kk) => c.heal ? f(c.heal[0] * kk) + '–' + f(c.heal[1] * kk) : f(c.dmg[0] * kk) + '–' + f(c.dmg[1] * kk);
+  const dd = c.heal || c.dmg || c.snipe;   // Odo no hace daño; X-9 dispara con el francotirador
+  const st = (a, kk) => dd ? f(dd[0] * kk) + '–' + f(dd[1] * kk) : '—';
   const rows = [['Vida', f(c.hp * k0)], [c.heal ? 'Cura' : 'Daño', st(0, k0)],
     ['Cadencia', 'cada ' + String(c.cd[0]).replace('.', ',') + '–' + String(c.cd[1]).replace('.', ',') + ' s'], ['Alcance', (c.range / H).toFixed(1).replace('.', ',')], ['Velocidad', spd], ['Coste', COST[k] + ' de energía']];
   const perks = (PERKS[k] || []).map(([rr, nm, t, v]) => '<li class="' + (rr <= r ? 'on' : '') + '"><b>' + nm + '</b> <small>' + sello(rr, 'mini') + 'rango ' + RANGOS[rr] + '</small><br>' + PERK_TXT[t](v) + '</li>').join('');

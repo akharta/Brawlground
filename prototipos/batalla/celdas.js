@@ -87,7 +87,9 @@ function chispas(el, col, n) {
   }
 }
 function golpe() {
-  if (!AB || AB.i >= 0) return siguiente();
+  if (!AB) return;
+  if (AB.golpes >= 3 && AB.i < 0) return;   // ya está abriéndose: no cuenta más golpes
+  if (AB.i >= 0) return siguiente();
   const cell = document.querySelector('.abcell'); AB.golpes++;
   cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
   cell.style.setProperty('--g', AB.golpes);
@@ -99,6 +101,7 @@ function golpe() {
   setTimeout(() => siguiente(), 1100);
 }
 function siguiente() {
+  if (!AB) return;                // ya se cerró (el aviso llega tarde)
   const out = AB.r.out; AB.i++;
   if (AB.i >= out.length) return resumen();
   const o = out[AB.i], last = AB.i === out.length - 1;

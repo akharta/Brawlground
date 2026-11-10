@@ -5800,7 +5800,7 @@ document.querySelectorAll('#ejercito .seg button').forEach(b => { b.onclick = ()
 $('ej-mazo').onclick = () => openDeck('ejercito');
 function openUnit(k) {
   const c = CH[k], has = owned().includes(k), w = prizeWhere(k), spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta';
-  const stats = ['Vida ' + c.hp, c.heal ? 'Cura ' + c.heal[0] + '–' + c.heal[1] : 'Daño ' + c.dmg[0] + '–' + c.dmg[1], 'Cada ' + c.cd[0].toString().replace('.', ',') + '–' + c.cd[1].toString().replace('.', ',') + ' s',
+  const stats = ['Vida ' + c.hp, c.heal ? 'Cura ' + c.heal[0] + '–' + c.heal[1] : (c.dmg || c.snipe) ? 'Daño ' + (c.dmg || c.snipe)[0] + '–' + (c.dmg || c.snipe)[1] : 'No ataca', 'Cada ' + c.cd[0].toString().replace('.', ',') + '–' + c.cd[1].toString().replace('.', ',') + ' s',
     'Alcance ' + (c.range / H).toFixed(1).replace('.', ','), 'Velocidad ' + spd, 'Coste ' + COST[k]];
   pop('<div class="udetail">' + cardHtml(k, has ? '' : 'shadow') + '<div><p class="eyebrow">' + RAREZA[RARITY[k] || 'comun'] + '</p><h2>' + NAMES[k] + '</h2><div class="statrow">' + stats.map(s => '<span>' + s + '</span>').join('') + '</div><p>' + HABILIDAD[k] + '</p>'
     + (has ? ((perfil.copias || {})[k] ? '<p class="note">Copias guardadas: ' + perfil.copias[k] + '</p>' : '') : '<p class="note">' + (w ? 'Prisionero en ' + w + '.' : 'Se recluta en la Taberna del Multiverso.') + '</p>') + '</div></div>');
@@ -6164,7 +6164,8 @@ openUnit = function (k, subio) {
   const c = CH[k], has = owned().includes(k), lv = lvOf(k), r = rangoOf(k), lc = lvCoste(k), rc = rkCoste(k), w = prizeWhere(k);
   const k0 = poderK(lv, rangoF(k)), kL = poderK(Math.min(LV_MAX, lv + 1), rangoF(k)), kR = poderK(lv, rc ? rangoF(k) + 1 / PUNTAS : r);
   const spd = c.speed >= 80 ? 'rápida' : c.speed >= 50 ? 'normal' : 'lenta', f = x => fmt(Math.round(x));
-  const st = (a, kk) => c.heal ? f(c.heal[0] * kk) + '–' + f(c.heal[1] * kk) : f(c.dmg[0] * kk) + '–' + f(c.dmg[1] * kk);
+  const dd = c.heal || c.dmg || c.snipe;   // Odo no hace daño; X-9 dispara con el francotirador
+  const st = (a, kk) => dd ? f(dd[0] * kk) + '–' + f(dd[1] * kk) : '—';
   const rows = [['Vida', f(c.hp * k0)], [c.heal ? 'Cura' : 'Daño', st(0, k0)],
     ['Cadencia', 'cada ' + String(c.cd[0]).replace('.', ',') + '–' + String(c.cd[1]).replace('.', ',') + ' s'], ['Alcance', (c.range / H).toFixed(1).replace('.', ',')], ['Velocidad', spd], ['Coste', COST[k] + ' de energía']];
   const perks = (PERKS[k] || []).map(([rr, nm, t, v]) => '<li class="' + (rr <= r ? 'on' : '') + '"><b>' + nm + '</b> <small>' + sello(rr, 'mini') + 'rango ' + RANGOS[rr] + '</small><br>' + PERK_TXT[t](v) + '</li>').join('');
@@ -6322,7 +6323,9 @@ function chispas(el, col, n) {
   }
 }
 function golpe() {
-  if (!AB || AB.i >= 0) return siguiente();
+  if (!AB) return;
+  if (AB.golpes >= 3 && AB.i < 0) return;   // ya está abriéndose: no cuenta más golpes
+  if (AB.i >= 0) return siguiente();
   const cell = document.querySelector('.abcell'); AB.golpes++;
   cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
   cell.style.setProperty('--g', AB.golpes);
@@ -6334,6 +6337,7 @@ function golpe() {
   setTimeout(() => siguiente(), 1100);
 }
 function siguiente() {
+  if (!AB) return;                // ya se cerró (el aviso llega tarde)
   const out = AB.r.out; AB.i++;
   if (AB.i >= out.length) return resumen();
   const o = out[AB.i], last = AB.i === out.length - 1;
