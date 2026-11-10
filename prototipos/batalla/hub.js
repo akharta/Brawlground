@@ -159,7 +159,7 @@ function paintHub() {
   if (!perfil) return;
   const nv = nivelDe(perfil.xp || 0), port = 'img/' + HEROES[playerHero()].portrait + '.png';
   $('h-lv').textContent = nv.lv; $('h-xp').style.width = (nv.cur / nv.need * 100) + '%'; $('h-name').textContent = perfil.nombre || 'Señor del Reino';
-  $('h-avatar').src = port; document.querySelectorAll('.ring').forEach(r => { r.style.background = COLORES[myColor()][1]; });
+  $('h-avatar').src = port; document.querySelectorAll('.avatar .ring').forEach(r => { r.style.background = COLORES[myColor()][1]; });
   document.querySelectorAll('.gema-n').forEach(e => { e.textContent = perfil.gemas || 0; });
   const p = expPending(); $('h-botin-n').textContent = fmt(p.oro); $('h-botin').classList.toggle('full', p.full);
   const nx = nextLevel(); $('h-next').textContent = nx ? 'Castillo ' + (nx.i + 1) + ': ' + KD(nx.k).levels[nx.i].name : 'Elige reino en la campaña';

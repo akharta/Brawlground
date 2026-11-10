@@ -9,17 +9,17 @@ let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null
 // héroes que se pueden llevar a la batalla
 const HEROES = {
   // throne: el héroe sentado que se pone sobre el trono del castillo (sin dibujo propio sentado, su trono de antes); al saltar, el trono queda vacío
-  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'aldric_sentado', empty: null, portrait: 'aldric_retrato', tw: 1.5, oy: 0.86 },
+  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'aldric_sentado', empty: null, portrait: 'aldric_retrato', tw: 2.1, oy: 0.74 },
   lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: null, portrait: 'lyra_retrato', tw: 1.15, oy: 0.95 },
   gull: { name: 'Gūll', skill: 'charge', skillName: 'Embestida porcina', throne: 'trono_gull', empty: null, portrait: 'gull_retrato', tw: 1.6, oy: 0.95 },
 };
 let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
-const ROADW = 430;                                       // anchura del camino (de hierba a hierba), en unidades del mundo
-const CAS = { k: 0.53, x0: 10, oy: 545, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
+const CAS = { k: 0.9, x0: -180, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
-const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 150 };
+const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 165 };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
@@ -120,9 +120,9 @@ function onDead(u) {            // en batalla las bajas no vuelven
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
 const LANES = 5, LANE_DRIFT = 34;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.78; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.62; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.88;
+  const lim = ROAD_HALF * 0.75;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
@@ -297,36 +297,19 @@ function makeCloud(sc) {
   g.generateTexture('nube', 260, 124); g.destroy();
 }
 function drawScenery(sc) {
-  // la escena (vista aérea) con su camino centrado en GROUND y de ROADW de ancho; a los lados se repite en espejo. Por encima
-  // de la imagen, cielo y nubes; por debajo, más prado (una franja de hierba de la propia escena, repetida en espejo)
+  // la escena (vertical) cubre el ancho del campo, con su camino centrado en GROUND; por encima, su cielo y por debajo, su prado
   escObjs.forEach(o => o.destroy()); escObjs = []; clouds = [];
   const f = ESC[escena]; if (!f || !sc.textures.exists(escena)) return;
-  const s = ROADW / ((f.b - f.t) * f.h), iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
-  ROAD_HALF = ROADW / 2;
+  const s = W / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
+  ROADW = (f.b - f.t) * ih; ROAD_HALF = ROADW / 2;
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
-  const cols = []; for (let i = -6; i <= 6; i++) { const x = W / 2 + i * iw; if (x + iw / 2 >= cx - vw / 2 - 10 && x - iw / 2 <= cx + vw / 2 + 10) cols.push([x, i]); }
-  if (top < y0) add(sc.add.rectangle(cx, (top - 60 + y0) / 2 + 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-31));
-  for (const [x, i] of cols) add(sc.add.image(x, y0, escena, '__BASE').setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-30));
-  // prado de abajo: la franja de hierba (sin arbustos) de la escena, en espejo una y otra vez
-  const gk = escena + '_prado', g0 = 0.745, g1 = 0.875;
-  if (!sc.textures.exists(gk)) sc.textures.get(escena).add(gk, 0, 0, Math.round(f.h * g0), f.w, Math.round(f.h * (g1 - g0)));
-  const gh = f.h * (g1 - g0) * s;
-  for (let y = y0 + ih - 2, j = 0; y < bot + 10; y += gh - 1, j++) for (const [x, i] of cols) add(sc.add.image(x, y, escena, gk).setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setFlipY(j % 2 === 0).setDepth(-30));
-  const free = y0 + ih * 0.06 - top;   // cielo que no cubre la imagen: nubes que pasan despacio
-  if (free > 200) {
-    makeCloud(sc);
-    const tint = Phaser.Display.Color.Interpolate.ColorWithColor(Phaser.Display.Color.ValueToColor(0xffffff), Phaser.Display.Color.ValueToColor(col(f.top)), 100, 18);
-    const n = Math.max(2, Math.round(vw * free / 900000));
-    for (let i = 0; i < n; i++) {
-      const sz = rand(2.2, 3.6) * Math.min(1, vw / 2160), img = add(sc.add.image(cx - vw / 2 + rand(0, vw), top + 90 + rand(0, Math.max(10, free - 260)), 'nube').setScale(sz).setDepth(-29)
-        .setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b)).setFlipX(Math.random() < 0.5));
-      clouds.push({ img, v: rand(8, 18), x0: cx - vw / 2 - 400, x1: cx + vw / 2 + 400 });
-    }
-  }
+  if (top < y0) add(sc.add.rectangle(cx, (top - 60 + y0) / 2 + 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-2001));
+  if (bot > y0 + ih) add(sc.add.rectangle(cx, (y0 + ih + bot + 60) / 2 - 2, vw + 200, bot + 64 - y0 - ih, col(f.bot)).setDepth(-2001));
+  for (let i = -2; i <= 2; i++) { const x = W / 2 + i * iw; if (x + iw / 2 >= cx - vw / 2 - 10 && x - iw / 2 <= cx + vw / 2 + 10) add(sc.add.image(x, y0, escena, '__BASE').setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-2000)); }
 }
 // sin subsuelo: lo que queda de él, vacío (lo usan la cripta de la bestia y las pruebas)
-let SUB_Y = GROUND + ROADW, SUB_TEMA = 'piedra', SUB_TEMA_P = 'piedra', SUB_L = null;
+let SUB_Y = GROUND + 700, SUB_TEMA = 'piedra', SUB_TEMA_P = 'piedra', SUB_L = null;
 const SUBSUELO = { temas: {} };
 function subTex() {}
 function setScenery(e) {
@@ -351,7 +334,7 @@ function frameCamera() {
   }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
   const X0 = 20, X1 = W - 20, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
-  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
+  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));   // solo vertical: manda el ancho
   // el campo, en el centro del hueco entre el marcador y el panel de cartas (en vertical sobra alto: cielo arriba y prado abajo)
   const yCss = battle ? (topCss + botCss) / 2 : window.innerHeight / 2, mid = (Y0 + Y1) / 2;
   cam.setZoom(z); cam.centerOn(W / 2, mid - (yCss * DPR - ch / 2) / z);
@@ -380,10 +363,10 @@ function create() {
   castleVariants(this);
   for (const team of ['blue', 'purple']) {
     const A = castleArt(team), im = this.add.image(team === 'blue' ? CAS.x0 : W - CAS.x0, GROUND - 10, A.key).setFlipX(A.flip);
-    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setDepth(GROUND - 10 - ROADW / 2); castleImg[team] = im;   // detrás de las unidades
+    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setDepth(-1500); castleImg[team] = im;   // detrás de las unidades
   }
-  throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(GROUND - 9 - ROADW / 2);
-  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(GROUND - 9 - ROADW / 2).setFlipX(true);
+  throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499);
+  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499).setFlipX(true);
   setThrone(throneImg, 'aldric_sentado'); setThrone(throneImgP, 'aldric_sentado');
   castleG = this.add.graphics().setDepth(990);
   fxG = this.add.graphics().setDepth(980);
@@ -475,7 +458,7 @@ function fullscreen() {
   const inApp = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
   const el = document.documentElement;
   if (inApp || document.fullscreenElement) return;
-  try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+  try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.then) p.then(() => { try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {} }, () => {}); } catch (e) {}
 }
 $('tap').onclick = () => { clearInterval(tipTimer); fullscreen(); show('menu'); };
 $('pause').onclick = () => { if (B && !B.over) setPaused(true); };

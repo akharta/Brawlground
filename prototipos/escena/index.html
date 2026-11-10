@@ -616,7 +616,7 @@ const HEAT = { time: 30, k: 1.7 };   // se sobrecalienta siempre a los 30 s de s
 let rockets = [];
 // definitivas de las ascendidas: listas a los 10 s de salir, un solo uso por unidad; el jugador la lanza tocando a la unidad
 const ULT = { wait: 10, feast: 4, slamK: 2.5, plasma: 150 };
-const ULT_ICON = 46;   // diámetro del retrato de la definitiva (px)
+const ULT_ICON = 58;   // diámetro del retrato de la definitiva (px)
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
@@ -1155,7 +1155,7 @@ class Unit {
     if (this.ultIcon.texture.key !== key) this.ultIcon.setTexture(key);
     const now = this.sc.time.now / 1000, p = 0.5 + 0.5 * Math.sin(now * 5), [ix, iy] = this.ultIconPos();
     this.ultIcon.setPosition(ix, iy + Math.sin(now * 3) * 3).setScale(ULT_ICON / 128 * (1 + 0.06 * p));
-    this.bar.fillStyle(0xffd84a, 0.25 + 0.25 * p).fillCircle(ix, iy + Math.sin(now * 3) * 3, ULT_ICON * 0.62 * (1 + 0.1 * p));
+    this.bar.fillStyle(0xb06bff, 0.2 + 0.2 * p).fillCircle(ix, iy + Math.sin(now * 3) * 3, ULT_ICON * 0.4 * (1 + 0.1 * p));
   }
   sentinelExtras(o, dt) {
     // dron que repara y sobrecalentamiento (color del metal y daño)
@@ -3430,6 +3430,13 @@ function makeUltFaces(sc) {
   for (const [k, src, [sx, sy, sw, sh]] of list) {
     if (sc.textures.exists('ultface_' + k) || !sc.textures.exists(src)) continue;
     const t = sc.textures.createCanvas('ultface_' + k, 128, 128), c = t.getContext(), img = sc.textures.get(src).getSourceImage();
+    const fr = sc.textures.exists('marco_asc') ? sc.textures.get('marco_asc').getSourceImage() : null;
+    if (fr) {   // el marco morado de las ascendidas, con la cara en su círculo
+      const fw = 128 * 219 / 248, fx = (128 - fw) / 2, cxm = fx + fw * 0.493, cym = 128 * 0.492, r = 128 * 0.25;
+      c.save(); c.beginPath(); c.arc(cxm, cym, r, 0, Math.PI * 2); c.clip(); c.fillStyle = '#3a3f62'; c.fillRect(0, 0, 128, 128);
+      c.drawImage(img, sx, sy, sw, sh, cxm - r, cym - r, 2 * r, 2 * r); c.restore(); c.drawImage(fr, fx, 0, fw, 128);
+      t.refresh(); continue;
+    }
     c.fillStyle = '#1e2235'; c.beginPath(); c.arc(64, 64, 63, 0, Math.PI * 2); c.fill();
     c.fillStyle = '#ffd84a'; c.beginPath(); c.arc(64, 64, 57, 0, Math.PI * 2); c.fill();
     c.save(); c.beginPath(); c.arc(64, 64, 50, 0, Math.PI * 2); c.clip();
@@ -4048,7 +4055,7 @@ function start() {
     scene: { preload() {
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
-      L('rhy', 'rhysida/atlas');
+      L('rhy', 'rhysida/atlas'); L('marco_asc', 'ui/marco_ascendida');
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'baculo', 'aro', 'aro_plano', 'aro_luz', 'remolino1', 'remolino2', 'filo', 'explosion', 'estrella1', 'estrella2', 'estrella3', 'estrella4', 'esq1', 'esq2', 'esq3', 'esq4', 'esq5', 'esq6', 'esq7']) L('nul_' + n, 'nul/' + n);
       for (const n of ['cuerpo', 'partida', 'muerta']) L('kubi_' + n, 'kubi/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'hacha1', 'hacha2']) L('tor_' + n, 'tormund/' + n);

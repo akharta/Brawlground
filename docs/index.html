@@ -143,6 +143,14 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 /* el círculo del héroe va sobre su cabeza (en el trono o en el campo) y el de la bestia, sobre la suya en la cripta */
 #hero, #ab-beast { position: fixed; left: 0; top: 0; z-index: 12; transform: translate(-50%, -100%); width: auto; gap: 1px; will-change: left, top; }
 #hero .ring { width: 44px; height: 44px; padding: 3px; }
+/* marcos de los botones de habilidad: héroe (azul y oro) y bestia (rojo); el retrato va en el círculo y el texto en la placa */
+#hero .ring, #ab-beast .ring { position: relative; width: 62px; height: 70px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none !important; }
+#hero .ring::before, #ab-beast .ring::before { content: ''; position: absolute; left: 22%; top: 21%; width: 56%; height: 49.5%; border-radius: 50%; background: conic-gradient(var(--c, var(--gold)) calc(var(--p, 0) * 1turn), #141826 0); }
+#hero .ring::after, #ab-beast .ring::after { content: ''; position: absolute; inset: 0; background: url(img/ui/marco_heroe.png) center / 100% 100% no-repeat; pointer-events: none; }
+#ab-beast .ring::after { background-image: url(img/ui/marco_bestia.png); }
+#hero img, #ab-beast .aico { position: absolute; left: 25.5%; top: 24%; width: 49%; height: 43.5%; border: 0; z-index: 0; }
+#hero #herotxt, #ab-beast b { position: relative; z-index: 2; margin-top: -19px; background: none; font-size: .62rem; }
+#hero.ready .ring { animation: pulse .9s ease-in-out infinite; }
 #hero #herotxt, #ab-beast b { font-size: .68rem; background: rgba(15,19,34,.78); border-radius: 999px; padding: 0 6px; }
 #ab-beast .ring { width: 40px; height: 40px; }
 #ab-beast.auto { pointer-events: none; }
@@ -741,6 +749,12 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 .abil b { font-family: var(--font-display); font-weight: 400; font-size: .7rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
 .abil:disabled { cursor: default; } .abil:disabled .aico { filter: saturate(.5) brightness(.75); }
 .abil.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 2px var(--c), 0 0 12px var(--c); }
+/* solo se juega en vertical: en horizontal, un aviso para girar el móvil */
+#girar { display: none; }
+@media (orientation: landscape) and (max-height: 600px) {
+  #girar { display: grid; place-items: center; position: fixed; inset: 0; z-index: 9999; background: #161b2b; color: #fff; font-family: var(--font-display); text-align: center; padding: 24px; }
+  #girar b { font-size: 1.5rem; display: block; } #girar small { font-family: system-ui, sans-serif; opacity: .8; }
+}
 </style>
 
 </head>
@@ -908,6 +922,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
     <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
   </div>
   <div id="coach" role="status" hidden></div>
+  <div id="girar"><div><b>Gira el móvil</b><small>Brawlground se juega en vertical.</small></div></div>
   <div id="abils"><button class="abil" id="ab-spell" hidden><span class="ring"><span class="aico"></span></span><b></b></button><button class="abil" id="ab-beast" hidden><span class="ring"><span class="aico"></span></span><b></b></button></div>
   <div class="dock" id="dock">
     <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>
@@ -1094,7 +1109,7 @@ const HEAT = { time: 30, k: 1.7 };   // se sobrecalienta siempre a los 30 s de s
 let rockets = [];
 // definitivas de las ascendidas: listas a los 10 s de salir, un solo uso por unidad; el jugador la lanza tocando a la unidad
 const ULT = { wait: 10, feast: 4, slamK: 2.5, plasma: 150 };
-const ULT_ICON = 46;   // diámetro del retrato de la definitiva (px)
+const ULT_ICON = 58;   // diámetro del retrato de la definitiva (px)
 const KICK_CHAIN = { k: 0.75, stun: 1 };   // patada de Lin: daño a los que golpea el desplazado y aturdimiento
 const SKEL = { hp: 35, dmg: [8, 10], speed: 62, cd: [1.0, 1.3], range: H * 1.0 };
 const LINK = { w: 0.15 * H, hgt: 0.105 * H, step: 0.115 * H, tip: 0.24 * H, hang: 5 };   // eslabones cortos y gruesos; 5 por cadena
@@ -1633,7 +1648,7 @@ class Unit {
     if (this.ultIcon.texture.key !== key) this.ultIcon.setTexture(key);
     const now = this.sc.time.now / 1000, p = 0.5 + 0.5 * Math.sin(now * 5), [ix, iy] = this.ultIconPos();
     this.ultIcon.setPosition(ix, iy + Math.sin(now * 3) * 3).setScale(ULT_ICON / 128 * (1 + 0.06 * p));
-    this.bar.fillStyle(0xffd84a, 0.25 + 0.25 * p).fillCircle(ix, iy + Math.sin(now * 3) * 3, ULT_ICON * 0.62 * (1 + 0.1 * p));
+    this.bar.fillStyle(0xb06bff, 0.2 + 0.2 * p).fillCircle(ix, iy + Math.sin(now * 3) * 3, ULT_ICON * 0.4 * (1 + 0.1 * p));
   }
   sentinelExtras(o, dt) {
     // dron que repara y sobrecalentamiento (color del metal y daño)
@@ -3908,6 +3923,13 @@ function makeUltFaces(sc) {
   for (const [k, src, [sx, sy, sw, sh]] of list) {
     if (sc.textures.exists('ultface_' + k) || !sc.textures.exists(src)) continue;
     const t = sc.textures.createCanvas('ultface_' + k, 128, 128), c = t.getContext(), img = sc.textures.get(src).getSourceImage();
+    const fr = sc.textures.exists('marco_asc') ? sc.textures.get('marco_asc').getSourceImage() : null;
+    if (fr) {   // el marco morado de las ascendidas, con la cara en su círculo
+      const fw = 128 * 219 / 248, fx = (128 - fw) / 2, cxm = fx + fw * 0.493, cym = 128 * 0.492, r = 128 * 0.25;
+      c.save(); c.beginPath(); c.arc(cxm, cym, r, 0, Math.PI * 2); c.clip(); c.fillStyle = '#3a3f62'; c.fillRect(0, 0, 128, 128);
+      c.drawImage(img, sx, sy, sw, sh, cxm - r, cym - r, 2 * r, 2 * r); c.restore(); c.drawImage(fr, fx, 0, fw, 128);
+      t.refresh(); continue;
+    }
     c.fillStyle = '#1e2235'; c.beginPath(); c.arc(64, 64, 63, 0, Math.PI * 2); c.fill();
     c.fillStyle = '#ffd84a'; c.beginPath(); c.arc(64, 64, 57, 0, Math.PI * 2); c.fill();
     c.save(); c.beginPath(); c.arc(64, 64, 50, 0, Math.PI * 2); c.clip();
@@ -4500,17 +4522,17 @@ let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null
 // héroes que se pueden llevar a la batalla
 const HEROES = {
   // throne: el héroe sentado que se pone sobre el trono del castillo (sin dibujo propio sentado, su trono de antes); al saltar, el trono queda vacío
-  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'aldric_sentado', empty: null, portrait: 'aldric_retrato', tw: 1.5, oy: 0.86 },
+  aldric: { name: 'Rey Aldric', skill: 'seismic', skillName: 'Golpe sísmico', throne: 'aldric_sentado', empty: null, portrait: 'aldric_retrato', tw: 2.1, oy: 0.74 },
   lyra: { name: 'Lyra', skill: 'storm', skillName: 'Tormenta de plumas', throne: 'trono_lyra', empty: null, portrait: 'lyra_retrato', tw: 1.15, oy: 0.95 },
   gull: { name: 'Gūll', skill: 'charge', skillName: 'Embestida porcina', throne: 'trono_gull', empty: null, portrait: 'gull_retrato', tw: 1.6, oy: 0.95 },
 };
 let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HEROES[h] ? h : 'aldric'; } catch (e) { return 'aldric'; } })();   // trono sobre el torreón de tu castillo
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
-const ROADW = 430;                                       // anchura del camino (de hierba a hierba), en unidades del mundo
-const CAS = { k: 0.53, x0: 10, oy: 545, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
+const CAS = { k: 0.9, x0: -180, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
-const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 150 };
+const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 165 };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
@@ -4611,9 +4633,9 @@ function onDead(u) {            // en batalla las bajas no vuelven
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
 const LANES = 5, LANE_DRIFT = 34;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.78; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.62; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.88;
+  const lim = ROAD_HALF * 0.75;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
@@ -4767,7 +4789,7 @@ window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
 window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
 
 /* ---- escenario: escenas completas (fondo, camino y objetos en una sola imagen); t/b = franja de tierra (fracción del alto) ---- */
-const ESC = {"cerezos": {"t": 0.417, "b": 0.7232, "w": 1396, "h": 1127, "top": "#4bb8fd", "bot": "#9ce74a"}, "otono": {"t": 0.417, "b": 0.7232, "w": 1396, "h": 1127, "top": "#49b6fd", "bot": "#bdd63e"}, "oasis": {"t": 0.417, "b": 0.7232, "w": 1396, "h": 1127, "top": "#22d3f1", "bot": "#c3e44d"}, "pinos": {"t": 0.417, "b": 0.7232, "w": 1396, "h": 1127, "top": "#47b4fd", "bot": "#9adc70"}};
+const ESC = {"cerezos": {"t": 0.4198, "b": 0.6561, "w": 841, "h": 1870, "top": "#46b9fe", "bot": "#9ee84d"}, "otono": {"t": 0.4048, "b": 0.6759, "w": 841, "h": 1870, "top": "#16a3fe", "bot": "#c3dd3d"}, "oasis": {"t": 0.415, "b": 0.6914, "w": 841, "h": 1870, "top": "#1ed7fd", "bot": "#c4e655"}, "pinos": {"t": 0.4123, "b": 0.6706, "w": 841, "h": 1870, "top": "#42b5fe", "bot": "#9be06b"}};
 const ESC_NAME = { cerezos: 'Cerezos', otono: 'Otoño', oasis: 'Oasis', pinos: 'Pinos' };
 let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return ESC[v] ? v : 'cerezos'; } catch (e) { return 'cerezos'; } })(), escObjs = [], clouds = [];
 function escPreload(L) {
@@ -4788,36 +4810,19 @@ function makeCloud(sc) {
   g.generateTexture('nube', 260, 124); g.destroy();
 }
 function drawScenery(sc) {
-  // la escena (vista aérea) con su camino centrado en GROUND y de ROADW de ancho; a los lados se repite en espejo. Por encima
-  // de la imagen, cielo y nubes; por debajo, más prado (una franja de hierba de la propia escena, repetida en espejo)
+  // la escena (vertical) cubre el ancho del campo, con su camino centrado en GROUND; por encima, su cielo y por debajo, su prado
   escObjs.forEach(o => o.destroy()); escObjs = []; clouds = [];
   const f = ESC[escena]; if (!f || !sc.textures.exists(escena)) return;
-  const s = ROADW / ((f.b - f.t) * f.h), iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
-  ROAD_HALF = ROADW / 2;
+  const s = W / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
+  ROADW = (f.b - f.t) * ih; ROAD_HALF = ROADW / 2;
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
-  const cols = []; for (let i = -6; i <= 6; i++) { const x = W / 2 + i * iw; if (x + iw / 2 >= cx - vw / 2 - 10 && x - iw / 2 <= cx + vw / 2 + 10) cols.push([x, i]); }
-  if (top < y0) add(sc.add.rectangle(cx, (top - 60 + y0) / 2 + 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-31));
-  for (const [x, i] of cols) add(sc.add.image(x, y0, escena, '__BASE').setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-30));
-  // prado de abajo: la franja de hierba (sin arbustos) de la escena, en espejo una y otra vez
-  const gk = escena + '_prado', g0 = 0.745, g1 = 0.875;
-  if (!sc.textures.exists(gk)) sc.textures.get(escena).add(gk, 0, 0, Math.round(f.h * g0), f.w, Math.round(f.h * (g1 - g0)));
-  const gh = f.h * (g1 - g0) * s;
-  for (let y = y0 + ih - 2, j = 0; y < bot + 10; y += gh - 1, j++) for (const [x, i] of cols) add(sc.add.image(x, y, escena, gk).setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setFlipY(j % 2 === 0).setDepth(-30));
-  const free = y0 + ih * 0.06 - top;   // cielo que no cubre la imagen: nubes que pasan despacio
-  if (free > 200) {
-    makeCloud(sc);
-    const tint = Phaser.Display.Color.Interpolate.ColorWithColor(Phaser.Display.Color.ValueToColor(0xffffff), Phaser.Display.Color.ValueToColor(col(f.top)), 100, 18);
-    const n = Math.max(2, Math.round(vw * free / 900000));
-    for (let i = 0; i < n; i++) {
-      const sz = rand(2.2, 3.6) * Math.min(1, vw / 2160), img = add(sc.add.image(cx - vw / 2 + rand(0, vw), top + 90 + rand(0, Math.max(10, free - 260)), 'nube').setScale(sz).setDepth(-29)
-        .setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b)).setFlipX(Math.random() < 0.5));
-      clouds.push({ img, v: rand(8, 18), x0: cx - vw / 2 - 400, x1: cx + vw / 2 + 400 });
-    }
-  }
+  if (top < y0) add(sc.add.rectangle(cx, (top - 60 + y0) / 2 + 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-2001));
+  if (bot > y0 + ih) add(sc.add.rectangle(cx, (y0 + ih + bot + 60) / 2 - 2, vw + 200, bot + 64 - y0 - ih, col(f.bot)).setDepth(-2001));
+  for (let i = -2; i <= 2; i++) { const x = W / 2 + i * iw; if (x + iw / 2 >= cx - vw / 2 - 10 && x - iw / 2 <= cx + vw / 2 + 10) add(sc.add.image(x, y0, escena, '__BASE').setOrigin(0.5, 0).setScale(s).setFlipX(i % 2 !== 0).setDepth(-2000)); }
 }
 // sin subsuelo: lo que queda de él, vacío (lo usan la cripta de la bestia y las pruebas)
-let SUB_Y = GROUND + ROADW, SUB_TEMA = 'piedra', SUB_TEMA_P = 'piedra', SUB_L = null;
+let SUB_Y = GROUND + 700, SUB_TEMA = 'piedra', SUB_TEMA_P = 'piedra', SUB_L = null;
 const SUBSUELO = { temas: {} };
 function subTex() {}
 function setScenery(e) {
@@ -4842,7 +4847,7 @@ function frameCamera() {
   }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
   const X0 = 20, X1 = W - 20, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
-  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));
+  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));   // solo vertical: manda el ancho
   // el campo, en el centro del hueco entre el marcador y el panel de cartas (en vertical sobra alto: cielo arriba y prado abajo)
   const yCss = battle ? (topCss + botCss) / 2 : window.innerHeight / 2, mid = (Y0 + Y1) / 2;
   cam.setZoom(z); cam.centerOn(W / 2, mid - (yCss * DPR - ch / 2) / z);
@@ -4871,10 +4876,10 @@ function create() {
   castleVariants(this);
   for (const team of ['blue', 'purple']) {
     const A = castleArt(team), im = this.add.image(team === 'blue' ? CAS.x0 : W - CAS.x0, GROUND - 10, A.key).setFlipX(A.flip);
-    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setDepth(GROUND - 10 - ROADW / 2); castleImg[team] = im;   // detrás de las unidades
+    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setDepth(-1500); castleImg[team] = im;   // detrás de las unidades
   }
-  throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(GROUND - 9 - ROADW / 2);
-  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(GROUND - 9 - ROADW / 2).setFlipX(true);
+  throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499);
+  throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499).setFlipX(true);
   setThrone(throneImg, 'aldric_sentado'); setThrone(throneImgP, 'aldric_sentado');
   castleG = this.add.graphics().setDepth(990);
   fxG = this.add.graphics().setDepth(980);
@@ -4927,7 +4932,7 @@ function start() {
       this.load.on('progress', v => { $('loadfill').style.width = (v * 100) + '%'; $('loadtxt').textContent = 'Cargando… ' + Math.round(v * 100) + ' %'; });
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
-      L('rhy', 'rhysida/atlas');
+      L('rhy', 'rhysida/atlas'); L('marco_asc', 'ui/marco_ascendida');
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'baculo', 'aro', 'aro_plano', 'aro_luz', 'remolino1', 'remolino2', 'filo', 'explosion', 'estrella1', 'estrella2', 'estrella3', 'estrella4', 'esq1', 'esq2', 'esq3', 'esq4', 'esq5', 'esq6', 'esq7']) L('nul_' + n, 'nul/' + n);
       for (const n of ['cuerpo', 'partida', 'muerta']) L('kubi_' + n, 'kubi/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'hacha1', 'hacha2']) L('tor_' + n, 'tormund/' + n);
@@ -5003,7 +5008,7 @@ function fullscreen() {
   const inApp = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
   const el = document.documentElement;
   if (inApp || document.fullscreenElement) return;
-  try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+  try { const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: 'hide' }); if (p && p.then) p.then(() => { try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {} }, () => {}); } catch (e) {}
 }
 $('tap').onclick = () => { clearInterval(tipTimer); fullscreen(); show('menu'); };
 $('pause').onclick = () => { if (B && !B.over) setPaused(true); };
@@ -5753,7 +5758,7 @@ function paintHub() {
   if (!perfil) return;
   const nv = nivelDe(perfil.xp || 0), port = 'img/' + HEROES[playerHero()].portrait + '.png';
   $('h-lv').textContent = nv.lv; $('h-xp').style.width = (nv.cur / nv.need * 100) + '%'; $('h-name').textContent = perfil.nombre || 'Señor del Reino';
-  $('h-avatar').src = port; document.querySelectorAll('.ring').forEach(r => { r.style.background = COLORES[myColor()][1]; });
+  $('h-avatar').src = port; document.querySelectorAll('.avatar .ring').forEach(r => { r.style.background = COLORES[myColor()][1]; });
   document.querySelectorAll('.gema-n').forEach(e => { e.textContent = perfil.gemas || 0; });
   const p = expPending(); $('h-botin-n').textContent = fmt(p.oro); $('h-botin').classList.toggle('full', p.full);
   const nx = nextLevel(); $('h-next').textContent = nx ? 'Castillo ' + (nx.i + 1) + ': ' + KD(nx.k).levels[nx.i].name : 'Elige reino en la campaña';

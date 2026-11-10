@@ -143,6 +143,14 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 /* el círculo del héroe va sobre su cabeza (en el trono o en el campo) y el de la bestia, sobre la suya en la cripta */
 #hero, #ab-beast { position: fixed; left: 0; top: 0; z-index: 12; transform: translate(-50%, -100%); width: auto; gap: 1px; will-change: left, top; }
 #hero .ring { width: 44px; height: 44px; padding: 3px; }
+/* marcos de los botones de habilidad: héroe (azul y oro) y bestia (rojo); el retrato va en el círculo y el texto en la placa */
+#hero .ring, #ab-beast .ring { position: relative; width: 62px; height: 70px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none !important; }
+#hero .ring::before, #ab-beast .ring::before { content: ''; position: absolute; left: 22%; top: 21%; width: 56%; height: 49.5%; border-radius: 50%; background: conic-gradient(var(--c, var(--gold)) calc(var(--p, 0) * 1turn), #141826 0); }
+#hero .ring::after, #ab-beast .ring::after { content: ''; position: absolute; inset: 0; background: url(img/ui/marco_heroe.png) center / 100% 100% no-repeat; pointer-events: none; }
+#ab-beast .ring::after { background-image: url(img/ui/marco_bestia.png); }
+#hero img, #ab-beast .aico { position: absolute; left: 25.5%; top: 24%; width: 49%; height: 43.5%; border: 0; z-index: 0; }
+#hero #herotxt, #ab-beast b { position: relative; z-index: 2; margin-top: -19px; background: none; font-size: .62rem; }
+#hero.ready .ring { animation: pulse .9s ease-in-out infinite; }
 #hero #herotxt, #ab-beast b { font-size: .68rem; background: rgba(15,19,34,.78); border-radius: 999px; padding: 0 6px; }
 #ab-beast .ring { width: 40px; height: 40px; }
 #ab-beast.auto { pointer-events: none; }
@@ -741,6 +749,12 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 .abil b { font-family: var(--font-display); font-weight: 400; font-size: .7rem; color: #fff; text-shadow: 0 1px 0 var(--outline), 0 0 3px #000; white-space: nowrap; }
 .abil:disabled { cursor: default; } .abil:disabled .aico { filter: saturate(.5) brightness(.75); }
 .abil.ready .ring { animation: pulse .9s ease-in-out infinite; box-shadow: 0 0 0 2px var(--c), 0 0 12px var(--c); }
+/* solo se juega en vertical: en horizontal, un aviso para girar el móvil */
+#girar { display: none; }
+@media (orientation: landscape) and (max-height: 600px) {
+  #girar { display: grid; place-items: center; position: fixed; inset: 0; z-index: 9999; background: #161b2b; color: #fff; font-family: var(--font-display); text-align: center; padding: 24px; }
+  #girar b { font-size: 1.5rem; display: block; } #girar small { font-family: system-ui, sans-serif; opacity: .8; }
+}
 </style>
 
 </head>
@@ -908,6 +922,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
     <button class="ibtn" id="speed" aria-pressed="false" aria-label="Velocidad">x1</button>
   </div>
   <div id="coach" role="status" hidden></div>
+  <div id="girar"><div><b>Gira el móvil</b><small>Brawlground se juega en vertical.</small></div></div>
   <div id="abils"><button class="abil" id="ab-spell" hidden><span class="ring"><span class="aico"></span></span><b></b></button><button class="abil" id="ab-beast" hidden><span class="ring"><span class="aico"></span></span><b></b></button></div>
   <div class="dock" id="dock">
     <div class="energy"><div class="ebar" aria-label="Energía"><div id="efill"></div><div class="eticks"></div></div><span id="enum">5</span></div>

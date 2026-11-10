@@ -440,3 +440,11 @@ Se borraron los fondos de batalla, caminos, castillos (y sus 20 aspectos) y subs
   Al saltar al campo, el trono queda vacío.
 - Sin subsuelo ni cripta: la bestia se pasea por el prado, bajo el camino, junto a tu castillo.
 - Los tronos sueltos de cada castillo están en `docs/img/castillos/trono_*.png` (aún sin uso).
+
+## Solo vertical y fondos verticales
+
+- El juego es solo vertical: en horizontal sale un aviso de «Gira el móvil»; la app instalada se bloquea en vertical.
+- Los cuatro fondos son verticales (841×1870): cubren el ancho del campo con el camino en medio; arriba su cielo y abajo su prado.
+- Castillos más grandes (escala 0,9, la parte de atrás se sale un poco de la pantalla); Aldric sentado en su trono.
+- Marcos de los botones de habilidad: azul y oro para el héroe, morado para las ascendidas (el retrato de su definitiva)
+  y rojo para las bestias (`docs/img/ui/marco_*.png`).
