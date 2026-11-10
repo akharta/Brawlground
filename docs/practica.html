@@ -499,6 +499,8 @@ const GUN = { ox: 0.154, oy: 0.692, mx: 1.0, my: 0.19, w: 512, h: 329 };
 // skins de Rhysida por orden de desbloqueo: 1 al conseguirla, +3 en rango C, +3 en A y +3 en S+; grip = [x de la empuñadura, y del arma 1, y del arma 2]
 const RHY = { skins: ['gris', 'trenzas', 'azul', 'blanco', 'traje', 'pirata', 'neon', 'espartano', 'oni', 'mariachi'], org: [0.5369, 0.9908], every: 0.7, glitch: 0.2,
   grip: { gris: [0.126, 0.51, 0.649], trenzas: [0.126, 0.574, 0.582], azul: [0.126, 0.517, 0.517], blanco: [0.126, 0.5, 0.5], traje: [0.126, 0.521, 0.531], pirata: [0.2, 0.623, 0.729], neon: [0.126, 0.539, 0.538], espartano: [0.19, 0.528, 0.533], oni: [0.126, 0.53, 0.54], mariachi: [0.25, 0.508, 0.515] } };
+const RHY_FR = {"azul_cuerpo":[0,0,511,538],"blanco_cuerpo":[513,0,511,538],"espartano_cuerpo":[1026,0,511,538],"gris_cuerpo":[0,540,511,538],"mariachi_cuerpo":[513,540,511,538],"neon_cuerpo":[1026,540,511,538],"oni_cuerpo":[0,1080,511,538],"pirata_cuerpo":[513,1080,511,538],"traje_cuerpo":[1026,1080,511,538],"trenzas_cuerpo":[0,1620,511,538],"mariachi_arma2":[513,1620,271,132],"mariachi_arma1":[786,1620,267,130],"pirata_arma2":[1055,1620,257,116],"espartano_arma2":[1314,1620,274,91],"espartano_arma1":[1590,1620,273,89],"pirata_arma1":[0,2160,244,85],"oni_mano1":[246,2160,90,82],"oni_mano2":[338,2160,92,76],"pirata_mano2":[432,2160,76,76],"pirata_mano1":[510,2160,78,75],"blanco_mano1":[590,2160,73,74],"mariachi_mano1":[665,2160,73,74],"mariachi_mano2":[740,2160,71,73],"azul_mano1":[813,2160,73,72],"trenzas_mano1":[888,2160,70,72],"azul_mano2":[960,2160,69,71],"blanco_mano2":[1031,2160,70,71],"espartano_mano1":[1103,2160,75,71],"espartano_mano2":[1180,2160,73,71],"gris_mano1":[1255,2160,70,71],"neon_mano1":[1327,2160,70,71],"traje_mano1":[1399,2160,73,71],"trenzas_mano2":[1474,2160,72,71],"traje_mano2":[1548,2160,70,70],"neon_mano2":[1620,2160,67,69],"gris_mano2":[1689,2160,66,68],"gris_arma2":[1757,2160,275,67],"int8":[0,2247,160,61],"azul_arma1":[162,2247,282,58],"azul_arma2":[446,2247,282,58],"int7":[730,2247,160,58],"trenzas_arma2":[892,2247,256,55],"trenzas_arma1":[1150,2247,256,54],"neon_arma2":[1408,2247,259,53],"blanco_arma2":[1669,2247,280,51],"neon_arma1":[0,2310,258,51],"blanco_arma1":[260,2310,280,50],"oni_arma1":[542,2310,269,50],"oni_arma2":[813,2310,269,50],"gris_arma1":[1084,2310,272,49],"traje_arma1":[1358,2310,265,48],"traje_arma2":[1625,2310,267,48],"int3":[0,2363,160,44],"int2":[162,2363,160,36],"int1":[324,2363,160,33],"int4":[486,2363,160,32],"int6":[648,2363,160,31],"int0":[810,2363,160,16],"int5":[972,2363,160,15]};   // recortes de la lámina img/rhysida/atlas.png (la genera el empaquetado del arte)
+function rhyFrames(sc) { const t = sc.textures.get('rhy'); if (!t.has('gris_cuerpo')) for (const k in RHY_FR) t.add(k, 0, ...RHY_FR[k]); }
 let RHY_ALL = true;                 // en la escena de pruebas se ven las 10; en batalla, las del rango de la unidad
 let slowBy = null, slowReal = 0;    // quién ha ralentizado el tiempo (definitiva de Rhysida) y el dt real de este fotograma
 const BOW = CH.arquera.bow;
@@ -745,10 +747,11 @@ class Unit {
       this.bigK = c.k; this.shadow.setSize(H * 0.62 * c.k, H * 0.16 * c.k);
     } else if (type === 'rhysida') {
       const k = H / 512;
-      this.body = sc.add.image(0, 0, 'rhy_gris_cuerpo').setOrigin(RHY.org[0], RHY.org[1]).setScale(k);
-      this.bk = sc.add.image(0, 0, 'rhy_gris_arma2').setScale(k); this.bh = sc.add.image(0, 0, 'rhy_gris_mano2').setScale(k);
-      this.fk = sc.add.image(0, 0, 'rhy_gris_arma1').setScale(k); this.fh = sc.add.image(0, 0, 'rhy_gris_mano1').setScale(k);
-      this.ints = [0, 1, 2].map(i => sc.add.image(0, 0, 'rhy_int' + i).setVisible(false));   // interferencias que le cruzan el cuerpo
+      rhyFrames(sc);
+      this.body = sc.add.image(0, 0, 'rhy', 'gris_cuerpo').setScale(k);
+      this.bk = sc.add.image(0, 0, 'rhy', 'gris_arma2').setScale(k); this.bh = sc.add.image(0, 0, 'rhy', 'gris_mano2').setScale(k);
+      this.fk = sc.add.image(0, 0, 'rhy', 'gris_arma1').setScale(k); this.fh = sc.add.image(0, 0, 'rhy', 'gris_mano1').setScale(k);
+      this.ints = [0, 1, 2].map(i => sc.add.image(0, 0, 'rhy', 'int' + i).setVisible(false));   // interferencias que le cruzan el cuerpo
       this.parts = [this.body, this.bk, this.bh, this.fk, this.fh];
       this.rig.add(this.parts.concat(this.ints));
       this.setSkin('gris'); this.glT = rand(0.3, 0.7); this.gl = 0;
@@ -903,8 +906,8 @@ class Unit {
   }
   setSkin(sk) {
     const g = RHY.grip[sk]; this.skin = sk;
-    this.body.setTexture('rhy_' + sk + '_cuerpo'); this.bh.setTexture('rhy_' + sk + '_mano2'); this.fh.setTexture('rhy_' + sk + '_mano1');
-    this.fk.setTexture('rhy_' + sk + '_arma1').setOrigin(g[0], g[1]); this.bk.setTexture('rhy_' + sk + '_arma2').setOrigin(g[0], g[2]);
+    this.body.setFrame(sk + '_cuerpo').setOrigin(RHY.org[0], RHY.org[1]); this.bh.setFrame(sk + '_mano2').setOrigin(0.5); this.fh.setFrame(sk + '_mano1').setOrigin(0.5);
+    this.fk.setFrame(sk + '_arma1').setOrigin(g[0], g[1]); this.bk.setFrame(sk + '_arma2').setOrigin(g[0], g[2]);
   }
   rhySkins() { const r = this.rk || 0; return RHY.skins.slice(0, RHY_ALL ? 10 : r >= 6 ? 10 : r >= 4 ? 7 : r >= 2 ? 4 : 1); }
   rhyOtra() { const l = this.rhySkins().filter(k => k !== this.skin); return l.length ? l[Math.floor(Math.random() * l.length)] : this.skin; }
@@ -917,7 +920,7 @@ class Unit {
       this.gl -= dt; const q = Math.floor(this.sc.time.now / 45);
       if (q !== this.glQ) {
         this.glQ = q; this.glX = rand(-7, 7); this.glA = rand(0.65, 1); this.setSkin(this.rhyOtra());
-        for (const im of this.ints) im.setVisible(Math.random() < 0.8).setTexture('rhy_int' + Math.floor(Math.random() * 9)).setPosition(rand(-0.4, 0.4) * H, rand(-1, -0.08) * H).setScale(rand(0.3, 0.7) * H / 160);
+        for (const im of this.ints) im.setVisible(Math.random() < 0.8).setFrame('int' + Math.floor(Math.random() * 9)).setOrigin(0.5).setPosition(rand(-0.4, 0.4) * H, rand(-1, -0.08) * H).setScale(rand(0.3, 0.7) * H / 160);
       }
       this.rig.x += this.glX; this.rig.setAlpha(this.glA);
       if (this.gl <= 0) { if (this.skin === this.glFrom) this.setSkin(this.rhyOtra()); this.rig.setAlpha(1); this.ints.forEach(im => im.setVisible(false)); }
@@ -2657,7 +2660,8 @@ function impHitOn(u, v, k) {
 }
 function makeUltFaces(sc) {
   // retratos redondos para el botón de la definitiva, recortados de la cara de cada cuerpo
-  const list = [['rhy', 'rhy_gris_cuerpo', [160, 125, 260, 260]], ['ce', 'ce_cuerpo', [30, 50, 270, 270]], ['imp1', 'imp_cuerpo', [150, 110, 250, 250]], ['imp2', 'imp_mon_cuerpo', [170, 110, 250, 250]], ['imp3', 'imp_esp_cuerpo', [140, 120, 230, 230]]];
+  rhyFrames(sc); const rf = RHY_FR.gris_cuerpo;
+  const list = [['rhy', 'rhy', [rf[0] + 160, rf[1] + 125, 260, 260]], ['ce', 'ce_cuerpo', [30, 50, 270, 270]], ['imp1', 'imp_cuerpo', [150, 110, 250, 250]], ['imp2', 'imp_mon_cuerpo', [170, 110, 250, 250]], ['imp3', 'imp_esp_cuerpo', [140, 120, 230, 230]]];
   for (const [k, src, [sx, sy, sw, sh]] of list) {
     if (sc.textures.exists('ultface_' + k) || !sc.textures.exists(src)) continue;
     const t = sc.textures.createCanvas('ultface_' + k, 128, 128), c = t.getContext(), img = sc.textures.get(src).getSourceImage();
@@ -3227,8 +3231,7 @@ function start() {
     scene: { preload() {
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
-      for (const sk of RHY.skins) for (const pz of ['cuerpo', 'mano1', 'mano2', 'arma1', 'arma2']) L('rhy_' + sk + '_' + pz, 'rhysida/' + sk + '_' + pz);
-      for (let i = 0; i < 9; i++) L('rhy_int' + i, 'rhysida/int' + i);
+      L('rhy', 'rhysida/atlas');
       L('hon_cuerpo', 'honderillo_cuerpo'); L('hon_arma', 'honderillo_arma'); L('hon_vacia', 'honderillo_arma_vacia'); L('hon_puno', 'honderillo_puno'); L('hon_mano', 'honderillo_mano'); L('hon_piedra', 'honderillo_piedra');
       L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');
       L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
