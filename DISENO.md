@@ -409,3 +409,12 @@ Arte en bruto en `arte/aprendiz/`; piezas del juego en `docs/img/ivo/`.
 - A distancia: alza la varita, la hace girar y la baja apuntando; sale un rayo de luz blanco y dorado que da al instante (10–12).
   La punta de la varita suelta chispitas.
 - Provisional: 55 de vida. Habilidades de rango: Chispa (críticos), Varita rápida (más rápido), Rayo maestro (remata a los heridos).
+
+## Torque, el Robot obrero (rara, coste 3)
+
+Arte en bruto en `arte/robot/`; piezas del juego en `docs/img/torque/`.
+
+- No ataca. Se queda junto a tu muralla yendo de un lado a otro (también de carril) con el cubo de cemento en una mano.
+- Cada 2,2–2,6 s se vuelve hacia la muralla, moja la paleta en el cubo y unta cemento: tu castillo recupera 24 de vida
+  (más con nivel y rango). Si el castillo está entero, no cura nada.
+- Provisional: 150 de vida. Habilidades de rango: Blindaje (escudo), Engrasado (regenera), Cemento rápido (más rápido).

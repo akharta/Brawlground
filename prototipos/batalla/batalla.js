@@ -659,6 +659,7 @@ $('selfondo').value = escena;
 $('selfondo').onchange = e => { if (scene) setScenery(e.target.value); };
 
 /* ---- ganchos para las pruebas ---- */
+window.__castles = () => castles;
 window.__debugBattle = () => ({ t: B.t, demo: B.demo, run: B.run, blue: { e: B.blue.energy, hand: B.blue.hand, hp: castles.blue.hp, kills: B.blue.kills }, purple: { e: B.purple.energy, hp: castles.purple.hp, max: castles.purple.max, deck: B.purple.deck }, heroP: B.heroP.type, units: units.map(u => u.type + ':' + u.team + ':' + Math.round(u.hp) + ':' + Math.round(u.x)), over: B.over, zoom: zoomCss });
 window.__play = (team, i) => play(team, i);
 window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, x)); };

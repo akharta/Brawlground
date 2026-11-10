@@ -12,6 +12,7 @@ const HABILIDAD = {
   nivea: 'Lanza ráfagas de 3 copos de nieve desde su libro; cada tercer ataque, un cristal de hielo.',
   rufo: 'A cada rival nuevo: salta a morder, se da la vuelta y se aleja olisqueándose el rabo; después pelea pegado.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
+  torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
   ivo: 'Agita la varita y lanza rayos de luz que dan al instante.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',

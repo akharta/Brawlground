@@ -145,6 +145,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="honderillo" aria-pressed="false">Pip, el Honderillo</button>
       <button data-char="ivo" aria-pressed="false">Ivo, el Aprendiz de mago</button>
       <button data-char="odo" aria-pressed="false">Odo, el Tamborilero</button>
+      <button data-char="torque" aria-pressed="false">Torque, el Robot obrero</button>
       <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="tormund" aria-pressed="false">Tormund, el Berserker</button>
       <button data-char="rufo" aria-pressed="false">Rufo, el Perro cobarde</button>
@@ -263,6 +264,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Torque, el Robot obrero">
+        <div class="cost">3</div>
+        <div class="art"><img src="img/torque_carta.png" alt="Ilustración de Torque, el Robot obrero"></div>
+        <div class="name">Torque</div>
+        <div class="cls">el Robot obrero</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>No ataca</dd><dt>Apoyo</dt><dd>Repara tu castillo</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card uncommon" aria-label="Carta de Odo, el Tamborilero">
@@ -505,6 +516,9 @@ const CH = {
   // Ivo, el Aprendiz de mago: agita la varita y suelta un rayo de luz que da al instante
   ivo: { hp: 55, dmg: [10, 12], speed: 58, cd: [1.3, 1.6], range: H * 4.5, ranged: true, h: 1.08,
     rest: { bh: [-0.219, -0.267], fh: [0.253, -0.378] }, org: 0.487, grip: [-0.088, 0.646], tip: 0.219, nat: -0.072 },
+  // Torque, el Robot obrero: no ataca; se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento
+  torque: { hp: 150, speed: 40, cd: [2.2, 2.6], range: H * 0.5, ranged: false, h: 1.1, support: true, fix: 24,
+    rest: { bh: [-0.317, -0.389], fh: [0.477, -0.559] }, org: 0.514, tw: [0.133, 0.793, -0.736], bk: [0.5, 0.045] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -606,7 +620,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -684,6 +698,14 @@ function ratPack(u) {
     units.push(c);
   });
 }
+function torqueFix(u) {
+  // el cemento cura a su castillo (en la escena de pruebas solo se ve)
+  if (typeof castles === 'undefined' || !castles || mode !== 'fight') return;
+  const c = castles[u.team]; if (!c || !c.alive || c.hp >= c.max) return;
+  const n = Math.min(c.max - c.hp, Math.round(u.cfg.fix * (u.pk || 1))); c.hp += n;
+  if (!(typeof B !== 'undefined' && B && B.sim)) floatText(c.x, GROUND - H * 1.9, '+' + n, '#9be37a');
+  if (typeof stat === 'function') stat(u.team, u.type).heal += n;
+}
 function ivoRay(u, wx, wy) {
   // rayo de luz: una raya blanca y dorada de la punta de la varita al enemigo, que da al instante y se apaga
   let tx, ty, tg = null;
@@ -703,7 +725,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1004,6 +1026,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'torque') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'tq_cuerpo').setOrigin(c.org, 1).setScale(k);
+      this.bucket = sc.add.image(0, 0, 'tq_cubo').setOrigin(c.bk[0], c.bk[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'tq_mano_t').setScale(k);
+      this.weapon = sc.add.image(0, 0, 'tq_paleta').setOrigin(c.tw[0], c.tw[1]).setScale(k);
+      this.fh = sc.add.image(0, 0, 'tq_mano_d').setScale(k);
+      this.parts = [this.body, this.bucket, this.bh, this.weapon, this.fh];
+      this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 8], [this.bucket, -0.4, -380, -5]];
     } else if (type === 'odo') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'odo_cuerpo').setOrigin(c.org, 1).setScale(k);
@@ -1312,6 +1343,19 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackTorque(o, t) {
+    // de cara a la muralla: mete la paleta en el cubo, la sube y extiende el cemento arriba y abajo
+    const r = this.cfg.rest, p = t / 1.4;
+    if (p < 0.25) { const e = ease(p / 0.25); o.fh = lerp2(r.fh, [r.bh[0] + 0.1, r.bh[1] - 0.05], e); o.wa = lerp(-0.9, 1.4, e); o.rot = -0.05 * e; }
+    else if (p < 0.4) { const e = ease((p - 0.25) / 0.15); o.fh = lerp2([r.bh[0] + 0.1, r.bh[1] - 0.05], [0.45, -0.55], e); o.wa = lerp(1.4, -0.6, e); }
+    else if (p < 0.85) {          // unta: arriba y abajo contra la pared
+      const q = (p - 0.4) / 0.45, w = Math.sin(q * Math.PI * 3);
+      o.fh = [0.5, -0.55 + 0.12 * w]; o.wa = -0.6 + 0.25 * w; o.rot = 0.06; o.dx = 0.05;
+      if (Math.random() < 0.3) { const k = this.bigK || 1; fx.push({ x: this.x + this.dir * 0.62 * H * k, y: this.gy + (-0.62 + 0.12 * w) * H * k, vx: rand(-30, 30), vy: rand(-10, 30), g: 300, r: rand(2, 4), life: 0.4, t: 0.4, color: 0xc9c4b8 }); }
+      if (!this.fired && q > 0.5) { this.fired = true; torqueFix(this); }
+    } else { const e = ease((p - 0.85) / 0.15); o.fh = lerp2([0.5, -0.55], r.fh, e); o.wa = lerp(-0.6, -0.9, e); }
+    if (p >= 1) this.set('idle');
+  }
   attackIvo(o, t) {
     // alza la varita, la hace girar un poco y la baja de golpe apuntando: ¡zas!, rayo de luz
     const r = this.cfg.rest, p = t / 0.7, up = p < 0.4 ? ease(p / 0.4) : 0, dn = p < 0.4 ? 0 : p < 0.52 ? easeIn((p - 0.4) / 0.12) : 1, ret = p > 0.75 ? ease((p - 0.75) / 0.25) : 0;
@@ -1466,6 +1510,7 @@ class Unit {
     else if (this.type === 'rhysida') { o.bk = r.bk; o.fk = r.fk; o.wv = 1; }
     else if (this.type === 'nul') { o.st = 0; }
     else if (this.type === 'odo') { o.drum = true; }
+    else if (this.type === 'torque') { o.wa = -0.9; o.bkr = 0; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -1524,6 +1569,7 @@ class Unit {
         if (this.type === 'nul') { o.st = 0.04 * breathe; o.rot = 0.02 * Math.sin(now * 1.6); }
         if (this.type === 'nivea') { o.bk = [0, 0.012 * Math.sin(now * 2.2 + this.homeX)]; }
         if (this.type === 'ivo') o.wa += 0.06 * breathe;
+        if (this.type === 'torque') { o.wa += 0.05 * breathe; o.bkr = 0.05 * Math.sin(now * 2 + this.homeX); }
         if (this.cfg.rat) { o.wa += 0.04 * breathe; if (this.cfg.rat === 'puno') { const b = Math.sin(now * 6 + this.homeX); o.bh[1] += 0.015 * b; o.fh[1] -= 0.015 * b; } }   // el libro flota sobre la mano
         if (this.type === 'tormund') { o.a1 += 0.05 * breathe; o.a2 -= 0.05 * breathe; }
         if (this.type === 'kubi') { const q = Math.sin(now * 4 + this.homeX); o.sy = 1 + 0.05 * q; o.sx = 1 - 0.05 * q; }   // gelatina
@@ -1557,6 +1603,7 @@ class Unit {
           if (this.form === 3) { o.rot = 0.16 + Math.sin(ph * 0.5) * 0.06; o.hop *= 0.7; }
         }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
+        if (this.type === 'torque') { o.hop *= 0.5; o.rot *= 0.6; o.bkr = Math.sin(ph) * 0.25; }   // pasitos de robot; el cubo se balancea
         if (this.type === 'nul') { o.hop = 0; o.rot = 0.1; o.sy = 1; o.st = 0.14; }
         if (this.type === 'tormund') { o.a1 += Math.sin(ph) * 0.12; o.a2 -= Math.sin(ph) * 0.12; o.rot += 0.05; }
         if (this.type === 'kubi') {   // a saltitos: se aplasta, salta estirándose y cae aplastándose
@@ -1612,6 +1659,7 @@ class Unit {
         else if (this.type === 'kubi') this.attackKubi(o, t);
         else if (this.type === 'nivea') this.attackNivea(o, t);
         else if (this.type === 'ivo') this.attackIvo(o, t);
+        else if (this.type === 'torque') this.attackTorque(o, t);
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
         else if (this.type === 'tormund') this.attackTor(o, t);
@@ -2847,6 +2895,9 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'torque') {
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation((o.wa || 0) - this.cfg.tw[2]);
+      this.bucket.setPosition(o.bh[0] * H, (o.bh[1] - 0.03) * H).setRotation(o.bkr || 0);
     } else if (this.type === 'ivo') {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation((o.wa || 0) - this.cfg.nat);
       if (Math.random() < 0.08 && this.state !== 'die') { const k = this.bigK || 1, a = o.wa || 0, L = this.cfg.tip; fx.push({ x: this.x + this.dir * (o.fh[0] + Math.cos(a) * L) * H * k, y: this.gy + (o.fh[1] + Math.sin(a) * L) * H * k - (this.rig.y ? -this.rig.y : 0), vx: rand(-20, 20), vy: -rand(20, 50), g: 0, r: rand(1.5, 3), life: 0.4, t: 0.4, color: 0xffe27a }); }   // chispitas en la punta
@@ -3638,6 +3689,7 @@ function fightLogic(dt) {
     }
     if (u.type === 'fraile') { friarLogic(u, dt); continue; }
     if (u.type === 'odo') { odoLogic(u, dt); continue; }
+    if (u.type === 'torque') { torqueLogic(u, dt); continue; }
     if (u.type === 'rufo' && (u.state === 'idle' || u.state === 'walk')) { const e = nearestEnemy(u); u.cfg.range = e && !(u.rufoDone && u.rufoDone.has(e)) ? CH.rufo.range : H * 0.8; }   // a cada rival nuevo, otra vez mordisco y huida
     if (u.type === 'catapulta') { siegeLogic(u, dt); continue; }
     if (u.type === 'centinela') { sentinelLogic(u, dt); continue; }
@@ -3731,6 +3783,20 @@ function siegeLogic(u, dt) {
   const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
   if (atWall) { if (u.state === 'walk') u.set('idle'); }
   else if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); }
+}
+function torqueLogic(u, dt) {
+  // va y viene junto a su muralla; cada poco se vuelve hacia ella y le echa cemento (en batalla, cura al castillo)
+  const wall = u.teamDir > 0 ? (typeof FIELD_L !== 'undefined' ? FIELD_L : 150) : (typeof FIELD_R !== 'undefined' ? FIELD_R : W - 150);
+  u.cd = u.cd - dt;   // (no acelera con los efectos de velocidad de ataque)
+  if (u.state === 'attack') return;
+  if (u.cd <= 0) { u.cd = rand(...u.cfg.cd); u.dir = -u.teamDir; u.set('attack'); return; }
+  if (u.tqTo === undefined || Math.abs(u.x - u.tqTo) < 6) { u.tqTo = wall + u.teamDir * rand(0, H * 1.1); u.tqLane = typeof laneRand === 'function' ? laneRand() : 0; }
+  if (u.state === 'idle' || u.state === 'walk') {
+    const d = u.tqTo - u.x; u.dir = Math.sign(d) || u.teamDir;
+    if (u.state !== 'walk') u.set('walk');
+    if (Math.abs(d) < 10) { u.x = u.tqTo; u.set('idle'); u.tqTo = undefined; }
+    u.lane += Math.sign(u.tqLane - u.lane) * Math.min(Math.abs(u.tqLane - u.lane), 20 * dt);
+  }
 }
 function odoLogic(u, dt) {
   // no ataca: sigue dos pasos por detrás del aliado que lleva delante (o del más adelantado); no se mete entre los enemigos
@@ -3925,6 +3991,7 @@ function start() {
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'hacha1', 'hacha2']) L('tor_' + n, 'tormund/' + n);
       for (const n of ['cuerpo', 'mano', 'libro', 'copo', 'cristal']) L('niv_' + n, 'nivea/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'varita']) L('ivo_' + n, 'ivo/' + n);
+      for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
       for (const n of ['escudo', 'cuchillo', 'palanca']) L('rat_' + n, 'grises/' + n);
       for (const n of ['cuerpo', 'cola', 'cabeza', 'pata_dl', 'pata_dv', 'pata_tc', 'pata_tl']) L('rufo_' + n, 'rufo/' + n);
