@@ -97,6 +97,24 @@ function onDead(u) {            // en batalla las bajas no vuelven
   if (B && !B.over) onKill(u);
   units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
+/* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
+   se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
+let ROAD_HALF = H;
+const LANES = 5, LANE_DRIFT = 34;   // px por segundo de cambio de carril
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 1.05;   /* los de los extremos pisan ya la hierba */ return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+function laneTick(dt) {
+  const lim = ROAD_HALF * 1.15;
+  for (const u of units) {
+    if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
+    const o = nearestEnemy(u);
+    if (o && !o.isCastle && Math.abs(o.x - u.x) < H * 3.2) {
+      const d = o.lane - u.lane, step = Math.min(Math.abs(d) / 2, LANE_DRIFT * dt);   // los dos van hacia el medio
+      if (Math.abs(d) > 6) u.lane += Math.sign(d) * step;
+    }
+    u.lane = Math.max(-lim, Math.min(lim, u.lane));
+    u.root.y = u.gy; u.root.setDepth(u.gy);
+  }
+}
 let PLAY_AT = null; RHY_ALL = false;   // en batalla Rhysida solo usa las skins de su rango
 function play(team, idx) {
   const side = B[team], type = side.hand[idx];
@@ -260,6 +278,7 @@ function drawScenery(sc) {
   const f = ESC[escena], tw = sc.textures.get(escena).getSourceImage().width, base = (W + 8) / tw, pc = (f.t + f.b) / 2;
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
   const ih0 = f.h * tw / f.w * base, k = Math.max(1, Math.min(1.25, (GROUND - top) / pc / ih0)), s = base * k, ih = ih0 * k, iw = tw * s, y0 = GROUND + 2 - pc * ih;
+  ROAD_HALF = (f.b - f.t) * ih / 2;   // media anchura del camino: ahí caben los carriles
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
   add(sc.add.rectangle(cx, (top - 60 + y0) / 2, vw + 200, y0 - top + 64, col(f.top)).setDepth(-31));
   drawSubsuelo(sc, y0 + ih, add, cx, vw, bot, col(f.bot));
@@ -523,7 +542,7 @@ function battleStep(dt) {
     if (B.t >= DOUBLE_AT && !B.doubled) { B.doubled = true; if (!B.auto) floatText(W / 2, GROUND - H * 2.4, '¡Energía doble!', '#d8b4ff'); }
     for (const team of ['blue', 'purple']) B[team].energy = Math.min(EMAX, B[team].energy + rate * dt * B[team].regenK);
     aiLogic(dt, 'purple'); if (B.auto) aiLogic(dt, 'blue');
-    towers(dt); fightLogic(dt);
+    towers(dt); fightLogic(dt); laneTick(dt);
     for (const hr of [B.hero, B.heroP]) if (hr.state === 'field') { if (!hr.unit.alive || hr.unit.state === 'die') hr.state = 'dead'; else if (hr.unit.state !== 'heroJump') hr.skillT = Math.max(0, hr.skillT - dt); }
     heroAI('purple'); if (B.auto) heroAI('blue');
   }

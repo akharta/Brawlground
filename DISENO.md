@@ -395,3 +395,9 @@ Arte en bruto en `arte/ratas/`; piezas del juego en `docs/img/grises/`.
   - Cuchillo: puñaladas rápidas (60 de vida, 9–12).
   - Palanca: palancazos de arriba abajo (70 de vida, 12–15).
 - Habilidades de rango (para las cuatro): Más ratas que nunca (escudo), Mordisco de cloaca (robo de vida), Plaga (furia).
+
+## Carriles
+
+El camino tiene cinco carriles invisibles a lo ancho (los de los extremos pisan ya el borde de hierba). Cada unidad sale en uno
+al azar y, cuando se acerca a su rival (a unos 3 cuerpos), las dos se van desviando hacia el medio para pelear cara a cara.
+Da sensación de profundidad en vez de una sola fila en la que todos se solapan.
