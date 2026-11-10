@@ -399,7 +399,7 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 1.7, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24,
+    ringCd: 20, ringR: H * 1.7, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.32,
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
@@ -983,7 +983,7 @@ class Unit {
     if (t >= 2.4) { this.rg = null; this.ringT = c.ringCd; this.nulHide(); this.root.setDepth(this.gy); }
   }
   attackNul(o, t) {
-    // echa el báculo atrás y lo descarga hacia delante: de la punta sale un filo de energía que atraviesa
+    // echa el báculo atrás y lo descarga hacia delante: de la punta sale una bola de luz que atraviesa
     const r = this.cfg.rest, p = t / 0.9, up = [0.1, -0.78], fw = [0.52, -0.62];
     if (p < 0.4) { const e = ease(p / 0.4); o.fh = lerp2(r.fh, up, e); o.st = lerp(0, -0.6, e); o.rot = -0.06 * e; }
     else if (p < 0.58) { const e = easeIn((p - 0.4) / 0.18); o.fh = lerp2(up, fw, e); o.st = lerp(-0.6, 0.9, e); o.rot = lerp(-0.06, 0.1, e); }
@@ -1135,7 +1135,7 @@ class Unit {
         }
         if (o.pr !== undefined) o.pr += 0.025 * breathe;
         if (this.type === 'rhysida') { o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
-        if (this.type === 'nul') { o.hop = H * 0.035 * (1 + Math.sin(now * 2.4 + this.homeX)); o.st = 0.04 * breathe; }   // levita
+        if (this.type === 'nul') { o.st = 0.04 * breathe; o.rot = 0.02 * Math.sin(now * 1.6); }
         if (o.sr !== undefined) o.sr += 0.07 * Math.sin(now * 2.1 + this.homeX);   // la honda se mece colgando del puño
         if (o.mc !== undefined) o.mc += 0.03 * breathe;
         if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
@@ -1166,7 +1166,7 @@ class Unit {
           if (this.form === 3) { o.rot = 0.16 + Math.sin(ph * 0.5) * 0.06; o.hop *= 0.7; }
         }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
-        if (this.type === 'nul') { o.hop = H * (0.08 + 0.03 * Math.sin(t * 4)); o.rot = 0.07; o.sy = 1; o.st = 0.12; }   // no anda: se desliza flotando
+        if (this.type === 'nul') { o.hop = 0; o.rot = 0.1; o.sy = 1; o.st = 0.14; }   // no anda: vuela inclinado hacia delante
         if (this.type === 'rhysida') {   // carrera ninja: inclinada hacia delante, con las dos armas atrás
           const q = t * 15;
           o.hop = Math.abs(Math.sin(q)) * H * 0.06; o.rot = 0.13 + Math.sin(q) * 0.03;
@@ -2412,6 +2412,7 @@ class Unit {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.st || 0);
       // el aro flota sobre la mano y gira sin parar, como alrededor de una esfera
       this.ringImg.setPosition(o.bh[0] * H, (o.bh[1] - 0.2) * H).setScale(rs * Math.cos(now * 5 + this.homeX), rs).setRotation(0.4 * Math.sin(now * 1.9));
+      if (this.state !== 'die') this.rig.y -= H * (c.fly + 0.05 * Math.sin(now * 2.2 + this.homeX));   // siempre en el aire
       this.nulTick(dt || 0);
     } else if (this.type === 'rhysida') {
       const k = H / 512, wv = o.wv === undefined ? 1 : o.wv;
@@ -3093,11 +3094,17 @@ function onShoot(u, sx, sy) {
   arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x });
 }
 function nulBlade(u) {
-  // filo fino de energía: va recto y atraviesa a varios enemigos
+  // bola de luz: sale de la punta del báculo, va recta y atraviesa a varios enemigos
   if (mode === 'fight' && !nearestEnemy(u)) return;
-  const sx = u.x + u.dir * H * 0.75, sy = u.gy - H * 0.62, v = 900;
-  const img = scene.add.image(sx, sy, 'nul_filo').setDepth(950); img.setScale(0.95 * H / img.height);
-  arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: 0, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x });
+  if (!scene.textures.exists('nul_orbe')) {
+    const t = scene.textures.createCanvas('nul_orbe', 96, 96), c = t.getContext(), g = c.createRadialGradient(48, 48, 2, 48, 48, 48);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#fffbe0'); g.addColorStop(0.55, 'rgba(255,236,110,.95)'); g.addColorStop(0.8, 'rgba(255,200,60,.35)'); g.addColorStop(1, 'rgba(255,190,40,0)');
+    c.fillStyle = g; c.fillRect(0, 0, 96, 96); t.refresh();
+  }
+  const sx = u.x + u.dir * H * 0.8, sy = u.gy - H * (0.95 + u.cfg.fly), v = 760;
+  const img = scene.add.image(sx, sy, 'nul_orbe').setDepth(950).setScale(0.55 * H / 96);
+  burst(sx, sy, 0xfff3a0, 6, 140);
+  arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: (u.gy - H * 0.5 - sy) / 0.35, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, spin: 0.01, level: u.gy - H * 0.5, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x });
 }
 function glitchBurst(x, y, n = 12) {
   // chispas cuadradas cian y magenta (interferencia)
@@ -3241,6 +3248,7 @@ function updateArrows(dt) {
     if (a.stuck > 0) { a.stuck -= dt; a.img.setAlpha(Math.min(1, a.stuck / 0.3)); if (a.stuck <= 0) { a.img.destroy(); return false; } return true; }
     const px0 = a.x;
     a.t += dt; a.vy += a.g * dt; a.x += a.vx * dt; a.y += a.vy * dt;
+    if (a.level !== undefined && a.y >= a.level) { a.y = a.level; a.vy = 0; }
     if (a.team) {
       // ¿ha cruzado el proyectil la línea del escudo entre este fotograma y el anterior?
       const wall = shieldWalls(a.team).find(ac => { const k = ac.bigK || 1, sx = ac.x + ac.dir * H * 0.45 * k;
