@@ -367,3 +367,11 @@ Arte en bruto en `arte/berserker/`; piezas del juego en `docs/img/tormund/`.
 - Cuerpo a cuerpo, hachazos alternos con cada hacha (18–22).
 - Furia: al bajar del 40 % de vida (una vez por vida), 3,5 s en rojo atacando el doble de rápido y curándose un 15 % del daño.
 - Provisional: 220 de vida. Habilidades de rango: Piel de oso (escudo), Sed de batalla (robo de vida), Valhalla me espera (aguanta).
+
+## Rufo, el Perro cobarde (común, coste 2)
+
+Arte en bruto en `arte/perro/`; piezas del juego en `docs/img/rufo/` (cuerpo, cabeza, cola y cuatro patas animadas por separado).
+
+- Trota hacia el rival; a unos dos cuerpos salta a morderle y de otro salto se aparta hacia atrás; luego vuelve a la carga.
+- Provisional: 80 de vida, 12–16 por mordisco, rápido. Habilidades de rango: Colmillo (críticos), Patas ligeras (más rápido),
+  Perro viejo (aguanta).

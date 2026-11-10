@@ -8,6 +8,7 @@ const HABILIDAD = {
   nul: 'Vuela. Lanza bolas de luz que atraviesan. 7 cargas de esquiva. Cada 20 s su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
   rhysida: 'Dos tajos y un remolino. Se teletransporta a la espalda del rival más débil. Definitiva: ralentiza el tiempo y corta a todos los rivales. Cambia de skin al subir de rango.',
   tormund: 'Lanza sus hachas girando desde lejos; a 6 cuerpos salta y cae como una guillotina. Al 40 % de vida entra en furia: ataca el doble de rápido y roba vida.',
+  rufo: 'Salta a morder y se aparta de otro salto; luego vuelve a la carga.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
