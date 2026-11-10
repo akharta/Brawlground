@@ -327,6 +327,7 @@ Ninja hacker. Arte en bruto en `arte/hacker/`; piezas del juego en `docs/img/rhy
 
 Hechicero primordial. Arte en bruto en `arte/hechicero/`; piezas del juego en `docs/img/nul/`.
 
+- **Cuerpo a cuerpo:** si se le pegan, golpea rápido con el bastón en cadena: vertical, horizontal, oblicuo y un giro completo dándose la vuelta que da a todos los que tiene encima (10–13 por golpe).
 - **Ataque:** a distancia; va siempre volando; descarga el báculo y lanza una bola de luz que atraviesa hasta 4 enemigos (16–20).
 - **Pasiva, intocable:** 7 cargas de esquiva; cada golpe que le llega (a distancia o cuerpo a cuerpo) gasta una y no hace daño,
   con una de sus 7 poses de esquiva. Agotadas, gana una carga cada 4 s. Las cargas se ven como 7 puntitos bajo sus pies.

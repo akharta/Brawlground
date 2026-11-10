@@ -410,7 +410,7 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.26,   // fly: vuela a 0,20 de su altura
+    ringCd: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, melee: [10, 13], fly: 0.26,   // fly: vuela a 0,20 de su altura
    
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   // Odo, el Tamborilero: no ataca; toca el tambor sin parar (salen notas) y va dos pasos por detrás de su aliado. Los aliados
@@ -871,7 +871,7 @@ class Unit {
     this.heat = 0; this.misT = 4; this.droneT = 0; this.beamT = 0;
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
-    if (this.type === 'nul') { this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
+    if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
@@ -1033,13 +1033,44 @@ class Unit {
     if (t >= 2.65) { this.rg = null; this.ringT = c.ringCd; this.nulHide(); this.root.setDepth(this.gy); }
   }
   attackNul(o, t) {
+    if (t === 0 || this.nulMelee === undefined) {   // al empezar: ¿lo tienen encima? entonces, a bastonazos
+      const e = mode === 'fight' ? enemiesOf(this).filter(v => !v.isCastle && Math.abs(v.x - this.x) <= H * 1.35)[0] : null;
+      this.nulMelee = !!e || (mode === 'anim' && this.forceMelee);
+    }
+    if (this.nulMelee) return this.meleeNul(o, t);
     // echa el báculo atrás y lo descarga hacia delante: de la punta sale una bola de luz que atraviesa
     const r = this.cfg.rest, p = t / 0.9, up = [0.1, -0.78], fw = [0.52, -0.62];
     if (p < 0.4) { const e = ease(p / 0.4); o.fh = lerp2(r.fh, up, e); o.st = lerp(0, -0.6, e); o.rot = -0.06 * e; }
     else if (p < 0.58) { const e = easeIn((p - 0.4) / 0.18); o.fh = lerp2(up, fw, e); o.st = lerp(-0.6, 0.9, e); o.rot = lerp(-0.06, 0.1, e); }
     else { const e = ease((p - 0.58) / 0.42); o.fh = lerp2(fw, r.fh, e); o.st = lerp(0.9, 0, e); o.rot = 0.1 * (1 - e); }
     if (p >= 0.55 && !this.fired) { this.fired = true; nulBlade(this); }
-    if (p >= 1) this.set('idle');
+    if (p >= 1) { this.nulMelee = undefined; this.set('idle'); }
+  }
+  meleeNul(o, t) {
+    // cuerpo a cuerpo, rápido: vertical, horizontal, oblicuo y giro completo dándose la vuelta, en cadena
+    const r = this.cfg.rest, n = (this.atkN || 0) % 4, D = n === 3 ? 0.5 : 0.32, p = Math.min(1, t / D);
+    const wind = p < 0.3 ? ease(p / 0.3) : 1, sw = p < 0.3 ? 0 : p < 0.6 ? easeIn((p - 0.3) / 0.3) : 1, back = p > 0.75 ? ease((p - 0.75) / 0.25) : 0;
+    const K = [   // [mano atrás, ángulo atrás, mano golpe, ángulo golpe]
+      [[0.05, -0.95], -0.4, [0.5, -0.45], 1.7],       // vertical: de arriba abajo
+      [[-0.1, -0.62], 1.4, [0.55, -0.6], 1.6],        // horizontal: barrido hacia delante
+      [[0.0, -0.9], -1.0, [0.5, -0.4], 2.3],          // oblicuo
+      [[0.2, -0.7], 0.6, [0.5, -0.6], 1.57]][n];      // giro
+    const hA = lerp2(lerp2(r.fh, K[0], wind), K[2], sw), aA = lerp(lerp(0, K[1], wind), K[3], sw);
+    o.fh = lerp2(hA, r.fh, back); o.st = lerp(aA, 0, back); o.rot = 0.1 * sw * (1 - back) - 0.05 * wind * (1 - sw);
+    if (n === 1) o.st += 0;
+    if (n === 3) {                       // se da la vuelta entera con el bastón extendido
+      const q = p < 0.25 ? 0 : Math.min(1, (p - 0.25) / 0.55), ang = Math.PI * 2 * easeInOut(q);
+      o.sx = Math.cos(ang) || 0.01; o.fh = lerp2([0.5, -0.6], r.fh, back); o.st = 1.57 * (1 - back); o.hop = Math.sin(q * Math.PI) * H * 0.12;
+    }
+    if (sw > 0.5 && !this.fired) {
+      this.fired = true;
+      if (mode === 'fight') {
+        const tg = enemiesOf(this).filter(v => Math.abs(v.x - this.x) <= H * 1.5).sort((a, b) => (!!a.isCastle - !!b.isCastle) || Math.abs(a.x - this.x) - Math.abs(b.x - this.x));
+        (n === 3 ? tg.filter(v => !v.isCastle) : tg.slice(0, 1)).forEach(v => v.damage(Math.round(rand(...this.cfg.melee)), this));
+      }
+      burst(this.x + this.dir * H * 0.6, this.gy - H * 0.55, 0xfff3a0, 6, 150);
+    }
+    if (p >= 1) { this.atkN = (this.atkN || 0) + 1; this.nulMelee = undefined; this.cd = Math.min(this.cd, 0.05); this.set('idle'); }
   }
   ultNul(o, t) {
     // definitiva: alza el báculo y sobre él nace una estrella que crece en cuatro fases (blanca, amarilla, naranja y roja);
