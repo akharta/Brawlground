@@ -144,6 +144,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
       <button data-char="honderillo" aria-pressed="false">Pip, el Honderillo</button>
       <button data-char="odo" aria-pressed="false">Odo, el Tamborilero</button>
+      <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="rhysida" aria-pressed="false">Rhysida, la Interferencia</button>
       <button data-char="nul" aria-pressed="false">Nul, el Intocable</button>
       <button data-char="aldric" aria-pressed="false">Rey Aldric (héroe)</button>
@@ -207,6 +208,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Ascendida</div>
       </div>
       <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>16 por tajo</dd><dt>Ataques</dt><dd>Dos tajos y remolino</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta de Kubi, la Slime">
+        <div class="cost">2</div>
+        <div class="art"><img src="img/kubi_carta.png" alt="Ilustración de Kubi, la Slime"></div>
+        <div class="name">Kubi</div>
+        <div class="cls">la Slime</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card uncommon" aria-label="Carta de Odo, el Tamborilero">
@@ -417,6 +428,8 @@ const CH = {
   // cerca de él andan y atacan más rápido y tienen un 35 % de crítico.
   odo: { hp: 90, speed: 58, cd: [1, 1], range: H * 0.5, ranged: false, h: 1.05, support: true,
     rest: { bh: [0.287, -0.633], fh: [0.086, -0.455] }, org: 0.39, drumL: [0.184, -0.401], drumR: [0.304, -0.406], grip: [0.138, 0.841], stA: -0.473 },
+  // Kubi, la Slime: salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una de ellas en otras dos (4 en total)
+  kubi: { hp: 120, dmg: [9, 11], speed: 54, cd: [1.0, 1.3], range: H * 0.95, ranged: false, h: 0.8, rest: { bh: [0, 0], fh: [0, 0] } },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -518,7 +531,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -552,6 +565,18 @@ function updateNotes(dt) {
     return true;
   });
 }
+const KUBI = { w: 0.95, k: [1, 0.72, 0.52], dmg: [1, 0.65, 0.42] };   // ancho del cubo (en H) y tamaño y daño de cada generación
+function kubiSplit(u) {
+  // se parte en dos slimes de la generación siguiente, con la mitad de vida cada una
+  if (mode !== 'fight' || (u.gen || 0) >= 2) return;
+  for (const s of [-1, 1]) {
+    const c = new Unit(scene, 'kubi', u.team, u.x + s * H * 0.3 * KUBI.k[u.gen]);
+    c.gen = u.gen + 1; c.lv = u.lv; c.rk = u.rk; c.pk = u.pk; c.perk = u.perk;
+    c.cfg = Object.assign({}, u.cfg, { hp: Math.max(1, Math.round(u.max / 2)), dmg: CH.kubi.dmg.map(d => d * KUBI.dmg[c.gen]) });
+    c.hp = c.max = c.cfg.hp; c.lane = u.lane + s * 5; c.root.y = c.gy; c.dropH = H * 0.5 * KUBI.k[c.gen]; c.swing = 0; c.set('spawn');
+    c.pushLeft = s * H * 0.35; units.push(c);
+  }
+}
 let RHY_ALL = true;                 // en la escena de pruebas se ven las 10; en batalla, las del rango de la unidad
 let slowBy = null, slowReal = 0;    // quién ha ralentizado el tiempo (definitiva de Rhysida) y el dt real de este fotograma
 const BOW = CH.arquera.bow;
@@ -560,7 +585,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -817,6 +842,9 @@ class Unit {
       this.parts = [this.body, this.bk, this.bh, this.fk, this.fh];
       this.rig.add(this.parts.concat(this.ints));
       this.setSkin('gris'); this.glT = rand(0.3, 0.7); this.gl = 0;
+    } else if (type === 'kubi') {
+      this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
+      this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
     } else if (type === 'odo') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'odo_cuerpo').setOrigin(c.org, 1).setScale(k);
@@ -871,6 +899,7 @@ class Unit {
     this.heat = 0; this.misT = 4; this.droneT = 0; this.beamT = 0;
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
+    if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
@@ -1046,6 +1075,15 @@ class Unit {
     if (p >= 0.55 && !this.fired) { this.fired = true; nulBlade(this); }
     if (p >= 1) { this.nulMelee = undefined; this.set('idle'); }
   }
+  attackKubi(o, t) {
+    // se encoge, salta encima del enemigo y lo aplasta; rebota hacia atrás
+    const p = t / 0.7;
+    if (p < 0.3) { const e = ease(p / 0.3); o.sy = 1 - 0.25 * e; o.sx = 1 + 0.2 * e; }
+    else if (p < 0.65) { const e = (p - 0.3) / 0.35; o.hop = Math.sin(e * Math.PI) * H * 0.45 * KUBI.k[this.gen || 0]; o.dx = 0.35 * e; o.rot = 0.25 * e; o.sy = 1 + 0.15 * Math.sin(e * Math.PI); o.sx = 1 - 0.1 * Math.sin(e * Math.PI); }
+    else { const e = ease((p - 0.65) / 0.35); o.dx = 0.35 * (1 - e); o.rot = 0.25 * (1 - e); o.sy = 1 - 0.22 * (1 - e); o.sx = 1 + 0.22 * (1 - e); }
+    if (p >= 0.65 && !this.fired) { this.fired = true; onMelee(this); burst(this.x + this.dir * H * 0.45, this.gy - 4, 0xff5fa0, 8, 140); }
+    if (p >= 1) this.set('idle');
+  }
   meleeNul(o, t) {
     // cuerpo a cuerpo, rápido: vertical, horizontal, oblicuo y giro completo dándose la vuelta, en cadena
     const r = this.cfg.rest, n = (this.atkN || 0) % 4, D = n === 3 ? 0.5 : 0.32, p = Math.min(1, t / D);
@@ -1218,6 +1256,7 @@ class Unit {
         if (o.pr !== undefined) o.pr += 0.025 * breathe;
         if (this.type === 'rhysida') { o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (this.type === 'nul') { o.st = 0.04 * breathe; o.rot = 0.02 * Math.sin(now * 1.6); }
+        if (this.type === 'kubi') { const q = Math.sin(now * 4 + this.homeX); o.sy = 1 + 0.05 * q; o.sx = 1 - 0.05 * q; }   // gelatina
         if (o.sr !== undefined) o.sr += 0.07 * Math.sin(now * 2.1 + this.homeX);   // la honda se mece colgando del puño
         if (o.mc !== undefined) o.mc += 0.03 * breathe;
         if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
@@ -1248,7 +1287,14 @@ class Unit {
           if (this.form === 3) { o.rot = 0.16 + Math.sin(ph * 0.5) * 0.06; o.hop *= 0.7; }
         }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
-        if (this.type === 'nul') { o.hop = 0; o.rot = 0.1; o.sy = 1; o.st = 0.14; }   // no anda: vuela inclinado hacia delante
+        if (this.type === 'nul') { o.hop = 0; o.rot = 0.1; o.sy = 1; o.st = 0.14; }
+        if (this.type === 'kubi') {   // a saltitos: se aplasta, salta estirándose y cae aplastándose
+          const q = (t * 2.6) % 1, air = q > 0.25 && q < 0.85, a = air ? (q - 0.25) / 0.6 : 0;
+          o.hop = air ? Math.sin(a * Math.PI) * H * 0.32 * (KUBI.k[this.gen || 0]) : 0; o.rot = air ? 0.12 * (1 - 2 * a) : 0;
+          const sq = air ? 0.12 * Math.sin(a * Math.PI) : -0.16 * Math.sin((q < 0.25 ? q / 0.25 : (q - 0.85) / 0.15) * Math.PI);
+          o.sy = 1 + sq; o.sx = 1 - sq;
+          if (!this.inPlace && !air) { this.x -= this.dir * this.cfg.speed * (this.spdK || 1) * gullHaste(this) * dt * (this.backing ? -0.7 : 1); }   // en el suelo no avanza
+        }   // no anda: vuela inclinado hacia delante
         if (this.type === 'rhysida') {   // carrera ninja: inclinada hacia delante, con las dos armas atrás
           const q = t * 15;
           o.hop = Math.abs(Math.sin(q)) * H * 0.06; o.rot = 0.13 + Math.sin(q) * 0.03;
@@ -1292,6 +1338,7 @@ class Unit {
         else if (this.type === 'esqueleto') this.attackBone(o, t);
         else if (this.type === 'rhysida') this.attackRhy(o, t);
         else if (this.type === 'nul') this.attackNul(o, t);
+        else if (this.type === 'kubi') this.attackKubi(o, t);
         else if (this.type === 'honderillo') this.attackSling(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
@@ -1586,6 +1633,16 @@ class Unit {
         break;
       }
       case 'die': {
+        if (this.type === 'kubi') {      // se parte por la mitad: las dos mitades se separan
+          const last = (this.gen || 0) >= 2 || mode !== 'fight';
+          this.hurtT = 0; this.body.clearTint();   // sin el destello blanco del golpe: que se vea partida
+          if (t < dt * 1.5) { this.body.setTexture(last ? 'kubi_muerta' : 'kubi_partida'); burst(this.x, this.gy - H * 0.5 * KUBI.k[this.gen || 0], 0xff5fa0, 12, 170); }
+          const e = Math.min(1, t / 0.25); o.sy = 1 - 0.1 * Math.sin(e * Math.PI); o.sx = 1 + 0.08 * e;
+          if (!last && t >= 0.38 && !this.poofed) { this.poofed = true; kubiSplit(this); }
+          this.root.setAlpha(last ? Math.max(0, 1 - Math.max(0, t - 0.5) / 0.4) : t < 0.38 ? 1 : 0);
+          if (t >= (last ? 0.9 : 0.4)) { this.alive = false; this.root.setVisible(false); this.bar.clear(); onDead(this); return; }
+          break;
+        }
         if (t < dt * 1.5) { this.detach(); if (this.type === 'muerte') raiseGraves(this); if (this.ultSword) { this.ultSword.destroy(); this.ultSword = null; } if (this.plasmaG) this.plasmaG.clear(); }
         o.hop = Math.sin(Math.min(1, t / 0.45) * Math.PI) * H * 0.35;
         o.rot = -ease(t / 0.45) * 1.45;
@@ -2489,6 +2546,10 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'kubi') {
+      const k = KUBI.k[this.gen || 0], dead = this.body.texture.key !== 'kubi_cuerpo';
+      this.body.setScale(KUBI.w * H * k / (dead ? 380 : 400));
+      this.bigK = k; this.shadow.setSize(H * 0.8 * k, H * 0.15 * k);
     } else if (this.type === 'odo') {
       // toca sin parar: cada baqueta sube y baja de golpe sobre el parche, alternando; en cada golpe, a veces, sale una nota
       const c = this.cfg, now = this.sc.time.now / 1000;
@@ -3521,6 +3582,7 @@ function start() {
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
       L('rhy', 'rhysida/atlas');
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'baculo', 'aro', 'aro_plano', 'aro_luz', 'remolino1', 'remolino2', 'filo', 'explosion', 'estrella1', 'estrella2', 'estrella3', 'estrella4', 'esq1', 'esq2', 'esq3', 'esq4', 'esq5', 'esq6', 'esq7']) L('nul_' + n, 'nul/' + n);
+      for (const n of ['cuerpo', 'partida', 'muerta']) L('kubi_' + n, 'kubi/' + n);
       for (const n of ['cuerpo', 'mano', 'baqueta', 'nota1', 'nota2', 'nota3', 'nota4']) L('odo_' + n, 'odo/' + n);
       L('hon_cuerpo', 'honderillo_cuerpo'); L('hon_arma', 'honderillo_arma'); L('hon_vacia', 'honderillo_arma_vacia'); L('hon_puno', 'honderillo_puno'); L('hon_mano', 'honderillo_mano'); L('hon_piedra', 'honderillo_piedra');
       L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');

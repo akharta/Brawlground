@@ -346,3 +346,13 @@ Arte en bruto en `arte/tamborilero/`; piezas del juego en `docs/img/odo/`.
 - Redoble: los aliados a su alrededor (unas 3 unidades de distancia) andan y atacan un 25 % más rápido y tienen un 35 % de
   probabilidad de crítico (daño doble). A él no le afecta. A veces sale una notita sobre los que reciben el redoble.
 - Provisional: 90 de vida. Habilidades de rango: Piel de tambor (escudo), Buen ritmo (regenera), Último redoble (aguanta).
+
+## Kubi, la Slime (común, coste 2)
+
+Arte en bruto en `arte/slime/`; piezas del juego en `docs/img/kubi/`.
+
+- Avanza a saltitos de gelatina; ataca saltando encima del enemigo y aplastándolo.
+- Al morir se parte por la mitad (imagen partida) y salen dos slimes más pequeñas con la mitad de vida; cuando muere cada una
+  de esas, se parte en otras dos (4 en total). Las más pequeñas mueren de verdad (imagen con los ojos en cruz).
+- Provisional: 120 de vida (60 y 30 las pequeñas), 9–11 de daño (menos cuanto más pequeña).
+- Habilidades de rango: Gelatina dura (escudo), Pegajosa (aturde), Rebote (regenera).
