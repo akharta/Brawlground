@@ -1008,6 +1008,10 @@ const CH = {
   // Torque, el Robot obrero: no ataca; se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento
   torque: { hp: 150, speed: 40, cd: [2.2, 2.6], range: H * 0.5, ranged: false, h: 1.1, support: true, fix: 24,
     rest: { bh: [-0.317, -0.389], fh: [0.477, -0.559] }, org: 0.514, tw: [0.133, 0.793, -0.736], bk: [0.5, 0.045] },
+  // Anubek, el Chacal de arcilla: jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace
+  // (una vez), con los trozos algo separados
+  anubek: { hp: 150, dmg: [12, 16], speed: 52, cd: [1.1, 1.4], range: H * 1.15, ranged: false, h: 1.25, block: 0.2, revive: 0.6,
+    rest: { bh: [-0.257, -0.336], fh: [0.242, -0.274] }, org: [0.468, 0.995], sh: [0.144, 0.015], kg: [0.24, 0.65], knat: -0.15 },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -1109,7 +1113,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -1214,7 +1218,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1515,6 +1519,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'anubek') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'anu_cuerpo_0').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.weapon = sc.add.image(0, 0, 'anu_khopesh').setOrigin(c.kg[0], c.kg[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'anu_mano_a').setScale(k);
+      this.shield = sc.add.image(0, 0, 'anu_escudo').setScale(k);
+      this.fh = sc.add.image(0, 0, 'anu_mano_b').setScale(k);
+      this.parts = [this.weapon, this.bh, this.body, this.shield, this.fh];
+      this.rig.add(this.parts); this.drops = [];
     } else if (type === 'torque') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'tq_cuerpo').setOrigin(c.org, 1).setScale(k);
@@ -1581,6 +1594,7 @@ class Unit {
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nivea') this.shots = 0;
+    if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
     if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.rufoDone = new Set(); this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
     if (this.type === 'tormund') { this.rageT = 0; this.rageUsed = false; this.cdK = 1; this.axeGone = 0; this.leapT = 0; this.throwT = 0; }
     if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
@@ -1832,6 +1846,15 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackAnubek(o, t) {
+    // alza el jepés por encima de la cabeza y lo descarga en curva hacia delante, con el escudo por delante
+    const r = this.cfg.rest, p = t / 0.6, up = p < 0.4 ? ease(p / 0.4) : 0, dn = p < 0.4 ? 0 : p < 0.58 ? easeIn((p - 0.4) / 0.18) : 1, ret = p > 0.7 ? ease((p - 0.7) / 0.3) : 0;
+    const hand = lerp2(lerp2(r.bh, [-0.1, -0.75], up), [0.3, -0.4], dn);
+    o.bh = lerp2(hand, r.bh, ret); o.ka = lerp(lerp(-1.85, -2.8, up), 0.5, dn) * (1 - ret) + -1.85 * ret;
+    o.fh = lerp2(r.fh, [r.fh[0] + 0.05, r.fh[1]], dn * (1 - ret)); o.rot = (-0.07 * up + 0.12 * dn) * (1 - ret);
+    if (dn > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
+    if (p >= 1) this.set('idle');
+  }
   attackTorque(o, t) {
     // de cara a la muralla: mete la paleta en el cubo, la sube y extiende el cemento arriba y abajo
     const r = this.cfg.rest, p = t / 1.4;
@@ -2000,6 +2023,7 @@ class Unit {
     else if (this.type === 'nul') { o.st = 0; }
     else if (this.type === 'odo') { o.drum = true; }
     else if (this.type === 'torque') { o.wa = -0.9; o.bkr = 0; }
+    else if (this.type === 'anubek') { o.ka = -1.85; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -2058,6 +2082,7 @@ class Unit {
         if (this.type === 'nul') { o.st = 0.04 * breathe; o.rot = 0.02 * Math.sin(now * 1.6); }
         if (this.type === 'nivea') { o.bk = [0, 0.012 * Math.sin(now * 2.2 + this.homeX)]; }
         if (this.type === 'ivo') o.wa += 0.06 * breathe;
+        if (this.type === 'anubek') o.ka += 0.04 * breathe;
         if (this.type === 'torque') { o.wa += 0.05 * breathe; o.bkr = 0.05 * Math.sin(now * 2 + this.homeX); }
         if (this.cfg.rat) { o.wa += 0.04 * breathe; if (this.cfg.rat === 'puno') { const b = Math.sin(now * 6 + this.homeX); o.bh[1] += 0.015 * b; o.fh[1] -= 0.015 * b; } }   // el libro flota sobre la mano
         if (this.type === 'tormund') { o.a1 += 0.05 * breathe; o.a2 -= 0.05 * breathe; }
@@ -2149,6 +2174,7 @@ class Unit {
         else if (this.type === 'nivea') this.attackNivea(o, t);
         else if (this.type === 'ivo') this.attackIvo(o, t);
         else if (this.type === 'torque') this.attackTorque(o, t);
+        else if (this.type === 'anubek') this.attackAnubek(o, t);
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
         else if (this.type === 'tormund') this.attackTor(o, t);
@@ -2471,6 +2497,24 @@ class Unit {
         break;
       }
       case 'die': {
+        if (this.type === 'anubek') {
+          const again = !this.revived && mode === 'fight' || (mode === 'anim' && !this.revived);
+          const arm = v => [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(v));
+          if (t < dt * 1.5) { arm(false); this.body.setTexture('anu_roto'); this.sc.cameras.main.shake(120, 0.004); burst(this.x, this.gy - H * 0.6, 0xd9694f, 18, 220); burst(this.x, this.gy - H * 0.3, 0xe8a06a, 10, 160); this.hurtT = 0; }
+          this.parts.forEach(pt => pt.clearTint());
+          if (t < 0.3) { o.sx = 1 + 0.06 * Math.sin(t * 80); }
+          else if (t < 2.3) { if (this.body.texture.key !== 'anu_monton') { this.body.setTexture('anu_monton'); burst(this.x, this.gy - 6, 0xc9a77a, 12, 120); } }
+          else if (again) {            // se rehace: los trozos se levantan del montón y se juntan
+            const q = Math.min(1, (t - 2.3) / 0.8);
+            if (q < 0.5) { if (this.body.texture.key !== 'anu_roto') this.body.setTexture('anu_roto'); o.sy = lerp(0.4, 1.05, ease(q * 2)); o.hop = H * 0.15 * Math.sin(q * 2 * Math.PI); if (Math.random() < 0.4) fx.push({ x: this.x + rand(-H * 0.4, H * 0.4), y: this.gy - 4, vx: rand(-20, 20), vy: -rand(60, 140), g: 0, r: rand(2, 4), life: 0.4, t: 0.4, color: 0xd9694f }); }
+            else { if (this.body.texture.key !== 'anu_rehecho') { this.body.setTexture('anu_rehecho'); arm(true); burst(this.x, this.gy - H * 0.6, 0xffe2a0, 14, 180); } o.sy = 1 + 0.08 * (1 - (q - 0.5) * 2); }
+            if (q >= 1) { this.revived = true; this.hp = Math.round(this.max * this.cfg.revive); floatText(this.x, this.gy - H * 1.5, '¡Se rehace!', '#ffd08a'); this.set(mode === 'fight' ? 'walk' : 'idle'); }
+          } else {
+            this.root.setAlpha(Math.max(0, 1 - (t - 2.3) / 0.5));
+            if (t >= 2.8) { this.alive = false; this.root.setVisible(false); this.bar.clear(); onDead(this); return; }
+          }
+          break;
+        }
         if (this.type === 'kubi') {      // se parte por la mitad: las dos mitades se separan
           const last = (this.gen || 0) >= 2 || mode !== 'fight';
           this.hurtT = 0; this.body.clearTint();   // sin el destello blanco del golpe: que se vea partida
@@ -3384,6 +3428,14 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'anubek') {
+      const c = this.cfg;
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation((o.ka === undefined ? -1.85 : o.ka) - c.knat);
+      this.shield.setPosition((o.fh[0] + c.sh[0]) * H, (o.fh[1] + c.sh[1]) * H);
+      if (this.state !== 'die') {      // se agrieta según pierde vida; ya rehecho, se queda con los trozos separados
+        const f = this.hp / this.max, key = this.revived ? 'anu_rehecho' : 'anu_cuerpo_' + (f > 0.75 ? 0 : f > 0.5 ? 1 : f > 0.25 ? 2 : 3);
+        if (this.body.texture.key !== key) this.body.setTexture(key);
+      }
     } else if (this.type === 'torque') {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation((o.wa || 0) - this.cfg.tw[2]);
       this.bucket.setPosition(o.bh[0] * H, (o.bh[1] - 0.03) * H).setRotation(o.bkr || 0);
@@ -4439,7 +4491,7 @@ function makeAuraTextures(sc) {
 }
 /* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
+const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata';
 const ALL = Object.keys(NAMES);
@@ -5026,6 +5078,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'libro', 'copo', 'cristal']) L('niv_' + n, 'nivea/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'varita']) L('ivo_' + n, 'ivo/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
+      for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
       for (const n of ['escudo', 'cuchillo', 'palanca']) L('rat_' + n, 'grises/' + n);
       for (const n of ['cuerpo', 'cola', 'cabeza', 'pata_dl', 'pata_dv', 'pata_tc', 'pata_tl']) L('rufo_' + n, 'rufo/' + n);
@@ -5163,7 +5216,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['escena_01', 'escena_02', 'escena_03', 'escena_04', 'escena_05', 'escena_06', 'escena_07', 'escena_08', 'escena_09', 'escena_10'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'fraile', 'acorazado', 'pistolero', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
@@ -5697,6 +5750,7 @@ const HABILIDAD = {
   nivea: 'Lanza ráfagas de 3 copos de nieve desde su libro; cada tercer ataque, un cristal de hielo.',
   rufo: 'A cada rival nuevo: salta a morder, se da la vuelta y se aleja olisqueándose el rabo; después pelea pegado.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
+  anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
   ivo: 'Agita la varita y lanza rayos de luz que dan al instante.',
@@ -6077,6 +6131,7 @@ const PERKS = {
   nivea: [[2, 'Escarcha', 'crit', 0.2], [4, 'Ventisca', 'veloz', 0.2], [6, 'Corazón de hielo', 'escudo', 0.35]],
   rufo: [[2, 'Colmillo', 'crit', 0.2], [4, 'Patas ligeras', 'veloz', 0.2], [6, 'Perro viejo', 'aguante', 1]],
   kubi: [[2, 'Gelatina dura', 'escudo', 0.25], [4, 'Pegajosa', 'aturdir', 0.15], [6, 'Rebote', 'regen', 0.02]],
+  anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
   odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],
   ivo: [[2, 'Chispa', 'crit', 0.2], [4, 'Varita rápida', 'veloz', 0.2], [6, 'Rayo maestro', 'ejecutar', 0.5]],

@@ -418,3 +418,12 @@ Arte en bruto en `arte/robot/`; piezas del juego en `docs/img/torque/`.
 - Cada 2,2–2,6 s se vuelve hacia la muralla, moja la paleta en el cubo y unta cemento: tu castillo recupera 24 de vida
   (más con nivel y rango). Si el castillo está entero, no cura nada.
 - Provisional: 150 de vida. Habilidades de rango: Blindaje (escudo), Engrasado (regenera), Cemento rápido (más rápido).
+
+## Anubek, el Chacal de arcilla (rara, coste 4)
+
+Arte en bruto en `arte/chacal/`; piezas del juego en `docs/img/anubek/`.
+
+- Cuerpo a cuerpo con jepés y escudo (para el 20 % de lo que le llega de frente). Se va agrietando al perder vida (4 dibujos).
+- Al morir se rompe en pedazos y queda un montón de arcilla; a los 2 s los trozos se levantan y se rehace (una vez por vida),
+  con el 60 % de su vida y los trozos algo separados. La segunda vez se queda en el montón y desaparece.
+- Provisional: 150 de vida, 12–16. Habilidades de rango: Arcilla dura (escudo), Maldición del desierto (espinas), Eterno (aguanta).
