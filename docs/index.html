@@ -1511,6 +1511,7 @@ class Unit {
       this.rig.add([this.body, this.weapon, this.str, this.arrow, this.bh, this.fh]);
       this.drops = [[this.weapon, 0.7, -480, 7]];
     }
+    this.drops = this.drops || [];   // piezas que suelta al morir (las que no tienen, ninguna)
     this.aura = AURA[RARITY[type]] || null;
     this.auraBack = sc.add.graphics(); this.auraFront = sc.add.graphics(); this.auraP = [];
     this.root.add([this.auraBack, this.shadow]);
