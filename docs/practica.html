@@ -148,6 +148,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="centinela" aria-pressed="false">Unidad X-9, el Centinela</button>
       <button data-char="desencadenado" aria-pressed="false">Jhotum, el Desencadenado</button>
       <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
+      <button data-char="honderillo" aria-pressed="false">Pip, el Honderillo</button>
       <button data-char="aldric" aria-pressed="false">Rey Aldric (héroe)</button>
       <button data-char="lyra" aria-pressed="false">Lyra, Ojo de Halcón (heroína)</button>
       <button data-char="gull" aria-pressed="false">Gūll, el Puerco (héroe)</button>
@@ -189,6 +190,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>11</dd><dt>Alcance</dt><dd>Cuerpo a cuerpo</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card" aria-label="Carta de Pip, el Honderillo">
+        <div class="cost">1</div>
+        <div class="art"><img src="img/honderillo_carta.png" alt="Ilustración de Pip, el Honderillo"></div>
+        <div class="name">Pip</div>
+        <div class="cls">el Honderillo</div>
+        <div class="rar">Común</div>
+      </div>
+      <dl><dt>Vida</dt><dd>50</dd><dt>Daño</dt><dd>9</dd><dt>Alcance</dt><dd>Largo</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card" aria-label="Carta de Ailin, la Arquera">
@@ -361,6 +372,9 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const CH = {
   legionario: { hp: 120, dmg: [10, 12], speed: 58, cd: [1.05, 1.4], range: H * 1.15, ranged: false,
     h: 1, rest: { sw: -1.97, bh: [-0.207, -0.165], fh: [0.245, -0.169], sh: [0.388, -0.215] } },
+  // Honderillo: voltea la honda sobre la cabeza y lanza la piedra en parábola. La honda cuelga del puño (bh); la otra mano, junto al zurrón.
+  honderillo: { hp: 50, dmg: [8, 10], speed: 64, cd: [1.25, 1.55], range: H * 4.2, ranged: true, h: 1,
+    rest: { bh: [0.2, -0.38], fh: [-0.19, -0.29], sr: 1.3, ssx: 0.42 }, sling: 0.82, pouch: 0.86, stone: 0.15 },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -462,7 +476,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -473,7 +487,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -709,6 +723,14 @@ class Unit {
       this.rig.add([this.body, this.weapon, this.str, this.arrow, this.bh, this.fh]);
       this.drops = [[this.weapon, 0.7, -480, 7]];
       this.bigK = c.k; this.shadow.setSize(H * 0.62 * c.k, H * 0.16 * c.k);
+    } else if (type === 'honderillo') {
+      this.body = sc.add.image(0, 0, 'hon_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
+      this.weapon = sc.add.image(0, 0, 'hon_arma').setOrigin(0.04, 0.44);
+      this.bh = handScale('hon_puno').setScale(0.127 * H / 256);
+      this.fh = handScale('hon_mano').setScale(0.127 * H / 256);
+      this.parts = [this.body, this.weapon, this.bh, this.fh];
+      this.rig.add(this.parts);
+      this.drops = [[this.weapon, 0.7, -480, 7]];
     } else {
       this.body = sc.add.image(0, 0, 'arq_cuerpo').setOrigin(0.5, 1).setScale(H / 512);
       this.weapon = sc.add.image(0, 0, 'arq_arma').setOrigin(BOW.ox, BOW.oy).setScale(bowH / 512);
@@ -859,6 +881,7 @@ class Unit {
     if (o.sw !== undefined) o.sw += Math.sin(q * 0.9) * 0.9 - 0.3;
     if (o.sh) o.sh = [o.sh[0] + Math.sin(q + 2.4) * 0.06, o.sh[1] - 0.1 + Math.cos(q + 2.4) * 0.05];
     if (o.pr !== undefined) o.pr += Math.sin(q * 0.7) * 0.5;
+    if (o.sr !== undefined) o.sr += Math.sin(q * 0.9) * 0.6;
     if (o.mc !== undefined) o.mc += Math.sin(q * 0.8) * 0.7;
     if (o.hr !== undefined) o.hr += Math.sin(q * 0.8) * 0.7;
     if (o.st !== undefined) o.st += Math.sin(q * 0.8) * 0.5;
@@ -886,6 +909,7 @@ class Unit {
     else if (this.type === 'aldric' || this.type === 'guardia') { o.hr = r.hr; }
     else if (this.type === 'centinela') { o.rf = r.rf; o.rp = [...r.rp]; o.mg = [...r.mg]; o.mgR = 0; o.aim = false; o.laser = 0; }
     else if (this.type === 'esqueleto') { o.sw = r.sw; }
+    else if (this.type === 'honderillo') { o.sr = r.sr; o.ssx = r.ssx; o.empty = false; }   // en reposo la honda cuelga hacia delante (se ve corta)
     else if (this.type === 'samurai') { o.katR = Math.PI + this.cfg.sayaR; o.drawn = false; o.glint = 0; }
     else if (this.type === 'lobo') { o.tail = 0; o.headR = 0; o.head = [0, 0]; o.by = 0; o.bite = false; }
     else { o.bow = bowRestFromHand(r.fh, this.bw); o.bowR = 0; o.nock = null; o.arrow = false; }
@@ -933,6 +957,7 @@ class Unit {
           if (this.form === 3) o.rot = 0.04 * Math.sin(now * 1.7 + this.homeX);
         }
         if (o.pr !== undefined) o.pr += 0.025 * breathe;
+        if (o.sr !== undefined) o.sr += 0.07 * Math.sin(now * 2.1 + this.homeX);   // la honda se mece colgando del puño
         if (o.mc !== undefined) o.mc += 0.03 * breathe;
         if (this.type === 'kungfu') {   // guardia: rebota sobre los pies como un luchador
           const b = Math.abs(Math.sin(now * 6));
@@ -962,6 +987,7 @@ class Unit {
           if (this.form === 3) { o.rot = 0.16 + Math.sin(ph * 0.5) * 0.06; o.hop *= 0.7; }
         }
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
+        if (o.sr !== undefined) o.sr += Math.sin(ph - 0.8) * 0.16;
         if (this.type === 'catapulta') { o.hop = 0; o.sy = 1; o.rot = Math.sin(t * 9) * 0.012; }
         if (o.mc !== undefined) { o.hop *= 0.5; o.rot *= 0.5; o.mc += Math.sin(ph) * 0.06; o.sh[1] -= Math.abs(Math.sin(ph)) * 0.02; if (Math.abs(Math.sin(ph)) < 0.12 && this.sc.time.now - (this.stepT || 0) > 250) { this.stepT = this.sc.time.now; burst(this.x, this.gy - 2, 0xe8d3b0, 3, 50); } }
         if (o.tail !== undefined) {   // galope: el cuerpo se mece, la cabeza contrarresta y la cola va al viento
@@ -997,6 +1023,7 @@ class Unit {
         else if (this.type === 'desencadenado') { if (this.ultNext) this.attackUnchain(o, t); else this.attackWhip(o, t); }
         else if (this.type === 'centinela') { if (this.sentMode === 'burst') this.attackBurst(o, t); else this.attackSnipe(o, t); }
         else if (this.type === 'esqueleto') this.attackBone(o, t);
+        else if (this.type === 'honderillo') this.attackSling(o, t);
         else if (this.type === 'kungfu') { if (this.kickNext) this.attackKick(o, t); else this.attackCombo(o, t); }
         else this.attackBow(o, t);
         break;
@@ -1820,6 +1847,36 @@ class Unit {
     this.tpT = this.cfg.tpCd; this.tpTarget = null;
     this.set('tpIn');
   }
+  attackSling(o, t) {
+    // sube el puño sobre la cabeza, voltea la honda en círculos cada vez más rápido (vista de lado: la honda se encoge y se
+    // estira), la descarga hacia delante soltando la piedra y vuelve a cargarla del zurrón
+    const r = this.cfg.rest, D = 1.3, p = t / D, up = [-0.03, -1.03], fwd = [0.36, -0.72];
+    o.empty = this.fired;
+    if (p < 0.16) {
+      const e = ease(p / 0.16);
+      o.bh = lerp2(r.bh, up, e); o.sr = lerp(r.sr, -0.15, e); o.ssx = lerp(r.ssx, 1, e);
+    } else if (p < 0.68) {           // volteo: unas tres vueltas, acelerando
+      const q = (p - 0.16) / 0.52, th = Math.PI * 2 * 3 * Math.pow(q, 1.35);
+      o.bh = [up[0] + Math.cos(th) * 0.035, up[1] + Math.sin(th) * 0.018];
+      o.ssx = Math.cos(th); o.sr = -0.15 - 0.2 * Math.sin(th);
+      o.fh = [r.fh[0] + 0.03, r.fh[1] - 0.04]; o.rot = -0.03;
+    } else if (p < 0.8) {            // descarga: el brazo baja hacia delante y la honda latiguea
+      const e = ease((p - 0.68) / 0.12);
+      o.bh = lerp2(up, fwd, e); o.sr = lerp(-0.15, 0.95, e); o.ssx = 1; o.rot = 0.08 * e;
+      if (!this.fired && e > 0.3) {
+        this.fired = true; o.empty = true;
+        const k = this.bigK || 1, L = this.cfg.sling * this.cfg.pouch;
+        const tx = o.bh[0] + Math.cos(o.sr) * L, ty = o.bh[1] + Math.sin(o.sr) * L;
+        slingShot(this, this.x + this.dir * tx * H * k, this.gy + ty * H * k);
+      }
+    } else {                          // vuelve y saca otra piedra del zurrón
+      const e = ease((p - 0.8) / 0.2);
+      o.bh = lerp2(fwd, r.bh, e); o.sr = lerp(0.95, r.sr, e); o.ssx = lerp(1, r.ssx, e); o.rot = 0.08 * (1 - e);
+      o.fh = [r.fh[0] + 0.1 * Math.sin(e * Math.PI), r.fh[1] - 0.12 * Math.sin(e * Math.PI)];
+      o.empty = p < 0.93;
+    }
+    if (p >= 1) this.set('idle');
+  }
   attackBow(o, t) {
     const r = this.cfg.rest, D = 1.15, p = t / D;
     const aimHand = [0.42, -0.43];
@@ -2075,6 +2132,10 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'honderillo') {
+      const k = this.cfg.sling * H / 512;
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.sr).setScale(k * (Math.abs(o.ssx) < 0.08 ? 0.08 * Math.sign(o.ssx || 1) : o.ssx), k);
+      const key = o.empty ? 'hon_vacia' : 'hon_arma'; if (this.weapon.texture.key !== key) this.weapon.setTexture(key);
     } else if (this.type === 'pistolero') {
       this.bg.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(o.bg);
       this.fg.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.fg);
@@ -2744,6 +2805,15 @@ function onShoot(u, sx, sy) {
   const img = scene.add.image(sx, sy, 'arq_flecha').setOrigin(0.85, 0.5).setScale(0.6 * H / 512).setDepth(950);
   arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, team: u.team, fromX: u.x });
 }
+function slingShot(u, sx, sy) {
+  // la piedra sale en parábola hacia el enemigo más cercano y gira en el aire
+  let tx, ty, target = null;
+  if (mode === 'anim') { tx = u.x + u.dir * H * 4; ty = u.gy - H * 0.35; }
+  else { target = nearestEnemy(u); if (!target) return; tx = target.x; ty = target.gy - H * 0.45; }
+  const dist = Math.abs(tx - sx), T = Math.max(0.35, dist / 760), g = 1000;
+  const img = scene.add.image(sx, sy, 'hon_piedra').setScale(u.cfg.stone * H / 128 * (u.bigK || 1)).setDepth(950);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, spin: 14 * u.dir, team: u.team, fromX: u.x });
+}
 function onDead(u) {
   if (u.type === 'esqueleto') { units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); return; }
   if (mode === 'anim') { setTimeout(() => { if (mode === 'anim' && units[0] === u) u.reset(u.homeX); }, 500); return; }
@@ -2948,7 +3018,7 @@ function buildMode() {
       spawnTimers.push(setTimeout(() => { if (mode === 'fight') units.push(new Unit(scene, type, team, x)); }, delay));
     }
   } else {
-    const x = animChar === 'arquera' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : animChar === 'centinela' ? W / 2 - 220 : animChar === 'desencadenado' ? 170 : animChar === 'imparable' ? W / 2 - 160 : W / 2;
+    const x = animChar === 'arquera' || animChar === 'honderillo' ? W / 2 - 170 : animChar === 'valkiria' ? W / 2 - 60 : animChar === 'ninja' ? W / 2 - 165 : animChar === 'pistolero' ? W / 2 - 200 : animChar === 'lobo' ? W / 2 - 150 : animChar === 'samurai' ? W / 2 - 120 : animChar === 'kungfu' ? W / 2 - 140 : animChar === 'tercio' ? W / 2 - 230 : animChar === 'muerte' ? W / 2 - 150 : animChar === 'acorazado' ? W / 2 - 100 : animChar === 'fraile' ? W / 2 - 180 : animChar === 'catapulta' ? W / 2 - 280 : animChar === 'centinela' ? W / 2 - 220 : animChar === 'desencadenado' ? 170 : animChar === 'imparable' ? W / 2 - 160 : W / 2;
     units.push(new Unit(scene, animChar, 'blue', x));
   }
 }
@@ -3013,6 +3083,7 @@ function start() {
     scene: { preload() {
       const L = (k, f) => this.load.image(k, 'img/' + f + '.png');
       L('leg_cuerpo', 'legionario_cuerpo'); L('leg_arma', 'legionario_arma'); L('leg_mano', 'legionario_mano'); L('leg_escudo', 'legionario_escudo');
+      L('hon_cuerpo', 'honderillo_cuerpo'); L('hon_arma', 'honderillo_arma'); L('hon_vacia', 'honderillo_arma_vacia'); L('hon_puno', 'honderillo_puno'); L('hon_mano', 'honderillo_mano'); L('hon_piedra', 'honderillo_piedra');
       L('arq_cuerpo', 'arquera_cuerpo'); L('arq_arma', 'arquera_arma'); L('arq_flecha', 'arquera_flecha'); L('arq_mano', 'arquera_mano');
       L('val_cuerpo', 'valkiria_cuerpo'); L('val_montura', 'valkiria_montura'); L('val_arma', 'valkiria_arma'); L('val_mano', 'valkiria_mano');
       L('nin_cuerpo', 'ninja_cuerpo'); L('nin_bufanda', 'ninja_bufanda'); L('nin_arma', 'ninja_arma'); L('nin_mano', 'ninja_mano'); L('nin_shuriken', 'ninja_shuriken');

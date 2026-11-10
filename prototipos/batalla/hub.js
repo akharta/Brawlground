@@ -5,6 +5,7 @@ const RAREZA = { comun: 'Común', poco: 'Poco común', rara: 'Rara', epica: 'Ép
 const HABILIDAD = {
   legionario: 'Espada y escudo. Aguanta en primera línea.',
   arquera: 'Dispara flechas en parábola desde lejos.',
+  honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
   valkiria: 'A caballo. Barrido de hacha que da a todos los que tiene delante.',
   ninja: 'Se teletransporta junto a los tiradores enemigos (cada 9 s) y lanza shuriken.',
   pistolero: 'Ráfagas con dos revólveres. Si le echan encima, da un mortal hacia atrás.',

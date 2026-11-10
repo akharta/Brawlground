@@ -70,6 +70,7 @@ const PERK_TXT = {
 // por unidad: [rango en que se aprende, nombre, tipo, valor]
 const PERKS = {
   legionario: [[2, 'Muro de escudos', 'escudo', 0.25], [4, 'Disciplina de legión', 'aura', 0.1], [6, 'Última legión', 'aguante', 1]],
+  honderillo: [[2, 'Piedra afilada', 'crit', 0.2], [4, 'Brazo suelto', 'veloz', 0.2], [6, 'Pedrada', 'aturdir', 0.2]],
   arquera: [[2, 'Ojo certero', 'crit', 0.2], [4, 'Flechas veloces', 'veloz', 0.2], [6, 'Puntería letal', 'ejecutar', 0.5]],
   tercio: [[2, 'Picas firmes', 'espinas', 0.25], [4, 'Erizo', 'escudo', 0.3], [6, '¡Santiago y cierra!', 'aturdir', 0.2]],
   valkiria: [[2, 'Galope', 'veloz', 0.2], [4, 'Furia nórdica', 'furia', 0.35], [6, 'Valhalla', 'aguante', 1]],
