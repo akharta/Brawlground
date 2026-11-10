@@ -1289,9 +1289,9 @@ class Unit {
         if (o.pr !== undefined) o.pr += Math.sin(ph) * 0.05;
         if (this.type === 'nul') { o.hop = 0; o.rot = 0.1; o.sy = 1; o.st = 0.14; }
         if (this.type === 'kubi') {   // a saltitos: se aplasta, salta estirándose y cae aplastándose
-          const q = (t * 2.6) % 1, air = q > 0.25 && q < 0.85, a = air ? (q - 0.25) / 0.6 : 0;
-          o.hop = air ? Math.sin(a * Math.PI) * H * 0.32 * (KUBI.k[this.gen || 0]) : 0; o.rot = air ? 0.12 * (1 - 2 * a) : 0;
-          const sq = air ? 0.12 * Math.sin(a * Math.PI) : -0.16 * Math.sin((q < 0.25 ? q / 0.25 : (q - 0.85) / 0.15) * Math.PI);
+          const q = (t * 1.5) % 1, air = q > 0.2 && q < 0.9, a = air ? (q - 0.2) / 0.7 : 0;   // saltos lentos y largos
+          o.hop = air ? Math.sin(a * Math.PI) * H * 0.4 * (KUBI.k[this.gen || 0]) : 0; o.rot = air ? 0.12 * (1 - 2 * a) : 0;
+          const sq = air ? 0.12 * Math.sin(a * Math.PI) : -0.16 * Math.sin((q < 0.2 ? q / 0.2 : (q - 0.9) / 0.1) * Math.PI);
           o.sy = 1 + sq; o.sx = 1 - sq;
           if (!this.inPlace && !air) { this.x -= this.dir * this.cfg.speed * (this.spdK || 1) * gullHaste(this) * dt * (this.backing ? -0.7 : 1); }   // en el suelo no avanza
         }   // no anda: vuela inclinado hacia delante
