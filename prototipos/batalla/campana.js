@@ -20,7 +20,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['escena_01', 'escena_02', 'escena_03', 'escena_04', 'escena_05', 'escena_06', 'escena_07', 'escena_08', 'escena_09', 'escena_10'];
-const FUERZA = ['legionario', 'honderillo', 'kubi', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'ninja', 'samurai', 'fraile', 'acorazado', 'pistolero', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'kubi', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'ninja', 'samurai', 'fraile', 'acorazado', 'pistolero', 'tormund', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {

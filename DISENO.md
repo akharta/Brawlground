@@ -356,3 +356,14 @@ Arte en bruto en `arte/slime/`; piezas del juego en `docs/img/kubi/`.
   de esas, se parte en otras dos (4 en total). Las más pequeñas mueren de verdad (imagen con los ojos en cruz).
 - Provisional: 120 de vida (60 y 30 las pequeñas), 9–11 de daño (menos cuanto más pequeña).
 - Habilidades de rango: Gelatina dura (escudo), Pegajosa (aturde), Rebote (regenera).
+
+## Tormund, el Berserker (épica, coste 5)
+
+Arte en bruto en `arte/berserker/`; piezas del juego en `docs/img/tormund/`.
+
+- Desde lejos (hasta 3/5 del campo) lanza su hacha grande, que va girando hasta impactar (13–16); le vuelve a la mano enseguida.
+- A 6 cuerpos del enemigo da un salto alto hacia él y cae con las dos hachas como una guillotina (45 al objetivo y 18 a los de
+  al lado). Cada 10 s.
+- Cuerpo a cuerpo, hachazos alternos con cada hacha (18–22).
+- Furia: al bajar del 40 % de vida (una vez por vida), 3,5 s en rojo atacando el doble de rápido y curándose un 15 % del daño.
+- Provisional: 220 de vida. Habilidades de rango: Piel de oso (escudo), Sed de batalla (robo de vida), Valhalla me espera (aguanta).
