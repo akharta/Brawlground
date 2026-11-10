@@ -1381,7 +1381,7 @@ class Unit {
     this.heat = 0; this.misT = 4; this.droneT = 0; this.beamT = 0;
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
-    if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; if (slowBy === this) slowBy = null; }
+    if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
   set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
@@ -2518,17 +2518,30 @@ class Unit {
     if (p >= 1) { this.hits = 0; this.atkN++; burst(this.x, this.gy, 0xe8d3b0, 8, 110); this.set('idle'); }
   }
   ultRhy(o, t) {
-    // definitiva: el tiempo casi se para (99 % más lento), Rhysida aparece y desaparece por toda la pantalla dejando cortes,
-    // vuelve a su sitio y envaina; al envainar el tiempo corre otra vez y todos los cortes hacen su daño a todos los rivales
-    const r = this.cfg.rest, k = this.bigK || 1, v = this.sc.cameras.main.worldView, A = 0.3, Bc = 2.0, C = 2.5, E = 2.95;
+    // definitiva, con su teatro: el tiempo casi se para (99 % más lento); Rhysida se agacha y envaina despacio, desenvaina de golpe,
+    // aparece y desaparece por toda la pantalla dejando cortes, vuelve a su sitio y envaina a cámara lenta; con el clic de las
+    // fundas el tiempo corre otra vez y todos los cortes hacen su daño a todos los rivales
+    const r = this.cfg.rest, v = this.sc.cameras.main.worldView;
+    const A = 0.95, A2 = 1.2, D = 1.38, Bc = 3.1, C = 4.35, E = 4.9;   // carga · pausa · desenvaina · cortes · envaina · clic
+    const up = [[0.14, -0.6], [-0.14, -0.6]], fkS = -2.2, bkS = -0.95;   // manos y armas en las fundas de la espalda
     if (!this.plasmaG) this.plasmaG = scene.add.graphics().setDepth(958);
     const g = this.plasmaG; g.clear();
     if (!this.cuts) { this.cuts = []; this.ultFrom = [this.x, this.lane, this.dir]; this.cutN = 0; slowBy = this; this.root.setDepth(960); }
-    const dark = t < A ? t / A : t < C ? 1 : Math.max(0, 1 - (t - C) / 0.25);
-    g.fillStyle(0x0a0620, 0.45 * dark).fillRect(v.x - 50, v.y - 50, v.width + 100, v.height + 100);
-    if (t < A) { this.gl = 0.1; o.sy = 1 - 0.1 * (t / A); }
-    else if (t < Bc) {               // un corte cada pocas centésimas, cada uno desde un sitio distinto
-      const n = Math.floor((t - A) / 0.045);
+    const dark = t < A ? ease(t / A) : t < C ? 1 : Math.max(0, 1 - (t - C) / 0.3);
+    g.fillStyle(0x0a0620, 0.5 * dark).fillRect(v.x - 50, v.y - 50, v.width + 100, v.height + 100);
+    if (t < A2) {                    // carga: se agacha y lleva las armas a las fundas, despacio; luego se queda quieta un instante
+      const e = easeInOut(Math.min(1, t / A)), hold = t > A ? (t - A) / (A2 - A) : 0;
+      o.fh = lerp2(r.fh, up[0], e); o.bh = lerp2(r.bh, up[1], e); o.fk = lerp(r.fk, fkS, e); o.bk = lerp(r.bk, bkS, e); o.wv = 1 - 0.75 * easeIn(e);
+      o.sy = 1 - 0.14 * e - 0.03 * hold; o.sx = 1 + 0.08 * e; o.rot = 0.1 * e;
+      if (Math.random() < 0.25 + 0.5 * e) { const a = Math.random() * Math.PI * 2, R = H * 1.3; fx.push({ x: this.x + Math.cos(a) * R, y: this.gy - H * 0.5 + Math.sin(a) * R, vx: -Math.cos(a) * R * 90, vy: -Math.sin(a) * R * 90, g: 0, r: 3, life: 0.011, t: 0.011, color: Math.random() < 0.5 ? 0x35e8ff : 0xff3bd8 }); }
+      if (hold > 0) this.gl = Math.max(this.gl, 0.03);
+    } else if (t < D) {              // desenvaina de golpe: se estira y los filos salen en abanico
+      const e = easeIn((t - A2) / (D - A2));
+      if (!this.drawn) { this.drawn = true; this.sc.cameras.main.flash(120, 200, 240, 255); glitchBurst(this.x, this.gy - H * 0.6, 14); }
+      o.fh = lerp2(up[0], [0.55, -0.55], e); o.bh = lerp2(up[1], [-0.5, -0.5], e); o.fk = lerp(fkS, -0.3, e); o.bk = lerp(bkS, Math.PI + 0.3, e); o.wv = 0.25 + 0.75 * e;
+      o.sy = lerp(0.83, 1.12, e); o.sx = lerp(1.08, 0.94, e); o.hop = H * 0.12 * e;
+    } else if (t < Bc) {             // un corte cada pocas centésimas, cada uno desde un sitio distinto
+      const n = Math.floor((t - D) / 0.045);
       if (n !== this.cutN) {
         this.cutN = n;
         this.x = rand(Math.max(70, v.x + 50), Math.min(W - 70, v.right - 50)); this.dir = Math.random() < 0.5 ? 1 : -1; this.cutHop = rand(0, H * 1.5); this.cutPose = Math.random() < 0.5;
@@ -2538,25 +2551,28 @@ class Unit {
       }
       o.hop = this.cutHop || 0; o.rot = 0.25; this.gl = Math.max(this.gl, 0.03);
       if (this.cutPose) { o.fh = [0.5, -0.36]; o.fk = 0.45; o.bh = [-0.3, -0.3]; } else { o.bh = [0.46, -0.44]; o.bk = 0.3; o.fh = [0.1, -0.2]; }
-    } else if (t < C) {              // de vuelta donde estaba: lleva las armas a las fundas de la espalda
-      if (!this.fired) { this.fired = true; [this.x, this.lane, this.dir] = this.ultFrom; this.root.y = this.gy; this.gl = 0.2; glitchBurst(this.x, this.gy - H * 0.5); }
-      const e = ease((t - Bc) / (C - Bc - 0.08));
-      o.fh = lerp2(r.fh, [0.14, -0.6], e); o.bh = lerp2(r.bh, [-0.14, -0.6], e); o.fk = lerp(r.fk, -2.2, e); o.bk = lerp(r.bk, -0.95, e); o.wv = 1 - 0.75 * easeIn(e);
+    } else if (t < C) {              // de vuelta donde estaba, a cámara lenta: cae, gira las armas y las desliza en las fundas
+      if (!this.fired) { this.fired = true; [this.x, this.lane, this.dir] = this.ultFrom; this.root.y = this.gy; this.gl = 0.25; glitchBurst(this.x, this.gy - H * 0.5); }
+      const q = (t - Bc) / (C - Bc), land = Math.min(1, q / 0.22), e = easeInOut(Math.max(0, Math.min(1, (q - 0.18) / 0.72)));
+      o.hop = H * 0.35 * (1 - ease(land)); o.sy = 1 - 0.1 * Math.sin(land * Math.PI) - 0.05 * e; o.rot = 0.06 * e;
+      const fl = Math.sin(Math.min(1, e / 0.45) * Math.PI);   // floritura: las armas giran hacia fuera antes de ir a la espalda
+      o.fh = lerp2([0.5, -0.4], up[0], e); o.bh = lerp2([-0.46, -0.4], up[1], e);
+      o.fk = lerp(-0.2, fkS, e) - fl * 1.6; o.bk = lerp(Math.PI + 0.2, bkS + Math.PI * 2, e) + fl * 1.6; o.wv = 1 - 0.75 * easeIn(Math.max(0, (e - 0.55) / 0.45));
     } else {                         // clic: el tiempo vuelve y los cortes pegan
       if (slowBy === this) {
         slowBy = null; this.sc.cameras.main.shake(350, 0.012); this.sc.cameras.main.flash(160, 255, 255, 255);
         if (mode === 'fight') enemiesOf(this).filter(e2 => !e2.isCastle).forEach(e2 => { e2.damage(this.cfg.ultDmg, this); glitchBurst(e2.x, e2.gy - H * 0.5, 10); });
       }
-      const e = Math.min(1, (t - C) / (E - C));
-      o.fh = lerp2([0.14, -0.6], r.fh, ease(e)); o.bh = lerp2([-0.14, -0.6], r.bh, ease(e)); o.fk = lerp(-2.2, r.fk, ease(e)); o.bk = lerp(-0.95, r.bk, ease(e)); o.wv = 0.25 + 0.75 * ease(e);
+      const e = ease(Math.min(1, (t - C - 0.15) / (E - C - 0.15)));
+      o.fh = lerp2(up[0], r.fh, e); o.bh = lerp2(up[1], r.bh, e); o.fk = lerp(fkS, r.fk, e); o.bk = lerp(bkS, r.bk, e); o.wv = 0.25 + 0.75 * e; o.sy = 0.95 + 0.05 * e;
     }
-    const fade = t < C ? 1 : Math.max(0, 1 - (t - C) / 0.3);
+    const fade = t < C ? 1 : Math.max(0, 1 - (t - C) / 0.35);
     for (const c of this.cuts) {
       const born = Math.min(1, (t - c.t) / 0.05), w = t < C ? 1 : 2.5;
       const mx = lerp(c.x1, c.x2, born), my = lerp(c.y1, c.y2, born);
       g.lineStyle(7 * w, c.c, 0.22 * fade).lineBetween(c.x1, c.y1, mx, my); g.lineStyle(2 * w, 0xffffff, 0.9 * fade).lineBetween(c.x1, c.y1, mx, my);
     }
-    if (t >= E) { g.clear(); this.cuts = null; this.fired = false; this.root.setDepth(this.gy); this.set('idle'); }
+    if (t >= E) { g.clear(); this.cuts = null; this.fired = false; this.drawn = false; this.root.setDepth(this.gy); this.set('idle'); }
   }
   attackSling(o, t) {
     // sube el puño sobre la cabeza, voltea la honda en círculos cada vez más rápido (vista de lado: la honda se encoge y se
