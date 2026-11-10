@@ -71,6 +71,7 @@ const PERK_TXT = {
 const PERKS = {
   legionario: [[2, 'Muro de escudos', 'escudo', 0.25], [4, 'Disciplina de legión', 'aura', 0.1], [6, 'Última legión', 'aguante', 1]],
   tormund: [[2, 'Piel de oso', 'escudo', 0.25], [4, 'Sed de batalla', 'robo', 0.1], [6, 'Valhalla me espera', 'aguante', 1]],
+  grises: [[2, 'Más ratas que nunca', 'escudo', 0.2], [4, 'Mordisco de cloaca', 'robo', 0.15], [6, 'Plaga', 'furia', 0.35]],
   nivea: [[2, 'Escarcha', 'crit', 0.2], [4, 'Ventisca', 'veloz', 0.2], [6, 'Corazón de hielo', 'escudo', 0.35]],
   rufo: [[2, 'Colmillo', 'crit', 0.2], [4, 'Patas ligeras', 'veloz', 0.2], [6, 'Perro viejo', 'aguante', 1]],
   kubi: [[2, 'Gelatina dura', 'escudo', 0.25], [4, 'Pegajosa', 'aturdir', 0.15], [6, 'Rebote', 'regen', 0.02]],

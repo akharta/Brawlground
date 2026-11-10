@@ -384,3 +384,14 @@ Arte en bruto en `arte/maga/`; piezas del juego en `docs/img/nivea/`.
 - A distancia, con el libro de hielo abierto en la mano: ráfagas de 3 copos de nieve (5–7 cada uno); cada tercer ataque, un
   cristal de hielo recto y rápido (20–26). El libro brilla y suelta escarcha al lanzar.
 - Provisional: 70 de vida. Habilidades de rango: Escarcha (críticos), Ventisca (más rápida), Corazón de hielo (escudo).
+
+## Los Grises, las Ratas de cloaca (épica, coste 5)
+
+Arte en bruto en `arte/ratas/`; piezas del juego en `docs/img/grises/`.
+
+- Una carta, cuatro ratas: al salir la del escudo (tapa de alcantarilla) salen con ella las otras tres, con su mismo nivel y rango.
+  - Escudo: para el 30 % de lo que le llega de frente y empuja con la tapa (110 de vida, 7–9).
+  - Boxeadora: directos rápidos alternos con los puños vendados (80 de vida, 6–8).
+  - Cuchillo: puñaladas rápidas (60 de vida, 9–12).
+  - Palanca: palancazos de arriba abajo (70 de vida, 12–15).
+- Habilidades de rango (para las cuatro): Más ratas que nunca (escudo), Mordisco de cloaca (robo de vida), Plaga (furia).

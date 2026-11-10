@@ -8,6 +8,7 @@ const HABILIDAD = {
   nul: 'Vuela. Lanza bolas de luz que atraviesan. 7 cargas de esquiva. Cada 20 s su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
   rhysida: 'Dos tajos y un remolino. Se teletransporta a la espalda del rival más débil. Definitiva: ralentiza el tiempo y corta a todos los rivales. Cambia de skin al subir de rango.',
   tormund: 'Lanza sus hachas girando desde lejos; a 6 cuerpos salta y cae como una guillotina. Al 40 % de vida entra en furia: ataca el doble de rápido y roba vida.',
+  grises: 'Cuatro ratas en una carta: la del escudo (tapa de alcantarilla), la boxeadora, la del cuchillo y la de la palanca.',
   nivea: 'Lanza ráfagas de 3 copos de nieve desde su libro; cada tercer ataque, un cristal de hielo.',
   rufo: 'A cada rival nuevo: salta a morder, se da la vuelta y se aleja olisqueándose el rabo; después pelea pegado.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
