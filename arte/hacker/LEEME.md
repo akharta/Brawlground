@@ -28,7 +28,5 @@ TODOS los rivales. Daño: por decidir.
 ## Pasiva
 Se teletransporta a la espalda del rival más débil cada X segundos (por decidir).
 
-## Pendiente
-- Decidir el daño de la definitiva, cada cuánto se lanza y cada cuánto se teletransporta.
-- Confirmar qué manos grises son de gris_base, pirata y mariachi (asignadas a ojo).
-- Visto bueno para programar.
+## Estado
+Programada. Los detalles y los números provisionales están en DISENO.md.

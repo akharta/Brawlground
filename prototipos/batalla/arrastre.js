@@ -6,7 +6,7 @@
    - nunca detrás de un enemigo que ya esté en tu mitad: siempre por delante de él (se queda justo delante);
    - salvo los asesinos, que sí pueden caer a la espalda de los enemigos (entre su primera línea y su retaguardia).
    Ninguna unidad ni habilidad permite aún soltarlas en la mitad rival. ==== */
-const CLASE = { legionario: 'asesino', ninja: 'asesino' };            // clases de las unidades (de momento solo asesinos)
+const CLASE = { legionario: 'asesino', ninja: 'asesino', rhysida: 'asesino' };            // clases de las unidades (de momento solo asesinos)
 const ASESINO = t => CLASE[t] === 'asesino' && t !== 'ninja';       // Kazú es asesino, pero con su shuriken va aparte (de momento, como las demás)
 const DR_UMBRAL = 9;                                                 // px que hay que mover el dedo para que sea arrastre
 let DR = null, drClick = 0;
@@ -21,7 +21,7 @@ const drWorld = (cx, cy) => { const z = cam.zoom / DPR; return [cx / z + cam.wor
 function drDentro(x, y) { const r = $('dock').getBoundingClientRect(); return x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4; }
 function drFantasma(t) {
   // la unidad que cuelga del dedo: una de verdad, pero fuera de la batalla (no está en la lista de unidades)
-  const g = new Unit(scene, t, 'blue', FIELD_L); g.set('held'); g.heldH = H * 0.6; g.swing = 0; g.w = 0;
+  const g = new Unit(scene, t, 'blue', FIELD_L); g.rk = typeof rangoOf === 'function' ? Math.floor(rangoOf(t)) : 0; g.set('held'); g.heldH = H * 0.6; g.swing = 0; g.w = 0;
   g.root.setDepth(1500); g.bar.clear(); g.root.setScale(0.2); g.pop = 0; g.nuevo = true;
   return g;
 }

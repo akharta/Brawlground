@@ -97,7 +97,7 @@ function onDead(u) {            // en batalla las bajas no vuelven
   if (B && !B.over) onKill(u);
   units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
-let PLAY_AT = null;
+let PLAY_AT = null; RHY_ALL = false;   // en batalla Rhysida solo usa las skins de su rango
 function play(team, idx) {
   const side = B[team], type = side.hand[idx];
   if (!type || B.over || side.energy < COST[type]) return false;
@@ -537,7 +537,9 @@ function battleStep(dt) {
   fx = fx.filter(p => (p.life -= dt) > 0);
 }
 function update(_, deltaMs) {
-  const dt = paused ? 0 : Math.min(0.05, deltaMs / 1000) * timeScale;
+  const real = paused ? 0 : Math.min(0.05, deltaMs / 1000) * timeScale;
+  if (slowBy && (!slowBy.alive || slowBy.state !== 'ultR' || !units.includes(slowBy))) slowBy = null;   // definitiva de Rhysida: el tiempo va al 1 %
+  slowReal = real; const dt = slowBy ? real * 0.01 : real;
   for (const c of clouds) { c.img.x += c.v * deltaMs / 1000; if (c.img.x > c.x1) c.img.x = c.x0; }
   battleStep(dt);
   fxG.clear();

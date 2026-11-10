@@ -306,3 +306,19 @@ Aún no existen en el juego: primero hay que diseñarlos (arte) y escribir sus t
 2. ~~App instalable con carga, menú y batalla a pantalla completa~~ (hecho: akharta.github.io/Brawlground).
 3. Campaña del primer reino: mapa del mundo, mapa del reino con 10 castillos, progreso guardado.
 4. Jaulas de prisioneros y Taberna del Multiverso para reclutar.
+
+## Rhysida, la Interferencia (ascendida, coste 7)
+
+Ninja hacker. Arte en bruto en `arte/hacker/`; piezas del juego en `docs/img/rhysida/`.
+
+- **Skins por rango:** 1 al conseguirla (gris), +3 en rango C (trenzas, azul, blanco), +3 en A (traje, pirata, neón) y +3 en S+
+  (espartano, oni, mariachi). Cada ~0,7 s sufre una interferencia (tiembla, la cruzan barras cian y magenta) y sale con otra
+  skin de las que tenga. Con una sola skin, la interferencia se ve igual pero no cambia.
+- **Combo:** tajo con un arma, tajo con la otra y remolino (dos mortales hacia delante con las armas como una sierra: 3 golpes
+  en área). Provisional: 14–18 por tajo, 10–12 por golpe del remolino, 150 de vida.
+- **Pasiva:** cada 8 s se teletransporta a la espalda del rival con menos vida.
+- **Definitiva** (la lanza el jugador tocando su retrato, una vez por vida como las demás ascendidas): el tiempo va al 1 %,
+  llena la pantalla de cortes, vuelve a su sitio y envaina; al envainar el tiempo corre y todos los rivales reciben 60 de daño
+  (el castillo no). Mientras dura no recibe daño.
+- Es asesina: al arrastrarla puede caer a la espalda de los enemigos.
+- Pendiente: habilidades de rango (de momento su premio de rango son las skins) y ajustar los números.
