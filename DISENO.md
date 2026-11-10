@@ -331,7 +331,7 @@ Hechicero primordial. Arte en bruto en `arte/hechicero/`; piezas del juego en `d
 - **Pasiva, intocable:** 7 cargas de esquiva; cada golpe que le llega (a distancia o cuerpo a cuerpo) gasta una y no hace daño,
   con una de sus 7 poses de esquiva. Agotadas, gana una carga cada 4 s. Las cargas se ven como 7 puntitos bajo sus pies.
 - **Aro, cada 20 s:** el aro que gira junto a su mano sube sobre el enemigo con más vida, crece y se enciende (agujero blanco):
-  se traga entero al del centro, sea cual sea su vida, y a los que estén en su radio con el 30 % de vida o menos. A los héroes no.
+  se traga entero al del centro, sea cual sea su vida, y a los que estén justo debajo (radio de unas dos personas) con el 30 % de vida o menos. A los héroes no.
 - **Definitiva** (una vez por vida, tocando su retrato): alza el báculo y nace una estrella que crece en cuatro fases (blanca,
   amarilla, naranja y roja); la lanza contra el centro de los enemigos y estalla: 180 de daño en área (provisional).
 - Provisional: 120 de vida, levita y se desliza en vez de andar.

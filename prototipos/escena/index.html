@@ -399,7 +399,7 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 1.7, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.26,   // fly: vuela a 0,20 de su altura
+    ringCd: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, fly: 0.26,   // fly: vuela a 0,20 de su altura
    
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
@@ -967,21 +967,22 @@ class Unit {
       return;
     }
     const g = this.rg; g.t += dt; const t = g.t;
-    if (t < 1 && g.tg.alive && g.tg.state !== 'die') g.x = g.tg.x;          // sigue a su presa hasta que se enciende
-    const fly = ease(Math.min(1, t / 0.6)), out = t > 2 ? Math.min(1, (t - 2) / 0.4) : 0, lit = Math.max(0, Math.min(1, (t - 0.6) / 0.4)) * (1 - out);
-    const cx = lerp(g.x0, g.x, fly) - this.x, cy = lerp(g.y0, g.y, fly) - this.gy, w = lerp(c.ringW, 3.4, fly) * (1 - out * 0.8) * H;
-    this.fxRing.setVisible(true).setPosition(cx, cy).setScale(w / this.fxRing.width).setAlpha(1 - out);
-    this.fxLight.setVisible(lit > 0).setPosition(cx, cy).setScale(w / this.fxLight.width).setAlpha(lit);
+    if (t < 1.25 && g.tg.alive && g.tg.state !== 'die') g.x = g.tg.x;          // sigue a su presa hasta que se enciende
+    const fly = ease(Math.min(1, t / 0.6)), out = t > 2.25 ? Math.min(1, (t - 2.25) / 0.4) : 0, lit = Math.max(0, Math.min(1, (t - 0.95) / 0.3)) * (1 - out);
+    const cx = lerp(g.x0, g.x, fly) - this.x, cy = lerp(g.y0, g.y, fly) - this.gy, w = lerp(c.ringW, 1.6, fly) * (1 - out * 0.8) * H;   // del tamaño de dos personas
+    const spin = t < 0.95 ? Math.cos(Math.PI * 4 * ease(t / 0.95)) : 1;   // un par de vueltas y se queda fijo
+    this.fxRing.setVisible(true).setPosition(cx, cy).setScale(w / this.fxRing.width * (Math.abs(spin) < 0.06 ? 0.06 : spin), w / this.fxRing.width).setAlpha(1 - out);
+    this.fxLight.setVisible(lit > 0 && t >= 0.95).setPosition(cx, cy).setScale(w / this.fxLight.width).setAlpha(lit);
     const fr = Math.floor(t / 0.11);
     this.fxCone.setVisible(lit > 0).setTexture('nul_remolino' + (1 + fr % 2)).setPosition(cx, cy).setAlpha(lit * (0.65 + 0.2 * Math.sin(t * 20)));
-    this.fxCone.setScale((fr % 4 < 2 ? 1 : -1) * 2.5 * H / this.fxCone.width, (g.y0 + H * 0.6 - g.y) / this.fxCone.height);
-    if (t >= 1 && !g.done) {
+    this.fxCone.setScale((fr % 4 < 2 ? 1 : -1) * 1.25 * H / this.fxCone.width, (g.y0 + H * 0.6 - g.y) / this.fxCone.height);
+    if (t >= 1.25 && !g.done) {
       g.done = true; this.sc.cameras.main.flash(120, 255, 255, 255);
       const pool = enemiesOf(this).filter(v => !v.isCastle && !NUL_HERO(v) && v.alive && !['die', 'absorbed', 'ultR'].includes(v.state));
       const cen = pool.includes(g.tg) ? g.tg : pool.filter(v => Math.abs(v.x - g.x) < H * 0.6).sort((a, b) => Math.abs(a.x - g.x) - Math.abs(b.x - g.x))[0];
       pool.filter(v => v === cen || (Math.abs(v.x - g.x) <= c.ringR && v.hp <= v.max * c.ringLow)).forEach(v => { v.absX0 = v.x; v.absX = g.x; v.absH = H * 2.5; v.set('absorbed'); });
     }
-    if (t >= 2.4) { this.rg = null; this.ringT = c.ringCd; this.nulHide(); this.root.setDepth(this.gy); }
+    if (t >= 2.65) { this.rg = null; this.ringT = c.ringCd; this.nulHide(); this.root.setDepth(this.gy); }
   }
   attackNul(o, t) {
     // echa el báculo atrás y lo descarga hacia delante: de la punta sale una bola de luz que atraviesa
