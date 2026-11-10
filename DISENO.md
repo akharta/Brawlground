@@ -373,6 +373,14 @@ Arte en bruto en `arte/berserker/`; piezas del juego en `docs/img/tormund/`.
 Arte en bruto en `arte/perro/`; piezas del juego en `docs/img/rufo/` (cuerpo, cabeza, cola y cuatro patas animadas por separado).
 
 - Trota hacia el rival; a unos dos cuerpos salta a morderle, se da la vuelta, se aleja de un saltito y da vueltas olisqueándose
-  el rabo (solo la primera vez). Después ya pelea pegado, mordiendo cuerpo a cuerpo.
+  el rabo (una vez con cada rival). Después pelea pegado con ese rival, mordiendo cuerpo a cuerpo.
 - Provisional: 80 de vida, 12–16 por mordisco, rápido. Habilidades de rango: Colmillo (críticos), Patas ligeras (más rápido),
   Perro viejo (aguanta).
+
+## Nivea, la Maga de hielo (rara, coste 3)
+
+Arte en bruto en `arte/maga/`; piezas del juego en `docs/img/nivea/`.
+
+- A distancia, con el libro de hielo abierto en la mano: ráfagas de 3 copos de nieve (5–7 cada uno); cada tercer ataque, un
+  cristal de hielo recto y rápido (20–26). El libro brilla y suelta escarcha al lanzar.
+- Provisional: 70 de vida. Habilidades de rango: Escarcha (críticos), Ventisca (más rápida), Corazón de hielo (escudo).
