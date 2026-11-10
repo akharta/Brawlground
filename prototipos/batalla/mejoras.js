@@ -70,6 +70,7 @@ const PERK_TXT = {
 // por unidad: [rango en que se aprende, nombre, tipo, valor]
 const PERKS = {
   legionario: [[2, 'Muro de escudos', 'escudo', 0.25], [4, 'Disciplina de legión', 'aura', 0.1], [6, 'Última legión', 'aguante', 1]],
+  odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],
   honderillo: [[2, 'Piedra afilada', 'crit', 0.2], [4, 'Brazo suelto', 'veloz', 0.2], [6, 'Pedrada', 'aturdir', 0.2]],
   arquera: [[2, 'Ojo certero', 'crit', 0.2], [4, 'Flechas veloces', 'veloz', 0.2], [6, 'Puntería letal', 'ejecutar', 0.5]],
   tercio: [[2, 'Picas firmes', 'espinas', 0.25], [4, 'Erizo', 'escudo', 0.3], [6, '¡Santiago y cierra!', 'aturdir', 0.2]],
@@ -116,6 +117,7 @@ Unit.prototype.damage = function (d, src, fromX, crit) {
     if (P.furia && src.hp < src.max * 0.5) d *= 1 + P.furia;
     if (P.ejecutar && this.hp < this.max * 0.3) d *= 1 + P.ejecutar;
   }
+  if (src && !crit && drumOn(src) && Math.random() < ODO.crit) { d *= 2; crit = true; }   // tambor de Odo: 35 % de crítico
   if (src && src.team && !src.isCastle && units.length) { const a = auraBonus(src); if (a) d *= 1 + a; }
   if (typeof dmgMods === 'function') d = dmgMods(d, src, this);   // bestias y hechizos (reino.js)
   d = Math.max(1, Math.round(d));

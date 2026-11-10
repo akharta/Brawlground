@@ -335,3 +335,13 @@ Hechicero primordial. Arte en bruto en `arte/hechicero/`; piezas del juego en `d
 - **Definitiva** (una vez por vida, tocando su retrato): alza el báculo y nace una estrella que crece en cuatro fases (blanca,
   amarilla, naranja y roja); la lanza contra el centro de los enemigos y estalla: 180 de daño en área (provisional).
 - Provisional: 120 de vida, levita y se desliza en vez de andar.
+
+## Odo, el Tamborilero (poco común, coste 3)
+
+Arte en bruto en `arte/tamborilero/`; piezas del juego en `docs/img/odo/`.
+
+- No ataca: desde que sale toca el tambor sin parar (las dos baquetas alternando) y salen notas musicales (solo de adorno).
+- Va dos pasos por detrás del aliado que lleva delante; no se mete entre los enemigos.
+- Redoble: los aliados a su alrededor (unas 3 unidades de distancia) andan y atacan un 25 % más rápido y tienen un 35 % de
+  probabilidad de crítico (daño doble). A él no le afecta. A veces sale una notita sobre los que reciben el redoble.
+- Provisional: 90 de vida. Habilidades de rango: Piel de tambor (escudo), Buen ritmo (regenera), Último redoble (aguanta).

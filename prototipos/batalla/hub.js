@@ -7,6 +7,7 @@ const HABILIDAD = {
   arquera: 'Dispara flechas en parábola desde lejos.',
   nul: 'Vuela. Lanza bolas de luz que atraviesan. 7 cargas de esquiva. Cada 20 s su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
   rhysida: 'Dos tajos y un remolino. Se teletransporta a la espalda del rival más débil. Definitiva: ralentiza el tiempo y corta a todos los rivales. Cambia de skin al subir de rango.',
+  odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
   valkiria: 'A caballo. Barrido de hacha que da a todos los que tiene delante.',
   ninja: 'Se teletransporta junto a los tiradores enemigos (cada 9 s) y lanza shuriken.',
