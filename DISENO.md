@@ -401,3 +401,11 @@ Arte en bruto en `arte/ratas/`; piezas del juego en `docs/img/grises/`.
 El camino tiene cinco carriles invisibles a lo ancho (los de los extremos pisan ya el borde de hierba). Cada unidad sale en uno
 al azar y, cuando se acerca a su rival (a unos 3 cuerpos), las dos se van desviando hacia el medio para pelear cara a cara.
 Da sensación de profundidad en vez de una sola fila en la que todos se solapan.
+
+## Ivo, el Aprendiz de mago (común, coste 2)
+
+Arte en bruto en `arte/aprendiz/`; piezas del juego en `docs/img/ivo/`.
+
+- A distancia: alza la varita, la hace girar y la baja apuntando; sale un rayo de luz blanco y dorado que da al instante (10–12).
+  La punta de la varita suelta chispitas.
+- Provisional: 55 de vida. Habilidades de rango: Chispa (críticos), Varita rápida (más rápido), Rayo maestro (remata a los heridos).

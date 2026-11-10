@@ -13,6 +13,7 @@ const HABILIDAD = {
   rufo: 'A cada rival nuevo: salta a morder, se da la vuelta y se aleja olisqueándose el rabo; después pelea pegado.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
+  ivo: 'Agita la varita y lanza rayos de luz que dan al instante.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
   valkiria: 'A caballo. Barrido de hacha que da a todos los que tiene delante.',
   ninja: 'Se teletransporta junto a los tiradores enemigos (cada 9 s) y lanza shuriken.',

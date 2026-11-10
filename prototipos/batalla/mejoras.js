@@ -76,6 +76,7 @@ const PERKS = {
   rufo: [[2, 'Colmillo', 'crit', 0.2], [4, 'Patas ligeras', 'veloz', 0.2], [6, 'Perro viejo', 'aguante', 1]],
   kubi: [[2, 'Gelatina dura', 'escudo', 0.25], [4, 'Pegajosa', 'aturdir', 0.15], [6, 'Rebote', 'regen', 0.02]],
   odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],
+  ivo: [[2, 'Chispa', 'crit', 0.2], [4, 'Varita rápida', 'veloz', 0.2], [6, 'Rayo maestro', 'ejecutar', 0.5]],
   honderillo: [[2, 'Piedra afilada', 'crit', 0.2], [4, 'Brazo suelto', 'veloz', 0.2], [6, 'Pedrada', 'aturdir', 0.2]],
   arquera: [[2, 'Ojo certero', 'crit', 0.2], [4, 'Flechas veloces', 'veloz', 0.2], [6, 'Puntería letal', 'ejecutar', 0.5]],
   tercio: [[2, 'Picas firmes', 'espinas', 0.25], [4, 'Erizo', 'escudo', 0.3], [6, '¡Santiago y cierra!', 'aturdir', 0.2]],
