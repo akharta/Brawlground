@@ -5,6 +5,7 @@ const RAREZA = { comun: 'Común', poco: 'Poco común', rara: 'Rara', epica: 'Ép
 const HABILIDAD = {
   legionario: 'Espada y escudo. Aguanta en primera línea.',
   arquera: 'Dispara flechas en parábola desde lejos.',
+  nul: 'Filos de energía que atraviesan. 7 cargas de esquiva. Cada 20 s su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
   rhysida: 'Dos tajos y un remolino. Se teletransporta a la espalda del rival más débil. Definitiva: ralentiza el tiempo y corta a todos los rivales. Cambia de skin al subir de rango.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
   valkiria: 'A caballo. Barrido de hacha que da a todos los que tiene delante.',
