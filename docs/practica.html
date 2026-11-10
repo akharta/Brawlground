@@ -225,7 +225,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="cls">el Perro cobarde</div>
         <div class="rar">Común</div>
       </div>
-      <dl><dt>Vida</dt><dd>80</dd><dt>Daño</dt><dd>14 por mordisco</dd><dt>Ataque</dt><dd>Muerde y se aparta</dd></dl>
+      <dl><dt>Vida</dt><dd>80</dd><dt>Daño</dt><dd>14 por mordisco</dd><dt>Ataque</dt><dd>Muerde, huye y vuelve</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card epic" aria-label="Carta de Tormund, el Berserker">
@@ -961,7 +961,7 @@ class Unit {
     this.domeUsed = false; this.domeT = 0; this.flipT = 0; this.impMark = null; this.kickChain = null;
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
-    if (this.type === 'rufo') this.rufoFrom = undefined;
+    if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
     if (this.type === 'tormund') { this.rageT = 0; this.rageUsed = false; this.cdK = 1; this.axeGone = 0; this.leapT = 0; this.throwT = 0; }
     if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
@@ -1155,20 +1155,34 @@ class Unit {
     if (p >= 1) { this.atkN++; this.set('idle'); }
   }
   attackRufo(o, t) {
-    // salta a morder y, de otro salto, se aparta: muerde y huye
+    if (this.rufoRan) {             // ya se le pasó el miedo: muerde cuerpo a cuerpo, sin apartarse
+      const p = t / 0.45, k = p < 0.4 ? ease(p / 0.4) : 1 - ease((p - 0.4) / 0.6);
+      o.dx = 0.12 * k; o.rot = 0.1 * k; o.head = [0.05 * k, 0.02 * k]; o.headR = 0.2 * k; o.hop = H * 0.05 * Math.sin(Math.min(1, p / 0.4) * Math.PI);
+      if (p >= 0.38 && !this.fired) { this.fired = true; onMelee(this); burst(this.x + this.dir * H * 0.5, this.gy - H * 0.45, 0xffffff, 5, 110); }
+      if (p >= 1) this.set('idle');
+      return;
+    }
+    // la primera vez: salta a morder, se da la vuelta, se aleja de un saltito y se persigue el rabo; después ya pelea pegado
     if (t === 0 || this.rufoFrom === undefined) {
       const e = mode === 'fight' ? nearestEnemy(this) : null; this.rufoFrom = this.x;
-      this.rufoTo = e ? e.x - this.dir * H * (e.isCastle ? 0.7 : 0.55) : this.x + this.dir * H * 1.2; this.rufoBack = this.rufoFrom - this.dir * H * 0.5;
+      this.rufoTo = e ? e.x - this.dir * H * (e.isCastle ? 0.7 : 0.55) : this.x + this.dir * H * 1.2; this.rufoBack = this.rufoTo - this.dir * H * 1.3;
     }
-    const A = 0.28, B2 = 0.42, C = 0.82;
+    const A = 0.28, B2 = 0.42, T1 = 0.6, J = 1.0, S = 2.1;
     if (t < A) {                    // salto hacia delante con la boca abierta
       const e = t / A; this.x = lerp(this.rufoFrom, this.rufoTo, easeInOut(e)); o.hop = Math.sin(e * Math.PI) * H * 0.35; o.rot = lerp(-0.2, 0.15, e); o.headR = -0.25 * e;
     } else if (t < B2) {            // ¡ñam!
       o.headR = 0.2 * Math.sin((t - A) / (B2 - A) * Math.PI); o.rot = 0.1; o.head = [0.04, 0.02];
       if (!this.fired) { this.fired = true; onMelee(this); burst(this.x + this.dir * H * 0.55, this.gy - H * 0.45, 0xffffff, 6, 120); }
-    } else if (t < C) {             // salto hacia atrás, de espaldas al miedo
-      const e = (t - B2) / (C - B2); this.x = lerp(this.rufoTo, this.rufoBack, easeInOut(e)); o.hop = Math.sin(e * Math.PI) * H * 0.3; o.rot = lerp(0.1, -0.25, Math.sin(e * Math.PI)); o.tail = -0.6;
-    } else { this.rufoFrom = undefined; this.set('idle'); }
+    } else if (t < T1) {            // se da la vuelta
+      o.sx = Math.cos(Math.PI * ease((t - B2) / (T1 - B2))) || -0.01;
+    } else if (t < J) {             // saltito para alejarse (mirando hacia atrás)
+      const e = (t - T1) / (J - T1); o.sx = -1; this.x = lerp(this.rufoTo, this.rufoBack, easeInOut(e)); o.hop = Math.sin(e * Math.PI) * H * 0.25; o.rot = 0.12 * Math.sin(e * Math.PI); o.tail = 0.4;
+    } else if (t < S) {             // da vueltas olisqueándose el rabo y acaba otra vez de cara al enemigo
+      const e = (t - J) / (S - J); o.sx = Math.cos(Math.PI + Math.PI * 4 * easeInOut(e)) || 0.01;
+      o.hop = Math.abs(Math.sin(e * Math.PI * 6)) * H * 0.05; o.headR = 0.35; o.head = [-0.03, 0.08]; o.tail = 0.5 + 0.3 * Math.sin(t * 30);
+    } else {
+      this.rufoFrom = undefined; this.rufoRan = true; this.cfg = Object.assign({}, this.cfg, { range: H * 0.8 }); this.set('idle');
+    }
   }
   attackKubi(o, t) {
     // se encoge, salta encima del enemigo y lo aplasta; rebota hacia atrás
