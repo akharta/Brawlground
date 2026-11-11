@@ -495,3 +495,13 @@ Arte en bruto en `arte/kaiju/`; piezas del juego en `docs/img/kaiju/` (poses nor
 - Aliento atómico (cada 30 s, solo): carga con la boca abierta y lanza un rayo por todo el carril hasta el castillo: 110 a todos
   los enemigos que tiene delante y 70 al castillo.
 - Provisional: 380 de vida. Rango: Escamas de roca (escudo), Furia radiactiva (furia), Rey de los monstruos (aguanta).
+
+## Mira, la Alquimista (rara, coste 3)
+
+Arte en bruto en `arte/alquimista/`; piezas del juego en `docs/img/mira/`.
+- No ataca. Se queda a distancia y cada 4 s saca una poción al azar del zurrón y la lanza en arco:
+  las buenas a un aliado al azar y las malas a un enemigo al azar (si no hay a quién, saca otra).
+  - Roja +25 % daño · Morada +25 % velocidad · Azul +25 % velocidad de ataque · Verde +25 % vida (máxima y actual).
+  - Amarilla −25 % velocidad · Blanca −25 % velocidad de ataque · Negra −25 % de vida a lo largo de 3 s · Naranja −25 % daño.
+- Los efectos (salvo verde y negra) duran 6 s; la unidad suelta chispitas del color de la poción mientras dura.
+- Provisional: 80 de vida. Rango: Frascos reforzados (escudo), Mano rápida (más rápida), Elixir (regenera).

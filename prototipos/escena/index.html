@@ -152,6 +152,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="rhea" aria-pressed="false">Rhea, la Reina abeja</button>
       <button data-char="aurelion" aria-pressed="false">Aurelion, el Bastón del paladín</button>
       <button data-char="kaiju" aria-pressed="false">Kaiju Tomo, el Lagarto colosal</button>
+      <button data-char="mira" aria-pressed="false">Mira, la Alquimista</button>
       <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="tormund" aria-pressed="false">Tormund, el Berserker</button>
       <button data-char="rufo" aria-pressed="false">Rufo, el Perro cobarde</button>
@@ -270,6 +271,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card rare" aria-label="Carta de Mira, la Alquimista">
+        <div class="cost">3</div>
+        <div class="art"><img src="img/mira_carta.png" alt="Ilustración de Mira, la Alquimista"></div>
+        <div class="name">Mira</div>
+        <div class="cls">la Alquimista</div>
+        <div class="rar">Rara</div>
+      </div>
+      <dl><dt>Vida</dt><dd>80</dd><dt>Daño</dt><dd>No ataca</dd><dt>Cada 4 s</dt><dd>Una poción al azar</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card legend" aria-label="Carta de Kaiju Tomo, el Lagarto colosal">
@@ -611,6 +622,10 @@ const CH = {
   // atómico: un rayo que cruza todo el carril, daña a todos los enemigos que tiene delante y llega hasta el castillo
   kaiju: { hp: 380, dmg: [19, 25], speed: 38, cd: [1.8, 2.2], range: H * 2.4, ranged: true, h: 1.5, splash: H * 1.1, beamCd: 30, beamDmg: 110, beamCastle: 70,
     org: {"normal": [0.577, 0.999], "abierta": [0.592, 0.999], "estirado": [0.44, 0.999]}, rest: { bh: [0, 0], fh: [0, 0] }, mouthS: [0.75, -0.67], mouthA: [0.47, -0.85] },
+  // Mira, la Alquimista: no ataca. Cada 4 s saca una poción al azar del zurrón y la lanza: las buenas a un aliado y las malas a
+  // un enemigo (ver POCIONES)
+  mira: { hp: 80, speed: 54, cd: [4, 4], range: H * 3.0, ranged: true, h: 1.1, potT: 6,
+    rest: { bh: [-0.257, -0.426], fh: [0.371, -0.479] }, org: [0.505, 1.0], pot: [0.456, -0.608] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -712,7 +727,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -826,6 +841,44 @@ function abaPinchos(x, y) {
   }
   burst(x, y, 0xe8d3b0, 12, 200);
 }
+// pociones de Mira: a quién va (aliado o enemigo), qué cambia y cuánto
+const POCIONES = {
+  roja: { bien: true, k: 'dmg', v: 1.25, c: 0xff3b4a, txt: '+25 % daño' }, morada: { bien: true, k: 'spd', v: 1.25, c: 0xa64dff, txt: '+25 % velocidad' },
+  azul: { bien: true, k: 'atk', v: 1.25, c: 0x3bb5ff, txt: '+25 % ataque' }, verde: { bien: true, k: 'vida', v: 0.25, c: 0x7bdc3a, txt: '+25 % vida' },
+  amarilla: { bien: false, k: 'spd', v: 0.75, c: 0xffd83a, txt: '-25 % velocidad' }, blanca: { bien: false, k: 'atk', v: 0.75, c: 0xf0f0f0, txt: '-25 % ataque' },
+  negra: { bien: false, k: 'dot', v: 0.25, c: 0x2a2a35, txt: 'Veneno' }, naranja: { bien: false, k: 'dmg', v: 0.75, c: 0xff7a1a, txt: '-25 % daño' } };
+const potK = (u, k) => u && u.pot && u.pot[k] && u.pot[k][1] > 0 ? u.pot[k][0] : 1;
+function potApply(v, id, q) {
+  const P = POCIONES[id]; if (!v || !v.alive || v.state === 'die' || v.isCastle) return;
+  v.pot = v.pot || {};
+  if (P.k === 'vida') { const add = Math.round(v.max * P.v); v.max += add; v.hp = Math.min(v.max, v.hp + add); }
+  else if (P.k === 'dot') v.pot.dot = [v.max * P.v / 3, 3];
+  else v.pot[P.k] = [P.v, q.cfg.potT];
+  floatText(v.x, v.gy - H * (v.cfg.h || 1) * (v.bigK || 1) - 30, P.txt, '#' + P.c.toString(16).padStart(6, '0'));
+}
+function potTick(u, dt) {
+  if (!u.pot) return;
+  for (const k in u.pot) if (u.pot[k][1] > 0) u.pot[k][1] -= dt;
+  if (u.pot.dot && u.pot.dot[1] > 0 && u.alive && u.state !== 'die') { u.hp -= u.pot.dot[0] * dt; if (u.hp <= 0) { u.hp = 0; u.set('die'); } }
+  const act = Object.keys(u.pot).find(k => u.pot[k][1] > 0);
+  if (act && Math.random() < 0.15) { const c = act === 'dot' ? 0x2a2a35 : Object.values(POCIONES).find(P => P.k === act && (P.v > 1) === (u.pot[act][0] > 1)).c;
+    fx.push({ x: u.x + rand(-H * 0.25, H * 0.25), y: u.gy - rand(0.2, 1) * H * (u.bigK || 1), vx: 0, vy: -rand(20, 50), g: 0, r: rand(2, 4), life: 0.5, t: 0.5, color: c }); }
+}
+function miraThrow(u, sx, sy) {
+  // poción al azar: si no hay a quién lanzársela, prueba con otra
+  const ids = Object.keys(POCIONES).sort(() => Math.random() - 0.5), near = v => Math.abs(v.x - u.x) <= u.cfg.range * 1.3;
+  for (const id of ids) {
+    const P = POCIONES[id], pool = units.filter(v => v.alive && v.state !== 'die' && v.state !== 'spawn' && !v.isCastle && near(v) && (P.bien ? v.team === u.team : v.team !== u.team));
+    if (!pool.length) continue;
+    const tg = pool[Math.floor(Math.random() * pool.length)], tx = tg.x, ty = tg.gy - H * 0.5 * (tg.bigK || 1), T = Math.max(0.35, Math.abs(tx - sx) / 650);
+    const img = scene.add.image(sx, sy, 'mira_' + id).setDepth(950).setScale(0.32 * H / 96);
+    scene.tweens.add({ targets: img, x: tx, duration: T * 1000 / timeScale });
+    scene.tweens.add({ targets: img, y: { from: sy, to: Math.min(sy, ty) - H * 0.8 }, duration: T * 500 / timeScale, ease: 'Quad.out', yoyo: false, onComplete: () =>
+      scene.tweens.add({ targets: img, y: ty, duration: T * 500 / timeScale, ease: 'Quad.in', onComplete: () => { img.destroy(); burst(tx, ty, P.c, 16, 200); burst(tx, ty, 0xffffff, 6, 140); potApply(tg, id, u); } }) });
+    scene.tweens.add({ targets: img, angle: 360 * u.dir * 2, duration: T * 1000 / timeScale });
+    return;
+  }
+}
 let RHY_ALL = true;                 // en la escena de pruebas se ven las 10; en batalla, las del rango de la unidad
 let slowBy = null, slowReal = 0;    // quién ha ralentizado el tiempo (definitiva de Rhysida) y el dt real de este fotograma
 const BOW = CH.arquera.bow;
@@ -834,7 +887,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1135,6 +1188,13 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'mira') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'mira_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'mira_mano_bolsa').setScale(k);
+      this.held = sc.add.image(0, 0, 'mira_naranja').setScale(0.3 * H / 96).setVisible(false);
+      this.fh = sc.add.image(0, 0, 'mira_mano').setScale(k);
+      this.parts = [this.body, this.bh, this.held, this.fh]; this.rig.add(this.parts); this.drops = [];
     } else if (type === 'kaiju') {
       this.body = sc.add.image(0, 0, 'kai_normal').setOrigin(...this.cfg.org.normal).setScale(H / 512);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = [];
@@ -1499,6 +1559,15 @@ class Unit {
       if (dn > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
       if (p >= 1) this.set('idle');
     }
+  }
+  attackMira(o, t) {
+    // saca una poción del zurrón, la sube y la lanza hacia delante
+    const r = this.cfg.rest, p = t / 0.8;
+    if (p < 0.3) { const e = ease(p / 0.3); o.fh = lerp2(r.fh, [r.bh[0] + 0.15, r.bh[1] - 0.05], e); o.holding = e > 0.8; }
+    else if (p < 0.55) { const e = ease((p - 0.3) / 0.25); o.fh = lerp2([r.bh[0] + 0.15, r.bh[1] - 0.05], [r.fh[0] - 0.12, r.fh[1] - 0.35], e); o.holding = true; o.rot = -0.06 * e; }
+    else { const e = ease(Math.min(1, (p - 0.55) / 0.2)); o.fh = lerp2([r.fh[0] - 0.12, r.fh[1] - 0.35], [r.fh[0] + 0.12, r.fh[1] - 0.05], e); o.rot = -0.06 + 0.14 * e;
+      if (!this.fired) { this.fired = true; const k = this.bigK || 1; miraThrow(this, this.x + this.dir * (o.fh[0] + 0.05) * H * k, this.gy + (o.fh[1] - 0.12) * H * k + this.rig.y); } }
+    if (p >= 1) this.set('idle');
   }
   kaiMouth(pose) {   // la boca en el mundo
     const m = pose === 'estirado' ? this.cfg.mouthS : this.cfg.mouthA, k = this.bigK || 1;
@@ -1916,6 +1985,7 @@ class Unit {
         else if (this.type === 'rhea') this.attackRhea(o, t);
         else if (this.type === 'aurelion') this.attackAur(o, t);
         else if (this.type === 'kaiju') this.attackKai(o, t);
+        else if (this.type === 'mira') this.attackMira(o, t);
         else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
@@ -2346,6 +2416,7 @@ class Unit {
       const white = this.hurtT > 0.22;
       this.parts.forEach(pt => white ? pt.setTintFill(0xffffff) : pt.clearTint());
     }
+    potTick(this, dt);
     if (this.liftT > 0) { this.liftT -= dt; o.hop = (o.hop || 0) + Math.sin(Math.max(0, this.liftT) / 0.5 * Math.PI) * H * 0.5; }   // levantado por los pinchos de Abaddon
     this.apply(o, dt);
   }
@@ -3229,6 +3300,10 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'mira') {
+      this.held.setVisible(!!o.holding).setPosition((o.fh[0] + 0.02) * H, (o.fh[1] - 0.12) * H);
+      if (o.holding && !this.heldId) { this.heldId = Object.keys(POCIONES)[Math.floor(Math.random() * 8)]; this.held.setTexture('mira_' + this.heldId); }
+      if (!o.holding) this.heldId = null;
     } else if (this.type === 'kaiju') {
       const key = o.kai || 'normal'; if (this.body.texture.key !== 'kai_' + key) this.body.setTexture('kai_' + key).setOrigin(...this.cfg.org[key]);
       this.shadow.setSize(H * 1.3, H * 0.24);
@@ -3801,7 +3876,7 @@ function seismicSlam(u) {
     }
   }
 }
-function gullHaste(u) { return gullHaste0(u) * (drumOn(u) ? 1 + ODO.spd : 1); }   // el tambor de Odo también acelera
+function gullHaste(u) { return gullHaste0(u) * (drumOn(u) ? 1 + ODO.spd : 1) * potK(u, 'spd'); }   // el tambor de Odo también acelera
 function gullHaste0(u) {
   // pasiva de Gūll: sus aliados (no él) andan un 15 % más rápido mientras está en el campo
   if (u.type === 'gull' || mode !== 'fight') return 1;
@@ -4088,6 +4163,7 @@ function fightLogic(dt) {
     if (u.type === 'odo') { odoLogic(u, dt); continue; }
     if (u.type === 'rhea') { rheaLogic(u, dt); continue; }
     if (u.type === 'aurelion') { aurLogic(u, dt); continue; }
+    if (u.type === 'mira') { miraLogic(u, dt); continue; }
     if (u.type === 'kaiju') {   // aliento atómico cada 30 s, en cuanto tiene enemigos (o el castillo) por delante
       u.beamT = (u.beamT === undefined ? 6 : u.beamT) - dt;
       if (u.beamT <= 0 && (u.state === 'idle' || u.state === 'walk') && enemiesOf(u).some(v => (v.x - u.x) * u.dir > 0 && Math.abs(v.x - u.x) < H * 7)) { u.beamT = u.cfg.beamCd; u.set('kaiBeam'); continue; }
@@ -4209,6 +4285,15 @@ function torqueLogic(u, dt) {
     if (Math.abs(d) < 10) { u.x = u.tqTo; u.set('idle'); u.tqTo = undefined; }
     u.lane += Math.sign(u.tqLane - u.lane) * Math.min(Math.abs(u.tqLane - u.lane), 20 * dt);
   }
+}
+function miraLogic(u, dt) {
+  // avanza detrás de los suyos hasta tener enemigos a su alcance; desde ahí, una poción cada 4 s
+  const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
+  u.cd = u.cd - dt * (typeof atkK === 'function' ? atkK(u) : 1); if (u.state === 'attack') return;
+  const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
+  if (o && dist <= u.cfg.range) { if (u.state === 'walk') u.set('idle'); u.dir = Math.sign(o.x - u.x) || u.teamDir; if (u.cd <= 0) { u.cd = u.cfg.cd[0]; u.set('attack'); } }
+  else if (!atWall) { if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); } }
+  else if (u.state === 'walk') u.set('idle');
 }
 function aurLogic(u, dt) {
   // cura al aliado más herido a su alcance; cada 50 s revive al aliado caído más cercano; se queda detrás de los suyos
@@ -4454,6 +4539,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'cetro', 'abeja']) L('rhea_' + n, 'rhea/' + n);
       for (const n of ['cuerpo', 'mano', 'puno', 'baculo', 'ala_t', 'ala_d']) L('aur_' + n, 'aurelion/' + n);
       for (const n of ['normal', 'abierta', 'estirado', 'llama', 'aliento']) L('kai_' + n, 'kaiju/' + n);
+      for (const n of ['cuerpo', 'mano', 'mano_bolsa', 'roja', 'morada', 'azul', 'verde', 'amarilla', 'blanca', 'negra', 'naranja']) L('mira_' + n, 'mira/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }

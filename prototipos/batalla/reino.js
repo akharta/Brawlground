@@ -371,7 +371,7 @@ function moveK(u) {
   if (B && B.curse && B.curse.team === u.team) k *= 1 - B.curse.k;
   return k;
 }
-function atkK(u) { return moveK(u) * (drumOn(u) ? 1 + ODO.spd : 1); }   // + el tambor de Odo (al andar ya lo suma gullHaste)   // la velocidad de ataque sigue a la de movimiento (cuerno, ventisca, basilisco, veloz)
+function atkK(u) { return moveK(u) * (drumOn(u) ? 1 + ODO.spd : 1) * potK(u, 'atk'); }   // + el tambor de Odo (al andar ya lo suma gullHaste)   // la velocidad de ataque sigue a la de movimiento (cuerno, ventisca, basilisco, veloz)
 const _ghR = gullHaste;
 gullHaste = function (u) { return _ghR(u) * (mode === 'fight' && B && !B.idle ? moveK(u) : 1); };
 const teamBuffK = team => team === 'blue' && B && B.beast && B.beast.id === 'grifo' ? 1 + B.beast.v : 1;

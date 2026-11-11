@@ -79,6 +79,7 @@ const PERKS = {
   morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
+  mira: [[2, 'Frascos reforzados', 'escudo', 0.25], [4, 'Mano rápida', 'veloz', 0.2], [6, 'Elixir', 'regen', 0.02]],
   kaiju: [[2, 'Escamas de roca', 'escudo', 0.25], [4, 'Furia radiactiva', 'furia', 0.35], [6, 'Rey de los monstruos', 'aguante', 1]],
   aurelion: [[2, 'Gracia', 'escudo', 0.25], [4, 'Luz eterna', 'regen', 0.02], [6, 'Resurrección', 'aguante', 1]],
   rhea: [[2, 'Jalea real', 'escudo', 0.25], [4, 'Enjambre', 'veloz', 0.2], [6, 'Corona de miel', 'regen', 0.02]],
@@ -130,7 +131,8 @@ Unit.prototype.damage = function (d, src, fromX, crit) {
     if (P.furia && src.hp < src.max * 0.5) d *= 1 + P.furia;
     if (P.ejecutar && this.hp < this.max * 0.3) d *= 1 + P.ejecutar;
   }
-  if (src && !crit && drumOn(src) && Math.random() < ODO.crit) { d *= 2; crit = true; }   // tambor de Odo: 35 % de crítico
+  if (src && !crit && drumOn(src) && Math.random() < ODO.crit) { d *= 2; crit = true; }
+  if (src) d *= potK(src, 'dmg');   // pociones de Mira (roja / naranja)   // tambor de Odo: 35 % de crítico
   if (src && src.team && !src.isCastle && units.length) { const a = auraBonus(src); if (a) d *= 1 + a; }
   if (typeof dmgMods === 'function') d = dmgMods(d, src, this);   // bestias y hechizos (reino.js)
   d = Math.max(1, Math.round(d));
