@@ -7325,6 +7325,8 @@ function arrastreTick(dt) {
   const tx = Math.max(FIELD_L, Math.min(lim, wx));
   if (g.nuevo) { g.nuevo = false; g.x = tx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
   const ph = g.x; g.x += (tx - g.x) * (1 - Math.exp(-rdt * 22));
+  // el carril, a la altura del dedo (dentro del camino): se puede soltar arriba, abajo o en medio
+  const lm = (typeof ROAD_HALF !== 'undefined' ? ROAD_HALF : H) * 0.52; g.lane = Math.max(-lm, Math.min(lm, wy + H * 0.55 - GROUND));
   g.heldH = Math.max(H * 0.45, Math.min(H * 4, g.gy - (wy - 26 / z)));
   // péndulo: al moverla, los pies se quedan atrás y luego se mece
   const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
