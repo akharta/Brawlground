@@ -79,7 +79,9 @@ function arrastreTick(dt) {
   const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
   g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
   g.root.setScale(0.2 + 0.8 * ease(g.pop));
-  g.update(rdt); g.root.y = g.gy;
+  const pies = wy + 30 / z;   // por debajo del camino (césped), cuelga del dedo igual: no se queda pegada al borde
+  if (pies > g.gy) g.heldH = H * 0.25;
+  g.update(rdt); g.root.y = Math.max(g.gy, pies);
   // en rojo, el trozo de camino donde no se puede; la marca del suelo, azul si vale y roja si no
   if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
   const G = d.g2, top = GROUND - ROAD_HALF, bot = GROUND + ROAD_HALF, x0 = lim >= FIELD_L ? lim : FIELD_L;
@@ -91,3 +93,4 @@ function arrastreTick(dt) {
 }
 const _battleStepDr = battleStep;
 battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };
+window.__DR = () => DR && { on: DR.on, out: DR.out, ok: DR.ok, g: DR.g && [DR.g.x, DR.g.gy, DR.g.root.visible, DR.g.root.depth, DR.g.root.alpha, DR.g.heldH, DR.g.state, DR.g.root.scale] };

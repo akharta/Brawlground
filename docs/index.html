@@ -4573,6 +4573,35 @@ function castleVariants(sc) {
     sc.textures.addCanvas(key, cv);
   }
 }
+/* ---- arqueros de las torres: van encima del dibujo del castillo (en el mismo sitio que los pintados) y se animan al disparar:
+   el arco apunta al objetivo y retrocede con el tiro. Medidas en píxeles del dibujo del castillo ---- */
+const ARQ = { on: false, body: [463, 105.5, 201], bow: [562, 124.5, 115], dy: 660, dx: 5, t: 0.45 };   // on: cuando los castillos vengan sin los arqueros pintados
+let torreArq = {};
+function torreArqueros(sc) {
+  if (!ARQ.on) return;
+  for (const team of ['blue', 'purple']) torreArq[team] = [0, 1].map(() => ({
+    bow: sc.add.image(0, 0, 'torre_arco').setOrigin(0.674, 0.517).setDepth(-1497),
+    body: sc.add.image(0, 0, 'torre_cuerpo').setDepth(-1498),
+    hand: sc.add.image(0, 0, 'torre_mano').setDepth(-1496) }));
+}
+function torreArqTick(dt) {
+  const now = scene.time.now / 1000;
+  for (const team of ['blue', 'purple']) (torreArq[team] || []).forEach((A, i) => {
+    const s = B && B[team], c = castles[team], vis = !!(c && c.alive);
+    for (const k of ['body', 'bow', 'hand']) A[k].setVisible(vis); if (!vis) return;
+    const col = TEAM_COLOR[team], fl = team === 'purple' ? -1 : 1;
+    const wx = cx => { const x = CAS.x0 + cx * CAS.k; return team === 'blue' ? x : W - x; }, wy = cy => CAS.y0 + (cy - CAS.oy) * CAS.ky;
+    const oy = i * ARQ.dy, ox = i * ARQ.dx, T = s && s.arqT ? s.arqT[i] || 0 : 0;
+    if (s && s.arqT && T > 0) s.arqT[i] = Math.max(0, T - dt);
+    const p = T > 0 ? 1 - T / ARQ.t : 1, kick = T > 0 ? Math.sin(Math.min(1, p * 3) * Math.PI) * (1 - p) : 0;
+    const aim = (s && s.arqA ? s.arqA[i] || 0 : 0) * (T > 0 ? Math.min(1, (1 - p) * 3) : 0), bob = Math.sin(now * 2.6 + i * 1.7 + (team === 'blue' ? 0 : 1)) * 1.2;
+    const kb = CAS.k * ARQ.body[2] / 300, kw = CAS.k * ARQ.bow[2] / 240;
+    A.body.setTexture(colorTex('torre_cuerpo', col)).setPosition(wx(ARQ.body[0] + ox), wy(ARQ.body[1] + oy + bob)).setScale(fl * kb, kb * CAS.ky / CAS.k);
+    const bx = wx(ARQ.bow[0] + ox - 10 * kick), by = wy(ARQ.bow[1] + oy + bob * 0.6);
+    A.bow.setTexture(colorTex('torre_arco', col)).setPosition(bx, by).setScale(fl * kw, kw * CAS.ky / CAS.k).setRotation(fl * aim);
+    A.hand.setTexture(colorTex('torre_mano', col)).setPosition(bx, by).setScale(fl * kb, kb * CAS.ky / CAS.k);
+  });
+}
 const archPos = (team, i) => { const [ax, ay] = CAS.arch[i], x = CAS.x0 + ax * CAS.k; return [team === 'blue' ? x : W - x, CAS.y0 + (ay - CAS.oy) * CAS.ky]; };
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
@@ -4686,6 +4715,8 @@ function towers(dt) {
     if (!foes.length) { s.towerT = 0.2; continue; }
     const tg = foes.sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0];
     s.towerI = ((s.towerI || 0) + 1) % 2; const [sx, sy] = archPos(team, s.towerI);   // dispara el arquero de una torre y luego el de la otra
+    s.arqT = s.arqT || [0, 0]; s.arqA = s.arqA || [0, 0]; s.arqT[s.towerI] = ARQ.t;
+    s.arqA[s.towerI] = Math.max(-0.6, Math.min(0.6, Math.atan2(tg.gy - H * 0.45 - sy, Math.abs(tg.x - sx))));
     const tx = tg.x, ty = tg.gy - H * 0.45, T = Math.max(0.35, Math.abs(tx - sx) / 700), g = 900;
     const img = scene.add.image(sx, sy, colorTex(team === 'blue' ? 'flecha_azul' : 'flecha_morada', TEAM_COLOR[team])).setOrigin(0.85, 0.5).setScale(0.55 * H / 512).setDepth(950);
     arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, dmg: Math.round(TOWER.dmg * (s.towerK || 1)), stuck: 0 });
@@ -4801,6 +4832,7 @@ function escPreload(L) {
   L.image(escena, 'img/esc/' + escena + '.jpg');
   for (const id of CASTILLOS) L.image('cas_' + id, 'img/castillos/' + id + '.png');
   L.image('aldric_sentado', 'img/aldric_sentado.png');
+  for (const n of ['cuerpo', 'mano', 'arco']) L.image('torre_' + n, 'img/torre/' + n + '.png');
   for (const k in ICONOS) L.image(k, 'img/campana/' + k + '.png');
   L.image('moneda', 'img/esc/moneda.png'); L.image('flecha_azul', 'img/esc/flecha_azul.png'); L.image('flecha_morada', 'img/esc/flecha_morada.png');
   for (const e of ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna', 'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas']) L.image('emb_' + e, 'img/emb/' + e + '.png');
@@ -4886,6 +4918,7 @@ function create() {
   throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499);
   throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499).setFlipX(true);
   setThrone(throneImg, 'aldric_sentado'); setThrone(throneImgP, 'aldric_sentado');
+  torreArqueros(this);
   castleG = this.add.graphics().setDepth(990);
   fxG = this.add.graphics().setDepth(980);
   frameCamera(); startDemo();
@@ -4926,7 +4959,7 @@ function update(_, deltaMs) {
     if (l.img.y > l.floor) { l.img.y = l.floor; l.vy *= -0.35; l.vx *= 0.6; l.spin *= 0.5; }
     l.img.setAlpha(Math.min(1, l.life / 0.4));
   }
-  if (B) { drawCastleUI(dt); if (!B.auto) { uiTick(); colocaAnillos(); } }
+  if (B) { torreArqTick(dt); drawCastleUI(dt); if (!B.auto) { uiTick(); colocaAnillos(); } }
 }
 function start() {
   const g = $('game');
@@ -5147,7 +5180,7 @@ const KD = id => KINGDOMS.find(k => k.id === id);
 const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
-const SRC_HUE = { cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], flecha_azul: [0.53, 0.70, 'azul'], flecha_morada: [0.70, 0.86, 'morado'] };
+const SRC_HUE = { torre_: [0.53, 0.70, 'azul'], cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], flecha_azul: [0.53, 0.70, 'azul'], flecha_morada: [0.70, 0.86, 'morado'] };
 // emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
 const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
   'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
@@ -7320,7 +7353,9 @@ function arrastreTick(dt) {
   const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
   g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
   g.root.setScale(0.2 + 0.8 * ease(g.pop));
-  g.update(rdt); g.root.y = g.gy;
+  const pies = wy + 30 / z;   // por debajo del camino (césped), cuelga del dedo igual: no se queda pegada al borde
+  if (pies > g.gy) g.heldH = H * 0.25;
+  g.update(rdt); g.root.y = Math.max(g.gy, pies);
   // en rojo, el trozo de camino donde no se puede; la marca del suelo, azul si vale y roja si no
   if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
   const G = d.g2, top = GROUND - ROAD_HALF, bot = GROUND + ROAD_HALF, x0 = lim >= FIELD_L ? lim : FIELD_L;
@@ -7332,6 +7367,7 @@ function arrastreTick(dt) {
 }
 const _battleStepDr = battleStep;
 battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };
+window.__DR = () => DR && { on: DR.on, out: DR.out, ok: DR.ok, g: DR.g && [DR.g.x, DR.g.gy, DR.g.root.visible, DR.g.root.depth, DR.g.root.alpha, DR.g.heldH, DR.g.state, DR.g.root.scale] };
 
 /* ==== Deslizar entre las pestañas de la barra (Tienda · Reino · Campaña · Ejército · Eventos): la pantalla sigue al dedo
    1:1 (si lo mueves despacio y poco, se mueve despacio y poco) y la de al lado entra a la vez. Al soltar, si pasaste

@@ -85,7 +85,7 @@ const KD = id => KINGDOMS.find(k => k.id === id);
 const COLORES = { azul: ['Azul', '#3b82f6'], rojo: ['Rojo', '#dc3232'], negro: ['Negro', '#2b2b33'], verde: ['Verde', '#2faa52'], dorado: ['Dorado', '#f2b41e'],
   rosa: ['Rosa', '#ec5aa8'], naranja: ['Naranja', '#f2781e'], blanco: ['Blanco', '#eef0f5'], morado: ['Morado', '#8b5cf6'] };
 // tono de las banderas en cada dibujo original (fracción del círculo de color): azul en lo del jugador, morado en lo del rival
-const SRC_HUE = { cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], flecha_azul: [0.53, 0.70, 'azul'], flecha_morada: [0.70, 0.86, 'morado'] };
+const SRC_HUE = { torre_: [0.53, 0.70, 'azul'], cas_: [0.58, 0.69, 'azul', 0.72, 0.62], icono_: [0.70, 0.86, 'morado'], flecha_azul: [0.53, 0.70, 'azul'], flecha_morada: [0.70, 0.86, 'morado'] };
 // emblemas para el estandarte (img/emb) y dónde está el estandarte grande de cada castillo (fracciones: x, y, ancho, alto)
 const EMBLEMAS = ['leon', 'aguila', 'ciervo', 'jabali', 'dragon', 'lobo', 'zarpa', 'pluma', 'corona', 'espadas', 'martillo', 'torre', 'arbol', 'lis', 'sol', 'luna',
   'buho', 'caballo', 'cobra', 'carnero', 'hacha', 'arco', 'llave', 'ancla', 'caliz', 'reloj', 'calavera', 'yunque', 'flor', 'copo', 'llama', 'montanas'];
