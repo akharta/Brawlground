@@ -4530,7 +4530,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 1.6, x0: -976, oy: 454, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 1.6, x0: -976, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -4817,7 +4817,7 @@ function drawScenery(sc) {
   // la escena (vertical) cubre el ancho del campo, con su camino centrado en GROUND; por encima, su cielo y por debajo, su prado
   escObjs.forEach(o => o.destroy()); escObjs = []; clouds = [];
   const f = ESC[escena]; if (!f || !sc.textures.exists(escena)) return;
-  const s = (W + 2 * VIEW_M) / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
+  const s = W / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;   // la escena cubre el campo; detrás de los castillos se repite en espejo
   ROADW = (f.b - f.t) * ih; ROAD_HALF = ROADW / 2;
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
