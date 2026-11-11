@@ -16,6 +16,7 @@ const HABILIDAD = {
   morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
+  ignis: 'Alterna bola de fuego con la mano y llamarada con el bastón, que quema en área. Su cuerpo arde: quema a los enemigos que tiene a melé.',
   valdrys: 'Tanque sin armas: aguanta en primera línea tras su escudo y cada 5 s lo lanza hecho luz, atravesando a todos los enemigos de su camino.',
   ezra: 'No ataca: cada 15 s alza su espejo ante un enemigo y de él sale una copia de cristal de ese enemigo que lucha de tu lado.',
   zero: 'Ataca con su sombra, que toma formas y envuelve al enemigo. Definitiva (a los 30 s, una vez): oscuridad total 3 s; después mueren los enemigos con la mitad de vida o menos y el resto pierde un 30 %.',

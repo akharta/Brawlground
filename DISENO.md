@@ -530,3 +530,10 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - Cada 5 s, si hay un enemigo a 3,2 H, el escudo se ilumina y lo lanza hecho luz: va recto 4,8 H, atraviesa a todos los enemigos (16–20 de daño a cada uno) y se va apagando hasta la luz tenue y desaparecer. Los escudos enemigos no lo paran; el castillo sí.
 - Tras lanzarlo, el escudo se le vuelve a formar en las manos desde la luz tenue en ~1 s.
 - Mejoras: Égida (escudo), Coraza solar (espinas), Fe inquebrantable (regeneración).
+
+## Ignis, el Mago de fuego (épica)
+
+- A distancia (2,6 H). Alterna sus ataques: bola de fuego con la mano libre (14–18 a un enemigo) y llamarada con el bastón (10–13 a todos los enemigos que tiene delante hasta 2,7 H, castillo incluido).
+- Su cuerpo arde: cada 0,5 s quema con 4 de daño a los enemigos que tiene a melé (0,85 H).
+- El fuego de la cabeza se anima con un resplandor que late y lenguas de fuego y chispas que suben.
+- Mejoras: Brasas (crítico), Piel ardiente (espinas), Infierno (velocidad).

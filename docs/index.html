@@ -1062,6 +1062,11 @@ const CH = {
   // lucha de su lado
   // Valdrys, el Escudo del paladín: tanque sin armas. Aguanta en primera línea tras su escudo y cada 5 s lo lanza hecho luz:
   // atraviesa a todos los enemigos de su camino y se apaga; el escudo se le vuelve a formar en las manos
+  // Ignis, el Mago de fuego: alterna bola de fuego (mano libre) y llamarada (bastón, daño en área). Su cuerpo arde y quema a
+  // los enemigos que tiene a melé
+  ignis: { hp: 130, dmg: [14, 18], flameDmg: [10, 13], speed: 50, cd: [1.6, 1.9], range: H * 2.6, ranged: true, h: 1.1, flameL: H * 2.7,
+    burn: 4, burnR: H * 0.85, burnCd: 0.5,
+    rest: { bh: [-0.253, -0.306], fh: [0.376, -0.346] }, org: [0.495, 1], grip: [0.311, 0.595], nat: -1.885, tip: 0.239 },
   valdrys: { hp: 440, dmg: [16, 20], speed: 32, cd: [5, 5], range: H * 0.9, ranged: false, h: 1.15, block: 0.4, throwR: H * 3.2, throwD: H * 4.8,
     rest: { bh: [0.255, -0.565], fh: [0.241, -0.291] }, org: [0.511, 1], shOff: [0.311, -0.083] },
   ezra: { hp: 110, speed: 52, cd: [15, 15], range: H * 2.6, ranged: true, h: 1.1, copyHp: 1,
@@ -1167,7 +1172,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { valdrys: 'epica', ezra: 'epica', zero: 'ascendida', mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { ignis: 'epica', valdrys: 'epica', ezra: 'epica', zero: 'ascendida', mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -1330,6 +1335,20 @@ function ezraCopy(q, tg, mx, my) {
   for (let i = 0; i < 18; i++) fx.push({ x: mx + rand(-12, 12), y: my + rand(-12, 12), vx: q.dir * rand(60, 260), vy: rand(-120, 60), g: 200, r: rand(2, 5), life: 0.5, t: 0.5, color: Math.random() < 0.5 ? GLASS : 0xffffff });
   burst(tg.x, tg.gy - H * 0.5, GLASS, 10, 160);
 }
+function ignisBall(u, sx, sy) {
+  // bola de fuego de la mano libre, recta al enemigo más cercano
+  let tg = null, tx, ty;
+  if (mode === 'anim') { tx = u.x + u.dir * H * 3; ty = u.gy - H * 0.45; } else { tg = nearestEnemy(u); if (!tg) return; tx = tg.x; ty = tg.gy - H * 0.45; }
+  const d = Math.hypot(tx - sx, ty - sy), T = Math.max(0.18, d / 720);
+  const img = scene.add.image(sx, sy, 'ign_bola').setScale(0.45 * H / 236).setDepth(950).setFlipY(u.dir < 0);
+  burst(sx, sy, 0xffa030, 6, 130);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy) / T, g: 0, t: 0, T, target: tg, trail: 0xff8a2a, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, fire: true });
+}
+function ignisFlame(u) {
+  // la llamarada quema a todos los enemigos que tiene delante, hasta donde llega
+  const L = u.cfg.flameL * (u.bigK || 1);
+  for (const v of enemiesOf(u)) { const dx = (v.x - u.x) * u.dir; if (dx > -H * 0.2 && dx <= L + (v.isCastle ? H * 0.6 : 0)) { v.damage(Math.round(rand(...u.cfg.flameDmg)), u, u.x); burst(v.x, v.gy - H * 0.5, 0xff7a1a, 5, 120); } }
+}
 function valThrow(u) {
   // el escudo, hecho luz, sale recto: atraviesa a todos los enemigos y se va apagando hasta desvanecerse
   const k = u.bigK || 1, sx = u.x + u.dir * 0.8 * H * k, sy = u.gy - 0.5 * H * k, v = 640;
@@ -1357,7 +1376,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { valdrys: 'Valdrys, el Escudo del paladín', ezra: 'Ezra, el Ilusionista', zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { ignis: 'Ignis, el Mago de fuego', valdrys: 'Valdrys, el Escudo del paladín', ezra: 'Ezra, el Ilusionista', zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1658,6 +1677,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'ignis') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'ign_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.weapon = sc.add.image(0, 0, 'ign_baston').setOrigin(c.grip[0], c.grip[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'ign_puno').setScale(k);
+      this.fh = sc.add.image(0, 0, 'ign_mano').setScale(k);
+      this.headGlow = sc.add.image(0, -H * 0.82, 'auraDot').setTint(0xff8a2a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.5);
+      this.rig.add(this.headGlow); this.rig.sendToBack(this.headGlow);
+      this.parts = [this.body, this.weapon, this.bh, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 7]];
     } else if (type === 'valdrys') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'val_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -2055,6 +2083,31 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackIgnis(o, t) {
+    // alterna: bola de fuego con la mano libre / llamarada con el bastón
+    if (t === 0 || this.ignFl === undefined) this.ignFl = (this.ignN || 0) % 2 === 1;
+    const r = this.cfg.rest, k = this.bigK || 1;
+    if (!this.ignFl) {
+      const p = t / 0.7, back = p < 0.4 ? ease(p / 0.4) : 0, fw = p < 0.4 ? 0 : p < 0.55 ? ease((p - 0.4) / 0.15) : 1 - ease((p - 0.55) / 0.45);
+      o.fh = [r.fh[0] - 0.12 * back + 0.2 * fw, r.fh[1] - 0.06 * back + 0.04 * fw]; o.rot = -0.04 * back + 0.06 * fw;
+      if (back > 0.2 && Math.random() < 0.5) fx.push({ x: this.x + this.dir * o.fh[0] * H * k + rand(-6, 6), y: this.gy + (o.fh[1] - 0.05) * H * k, vx: rand(-15, 15), vy: -rand(30, 80), g: 0, r: rand(2, 4), life: 0.3, t: 0.3, color: Math.random() < 0.5 ? 0xffc23a : 0xff6a1a });
+      if (p >= 0.5 && !this.fired) { this.fired = true; ignisBall(this, this.x + this.dir * (o.fh[0] + 0.12) * H * k, this.gy + o.fh[1] * H * k); }
+      if (p >= 1) { this.ignN = (this.ignN || 0) + 1; this.ignFl = undefined; this.set('idle'); }
+      return;
+    }
+    const p = t / 1.2, up = p < 0.3 ? ease(p / 0.3) : p < 0.8 ? 1 : 1 - ease((p - 0.8) / 0.2);
+    o.wa = 1.45 * up; o.bh = [r.bh[0] + 0.12 * up, r.bh[1] - 0.08 * up]; o.rot = 0.05 * up;
+    const a = this.cfg.nat + o.wa, hx = o.bh[0] + Math.cos(a) * this.cfg.tip, hy = o.bh[1] + Math.sin(a) * this.cfg.tip;
+    if (!this.flame) this.flame = this.sc.add.image(0, 0, 'ign_llama').setOrigin(0.03, 0.42).setDepth(951).setVisible(false);
+    const on = p > 0.25 && p < 0.92, grow = Math.min(1, (p - 0.25) / 0.12), fade = p > 0.8 ? 1 - (p - 0.8) / 0.12 : 1;
+    if (on) {
+      const sc = this.cfg.flameL * k / 1019 * grow, fl = 1 + 0.12 * Math.sin(this.sc.time.now / 30);
+      this.flame.setVisible(true).setPosition(this.x + this.dir * hx * H * k, this.gy + hy * H * k + this.rig.y).setScale(this.dir * sc, sc / 1.6 * fl * Math.max(0.4, grow)).setRotation(0.16 * this.dir).setAlpha(Math.max(0, fade));
+      if (Math.random() < 0.7) fx.push({ x: this.x + this.dir * (hx * H * k + rand(0, this.cfg.flameL * k * grow)), y: this.gy + hy * H * k + rand(-10, 30), vx: this.dir * rand(20, 80), vy: -rand(20, 70), g: 0, r: rand(2, 4), life: 0.35, t: 0.35, color: Math.random() < 0.5 ? 0xffd23a : 0xff5a1a });
+    } else this.flame.setVisible(false);
+    if (p >= 0.42 && !this.fired) { this.fired = true; if (mode === 'fight') ignisFlame(this); }
+    if (p >= 1) { this.flame.setVisible(false); this.ignN = (this.ignN || 0) + 1; this.ignFl = undefined; this.set('idle'); }
+  }
   attackValdrys(o, t) {
     // el escudo se ilumina mientras lo echa atrás, y lo lanza de un empujón
     const r = this.cfg.rest, p = t / 1.0;
@@ -2361,6 +2414,7 @@ class Unit {
     else if (this.type === 'aurelion') { o.st = 0; o.glow = 0; }
     else if (this.type === 'ezra') { o.ma = 0.1; o.shine = 0; }
     else if (this.type === 'valdrys') { o.glow = 0; }
+    else if (this.type === 'ignis') { o.wa = 0; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -2419,6 +2473,7 @@ class Unit {
         if (this.type === 'nul') { o.st = 0.04 * breathe; o.rot = 0.02 * Math.sin(now * 1.6); }
         if (this.type === 'nivea') { o.bk = [0, 0.012 * Math.sin(now * 2.2 + this.homeX)]; }
         if (this.type === 'ivo') o.wa += 0.06 * breathe;
+        if (this.type === 'ignis') { o.wa += 0.05 * breathe; o.fh[1] += 0.012 * Math.sin(now * 2.6 + this.homeX); }
         if (this.type === 'anubek') o.ka += 0.04 * breathe;
         if (this.type === 'morgana') { o.fh[1] += 0.015 * Math.sin(now * 2.4 + this.homeX); }
         if (this.type === 'torque') { o.wa += 0.05 * breathe; o.bkr = 0.05 * Math.sin(now * 2 + this.homeX); }
@@ -2522,6 +2577,7 @@ class Unit {
         else if (this.type === 'zero') this.attackZero(o, t);
         else if (this.type === 'ezra') this.attackEzra(o, t);
         else if (this.type === 'valdrys') this.attackValdrys(o, t);
+        else if (this.type === 'ignis') this.attackIgnis(o, t);
         else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
@@ -3856,6 +3912,13 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'ignis') {
+      this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation(this.cfg.nat + (o.wa || 0));
+      if (this.flame && this.state !== 'attack') this.flame.setVisible(false);
+      // el fuego de su cabeza: resplandor que late y lenguas de fuego y chispas que suben
+      const now = this.sc.time.now / 1000, k = this.bigK || 1;
+      this.headGlow.setScale((H / 40) * (1 + 0.12 * Math.sin(now * 9) + 0.06 * Math.sin(now * 23))).setAlpha(this.state === 'die' ? 0 : 0.35 + 0.15 * Math.sin(now * 13));
+      if (this.state !== 'die' && Math.random() < 0.55) fx.push({ x: this.x + this.dir * rand(-0.32, 0.3) * H * k, y: this.gy - rand(0.75, 1.08) * H * k + this.rig.y, vx: rand(-12, 12), vy: -rand(40, 110), g: 0, r: rand(1.5, 3.5), life: 0.45, t: 0.45, color: [0xffd23a, 0xff8a2a, 0xff4a1a][Math.floor(Math.random() * 3)] });
     } else if (this.type === 'valdrys') {
       // el escudo va en los puños; tras lanzarlo se vuelve a formar de luz tenue
       const c = this.cfg, sx = (o.bh[0] + o.fh[0]) / 2 + c.shOff[0], sy = (o.bh[1] + o.fh[1]) / 2 + c.shOff[1], st = this.shT === undefined ? 9 : this.shT;
@@ -4749,6 +4812,10 @@ function fightLogic(dt) {
     if (u.type === 'aurelion') { aurLogic(u, dt); continue; }
     if (u.type === 'mira') { miraLogic(u, dt); continue; }
     if (u.type === 'valdrys') { valLogic(u, dt); continue; }
+    if (u.type === 'ignis' && u.state !== 'die') {   // su cuerpo arde: quema a los enemigos que tiene a melé
+      u.burnT = (u.burnT || 0) - dt;
+      if (u.burnT <= 0) { u.burnT = u.cfg.burnCd; for (const v of enemiesOf(u)) if (!v.isCastle && Math.abs(v.x - u.x) <= u.cfg.burnR * (u.bigK || 1)) { v.damage(u.cfg.burn, u, u.x); burst(v.x, v.gy - H * 0.4, 0xff6a1a, 4, 90); } }
+    }
     if (u.type === 'ezra') { if (!u.ezFirst) { u.ezFirst = true; u.cd = Math.min(u.cd, 2.5); } miraLogic(u, dt); continue; }   // la primera copia, enseguida
     if (u.type === 'kaiju') {   // aliento atómico cada 30 s, en cuanto tiene enemigos (o el castillo) por delante
       u.beamT = (u.beamT === undefined ? 6 : u.beamT) - dt;
@@ -5085,7 +5152,7 @@ function makeAuraTextures(sc) {
 }
 /* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "valdrys": 5, "ezra": 5, "zero": 7, "mira": 3, "kaiju": 7, "aurelion": 6, "rhea": 4, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
+const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "ignis": 5, "valdrys": 5, "ezra": 5, "zero": 7, "mira": 3, "kaiju": 7, "aurelion": 6, "rhea": 4, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata'; LABEL.abeja = 'Abeja';
 const ALL = Object.keys(NAMES);
@@ -5110,7 +5177,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira' && k !== 'zero' && k !== 'ezra') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira' && k !== 'zero' && k !== 'ezra' && k !== 'ignis') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -5561,6 +5628,7 @@ function start() {
       for (const n of ['normal', 'abierta', 'estirado', 'llama', 'aliento']) L('kai_' + n, 'kaiju/' + n);
       for (const n of ['cuerpo', 'mano_senala', 'puno', 'espejo']) L('ezr_' + n, 'ezra/' + n);
       for (const n of ['cuerpo', 'puno', 'escudo', 'escudo_luz', 'escudo_tenue']) L('val_' + n, 'valdrys/' + n);
+      for (const [a, b] of [['cuerpo', 'cuerpo'], ['puno', 'puno'], ['mano', 'mano'], ['baston', 'baston'], ['bola', 'bola'], ['llama', 'llamarada']]) L('ign_' + a, 'ignis/' + b);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'sombra', 'cuerpo_ulti', 'agarre', 'mano_ab_t', 'mano_ab_d', 'forma0', 'forma1', 'forma2', 'forma3', 'forma4', 'forma5', 'forma6', 'forma7', 'forma8']) L('zer_' + n, 'zero/' + n);
       for (const n of ['cuerpo', 'mano', 'mano_bolsa', 'roja', 'morada', 'azul', 'verde', 'amarilla', 'blanca', 'negra', 'naranja']) L('mira_' + n, 'mira/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
@@ -5702,7 +5770,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'mira', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'ezra', 'valdrys', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'aurelion', 'kaiju', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'mira', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'ezra', 'valdrys', 'ignis', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'aurelion', 'kaiju', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
@@ -6240,6 +6308,7 @@ const HABILIDAD = {
   morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
+  ignis: 'Alterna bola de fuego con la mano y llamarada con el bastón, que quema en área. Su cuerpo arde: quema a los enemigos que tiene a melé.',
   valdrys: 'Tanque sin armas: aguanta en primera línea tras su escudo y cada 5 s lo lanza hecho luz, atravesando a todos los enemigos de su camino.',
   ezra: 'No ataca: cada 15 s alza su espejo ante un enemigo y de él sale una copia de cristal de ese enemigo que lucha de tu lado.',
   zero: 'Ataca con su sombra, que toma formas y envuelve al enemigo. Definitiva (a los 30 s, una vez): oscuridad total 3 s; después mueren los enemigos con la mitad de vida o menos y el resto pierde un 30 %.',
@@ -6630,6 +6699,7 @@ const PERKS = {
   morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
+  ignis: [[2, 'Brasas', 'crit', 0.2], [4, 'Piel ardiente', 'espinas', 0.25], [6, 'Infierno', 'veloz', 0.25]],
   valdrys: [[2, 'Égida', 'escudo', 0.25], [4, 'Coraza solar', 'espinas', 0.2], [6, 'Fe inquebrantable', 'regen', 0.02]],
   ezra: [[2, 'Cristal templado', 'escudo', 0.25], [4, 'Doble truco', 'veloz', 0.25], [6, 'Gran ilusión', 'regen', 0.02]],
   zero: [[2, 'Sombra densa', 'escudo', 0.25], [4, 'Hambre del vacío', 'robo', 0.2], [6, 'Nada', 'ejecutar', 0.5]],
