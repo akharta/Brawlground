@@ -153,6 +153,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="aurelion" aria-pressed="false">Aurelion, el Bastón del paladín</button>
       <button data-char="kaiju" aria-pressed="false">Kaiju Tomo, el Lagarto colosal</button>
       <button data-char="mira" aria-pressed="false">Mira, la Alquimista</button>
+      <button data-char="zero" aria-pressed="false">Zero, el Niño de amarillo</button>
       <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="tormund" aria-pressed="false">Tormund, el Berserker</button>
       <button data-char="rufo" aria-pressed="false">Rufo, el Perro cobarde</button>
@@ -271,6 +272,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card ascended" aria-label="Carta de Zero, el Niño de amarillo">
+        <div class="cost">7</div>
+        <div class="art"><img src="img/zero_carta.png" alt="Ilustración de Zero, el Niño de amarillo"></div>
+        <div class="name">Zero</div>
+        <div class="cls">el Niño de amarillo</div>
+        <div class="rar">Ascendida</div>
+      </div>
+      <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>28 con la sombra</dd><dt>Definitiva</dt><dd>Oscuridad total</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card rare" aria-label="Carta de Mira, la Alquimista">
@@ -626,6 +637,11 @@ const CH = {
   // un enemigo (ver POCIONES)
   mira: { hp: 80, speed: 54, cd: [4, 4], range: H * 3.0, ranged: true, h: 1.1, potT: 6,
     rest: { bh: [-0.257, -0.426], fh: [0.371, -0.479] }, org: [0.505, 1.0], pot: [0.456, -0.608] },
+  // Zero, el Niño de amarillo (ascendido): le acompaña el vacío, una sombra negra. Ataca con ella: vuela hasta el enemigo, toma una
+  // forma y lo envuelve. Definitiva (a los 30 s, una vez): la sombra lo alza de la capucha y todo se vuelve negro 3 s; después,
+  // los enemigos con la mitad de vida o menos mueren y el resto pierde un 30 % de su vida
+  zero: { hp: 150, dmg: [24, 30], speed: 52, cd: [1.4, 1.8], range: H * 2.6, ranged: true, h: 1.0, ultWait: 30,
+    rest: { bh: [-0.25, -0.296], fh: [0.239, -0.366] }, org: [0.492, 1.0], face: [87, 147, 160], uorg: [0.098, 0.367], uh: [[-0.086, 0.197], [0.382, 0.198]], gorg: [0.78, 0.511] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -727,7 +743,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { zero: 'ascendida', mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -887,7 +903,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1188,6 +1204,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'zero') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'zer_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'zer_mano_t').setScale(k);
+      this.fh = sc.add.image(0, 0, 'zer_mano_d').setScale(k);
+      this.ubody = sc.add.image(0, 0, 'zer_cuerpo_ulti').setOrigin(c.uorg[0], c.uorg[1]).setScale(k).setVisible(false);
+      this.ugrab = sc.add.image(0, 0, 'zer_agarre').setOrigin(c.gorg[0], c.gorg[1]).setScale(k).setVisible(false);
+      this.uhl = sc.add.image(0, 0, 'zer_mano_ab_t').setScale(k).setVisible(false); this.uhr = sc.add.image(0, 0, 'zer_mano_ab_d').setScale(k).setVisible(false);
+      this.parts = [this.body, this.bh, this.fh]; this.rig.add([this.ugrab, this.ubody, this.uhl, this.uhr].concat(this.parts)); this.drops = [];
     } else if (type === 'mira') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'mira_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -1305,6 +1330,7 @@ class Unit {
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nivea') this.shots = 0;
     if (this.type === 'aurelion') this.revT = 0;
+    if (this.type === 'zero') { this.ultT = this.cfg.ultWait; this.zat = null; if (this.zdark) { this.zdark.destroy(); this.zdark = null; } }
     if (this.type === 'kaiju') { this.beamT = 6; if (this.beamImg) this.beamImg.setVisible(false); }
     if (this.type === 'abaddon') { this.abaInit = false; this.abaK = 1; this.stompT = 2; this.devT = 0; this.devTg = null; }
     if (this.type === 'morgana') { this.mor = null; if (this.plasmaG) this.plasmaG.clear(); }
@@ -1329,7 +1355,7 @@ class Unit {
     if (!this.ultReady) return false;
     if (mode === 'fight' && !enemiesOf(this).length) return false;
     this.ultUsed = true; this.inPlace = false;
-    this.set(this.type === 'imparable' ? 'ultE' : this.type === 'rhysida' ? 'ultR' : this.type === 'nul' ? 'ultN' : 'ultX'); return true;
+    this.set(this.type === 'imparable' ? 'ultE' : this.type === 'rhysida' ? 'ultR' : this.type === 'nul' ? 'ultN' : this.type === 'zero' ? 'ultZ' : 'ultX'); return true;
   }
   ultIconPos() { const k = this.bigK || 1; return [this.x, this.gy - H * this.cfg.h * k - (mode === 'fight' ? 62 : 44)]; }
   drawUltReady() {
@@ -1339,11 +1365,11 @@ class Unit {
     }
     // lista: un círculo con el retrato de su cara sobre la cabeza, que late; tócalo (o a la unidad) para lanzarla
     const ready = this.ultReady;
-    if (!this.ultIcon && ready) this.ultIcon = this.sc.add.image(0, 0, 'ultface_' + (this.type === 'imparable' ? 'imp' + this.form : this.type === 'rhysida' ? 'rhy' : this.type === 'nul' ? 'nul' : 'ce')).setDepth(995);
+    if (!this.ultIcon && ready) this.ultIcon = this.sc.add.image(0, 0, 'ultface_' + (this.type === 'imparable' ? 'imp' + this.form : this.type === 'rhysida' ? 'rhy' : this.type === 'nul' ? 'nul' : this.type === 'zero' ? 'zero' : 'ce')).setDepth(995);
     if (!this.ultIcon) return;
     this.ultIcon.setVisible(ready);
     if (!ready) return;
-    const key = 'ultface_' + (this.type === 'imparable' ? 'imp' + this.form : this.type === 'rhysida' ? 'rhy' : this.type === 'nul' ? 'nul' : 'ce');
+    const key = 'ultface_' + (this.type === 'imparable' ? 'imp' + this.form : this.type === 'rhysida' ? 'rhy' : this.type === 'nul' ? 'nul' : this.type === 'zero' ? 'zero' : 'ce');
     if (this.ultIcon.texture.key !== key) this.ultIcon.setTexture(key);
     const now = this.sc.time.now / 1000, p = 0.5 + 0.5 * Math.sin(now * 5), [ix, iy] = this.ultIconPos();
     this.ultIcon.setPosition(ix, iy + Math.sin(now * 3) * 3).setScale(ULT_ICON / 128 * (1 + 0.06 * p));
@@ -1559,6 +1585,23 @@ class Unit {
       if (dn > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
       if (p >= 1) this.set('idle');
     }
+  }
+  zeroShadow() {   // la sombra del vacío: una imagen suelta en el mundo que le sigue (o vuela a atacar)
+    if (!this.zsh || !this.zsh.scene) this.zsh = scene.add.image(this.x, this.gy, 'zer_sombra').setOrigin(0.5, 1);
+    return this.zsh;
+  }
+  attackZero(o, t) {
+    // la sombra vuela hasta el enemigo, toma una forma, lo envuelve y vuelve a ser la sombra pequeña
+    const p = t / 1.0, r = this.cfg.rest;
+    if (t < 0.02 || !this.zat) {
+      const tg = mode === 'fight' ? nearestEnemy(this) : null;
+      this.zat = { tg, x: tg ? tg.x : this.x + this.dir * H * 2, y: tg ? tg.gy : this.gy, shape: 'zer_forma' + Math.floor(Math.random() * 9), hit: false };
+    }
+    const A = this.zat, k = Math.sin(Math.min(1, p / 0.3) * Math.PI / 2);
+    o.fh = lerp2(r.fh, [r.fh[0] + 0.12, r.fh[1] - 0.15], p < 0.8 ? k : 1 - (p - 0.8) / 0.2);   // la mano señala al enemigo
+    if (A.tg && A.tg.alive && A.tg.state !== 'die') { A.x = A.tg.x; A.y = A.tg.gy; }
+    if (!A.hit && p >= 0.45) { A.hit = true; if (mode === 'fight' && A.tg && A.tg.alive && A.tg.state !== 'die') A.tg.damage(Math.round(rand(...this.cfg.dmg)), this); }
+    if (p >= 1) { this.zat = null; this.set('idle'); }
   }
   attackMira(o, t) {
     // saca una poción del zurrón, la sube y la lanza hacia delante
@@ -1986,6 +2029,7 @@ class Unit {
         else if (this.type === 'aurelion') this.attackAur(o, t);
         else if (this.type === 'kaiju') this.attackKai(o, t);
         else if (this.type === 'mira') this.attackMira(o, t);
+        else if (this.type === 'zero') this.attackZero(o, t);
         else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
@@ -2053,6 +2097,22 @@ class Unit {
       }
       case 'ultR': this.ultRhy(o, t); break;
       case 'ultN': this.ultNul(o, t); break;
+      case 'ultZ': {                 // la sombra lo alza de la capucha; abre las manos, ojos en blanco: oscuridad total 3 s
+        if (!this.zdark) { this.zdark = scene.add.rectangle(W / 2, HGT / 2, W * 6, HGT * 12, 0x000000, 0).setDepth(5000); this.zdone = false; }
+        const lift = Math.min(1, t / 0.6); o.hop = H * 0.55 * ease(lift); o.zult = true;
+        const a = t < 0.6 ? 0 : t < 0.9 ? (t - 0.6) / 0.3 : t < 3.9 ? 1 : Math.max(0, 1 - (t - 3.9) / 0.4);
+        this.zdark.setFillStyle(0x000000, a);
+        if (t >= 3.9 && !this.zdone) {
+          this.zdone = true;
+          if (mode === 'fight') enemiesOf(this).filter(v => !v.isCastle && v.alive && v.state !== 'die').forEach(v => {
+            if (v.hp <= v.max * 0.5) { v.damage(v.hp + 99999, this); } else v.damage(Math.round(v.hp * 0.3), this);
+            burst(v.x, v.gy - H * 0.5, 0x111111, 14, 200);
+          });
+          this.sc.cameras.main.flash(200, 255, 255, 255);
+        }
+        if (t >= 4.4) { this.zdark.destroy(); this.zdark = null; this.set('idle'); }
+        break;
+      }
       case 'kaiBeam': {              // aliento atómico: carga con la boca abierta y lanza el rayo por todo el carril
         const k = this.bigK || 1;
         if (!this.plasmaG) this.plasmaG = scene.add.graphics().setDepth(958);
@@ -3300,6 +3360,26 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'zero') {
+      // normal: niño y manos; en la definitiva, el cuerpo alzado, las manos abiertas y la sombra agarrando la capucha
+      const c = this.cfg, U = !!o.zult, now = this.sc.time.now / 1000, dead = this.state === 'die';
+      [this.body, this.bh, this.fh].forEach(pt => pt.setVisible(!U)); [this.ubody, this.ugrab, this.uhl, this.uhr].forEach(pt => pt.setVisible(U));
+      if (U) {
+        const hy = -H * 0.95; this.ubody.setPosition(0, hy); this.ugrab.setPosition(0.01 * H, hy).setRotation(0.05 * Math.sin(now * 3));
+        this.uhl.setPosition(c.uh[0][0] * H, hy + c.uh[0][1] * H).setRotation(-0.2 + 0.1 * Math.sin(now * 9)); this.uhr.setPosition(c.uh[1][0] * H, hy + c.uh[1][1] * H).setRotation(0.2 - 0.1 * Math.sin(now * 9));
+      }
+      const sh = this.zeroShadow(), k = this.bigK || 1; sh.setVisible(!dead && !U);
+      const A = this.state === 'attack' ? this.zat : null, home = [this.x - this.dir * H * 0.45 * k, this.gy + 2];
+      if (A) {   // fuera y vuelta: crece y toma forma alrededor del enemigo
+        const p = Math.min(1, this.t / 1.0), go = Math.min(1, p / 0.3), back = p > 0.75 ? (p - 0.75) / 0.25 : 0, at = p >= 0.3 && p < 0.75;
+        const x = lerp(lerp(home[0], A.x, ease(go)), home[0], ease(back)), y = lerp(lerp(home[1], A.y, ease(go)), home[1], ease(back));
+        if (at) { if (sh.texture.key !== A.shape) sh.setTexture(A.shape).setOrigin(0.5, 0.85); const q = Math.sin((p - 0.3) / 0.45 * Math.PI); sh.setPosition(x, y).setScale((0.4 + 1.2 * q) * H / 256 * k, (0.4 + 1.2 * q) * H / 256 * k).setRotation(0.15 * Math.sin(now * 8)); }
+        else { if (sh.texture.key !== 'zer_sombra') sh.setTexture('zer_sombra').setOrigin(0.5, 1); sh.setPosition(x, y - Math.sin(go * Math.PI) * H * 0.4).setScale(0.55 * H / 512 * k * 1.4).setRotation(0); }
+        sh.setDepth(Math.max(this.gy, A.y) + 3);
+      } else {
+        if (sh.texture.key !== 'zer_sombra') sh.setTexture('zer_sombra').setOrigin(0.5, 1);
+        sh.setPosition(home[0], home[1] - Math.abs(Math.sin(now * 2.2 + this.homeX)) * H * 0.04).setScale(H / 512 * 0.75 * k * (1 + 0.04 * Math.sin(now * 3)), H / 512 * 0.75 * k).setRotation(0).setDepth(this.gy - 1).setFlipX(this.dir < 0);
+      }
     } else if (this.type === 'mira') {
       this.held.setVisible(!!o.holding).setPosition((o.fh[0] + 0.02) * H, (o.fh[1] - 0.12) * H);
       if (o.holding && !this.heldId) { this.heldId = Object.keys(POCIONES)[Math.floor(Math.random() * 8)]; this.held.setTexture('mira_' + this.heldId); }
@@ -3828,7 +3908,7 @@ function impHitOn(u, v, k) {
 function makeUltFaces(sc) {
   // retratos redondos para el botón de la definitiva, recortados de la cara de cada cuerpo
   rhyFrames(sc); const rf = RHY_FR.gris_cuerpo;
-  const list = [['nul', 'nul_cuerpo', [CH.nul.face[0], CH.nul.face[1], CH.nul.face[2], CH.nul.face[2]]], ['rhy', 'rhy', [rf[0] + 160, rf[1] + 125, 260, 260]], ['ce', 'ce_cuerpo', [30, 50, 270, 270]], ['imp1', 'imp_cuerpo', [150, 110, 250, 250]], ['imp2', 'imp_mon_cuerpo', [170, 110, 250, 250]], ['imp3', 'imp_esp_cuerpo', [140, 120, 230, 230]]];
+  const list = [['zero', 'zer_cuerpo', [CH.zero.face[0], CH.zero.face[1], CH.zero.face[2], CH.zero.face[2]]], ['nul', 'nul_cuerpo', [CH.nul.face[0], CH.nul.face[1], CH.nul.face[2], CH.nul.face[2]]], ['rhy', 'rhy', [rf[0] + 160, rf[1] + 125, 260, 260]], ['ce', 'ce_cuerpo', [30, 50, 270, 270]], ['imp1', 'imp_cuerpo', [150, 110, 250, 250]], ['imp2', 'imp_mon_cuerpo', [170, 110, 250, 250]], ['imp3', 'imp_esp_cuerpo', [140, 120, 230, 230]]];
   for (const [k, src, [sx, sy, sw, sh]] of list) {
     if (sc.textures.exists('ultface_' + k) || !sc.textures.exists(src)) continue;
     const t = sc.textures.createCanvas('ultface_' + k, 128, 128), c = t.getContext(), img = sc.textures.get(src).getSourceImage();
@@ -4149,7 +4229,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kaiBeam', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kaiBeam', 'ultZ', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -4443,7 +4523,7 @@ function drawStage(g) {
 
 /* ---- montaje de modos ---- */
 function clearUnits() {
-  units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy(); }); units = [];
+  units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy(); }); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
   rockets.forEach(r => r.img.destroy()); rockets = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
@@ -4539,6 +4619,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'cetro', 'abeja']) L('rhea_' + n, 'rhea/' + n);
       for (const n of ['cuerpo', 'mano', 'puno', 'baculo', 'ala_t', 'ala_d']) L('aur_' + n, 'aurelion/' + n);
       for (const n of ['normal', 'abierta', 'estirado', 'llama', 'aliento']) L('kai_' + n, 'kaiju/' + n);
+      for (const n of ['cuerpo', 'mano_t', 'mano_d', 'sombra', 'cuerpo_ulti', 'agarre', 'mano_ab_t', 'mano_ab_d', 'forma0', 'forma1', 'forma2', 'forma3', 'forma4', 'forma5', 'forma6', 'forma7', 'forma8']) L('zer_' + n, 'zero/' + n);
       for (const n of ['cuerpo', 'mano', 'mano_bolsa', 'roja', 'morada', 'azul', 'verde', 'amarilla', 'blanca', 'negra', 'naranja']) L('mira_' + n, 'mira/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
@@ -4634,7 +4715,7 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kaiBeam', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kaiBeam', 'ultZ', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
   if (act === 'storm') { if (u.type === 'lyra') { u.inPlace = false; u.set('storm'); } return; }

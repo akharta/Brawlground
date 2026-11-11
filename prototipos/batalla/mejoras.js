@@ -79,6 +79,7 @@ const PERKS = {
   morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
+  zero: [[2, 'Sombra densa', 'escudo', 0.25], [4, 'Hambre del vacío', 'robo', 0.2], [6, 'Nada', 'ejecutar', 0.5]],
   mira: [[2, 'Frascos reforzados', 'escudo', 0.25], [4, 'Mano rápida', 'veloz', 0.2], [6, 'Elixir', 'regen', 0.02]],
   kaiju: [[2, 'Escamas de roca', 'escudo', 0.25], [4, 'Furia radiactiva', 'furia', 0.35], [6, 'Rey de los monstruos', 'aguante', 1]],
   aurelion: [[2, 'Gracia', 'escudo', 0.25], [4, 'Luz eterna', 'regen', 0.02], [6, 'Resurrección', 'aguante', 1]],

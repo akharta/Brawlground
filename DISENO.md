@@ -505,3 +505,13 @@ Arte en bruto en `arte/alquimista/`; piezas del juego en `docs/img/mira/`.
   - Amarilla −25 % velocidad · Blanca −25 % velocidad de ataque · Negra −25 % de vida a lo largo de 3 s · Naranja −25 % daño.
 - Los efectos (salvo verde y negra) duran 6 s; la unidad suelta chispitas del color de la poción mientras dura.
 - Provisional: 80 de vida. Rango: Frascos reforzados (escudo), Mano rápida (más rápida), Elixir (regenera).
+
+## Zero, el Niño de amarillo (ascendido, coste 7)
+
+Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
+- Le acompaña el vacío: una sombra negra pequeña que flota a su lado. Ataca con ella (24–30): vuela hasta el enemigo, toma una
+  de las 9 formas de la plantilla (al azar), crece envolviéndolo y vuelve a ser la sombra pequeña.
+- Definitiva (disponible a los 30 s de salir, una sola vez; se lanza tocando su retrato con marco morado): la sombra lo alza de
+  la capucha, abre las manos con los ojos en blanco y todo se vuelve negro absoluto 3 s. Después, los enemigos con la mitad de
+  vida o menos mueren y el resto pierde un 30 % de la vida que les quede (el castillo no).
+- Provisional: 150 de vida. Rango: Sombra densa (escudo), Hambre del vacío (robo), Nada (ejecutar).

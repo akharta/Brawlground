@@ -25,7 +25,7 @@ function drFantasma(t) {
   g.root.setDepth(1500); g.bar.clear(); g.root.setScale(0.2); g.pop = 0; g.nuevo = true;
   return g;
 }
-function drQuita(g) { if (!g) return; g.root.destroy(); g.bar.destroy(); ['laserG', 'ultIcon', 'plasmaG', 'beamG'].forEach(k => { if (g[k]) g[k].destroy(); }); }
+function drQuita(g) { if (!g) return; g.root.destroy(); g.bar.destroy(); if (g.zsh) g.zsh.destroy(); ['laserG', 'ultIcon', 'plasmaG', 'beamG'].forEach(k => { if (g[k]) g[k].destroy(); }); }
 function drFin(soltar) {
   const d = DR; if (!d) return; DR = null;
   const c = d.c; c.classList.remove('drag', 'fuera', 'nope'); c.style.transform = '';

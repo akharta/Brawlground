@@ -25,7 +25,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira' && k !== 'zero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -154,7 +154,7 @@ function onDead(u) {            // en batalla las bajas no vuelven (salvo que Au
   if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen)) {
     B.fallen = B.fallen || { blue: [], purple: [] }; B.fallen[u.team].push({ type: u.type, x: u.x, lane: u.lane, lv: u.lv, rk: u.rk });
   }
-  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
+  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
