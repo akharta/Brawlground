@@ -2,7 +2,7 @@
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
 const COST = __COST__;
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata'; LABEL.abeja = 'Abeja';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null, paused = false;
@@ -25,7 +25,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -366,7 +366,7 @@ function frameCamera() {
   const gm = window.__game, cw = gm.scale.width, ch = gm.scale.height, battle = !$('hud').hidden;
   if (!$('menu').hidden) {   // menú: un tramo del camino, entre la barra de arriba y el botón de batalla, con las unidades más grandes
     const t = $('hubtop').getBoundingClientRect().bottom + 40, bt = $('hubbot').getBoundingClientRect().top - 4, Y1 = GROUND + ROADW / 2 + 30, Y0 = GROUND - ROADW / 2 - H * 1.2;
-    const z = Math.min(cw / 860, Math.max(60, bt - t) * DPR / (Y1 - Y0), 0.7 * DPR);   // en pantallas grandes, sin pasarse de tamaño
+    const z = Math.min(cw / 2300, Math.max(60, bt - t) * DPR / (Y1 - Y0), 0.7 * DPR);   // un buen tramo del camino: así el fondo no se ve borroso
     cam.setZoom(z); cam.centerOn(W / 2, Y1 - (bt * DPR - ch / 2) / z);
     zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss)); drawScenery(scene); return;
   }

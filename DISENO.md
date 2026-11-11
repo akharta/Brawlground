@@ -471,3 +471,11 @@ Arte en bruto en `arte/abaddon/`; piezas del juego en `docs/img/abaddon/` (poses
 ## Ajustes
 - Unidades un 20 % más grandes (H = 374 en batalla); las marcas de Elyss y las cargas de Nul, a escala.
 - Todos los tiradores, un 25 % menos de alcance. Nivea: copos 4–5 y cristal 15–19.
+
+## Rhea, la Reina abeja (poco común, coste 4)
+
+Arte en bruto en `arte/abeja/`; piezas del juego en `docs/img/rhea/`.
+- No ataca. Avanza hasta tener un enemigo a la distancia de tiro de Cole y desde ahí, cada 1,5 s, alza el cetro y de su panal
+  sale una abeja que crece hasta la mitad de su tamaño. Hasta 6 abejas vivas a la vez.
+- Abeja: vuela, rápida, pica cuerpo a cuerpo (22 de vida, 4–6). Provisional: Rhea 110 de vida.
+- Rango: Jalea real (escudo), Enjambre (más rápida), Corona de miel (regenera).

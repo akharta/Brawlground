@@ -1036,6 +1036,11 @@ const CH = {
   // tamaño y vida. El crecimiento se acumula en la batalla: los siguientes Abaddon de ese bando salen ya crecidos
   abaddon: { hp: 320, dmg: [22, 28], speed: 46, cd: [1.3, 1.6], range: H * 1.1, ranged: false, h: 1.25, org: [0.399, 0.997], rest: { bh: [0, 0], fh: [0, 0] },
     stompCd: 20, stompR: H * 2.8, stompDmg: 40, stompStun: 1, devourCd: 15, devourHp: 0.15, grow: 1.1 },
+  // Rhea, la Reina abeja: no ataca. A la distancia de tiro de Cole, cada 1,5 s alza el cetro y de él sale una abeja que crece
+  // hasta la mitad de su tamaño y vuela a picar (hasta 6 a la vez)
+  rhea: { hp: 110, speed: 50, cd: [1.5, 1.5], range: H * 2.7, ranged: true, h: 1.15, bees: 6,
+    rest: { bh: [-0.166, -0.302], fh: [0.371, -0.34] }, org: [0.556, 0.999], grip: [0.337, 0.522], sA: -1.343, len: 0.782 },
+  abeja: { hp: 22, dmg: [4, 6], speed: 96, cd: [0.6, 0.85], range: H * 0.55, ranged: false, h: 0.6, rest: { bh: [0, 0], fh: [0, 0] } },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -1137,7 +1142,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -1235,6 +1240,12 @@ function ivoRay(u, wx, wy) {
   if (tg) tg.damage(Math.round(rand(...u.cfg.dmg)), u, u.x);
 }
 let ABA_STACK = { blue: 0, purple: 0 };   // crecimiento de Abaddon acumulado en esta batalla, por bando
+function rheaBee(q, x, y) {
+  // la abeja nace en el cetro, pequeña, y crece hasta la mitad del tamaño de la reina
+  const b = new Unit(scene, 'abeja', q.team, x); b.queen = q; b.lane = q.lane + rand(-24, 24); b.root.y = b.gy; b.born = 0; b.lv = q.lv; b.rk = q.rk;
+  b.bornY = y - b.gy; b.set('idle'); units.push(b); q.beeList = (q.beeList || []).concat(b);
+  burst(x, y, 0xffc83d, 8, 140);
+}
 function abaPinchos(x, y) {
   // brotan pinchos de hueso del suelo bajo el enemigo y se hunden de nuevo
   for (let i = 0; i < 3; i++) {
@@ -1253,7 +1264,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1554,6 +1565,16 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'rhea') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'rhea_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'rhea_mano').setScale(k);
+      this.weapon = sc.add.image(0, 0, 'rhea_cetro').setOrigin(c.grip[0], c.grip[1]).setScale(k);
+      this.fh = sc.add.image(0, 0, 'rhea_mano').setScale(k);
+      this.parts = [this.bh, this.body, this.weapon, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 8]];
+    } else if (type === 'abeja') {
+      this.body = sc.add.image(0, 0, 'rhea_abeja').setOrigin(0.5, 0.7);
+      this.parts = [this.body]; this.rig.add(this.parts); this.drops = [];
     } else if (type === 'abaddon') {
       this.body = sc.add.image(0, 0, 'aba_normal').setOrigin(this.cfg.org[0], this.cfg.org[1]).setScale(H / 512);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = [];
@@ -1895,6 +1916,17 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackRhea(o, t) {
+    // alza el cetro hacia delante y de su panal sale una abeja
+    const c = this.cfg, r = c.rest, p = t / 0.6, k = p < 0.35 ? ease(p / 0.35) : p < 0.6 ? 1 : 1 - ease((p - 0.6) / 0.4);
+    o.fh = [r.fh[0] + 0.06 * k, r.fh[1] - 0.12 * k]; o.sa = lerp(c.sA, -0.55, k); o.rot = -0.04 * k;
+    if (p >= 0.4 && !this.fired) {
+      this.fired = true; const kk = this.bigK || 1, L = c.len * 0.93;
+      const x = this.x + this.dir * (o.fh[0] + Math.cos(o.sa) * L) * H * kk, y = this.gy + (o.fh[1] + Math.sin(o.sa) * L) * H * kk;
+      rheaBee(this, x, y);
+    }
+    if (p >= 1) this.set('idle');
+  }
   attackAba(o, t) {
     // abre las fauces, se echa atrás y se lanza a morder
     const p = t / 0.6, k = p < 0.4 ? ease(p / 0.4) : 0, l = p < 0.4 ? 0 : p < 0.55 ? easeIn((p - 0.4) / 0.15) : 1 - ease((p - 0.55) / 0.45);
@@ -2111,6 +2143,7 @@ class Unit {
     else if (this.type === 'torque') { o.wa = -0.9; o.bkr = 0; }
     else if (this.type === 'anubek') { o.ka = -1.85; }
     else if (this.type === 'morgana') { o.nd = null; o.thread = 0; }
+    else if (this.type === 'rhea') { o.sa = this.cfg.sA; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -2265,6 +2298,8 @@ class Unit {
         else if (this.type === 'anubek') this.attackAnubek(o, t);
         else if (this.type === 'morgana') this.attackMorgana(o, t);
         else if (this.type === 'abaddon') this.attackAba(o, t);
+        else if (this.type === 'rhea') this.attackRhea(o, t);
+        else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
         else if (this.type === 'tormund') this.attackTor(o, t);
@@ -3546,6 +3581,17 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'rhea') {
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.sa === undefined ? this.cfg.sA : o.sa);
+    } else if (this.type === 'abeja') {
+      // vuela: flota a media altura, aletea (se estira un poco) y crece al nacer
+      const now = this.sc.time.now / 1000, qk = this.queen ? (this.queen.bigK || 1) : 1;
+      this.born = Math.min(1, (this.born || 0) + (dt || 0) / 0.45);
+      const g = 0.2 + 0.8 * ease(this.born), size = 0.5 * 1.15 * H * qk * g / 256;
+      this.body.setScale(size * (1 + 0.04 * Math.sin(now * 40)), size);
+      const fly = H * 0.45 * qk + Math.sin(now * 5 + this.homeX) * H * 0.05;
+      this.rig.y = -(this.state === 'die' ? fly * Math.max(0, 1 - this.t * 2) : fly) + (this.bornY !== undefined ? (this.bornY + fly) * (1 - ease(this.born)) : 0);
+      this.shadow.setSize(H * 0.3 * g * qk, H * 0.07 * g * qk);
     } else if (this.type === 'abaddon') {
       if (!this.abaInit && this.state !== 'held') {   // sale con el crecimiento acumulado de su bando en esta batalla
         this.abaInit = true; const n = mode === 'fight' ? ABA_STACK[this.team] || 0 : 0, g = Math.pow(this.cfg.grow, n);
@@ -4373,6 +4419,7 @@ function fightLogic(dt) {
     }
     if (u.type === 'fraile') { friarLogic(u, dt); continue; }
     if (u.type === 'odo') { odoLogic(u, dt); continue; }
+    if (u.type === 'rhea') { rheaLogic(u, dt); continue; }
     if (u.type === 'torque') { torqueLogic(u, dt); continue; }
     if (u.type === 'rufo' && (u.state === 'idle' || u.state === 'walk')) { const e = nearestEnemy(u); u.cfg.range = e && !(u.rufoDone && u.rufoDone.has(e)) ? CH.rufo.range : H * 0.8; }   // a cada rival nuevo, otra vez mordisco y huida
     if (u.type === 'catapulta') { siegeLogic(u, dt); continue; }
@@ -4490,6 +4537,18 @@ function torqueLogic(u, dt) {
     if (Math.abs(d) < 10) { u.x = u.tqTo; u.set('idle'); u.tqTo = undefined; }
     u.lane += Math.sign(u.tqLane - u.lane) * Math.min(Math.abs(u.tqLane - u.lane), 20 * dt);
   }
+}
+function rheaLogic(u, dt) {
+  // avanza hasta tener a un enemigo a su distancia y desde ahí suelta abejas (máximo 6 vivas)
+  const o = nearestEnemy(u), dist = o ? Math.abs(o.x - u.x) : Infinity;
+  u.beeList = (u.beeList || []).filter(b => b.alive && b.state !== 'die' && units.includes(b));
+  u.cd = u.cd - dt * (typeof atkK === 'function' ? atkK(u) : 1); if (u.state === 'attack') return;
+  const wall = u.teamDir > 0 ? W - 150 : 150, atWall = u.teamDir > 0 ? u.x >= wall : u.x <= wall;
+  if (o && dist <= u.cfg.range) {
+    if (u.state === 'walk') u.set('idle'); u.dir = Math.sign(o.x - u.x) || u.teamDir;
+    if (u.cd <= 0 && u.beeList.length < u.cfg.bees) { u.cd = u.cfg.cd[0]; u.set('attack'); }
+  } else if (!atWall) { if (u.state === 'idle') { u.dir = u.teamDir; u.set('walk'); } }
+  else if (u.state === 'walk') u.set('idle');
 }
 function odoLogic(u, dt) {
   // no ataca: sigue dos pasos por detrás del aliado que lleva delante (o del más adelantado); no se mete entre los enemigos
@@ -4648,9 +4707,9 @@ function makeAuraTextures(sc) {
 }
 /* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
+const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "rhea": 4, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
-LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata';
+LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata'; LABEL.abeja = 'Abeja';
 const ALL = Object.keys(NAMES);
 const EMAX = 10, EREGEN = 1 / 3.5, DOUBLE_AT = 120, CASTLE_HP = 1500, HERO_GOAL = CH.aldric.goal, TOWER = { range: H * 3.2, cd: 1.3, dmg: 8 };
 let B = null, castles = {}, castleG, flashG, throneImg = null, throneImgP = null, paused = false;
@@ -4673,7 +4732,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -5014,7 +5073,7 @@ function frameCamera() {
   const gm = window.__game, cw = gm.scale.width, ch = gm.scale.height, battle = !$('hud').hidden;
   if (!$('menu').hidden) {   // menú: un tramo del camino, entre la barra de arriba y el botón de batalla, con las unidades más grandes
     const t = $('hubtop').getBoundingClientRect().bottom + 40, bt = $('hubbot').getBoundingClientRect().top - 4, Y1 = GROUND + ROADW / 2 + 30, Y0 = GROUND - ROADW / 2 - H * 1.2;
-    const z = Math.min(cw / 860, Math.max(60, bt - t) * DPR / (Y1 - Y0), 0.7 * DPR);   // en pantallas grandes, sin pasarse de tamaño
+    const z = Math.min(cw / 2300, Math.max(60, bt - t) * DPR / (Y1 - Y0), 0.7 * DPR);   // un buen tramo del camino: así el fondo no se ve borroso
     cam.setZoom(z); cam.centerOn(W / 2, Y1 - (bt * DPR - ch / 2) / z);
     zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss)); drawScenery(scene); return;
   }
@@ -5114,6 +5173,7 @@ function start() {
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'varita']) L('ivo_' + n, 'ivo/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'carrete', 'aguja']) L('mor_' + n, 'morgana/' + n);
+      for (const n of ['cuerpo', 'mano', 'cetro', 'abeja']) L('rhea_' + n, 'rhea/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
@@ -5253,7 +5313,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
@@ -5791,6 +5851,7 @@ const HABILIDAD = {
   morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
+  rhea: 'No ataca: desde la distancia de Cole, cada 1,5 s su cetro suelta una abeja que vuela a picar (hasta 6 a la vez).',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
   ivo: 'Agita la varita y lanza rayos de luz que dan al instante.',
   honderillo: 'Voltea la honda sobre la cabeza y lanza piedras en parábola desde lejos.',
@@ -6174,6 +6235,7 @@ const PERKS = {
   morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
+  rhea: [[2, 'Jalea real', 'escudo', 0.25], [4, 'Enjambre', 'veloz', 0.2], [6, 'Corona de miel', 'regen', 0.02]],
   odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],
   ivo: [[2, 'Chispa', 'crit', 0.2], [4, 'Varita rápida', 'veloz', 0.2], [6, 'Rayo maestro', 'ejecutar', 0.5]],
   honderillo: [[2, 'Piedra afilada', 'crit', 0.2], [4, 'Brazo suelto', 'veloz', 0.2], [6, 'Pedrada', 'aturdir', 0.2]],
