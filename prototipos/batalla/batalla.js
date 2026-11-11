@@ -25,7 +25,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -149,8 +149,11 @@ function onKill(u) {
   B[other].kills++;   // las bajas ya no dan energía: solo se recarga con el tiempo
   if (u.type !== 'esqueleto') { const s = stat(u.team, u.type); s.deaths++; if (s.firstDeath === null) s.firstDeath = B.t; }
 }
-function onDead(u) {            // en batalla las bajas no vuelven
+function onDead(u) {            // en batalla las bajas no vuelven (salvo que Aurelion las reviva: se apuntan sus caídos)
   if (B && !B.over) onKill(u);
+  if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen)) {
+    B.fallen = B.fallen || { blue: [], purple: [] }; B.fallen[u.team].push({ type: u.type, x: u.x, lane: u.lane, lv: u.lv, rk: u.rk });
+  }
   units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
 }
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando

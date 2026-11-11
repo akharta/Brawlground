@@ -156,6 +156,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="morgana" aria-pressed="false">Morgana, la Costurera oscura</button>
       <button data-char="abaddon" aria-pressed="false">Abaddon, el Devorador insaciable</button>
       <button data-char="rhea" aria-pressed="false">Rhea, la Reina abeja</button>
+      <button data-char="aurelion" aria-pressed="false">Aurelion, el Bastón del paladín</button>
       <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="tormund" aria-pressed="false">Tormund, el Berserker</button>
       <button data-char="rufo" aria-pressed="false">Rufo, el Perro cobarde</button>
@@ -274,6 +275,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta de Aurelion, el Bastón del paladín">
+        <div class="cost">6</div>
+        <div class="art"><img src="img/aurelion_carta.png" alt="Ilustración de Aurelion, el Bastón del paladín"></div>
+        <div class="name">Aurelion</div>
+        <div class="cls">el Bastón del paladín</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>170</dd><dt>Cura</dt><dd>25 por destello</dd><dt>Cada 50 s</dt><dd>Revive a un aliado</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card uncommon" aria-label="Carta de Rhea, la Reina abeja">
@@ -587,6 +598,10 @@ const CH = {
   rhea: { hp: 110, speed: 50, cd: [1.5, 1.5], range: H * 2.7, ranged: true, h: 1.15, bees: 6,
     rest: { bh: [-0.166, -0.302], fh: [0.371, -0.34] }, org: [0.556, 0.999], grip: [0.337, 0.522], sA: -1.343, len: 0.782 },
   abeja: { hp: 22, dmg: [4, 6], speed: 96, cd: [0.6, 0.85], range: H * 0.55, ranged: false, h: 0.6, rest: { bh: [0, 0], fh: [0, 0] } },
+  // Aurelion, el Bastón del paladín: vuela batiendo sus alas de cristal; cura a los aliados con destellos verdes y dorados de su
+  // báculo y, cada 50 s, revive al aliado caído más cercano
+  aurelion: { hp: 170, heal: [22, 28], speed: 50, cd: [2.0, 2.6], range: H * 3.2, ranged: true, h: 1.15, fly: 0.22, keepBack: H * 2.4, reviveCd: 50,
+    rest: { bh: [-0.257, -0.55], fh: [0.381, -0.419] }, org: [0.53, 1.0], grip: [0.349, 0.657], sA: 0.064, tip: [0.069, -0.633], w0: [-0.2, -0.566], w1: [0.208, -0.566], w0o: [0.965, 0.726], w1o: [0.075, 0.694] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -688,7 +703,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -810,7 +825,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1111,6 +1126,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'aurelion') {
+      const k = H / 512, c = this.cfg;
+      this.wingB = sc.add.image(0, 0, 'aur_ala_t').setOrigin(c.w0o[0], c.w0o[1]).setScale(k);
+      this.wingF = sc.add.image(0, 0, 'aur_ala_d').setOrigin(c.w1o[0], c.w1o[1]).setScale(k);
+      this.body = sc.add.image(0, 0, 'aur_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'aur_mano').setScale(k);
+      this.weapon = sc.add.image(0, 0, 'aur_baculo').setOrigin(c.grip[0], c.grip[1]).setScale(k);
+      this.fh = sc.add.image(0, 0, 'aur_puno').setScale(k);
+      this.parts = [this.wingB, this.wingF, this.body, this.bh, this.weapon, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 7]];
     } else if (type === 'rhea') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'rhea_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -1208,6 +1232,7 @@ class Unit {
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nivea') this.shots = 0;
+    if (this.type === 'aurelion') this.revT = 0;
     if (this.type === 'abaddon') { this.abaInit = false; this.abaK = 1; this.stompT = 2; this.devT = 0; this.devTg = null; }
     if (this.type === 'morgana') { this.mor = null; if (this.plasmaG) this.plasmaG.clear(); }
     if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
@@ -1462,6 +1487,17 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackAur(o, t) {
+    // alza el báculo, la gema brilla y sale un destello que vuela hasta el aliado herido
+    const r = this.cfg.rest, p = t / 0.7, k = p < 0.35 ? ease(p / 0.35) : p < 0.6 ? 1 : 1 - ease((p - 0.6) / 0.4);
+    o.fh = [r.fh[0] + 0.06 * k, r.fh[1] - 0.14 * k]; o.st = 0.35 * k; o.glow = k; o.bh = [r.bh[0] + 0.05 * k, r.bh[1] - 0.08 * k];
+    if (p >= 0.45 && !this.fired) { this.fired = true; aurHeal(this, o); }
+    if (p >= 1) this.set('idle');
+  }
+  aurTip(o) {   // la gema del báculo, en el mundo
+    const c = this.cfg, k = this.bigK || 1, a = (o && o.st) || 0, tx = c.tip[0] * Math.cos(a) - c.tip[1] * Math.sin(a), ty = c.tip[0] * Math.sin(a) + c.tip[1] * Math.cos(a);
+    const fh = o ? o.fh : c.rest.fh; return [this.x + this.dir * (fh[0] + tx * this.dir * this.dir) * H * k, this.gy + (fh[1] + ty) * H * k + this.rig.y];
+  }
   attackRhea(o, t) {
     // alza el cetro hacia delante y de su panal sale una abeja
     const c = this.cfg, r = c.rest, p = t / 0.6, k = p < 0.35 ? ease(p / 0.35) : p < 0.6 ? 1 : 1 - ease((p - 0.6) / 0.4);
@@ -1690,6 +1726,7 @@ class Unit {
     else if (this.type === 'anubek') { o.ka = -1.85; }
     else if (this.type === 'morgana') { o.nd = null; o.thread = 0; }
     else if (this.type === 'rhea') { o.sa = this.cfg.sA; }
+    else if (this.type === 'aurelion') { o.st = 0; o.glow = 0; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -1845,6 +1882,7 @@ class Unit {
         else if (this.type === 'morgana') this.attackMorgana(o, t);
         else if (this.type === 'abaddon') this.attackAba(o, t);
         else if (this.type === 'rhea') this.attackRhea(o, t);
+        else if (this.type === 'aurelion') this.attackAur(o, t);
         else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
@@ -1912,6 +1950,13 @@ class Unit {
       }
       case 'ultR': this.ultRhy(o, t); break;
       case 'ultN': this.ultNul(o, t); break;
+      case 'aurRevive': {            // alza el báculo al cielo: cae una columna de luz sobre el caído y vuelve a la batalla
+        const r = this.cfg.rest, e = ease(Math.min(1, t / 0.4));
+        o.fh = [r.fh[0] - 0.05 * e, r.fh[1] - 0.3 * e]; o.st = -0.15 * e; o.glow = e; o.bh = [r.bh[0], r.bh[1] - 0.2 * e];
+        if (!this.fired && t >= 0.5) { this.fired = true; aurRevive(this); }
+        if (t >= 1.2) { this.fired = false; this.set('idle'); }
+        break;
+      }
       case 'abaStomp': {             // se alza y da un pisotón: brotan pinchos bajo los enemigos cercanos
         const k = this.abaK || 1;
         if (t < 0.4) { const e = ease(t / 0.4); o.hop = H * 0.35 * e; o.rot = -0.1 * e; o.abaTex = 'aba_cerrada'; }
@@ -3127,6 +3172,15 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'aurelion') {
+      // alas: baten de verdad (bajada rápida, subida lenta), cada una con su giro y su escorzo; vuela a media altura
+      const c = this.cfg, now = this.sc.time.now / 1000, dead = this.state === 'die', ph = (now * 2.6 + this.homeX * 0.01) % 1;
+      const fl = ph < 0.4 ? Math.sin(ph / 0.4 * Math.PI / 2) : Math.cos((ph - 0.4) / 0.6 * Math.PI / 2), beat = dead ? 0 : 1 - 2 * fl;   // +1 arriba, -1 abajo
+      this.wingB.setPosition(c.w0[0] * H, c.w0[1] * H).setRotation(0.35 * beat).setScale(H / 512 * (1 - 0.18 * Math.max(0, -beat)), H / 512 * (1 - 0.1 * Math.abs(beat)));
+      this.wingF.setPosition(c.w1[0] * H, c.w1[1] * H).setRotation(-0.3 * beat).setScale(H / 512 * (1 - 0.25 * Math.max(0, -beat)), H / 512);
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation((o.st || 0) + c.sA);
+      if (!dead) this.rig.y -= H * (c.fly + 0.04 * Math.sin(now * 5.2 + this.homeX) - 0.03 * beat);
+      if (o.glow > 0.05 && Math.random() < 0.6 * o.glow) { const [gx, gy] = this.aurTip(o); fx.push({ x: gx + rand(-8, 8), y: gy + rand(-8, 8), vx: rand(-40, 40), vy: -rand(20, 70), g: 0, r: rand(2, 5), life: 0.45, t: 0.45, color: Math.random() < 0.5 ? 0x7dffb0 : 0xffe27a }); }
     } else if (this.type === 'rhea') {
       this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.sa === undefined ? this.cfg.sA : o.sa);
     } else if (this.type === 'abeja') {
@@ -3959,7 +4013,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -3972,6 +4026,7 @@ function fightLogic(dt) {
     if (u.type === 'fraile') { friarLogic(u, dt); continue; }
     if (u.type === 'odo') { odoLogic(u, dt); continue; }
     if (u.type === 'rhea') { rheaLogic(u, dt); continue; }
+    if (u.type === 'aurelion') { aurLogic(u, dt); continue; }
     if (u.type === 'torque') { torqueLogic(u, dt); continue; }
     if (u.type === 'rufo' && (u.state === 'idle' || u.state === 'walk')) { const e = nearestEnemy(u); u.cfg.range = e && !(u.rufoDone && u.rufoDone.has(e)) ? CH.rufo.range : H * 0.8; }   // a cada rival nuevo, otra vez mordisco y huida
     if (u.type === 'catapulta') { siegeLogic(u, dt); continue; }
@@ -4089,6 +4144,40 @@ function torqueLogic(u, dt) {
     if (Math.abs(d) < 10) { u.x = u.tqTo; u.set('idle'); u.tqTo = undefined; }
     u.lane += Math.sign(u.tqLane - u.lane) * Math.min(Math.abs(u.tqLane - u.lane), 20 * dt);
   }
+}
+function aurLogic(u, dt) {
+  // cura al aliado más herido a su alcance; cada 50 s revive al aliado caído más cercano; se queda detrás de los suyos
+  u.revT = (u.revT === undefined ? 0 : u.revT) - dt;
+  if (u.state === 'attack' || u.state === 'aurRevive') return;
+  const fallen = typeof B !== 'undefined' && B && B.fallen ? B.fallen[u.team] : null;
+  if (u.revT <= 0 && fallen && fallen.length) { u.revT = u.cfg.reviveCd; u.set('aurRevive'); return; }
+  friarLogic(u, dt);
+}
+function aurHeal(u, o) {
+  // destello verde y dorado: vuela hasta el aliado más herido y lo cura al llegar
+  const tg = units.filter(v => v.team === u.team && v.alive && v.hp < v.max && !['die', 'spawn'].includes(v.state) && !v.isCastle && Math.abs(v.x - u.x) <= u.cfg.range).sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+  if (!tg) return;
+  if (!scene.textures.exists('aur_orbe')) {
+    const t = scene.textures.createCanvas('aur_orbe', 96, 96), c = t.getContext(), g = c.createRadialGradient(48, 48, 2, 48, 48, 48);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#eaffc8'); g.addColorStop(0.55, 'rgba(125,255,176,.9)'); g.addColorStop(0.8, 'rgba(255,226,122,.35)'); g.addColorStop(1, 'rgba(255,226,122,0)');
+    c.fillStyle = g; c.fillRect(0, 0, 96, 96); t.refresh();
+  }
+  const [sx, sy] = u.aurTip(o), tx = tg.x, ty = tg.gy - H * 0.5 * (tg.bigK || 1), T = Math.max(0.3, Math.abs(tx - sx) / 700), g = 300;
+  const img = scene.add.image(sx, sy, 'aur_orbe').setDepth(950).setScale(0.45 * H / 96);
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target: tg, heal: Math.round(rand(...u.cfg.heal) * (u.pk || 1)), spin: 0.01, trail: Math.random() < 0.5 ? 0x7dffb0 : 0xffe27a });
+}
+function aurRevive(u) {
+  // el caído más cercano vuelve a la batalla donde cayó, con su vida entera
+  const L = B && B.fallen && B.fallen[u.team]; if (!L || !L.length) return;
+  L.sort((a, b) => Math.abs(a.x - u.x) - Math.abs(b.x - u.x)); const f = L.shift();
+  const x = Math.max(FIELD_L, Math.min(FIELD_R, f.x)), v = new Unit(scene, f.type, u.team, x);
+  v.lane = f.lane; v.root.y = v.gy; v.root.setDepth(v.gy); units.push(v);
+  if (typeof applyPromo === 'function') applyPromo(v, f.lv || 1, f.rk || 0, f.pk && f.lv ? 1 : 1);
+  if (v.type === 'kubi') v.gen = f.gen || 0;
+  const col = scene.add.rectangle(x, v.gy - H * 2, H * 0.7, H * 4, 0xfff6c8, 0.55).setDepth(v.gy + 1);
+  scene.tweens.add({ targets: col, alpha: 0, scaleX: 0.2, duration: 700 / timeScale, onComplete: () => col.destroy() });
+  burst(x, v.gy - H * 0.5, 0x7dffb0, 18, 220); burst(x, v.gy - H * 0.5, 0xffe27a, 14, 180);
+  floatText(x, v.gy - H * 1.6, '¡Revive!', '#9dffbe');
 }
 function rheaLogic(u, dt) {
   // avanza hasta tener a un enemigo a su distancia y desde ahí suelta abejas (máximo 6 vivas)
@@ -4298,6 +4387,7 @@ function start() {
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'carrete', 'aguja']) L('mor_' + n, 'morgana/' + n);
       for (const n of ['cuerpo', 'mano', 'cetro', 'abeja']) L('rhea_' + n, 'rhea/' + n);
+      for (const n of ['cuerpo', 'mano', 'puno', 'baculo', 'ala_t', 'ala_d']) L('aur_' + n, 'aurelion/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
@@ -4392,7 +4482,7 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'aurRevive', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
   if (act === 'storm') { if (u.type === 'lyra') { u.inPlace = false; u.set('storm'); } return; }

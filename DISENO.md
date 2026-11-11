@@ -479,3 +479,11 @@ Arte en bruto en `arte/abeja/`; piezas del juego en `docs/img/rhea/`.
   sale una abeja que crece hasta la mitad de su tamaño. Hasta 6 abejas vivas a la vez.
 - Abeja: vuela, rápida, pica cuerpo a cuerpo (22 de vida, 4–6). Provisional: Rhea 110 de vida.
 - Rango: Jalea real (escudo), Enjambre (más rápida), Corona de miel (regenera).
+
+## Aurelion, el Bastón del paladín (legendaria, coste 6)
+
+Arte en bruto en `arte/paladin/`; piezas del juego en `docs/img/aurelion/`.
+- Vuela; las dos alas de cristal baten por separado (bajada rápida, subida lenta, con escorzo) y el cuerpo sube y baja al ritmo.
+- Cura: alza el báculo y lanza un destello verde y dorado al aliado más herido a su alcance (22–28). Se queda detrás de los suyos.
+- Cada 50 s revive al aliado caído más cercano (no héroes ni invocaciones): columna de luz y vuelve donde cayó, con su nivel y rango.
+- Provisional: 170 de vida. Rango: Gracia (escudo), Luz eterna (regenera), Resurrección (aguanta).
