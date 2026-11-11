@@ -31,8 +31,8 @@ function drFin(soltar) {
   const c = d.c; c.classList.remove('drag', 'fuera', 'nope'); c.style.transform = '';
   if (d.g2) d.g2.destroy();
   const lim = d.g ? drLimite(d.t) : 0;
-  if (soltar && d.g && d.g.root.visible && lim >= FIELD_L && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
-    PLAY_AT = { x: Math.min(d.g.x, lim), hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
+  if (soltar && d.g && d.g.root.visible && d.ok && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
+    PLAY_AT = { x: Math.max(FIELD_L, Math.min(d.g.x, lim)), hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
     try { play('blue', d.i); } finally { PLAY_AT = null; }
   }
   drQuita(d.g);
@@ -69,27 +69,25 @@ function arrastreTick(dt) {
   if (!B || B.over || paused || $('hud').hidden) { drFin(false); return; }
   const g = d.g; if (!g || !g.root.visible) { if (d.g2) d.g2.clear(); return; }
   const rdt = Math.max(dt, 1 / 120), z = cam.zoom / DPR;
-  const [wx, wy] = drWorld(d.x, d.y), lim = drLimite(d.t), hueco = lim >= FIELD_L;
-  // donde caería: entre tu muralla y el límite; cuelga un poco por encima del dedo para que se vea
-  const tx = Math.max(FIELD_L, Math.min(lim, wx));
-  if (g.nuevo) { g.nuevo = false; g.x = tx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
-  const ph = g.x; g.x += (tx - g.x) * (1 - Math.exp(-rdt * 22));
-  // el carril, a la altura del dedo (dentro del camino): se puede soltar arriba, abajo o en medio
-  const lm = (typeof ROAD_HALF !== 'undefined' ? ROAD_HALF : H) * 0.52; g.lane = Math.max(-lm, Math.min(lm, wy + H * 0.55 - GROUND));
-  g.heldH = Math.max(H * 0.45, Math.min(H * 4, g.gy - (wy - 26 / z)));
-  // péndulo: al moverla, los pies se quedan atrás y luego se mece
+  // la unidad sigue al dedo por todas partes (camino, césped o cielo); solo se puede soltar en el camino, en tu zona
+  const [wx, wy] = drWorld(d.x, d.y), lim = drLimite(d.t), lm = ROAD_HALF * 0.85, laneRaw = wy - GROUND;   // los pies, bajo el dedo
+  d.ok = lim >= FIELD_L && wx >= FIELD_L && wx <= lim && Math.abs(laneRaw) <= lm;
+  if (g.nuevo) { g.nuevo = false; g.x = wx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
+  const ph = g.x; g.x += (wx - g.x) * (1 - Math.exp(-rdt * 22));
+  g.lane = Math.max(-lm, Math.min(lm, laneRaw));
+  g.heldH = Math.max(H * 0.25, g.gy - wy + 30 / z);
   const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
   g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
   g.root.setScale(0.2 + 0.8 * ease(g.pop));
   g.update(rdt); g.root.y = g.gy;
-  // en rojo, donde no se puede (más allá del límite), la línea del límite y la marca del suelo donde caerá
+  // en rojo, el trozo de camino donde no se puede; la marca del suelo, azul si vale y roja si no
   if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
-  const G = d.g2, top = GROUND - H * 4.5, x0 = hueco ? lim : FIELD_L - H, pegada = wx > lim;
+  const G = d.g2, top = GROUND - ROAD_HALF, bot = GROUND + ROAD_HALF, x0 = lim >= FIELD_L ? lim : FIELD_L;
   G.clear();
-  G.fillStyle(0xff3b3b, 0.22).fillRect(x0, top, W - x0, GROUND + 40 - top);
-  if (hueco) for (let y = top; y < GROUND + 30; y += 22) G.fillStyle(pegada ? 0xff6b6b : 0xffffff, pegada ? 0.85 : 0.5).fillRect(lim - 2, y, 4, 12);
-  G.lineStyle(3, hueco ? 0xffffff : 0xff6b6b, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
-  G.fillStyle(hueco ? 0x4aa8ff : 0xff3b3b, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(0xff3b3b, 0.22).fillRect(x0, top, W - x0, bot - top);
+  if (lim >= FIELD_L) for (let y = top; y < bot; y += 26) G.fillStyle(0xffffff, 0.5).fillRect(lim - 2, y, 4, 14);
+  G.lineStyle(3, d.ok ? 0xffffff : 0xff6b6b, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(d.ok ? 0x4aa8ff : 0xff3b3b, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
 }
 const _battleStepDr = battleStep;
 battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };

@@ -967,7 +967,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 <script>
 (() => {
 'use strict';
-const W = 3660, VW = 960, HGT = 540, GROUND = 410, H = 240;
+const W = 3660, VW = 960, HGT = 540, GROUND = 410, H = 312;
 const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
@@ -4531,7 +4531,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
 // ky: aplastado en vertical; oy/y0: la base de la torre de abajo, en la hierba
-const CAS = { k: 2.08, ky: 1.912, x0: 400 - 860 * 2.08, oy: 1162, y0: GROUND + 765, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 2.08, ky: 1.935, x0: 400 - 643 * 2.08, oy: 1170, y0: GROUND + 765, front: 643, seat: [290, 565], arch: [[610, 125], [615, 785]], w: 660, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS.oy) * CAS.ky, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -4640,7 +4640,7 @@ let ROAD_HALF = H;
 const LANES = 5, LANE_DRIFT = 75 * H / 120;   // px por segundo de cambio de carril
 function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.45; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.52;
+  const lim = ROAD_HALF * 0.85;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
@@ -6925,8 +6925,8 @@ function colocaCripta() {
   if (BST) { BST.setVisible(false); if (BST.sombra) BST.sombra.setVisible(false); }
   if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
   if (BST) {
-    BST.x0 = CASTLE_FRONT + H * 0.3; BST.y0 = GROUND + ROAD_HALF + H * 1.1; BST.hh = H * 1.25 * BST.art.h;
-    BST.minX = CASTLE_FRONT - H * 0.6; BST.maxX = CASTLE_FRONT + H * 1.6; BST.paseo = null; BST.setFlipX(false); BST.setDepth(BST.y0);
+    BST.x0 = THRONE.x + H * 0.3; BST.y0 = CAS.y0 + H * 0.75; BST.hh = H * 1.1 * BST.art.h;   // en el césped, debajo de tu castillo
+    BST.minX = THRONE.x - H * 0.4; BST.maxX = CASTLE_FRONT - H * 0.2; BST.paseo = null; BST.setFlipX(false); BST.setDepth(BST.y0);
     BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
   }
 }
@@ -7043,27 +7043,17 @@ function abilUI(reset) {
 }
 // dónde van: en horizontal, en la esquina derecha junto al panel de cartas; en vertical, en el cielo encima de tu trono
 function colocaAbils() {
+  // el hechizo, encima del panel de cartas, a la derecha
   const ab = $('abils'), d = $('dock').getBoundingClientRect(), ih = window.innerHeight;
-  // en horizontal, la esquina izquierda es para la cripta: los botones van a la derecha del panel
-  if (d.left >= 74) { ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'var(--sr)'; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
-  ab.style.left = 'calc(var(--sl) + 66px)'; ab.style.right = '';   // a la derecha del círculo del héroe, que va sobre el trono
-  const z = cam.zoom / DPR, y = (THRONE.y - 175 - cam.worldView.y) * z, top = $('hudtop').getBoundingClientRect().bottom + 8, hh = ab.offsetHeight || 130;
-  const t = Math.max(top, y - hh);
-  if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
+  ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'calc(var(--sr) + 12px)'; ab.style.bottom = (ih - d.top + 8) + 'px';
 }
 function w2css(x, y) { const z = cam.zoom / DPR; return [(x - cam.worldView.x) * z, (y - cam.worldView.y) * z]; }
 function colocaAnillos() {
+  // héroe y bestia: fijos encima del panel de cartas, a la izquierda (así no tapan el campo)
   if (!B || B.auto || B.idle || $('hud').hidden) return;
-  const top = $('hudtop').getBoundingClientRect().bottom + 4, d = $('dock').getBoundingClientRect(), iw = window.innerWidth;
-  const pon = (el, x, y, h) => {   // encima de (x, y) del mundo, sin salirse de la pantalla ni pisar el marcador
-    const [cx, cy] = w2css(x, y), w = (el.offsetWidth || 48) / 2;
-    el.style.left = Math.max(w + 2, Math.min(iw - w - 2, cx)) + 'px'; el.style.top = Math.max(top + h, cy) + 'px';
-  };
-  const hr = B.hero, he = $('hero');
-  if (hr.state === 'field' && hr.unit && hr.unit.alive) { const u = hr.unit; pon(he, u.x, u.gy - H * (u.cfg.h || 1) * (u.bigK || 1) * 1.25 - 26, he.offsetHeight || 60); }
-  else if (throneImg) pon(he, THRONE.x, THRONE.y - throneImg.displayHeight * 0.92 - 6, he.offsetHeight || 60);
-  const bb = $('ab-beast');
-  if (!bb.hidden && BST) pon(bb, BST.x, BST.y - BST.displayHeight - 4, bb.offsetHeight || 56);
+  const d = $('dock').getBoundingClientRect(), y = d.top - 6;
+  const he = $('hero'); he.style.left = 'calc(var(--sl) + 38px)'; he.style.top = y + 'px';
+  const bb = $('ab-beast'); if (!bb.hidden) { bb.style.left = 'calc(var(--sl) + 110px)'; bb.style.top = y + 'px'; }
 }
 const _playR = play;
 play = function (team, idx) {
@@ -7282,8 +7272,8 @@ function drFin(soltar) {
   const c = d.c; c.classList.remove('drag', 'fuera', 'nope'); c.style.transform = '';
   if (d.g2) d.g2.destroy();
   const lim = d.g ? drLimite(d.t) : 0;
-  if (soltar && d.g && d.g.root.visible && lim >= FIELD_L && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
-    PLAY_AT = { x: Math.min(d.g.x, lim), hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
+  if (soltar && d.g && d.g.root.visible && d.ok && B && !B.over && !paused && B.blue.hand[d.i] === d.t) {
+    PLAY_AT = { x: Math.max(FIELD_L, Math.min(d.g.x, lim)), hop: d.g.heldH, lane: d.g.lane, swing: d.g.swing };
     try { play('blue', d.i); } finally { PLAY_AT = null; }
   }
   drQuita(d.g);
@@ -7320,27 +7310,25 @@ function arrastreTick(dt) {
   if (!B || B.over || paused || $('hud').hidden) { drFin(false); return; }
   const g = d.g; if (!g || !g.root.visible) { if (d.g2) d.g2.clear(); return; }
   const rdt = Math.max(dt, 1 / 120), z = cam.zoom / DPR;
-  const [wx, wy] = drWorld(d.x, d.y), lim = drLimite(d.t), hueco = lim >= FIELD_L;
-  // donde caería: entre tu muralla y el límite; cuelga un poco por encima del dedo para que se vea
-  const tx = Math.max(FIELD_L, Math.min(lim, wx));
-  if (g.nuevo) { g.nuevo = false; g.x = tx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
-  const ph = g.x; g.x += (tx - g.x) * (1 - Math.exp(-rdt * 22));
-  // el carril, a la altura del dedo (dentro del camino): se puede soltar arriba, abajo o en medio
-  const lm = (typeof ROAD_HALF !== 'undefined' ? ROAD_HALF : H) * 0.52; g.lane = Math.max(-lm, Math.min(lm, wy + H * 0.55 - GROUND));
-  g.heldH = Math.max(H * 0.45, Math.min(H * 4, g.gy - (wy - 26 / z)));
-  // péndulo: al moverla, los pies se quedan atrás y luego se mece
+  // la unidad sigue al dedo por todas partes (camino, césped o cielo); solo se puede soltar en el camino, en tu zona
+  const [wx, wy] = drWorld(d.x, d.y), lim = drLimite(d.t), lm = ROAD_HALF * 0.85, laneRaw = wy - GROUND;   // los pies, bajo el dedo
+  d.ok = lim >= FIELD_L && wx >= FIELD_L && wx <= lim && Math.abs(laneRaw) <= lm;
+  if (g.nuevo) { g.nuevo = false; g.x = wx; } g.pop = Math.min(1, g.pop + rdt / 0.14);
+  const ph = g.x; g.x += (wx - g.x) * (1 - Math.exp(-rdt * 22));
+  g.lane = Math.max(-lm, Math.min(lm, laneRaw));
+  g.heldH = Math.max(H * 0.25, g.gy - wy + 30 / z);
   const vx = (g.x - ph) / rdt, tgt = Math.max(-0.7, Math.min(0.7, vx * 0.0016));
   g.w += ((tgt - g.swing) * 70 - g.w * 7) * rdt; g.swing += g.w * rdt;
   g.root.setScale(0.2 + 0.8 * ease(g.pop));
   g.update(rdt); g.root.y = g.gy;
-  // en rojo, donde no se puede (más allá del límite), la línea del límite y la marca del suelo donde caerá
+  // en rojo, el trozo de camino donde no se puede; la marca del suelo, azul si vale y roja si no
   if (!d.g2) d.g2 = scene.add.graphics().setDepth(8);
-  const G = d.g2, top = GROUND - H * 4.5, x0 = hueco ? lim : FIELD_L - H, pegada = wx > lim;
+  const G = d.g2, top = GROUND - ROAD_HALF, bot = GROUND + ROAD_HALF, x0 = lim >= FIELD_L ? lim : FIELD_L;
   G.clear();
-  G.fillStyle(0xff3b3b, 0.22).fillRect(x0, top, W - x0, GROUND + 40 - top);
-  if (hueco) for (let y = top; y < GROUND + 30; y += 22) G.fillStyle(pegada ? 0xff6b6b : 0xffffff, pegada ? 0.85 : 0.5).fillRect(lim - 2, y, 4, 12);
-  G.lineStyle(3, hueco ? 0xffffff : 0xff6b6b, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
-  G.fillStyle(hueco ? 0x4aa8ff : 0xff3b3b, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(0xff3b3b, 0.22).fillRect(x0, top, W - x0, bot - top);
+  if (lim >= FIELD_L) for (let y = top; y < bot; y += 26) G.fillStyle(0xffffff, 0.5).fillRect(lim - 2, y, 4, 14);
+  G.lineStyle(3, d.ok ? 0xffffff : 0xff6b6b, 0.75).strokeEllipse(g.x, g.gy, H * 0.75, H * 0.2);
+  G.fillStyle(d.ok ? 0x4aa8ff : 0xff3b3b, 0.25).fillEllipse(g.x, g.gy, H * 0.75, H * 0.2);
 }
 const _battleStepDr = battleStep;
 battleStep = function (dt) { _battleStepDr(dt); arrastreTick(dt); };

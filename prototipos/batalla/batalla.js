@@ -18,7 +18,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
 // ky: aplastado en vertical; oy/y0: la base de la torre de abajo, en la hierba
-const CAS = { k: 2.08, ky: 1.912, x0: 400 - 860 * 2.08, oy: 1162, y0: GROUND + 765, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 2.08, ky: 1.935, x0: 400 - 643 * 2.08, oy: 1170, y0: GROUND + 765, front: 643, seat: [290, 565], arch: [[610, 125], [615, 785]], w: 660, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS.oy) * CAS.ky, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -127,7 +127,7 @@ let ROAD_HALF = H;
 const LANES = 5, LANE_DRIFT = 75 * H / 120;   // px por segundo de cambio de carril
 function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.45; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.52;
+  const lim = ROAD_HALF * 0.85;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);

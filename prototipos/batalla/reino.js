@@ -416,8 +416,8 @@ function colocaCripta() {
   if (BST) { BST.setVisible(false); if (BST.sombra) BST.sombra.setVisible(false); }
   if (!scene || !cam || !B || !B.beast || B.sim || B.idle || $('hud').hidden || !$('menu').hidden) return;
   if (BST) {
-    BST.x0 = CASTLE_FRONT + H * 0.3; BST.y0 = GROUND + ROAD_HALF + H * 1.1; BST.hh = H * 1.25 * BST.art.h;
-    BST.minX = CASTLE_FRONT - H * 0.6; BST.maxX = CASTLE_FRONT + H * 1.6; BST.paseo = null; BST.setFlipX(false); BST.setDepth(BST.y0);
+    BST.x0 = THRONE.x + H * 0.3; BST.y0 = CAS.y0 + H * 0.75; BST.hh = H * 1.1 * BST.art.h;   // en el césped, debajo de tu castillo
+    BST.minX = THRONE.x - H * 0.4; BST.maxX = CASTLE_FRONT - H * 0.2; BST.paseo = null; BST.setFlipX(false); BST.setDepth(BST.y0);
     BST.setPosition(BST.x0, BST.y0).setVisible(true); bestiaPose(BST.pose, BST.actT, true);
   }
 }
@@ -534,27 +534,17 @@ function abilUI(reset) {
 }
 // dónde van: en horizontal, en la esquina derecha junto al panel de cartas; en vertical, en el cielo encima de tu trono
 function colocaAbils() {
+  // el hechizo, encima del panel de cartas, a la derecha
   const ab = $('abils'), d = $('dock').getBoundingClientRect(), ih = window.innerHeight;
-  // en horizontal, la esquina izquierda es para la cripta: los botones van a la derecha del panel
-  if (d.left >= 74) { ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'var(--sr)'; ab.style.bottom = (ih - d.bottom + 10) + 'px'; return; }
-  ab.style.left = 'calc(var(--sl) + 66px)'; ab.style.right = '';   // a la derecha del círculo del héroe, que va sobre el trono
-  const z = cam.zoom / DPR, y = (THRONE.y - 175 - cam.worldView.y) * z, top = $('hudtop').getBoundingClientRect().bottom + 8, hh = ab.offsetHeight || 130;
-  const t = Math.max(top, y - hh);
-  if (t + hh > d.top - 8) { ab.style.top = ''; ab.style.bottom = (ih - d.top + 10) + 'px'; } else { ab.style.bottom = ''; ab.style.top = t + 'px'; }
+  ab.style.top = ''; ab.style.left = 'auto'; ab.style.right = 'calc(var(--sr) + 12px)'; ab.style.bottom = (ih - d.top + 8) + 'px';
 }
 function w2css(x, y) { const z = cam.zoom / DPR; return [(x - cam.worldView.x) * z, (y - cam.worldView.y) * z]; }
 function colocaAnillos() {
+  // héroe y bestia: fijos encima del panel de cartas, a la izquierda (así no tapan el campo)
   if (!B || B.auto || B.idle || $('hud').hidden) return;
-  const top = $('hudtop').getBoundingClientRect().bottom + 4, d = $('dock').getBoundingClientRect(), iw = window.innerWidth;
-  const pon = (el, x, y, h) => {   // encima de (x, y) del mundo, sin salirse de la pantalla ni pisar el marcador
-    const [cx, cy] = w2css(x, y), w = (el.offsetWidth || 48) / 2;
-    el.style.left = Math.max(w + 2, Math.min(iw - w - 2, cx)) + 'px'; el.style.top = Math.max(top + h, cy) + 'px';
-  };
-  const hr = B.hero, he = $('hero');
-  if (hr.state === 'field' && hr.unit && hr.unit.alive) { const u = hr.unit; pon(he, u.x, u.gy - H * (u.cfg.h || 1) * (u.bigK || 1) * 1.25 - 26, he.offsetHeight || 60); }
-  else if (throneImg) pon(he, THRONE.x, THRONE.y - throneImg.displayHeight * 0.92 - 6, he.offsetHeight || 60);
-  const bb = $('ab-beast');
-  if (!bb.hidden && BST) pon(bb, BST.x, BST.y - BST.displayHeight - 4, bb.offsetHeight || 56);
+  const d = $('dock').getBoundingClientRect(), y = d.top - 6;
+  const he = $('hero'); he.style.left = 'calc(var(--sl) + 38px)'; he.style.top = y + 'px';
+  const bb = $('ab-beast'); if (!bb.hidden) { bb.style.left = 'calc(var(--sl) + 110px)'; bb.style.top = y + 'px'; }
 }
 const _playR = play;
 play = function (team, idx) {
