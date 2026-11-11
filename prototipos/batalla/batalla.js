@@ -63,13 +63,12 @@ function castleVariants(sc) {
 }
 /* ---- arqueros de las torres: van encima del dibujo del castillo (en el mismo sitio que los pintados) y se animan al disparar:
    el arco apunta al objetivo y retrocede con el tiro. Medidas en píxeles del dibujo del castillo ---- */
-const ARQ = { on: false, body: [463, 105.5, 201], bow: [562, 124.5, 115], dy: 660, dx: 5, t: 0.45 };   // on: cuando los castillos vengan sin los arqueros pintados
+const ARQ = { body: [[465, 105], [480, 765]], bh: 200, hand: [92, 39], bowH: 150, grip: [0.68, 0.5], t: 0.45 };   // en píxeles del dibujo del castillo
 let torreArq = {};
 function torreArqueros(sc) {
-  if (!ARQ.on) return;
   for (const team of ['blue', 'purple']) torreArq[team] = [0, 1].map(() => ({
-    bow: sc.add.image(0, 0, 'torre_arco').setOrigin(0.674, 0.517).setDepth(-1497),
     body: sc.add.image(0, 0, 'torre_cuerpo').setDepth(-1498),
+    bow: sc.add.image(0, 0, 'torre_arco').setOrigin(ARQ.grip[0], ARQ.grip[1]).setDepth(-1497),
     hand: sc.add.image(0, 0, 'torre_mano').setDepth(-1496) }));
 }
 function torreArqTick(dt) {
@@ -77,20 +76,19 @@ function torreArqTick(dt) {
   for (const team of ['blue', 'purple']) (torreArq[team] || []).forEach((A, i) => {
     const s = B && B[team], c = castles[team], vis = !!(c && c.alive);
     for (const k of ['body', 'bow', 'hand']) A[k].setVisible(vis); if (!vis) return;
-    const col = TEAM_COLOR[team], fl = team === 'purple' ? -1 : 1;
+    const col = TEAM_COLOR[team], fl = team === 'purple' ? -1 : 1, ky = CAS.ky / CAS.k;
     const wx = cx => { const x = CAS.x0 + cx * CAS.k; return team === 'blue' ? x : W - x; }, wy = cy => CAS.y0 + (cy - CAS.oy) * CAS.ky;
-    const oy = i * ARQ.dy, ox = i * ARQ.dx, T = s && s.arqT ? s.arqT[i] || 0 : 0;
-    if (s && s.arqT && T > 0) s.arqT[i] = Math.max(0, T - dt);
-    const p = T > 0 ? 1 - T / ARQ.t : 1, kick = T > 0 ? Math.sin(Math.min(1, p * 3) * Math.PI) * (1 - p) : 0;
-    const aim = (s && s.arqA ? s.arqA[i] || 0 : 0) * (T > 0 ? Math.min(1, (1 - p) * 3) : 0), bob = Math.sin(now * 2.6 + i * 1.7 + (team === 'blue' ? 0 : 1)) * 1.2;
-    const kb = CAS.k * ARQ.body[2] / 300, kw = CAS.k * ARQ.bow[2] / 240;
-    A.body.setTexture(colorTex('torre_cuerpo', col)).setPosition(wx(ARQ.body[0] + ox), wy(ARQ.body[1] + oy + bob)).setScale(fl * kb, kb * CAS.ky / CAS.k);
-    const bx = wx(ARQ.bow[0] + ox - 10 * kick), by = wy(ARQ.bow[1] + oy + bob * 0.6);
-    A.bow.setTexture(colorTex('torre_arco', col)).setPosition(bx, by).setScale(fl * kw, kw * CAS.ky / CAS.k).setRotation(fl * aim);
-    A.hand.setTexture(colorTex('torre_mano', col)).setPosition(bx, by).setScale(fl * kb, kb * CAS.ky / CAS.k);
+    const T = s && s.arqT ? s.arqT[i] || 0 : 0; if (T > 0) s.arqT[i] = Math.max(0, T - dt);
+    const p = T > 0 ? 1 - T / ARQ.t : 1, draw = T > 0 ? (p < 0.35 ? p / 0.35 : 0) : 0, kick = T > 0 && p >= 0.35 ? Math.sin(Math.min(1, (p - 0.35) / 0.25) * Math.PI) : 0;
+    const aim = (s && s.arqA ? s.arqA[i] || 0 : 0) * (T > 0 ? 1 - Math.max(0, (p - 0.6) / 0.4) : 0), bob = Math.sin(now * 2.6 + i * 1.7 + (team === 'blue' ? 0 : 1)) * 2;
+    const [bx, by] = ARQ.body[i], kb = CAS.k * ARQ.bh / 300, kw = CAS.k * ARQ.bowH / 240;
+    A.body.setTexture(colorTex('torre_cuerpo', col)).setPosition(wx(bx - 4 * kick), wy(by + bob)).setScale(fl * kb, kb * ky).setRotation(-fl * 0.05 * kick);
+    const hx = wx(bx + ARQ.hand[0] - 6 * draw - 8 * kick), hy = wy(by + ARQ.hand[1] + bob);
+    A.bow.setTexture(colorTex('torre_arco', col)).setPosition(hx, hy).setScale(fl * kw, kw * ky).setRotation(fl * aim);
+    A.hand.setTexture(colorTex('torre_mano', col)).setPosition(hx, hy).setScale(fl * kb, kb * ky);
   });
 }
-const archPos = (team, i) => { const [ax, ay] = CAS.arch[i], x = CAS.x0 + ax * CAS.k; return [team === 'blue' ? x : W - x, CAS.y0 + (ay - CAS.oy) * CAS.ky]; };
+const archPos = (team, i) => { const [ax, ay] = [ARQ.body[i][0] + ARQ.hand[0] + 40, ARQ.body[i][1] + ARQ.hand[1]], x = CAS.x0 + ax * CAS.k; return [team === 'blue' ? x : W - x, CAS.y0 + (ay - CAS.oy) * CAS.ky]; };
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };

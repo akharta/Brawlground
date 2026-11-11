@@ -61,7 +61,7 @@ function collectExp(el) {
   perfil.gold += p.oro; addXP(p.xp); perfil.exp = Date.now(); dia().cobros++; savePerfil(); coinFly(el, p.oro);
   toast('Botín de la expedición: ' + fmt(p.oro) + ' de oro y ' + p.xp + ' de experiencia.'); paintHub();
 }
-// en el menú, las unidades de tu mazo avanzan por el camino y despachan de un golpe a los enemigos que salen al paso
+// en el menú, una escaramuza igualada: tus unidades (de tu mazo) contra otras tantas del rival, con su vida normal
 const IDLE = { tb: 0, tp: 0 };
 startDemo = function () { resetBattle({ demo: true, idle: true, deck: playerDeck(), hero: playerHero(), heroP: null, colors: battleColors(null) }); IDLE.tb = 0; IDLE.tp = 1; };
 function idleStep(dt) {
@@ -69,13 +69,13 @@ function idleStep(dt) {
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, half = cam.width / (2 * z), L = cx - half, R = cx + half;
   IDLE.tb -= dt; IDLE.tp -= dt;
   const mine = units.filter(u => u.team === 'blue' && u.alive), foes = units.filter(u => u.team === 'purple' && u.alive);
-  if (IDLE.tb <= 0 && mine.length < 6) {
-    IDLE.tb = rand(1.3, 2.3); const d = B.blue.deck, u = new Unit(scene, d[Math.floor(Math.random() * d.length)], 'blue', L - 70);
-    u.hp = u.max = 1e6; u.bar.setVisible(false); units.push(u);
+  if (IDLE.tb <= 0 && mine.length < 4) {
+    IDLE.tb = rand(1.6, 2.6); const d = B.blue.deck, u = new Unit(scene, d[Math.floor(Math.random() * d.length)], 'blue', L - 70);
+    u.bar.setVisible(false); units.push(u);
   }
-  if (IDLE.tp <= 0 && foes.length < 5) {
-    IDLE.tp = rand(1.1, 2.1); const pool = ['legionario', 'arquera', 'tercio', 'lobo', 'valkiria'], u = new Unit(scene, pool[Math.floor(Math.random() * pool.length)], 'purple', R + 70);
-    u.hp = u.max = 1; u.bar.setVisible(false); units.push(u);
+  if (IDLE.tp <= 0 && foes.length < 4) {
+    IDLE.tp = rand(1.6, 2.6); const pool = B.blue.deck.length > 2 ? B.blue.deck : ['legionario', 'arquera', 'tercio', 'lobo', 'valkiria'], u = new Unit(scene, pool[Math.floor(Math.random() * pool.length)], 'purple', R + 70);
+    u.bar.setVisible(false); units.push(u);
   }
   fightLogic(dt);
   for (const u of units.slice()) if ((u.team === 'blue' && u.x > R + 160) || (u.team === 'purple' && u.x < L - 160)) {
