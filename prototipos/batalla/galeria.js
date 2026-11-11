@@ -10,6 +10,7 @@
 const MARCOS = {
   legionario: { st: [16, 44, 68, 40], cost: [17, 41.5, 27] },
   arquera: { st: [20, 22, 60, 54], cost: [20, 19, 27] },
+  valkiria: { st: [19, 27, 62, 46], cost: [19.5, 24, 26] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -79,3 +80,46 @@ function galTick(dt) {
   });
 }
 window.__gal = () => GAL;
+
+/* ---- la tarjeta nueva en pequeño (mano de batalla, mazo, fichas, premios, tienda…): el marco de la unidad (o el
+   provisional), su retrato y el muslo del coste. El retrato es una foto de la unidad de verdad en reposo, sacada una vez
+   al arrancar con la escena de la batalla ---- */
+const RETRATO = {}, PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const MARCO_PROV = { st: [12, 34, 76, 54], cost: [4, 22, 27] };
+function tmInner(k, has = true) {
+  const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => v + '%';
+  return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
+    + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(m.st[0]) + ';top:' + pc(m.st[1]) + ';width:' + pc(m.st[2]) + ';height:' + pc(m.st[3]) + '">'
+    + '<span class="tm-cost" style="right:' + pc(m.cost[0]) + ';top:' + pc(m.cost[1]) + ';width:' + pc(m.cost[2]) + '"><b>' + COST[k] + '</b></span>';
+}
+cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };
+function retratos() {
+  // una foto de cada unidad en reposo (mirando a la derecha), por turnos para no trabar el arranque
+  const cola = ALL.filter(k => !RETRATO[k] && CH[k]);
+  const una = () => {
+    const k = cola.shift(); if (!k) return;
+    try {
+      const u = new Unit(scene, k, 'blue', 0);
+      u.root.list.forEach(c => { if (c.type === 'ParticleEmitter') c.setVisible(false); });
+      u.packDone = true; u.ultUsed = true; u.bar.setVisible(false); u.set('idle'); u.dir = 1; u.update(0);
+      u.root.setPosition(0, 0).setScale(1);
+      const b = u.rig.getBounds(), s = Math.min(1, 320 / Math.max(1, b.height)), pad = 6, sh = H * 0.1 * s;
+      const w = Math.ceil(b.width * s) + pad * 2, h = Math.ceil(b.height * s + sh) + pad * 2, key = 'ret_' + k;
+      u.root.setScale(s);
+      const dt = scene.textures.addDynamicTexture(key, w, h); dt.draw(u.root, -b.x * s + pad, -b.y * s + pad);
+      u.root.destroy(); u.bar.destroy();
+      dt.snapshot(img => {
+        RETRATO[k] = img.src; scene.textures.remove(key);
+        document.querySelectorAll('img[data-ret="' + k + '"]').forEach(i => { i.src = img.src; });
+        if (B && B.blue && $('nextwrap') && !$('nextwrap').hidden && B.blue.queue[0] === k) $('next').src = img.src;
+        setTimeout(una, 16);
+      });
+    } catch (e) { setTimeout(una, 16); }
+  };
+  una();
+}
+(function esperaRetratos() {
+  if (window.__game && scene && scene.sys && scene.sys.isActive() && scene.textures.exists('leg_cuerpo')) retratos(); else setTimeout(esperaRetratos, 400);
+})();
+window.__retratos = () => Object.keys(RETRATO).length;

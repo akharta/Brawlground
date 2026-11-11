@@ -45,8 +45,6 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid
 body.galeria #game { z-index: 31; pointer-events: none; background: transparent; }
 .ugrid.tcgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; }
 .tc { position: relative; display: flex; flex-direction: column; padding: 0; border: 0; background: none; min-width: 0; cursor: pointer; font: inherit; color: #fff; --rc: #c7cde0; --rd: #6b7390; }
-.tc.poco { --rc: #3ccf86; --rd: #146b47; } .tc.rara { --rc: #4da3ff; --rd: #1d4f9e; } .tc.epica { --rc: #a855f7; --rd: #57248f; }
-.tc.legendaria { --rc: #fbbf24; --rd: #a35b0c; } .tc.ascendida { --rc: #ff3a5c; --rd: #8f1029; }
 .tc-fr { position: relative; display: block; aspect-ratio: 932 / 1390; border-radius: 10px; overflow: hidden; border: 3px solid var(--outline);
   background: repeating-conic-gradient(from 0deg at 50% 62%, color-mix(in srgb, var(--rc) 55%, #fff) 0 7deg, color-mix(in srgb, var(--rc) 75%, #fff) 7deg 14deg);
   box-shadow: inset 0 0 0 3px var(--rd), inset 0 -18px 30px -12px var(--rd); }
@@ -116,17 +114,22 @@ body.galeria #game { z-index: 31; pointer-events: none; background: transparent;
 select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--outline); border-radius: 10px; padding: 6px 8px; font-weight: 800; }
 .acts { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 
-/* cartas con marco por rareza (img/esc/marco_*.png, 241x402): retrato en la ventana, coste en el círculo, nombre en la barra */
-.hc, .dk { position: relative; aspect-ratio: 241 / 402; padding: 0; border: 0; background: none; min-width: 0; display: block; flex: none;
+/* cartas: la tarjeta nueva en pequeño (galeria.js, tmInner): marco de la unidad o provisional, retrato y muslo del coste */
+.hc, .dk { position: relative; aspect-ratio: 2 / 3; padding: 0; border: 0; background: none; min-width: 0; display: block; flex: none; container-type: inline-size;
   filter: drop-shadow(0 3px 0 rgba(10,12,24,.45)); transition: transform .08s, filter .15s, opacity .12s; }
-.hc::after, .dk::after { content: ''; position: absolute; inset: 0; background: var(--frame) center / 100% 100% no-repeat; pointer-events: none; }
-.hc img, .dk img { position: absolute; left: 10.4%; top: 17.7%; width: 79%; height: 60%; object-fit: cover; border-radius: 4%; background: #c7cde0; }
-.hc .cost, .dk .cost { position: absolute; z-index: 1; left: 50%; top: 10.4%; transform: translate(-50%, -50%); width: 19%; aspect-ratio: 1; display: grid; place-items: center;
-  font-family: var(--font-display); color: #fff; font-size: 1rem; text-shadow: 0 2px 0 var(--outline); }
-.hc .nm, .dk .nm { position: absolute; z-index: 1; left: 7%; right: 7%; top: 81%; height: 15%; display: grid; place-items: center; font-family: var(--font-display); font-size: .8rem; color: #fff;
-  text-shadow: -1px -1px 0 var(--outline), 1px -1px 0 var(--outline), -1px 1px 0 var(--outline), 1px 1px 0 var(--outline), 0 2px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comun { --frame: url(img/esc/marco_comun.png); } .poco { --frame: url(img/esc/marco_poco.png); } .rara { --frame: url(img/esc/marco_rara.png); }
-.epica { --frame: url(img/esc/marco_epica.png); } .legendaria { --frame: url(img/esc/marco_legendaria.png); } .ascendida { --frame: url(img/esc/marco_ascendida.png); }
+.tm { --rc: #c7cde0; --rd: #6b7390; color: #fff; }
+.tm.poco, .tc.poco { --rc: #3ccf86; --rd: #146b47; } .tm.rara, .tc.rara { --rc: #4da3ff; --rd: #1d4f9e; } .tm.epica, .tc.epica { --rc: #a855f7; --rd: #57248f; }
+.tm.legendaria, .tc.legendaria { --rc: #fbbf24; --rd: #a35b0c; } .tm.ascendida, .tc.ascendida { --rc: #ff3a5c; --rd: #8f1029; }
+.tm .tm-fr { position: absolute; inset: 0; border-radius: 9% / 6%; border: 2px solid var(--outline);
+  background: repeating-conic-gradient(from 0deg at 50% 62%, color-mix(in srgb, var(--rc) 55%, #fff) 0 7deg, color-mix(in srgb, var(--rc) 75%, #fff) 7deg 14deg);
+  box-shadow: inset 0 0 0 2px var(--rd), inset 0 -12px 20px -10px var(--rd); }
+.tm .tm-fr[style] { border: 0; border-radius: 0; box-shadow: none; background: center / 100% 100% no-repeat; }
+.tm img.tm-u { position: absolute; object-fit: contain; object-position: 50% 100%; background: none; border-radius: 0; }
+.tm .tm-nm { position: absolute; left: 6%; right: 6%; top: 5%; display: grid; place-items: center; padding: 2% 3%; border-radius: 6px; background: var(--rd); border: 1.5px solid var(--outline); line-height: 1.05; text-align: center; }
+.tm .tm-nm b { font-family: var(--font-display); font-weight: 400; font-size: 12cqw; text-shadow: 0 1px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tm .tm-nm small { font-size: 8cqw; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tm .tm-cost { position: absolute; aspect-ratio: 1; display: grid; place-items: center; container-type: inline-size; background: url(img/tarjetas/coste.png) center / contain no-repeat; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+.tm .tm-cost b { margin: 0 0 22% 26%; font-family: var(--font-display); font-weight: 400; font-size: 34cqw; line-height: 1; color: #fff; text-shadow: 0 0 2px var(--outline), 0 1px 0 var(--outline), 0 -1px 0 var(--outline), 1px 0 0 var(--outline), -1px 0 0 var(--outline); }
 .dk { opacity: .5; width: 100%; }
 .dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 .hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
@@ -162,7 +165,7 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 #enum { font-family: var(--font-display); font-size: 1.4rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
 .row { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .hand { display: flex; gap: 8px; }
-.hc { height: min(120px, 16vh, calc((100vw - 170px) / 4 * 1.668)); }
+.hc { height: min(120px, 16vh, calc((100vw - 170px) / 4 * 1.5)); }
 .nextc { display: grid; gap: 2px; justify-items: center; font-size: .7rem; color: var(--muted); }
 .nextc img { width: 40px; height: 40px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
 #hero { display: grid; justify-items: center; gap: 3px; background: none; border: 0; padding: 0; width: 62px; }
@@ -219,7 +222,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .dk.lock::before { content: ''; position: absolute; z-index: 2; left: 50%; top: 47%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%);
   background: radial-gradient(circle at 50% 30%, transparent 32%, #d9dde8 33% 46%, transparent 47%) top / 100% 60% no-repeat, linear-gradient(#ffc83d, #c98a12) bottom / 100% 55% no-repeat; border-radius: 4px; }
 .hpick.lock { opacity: .6; } .hpick.lock img { filter: brightness(0) opacity(.7); }
-.dk.mini { width: 54px; opacity: 1; flex: none; } .dk.mini .nm { font-size: .55rem; } .dk.mini .cost { font-size: .7rem; }
+.dk.mini { width: 54px; opacity: 1; flex: none; }
 .dk.shadow img, .hport.shadow { filter: brightness(0) opacity(.8); }
 .hport { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--outline); background: #3a3f62; }
 
@@ -5747,14 +5750,14 @@ function renderHand() {
   B.blue.hand.forEach((t, i) => {
     if (!t) return;
     const b = document.createElement('button');
-    b.className = 'hc ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
-    b.innerHTML = '<span class="cost">' + COST[t] + '</span><img src="img/' + t + '_carta.png" alt=""><span class="nm">' + LABEL[t] + '</span>';
+    b.className = 'hc tm ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
+    b.innerHTML = tmInner(t);
     b.onclick = () => play('blue', i);
     h.appendChild(b);
   });
   const nx = B.blue.queue[0];
   $('nextwrap').hidden = !nx;
-  if (nx) { $('next').src = 'img/' + nx + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[nx]; }
+  if (nx) { $('next').src = RETRATO[nx] || 'img/' + nx + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[nx]; }
 }
 let lastUI = 0;
 function uiTick() {
@@ -6229,9 +6232,9 @@ function openDeck(from = 'menu') {
   picking = playerDeck();
   const g = $('deckgrid'), own = owned(); g.innerHTML = '';
   ALL.slice().sort((a, b) => (own.includes(b) - own.includes(a)) || COST[a] - COST[b] || LABEL[a].localeCompare(LABEL[b])).forEach(k => {
-    const has = own.includes(k), b = document.createElement('button'); b.type = 'button'; b.className = 'dk ' + (RARITY[k] || 'comun') + (has ? '' : ' lock'); b.dataset.k = k;
+    const has = own.includes(k), b = document.createElement('button'); b.type = 'button'; b.className = 'dk tm ' + (RARITY[k] || 'comun') + (has ? '' : ' lock'); b.dataset.k = k;
     b.setAttribute('aria-label', NAMES[k] + ', coste ' + COST[k] + (has ? '' : ', bloqueada'));
-    b.innerHTML = '<span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + (has ? LABEL[k] : '¿?') + '</span>';
+    b.innerHTML = tmInner(k, has);
     b.onclick = () => {
       if (!has) { const w = prizeWhere(k); return toast(w ? 'Prisionero en ' + w + '. Conquista ese castillo para liberarlo.' : 'Se recluta en la Taberna del Multiverso o en las jaulas (pronto).'); }
       const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck();
@@ -7623,7 +7626,7 @@ function cuartel(el) {
 }
 function cuElegir(i) {
   const usados = cuSlots().filter((s, j) => s && j !== i).map(s => s.k), lista = owned().filter(k => !usados.includes(k));
-  pop('<p class="eyebrow">Cuartel · puesto ' + (i + 1) + '</p><h2>¿Quién entrena?</h2><div class="pickgrid">' + lista.map(k => '<button type="button" class="dk ' + (RARITY[k] || 'comun') + '" data-k="' + k + '"><span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span></button>').join('') + '</div><p class="note">Si cambias a una unidad, primero recoges lo que lleve entrenado.</p>');
+  pop('<p class="eyebrow">Cuartel · puesto ' + (i + 1) + '</p><h2>¿Quién entrena?</h2><div class="pickgrid">' + lista.map(k => '<button type="button" class="dk tm ' + (RARITY[k] || 'comun') + '" data-k="' + k + '">' + tmInner(k) + '</button>').join('') + '</div><p class="note">Si cambias a una unidad, primero recoges lo que lleve entrenado.</p>');
   document.querySelectorAll('#pop-body [data-k]').forEach(b => { b.onclick = () => { if (cuSlots()[i]) cuCobra(i); cuSlots()[i] = { k: b.dataset.k, t0: Date.now() }; savePerfil(); $('pop').hidden = true; reEdif(); }; });
 }
 setInterval(() => { if (EDIF === 'cuartel' && !$('edif').hidden && $('pop').hidden) reEdif(); }, 30000);
@@ -7914,6 +7917,7 @@ window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__skinP = (
 const MARCOS = {
   legionario: { st: [16, 44, 68, 40], cost: [17, 41.5, 27] },
   arquera: { st: [20, 22, 60, 54], cost: [20, 19, 27] },
+  valkiria: { st: [19, 27, 62, 46], cost: [19.5, 24, 26] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -7983,6 +7987,49 @@ function galTick(dt) {
   });
 }
 window.__gal = () => GAL;
+
+/* ---- la tarjeta nueva en pequeño (mano de batalla, mazo, fichas, premios, tienda…): el marco de la unidad (o el
+   provisional), su retrato y el muslo del coste. El retrato es una foto de la unidad de verdad en reposo, sacada una vez
+   al arrancar con la escena de la batalla ---- */
+const RETRATO = {}, PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const MARCO_PROV = { st: [12, 34, 76, 54], cost: [4, 22, 27] };
+function tmInner(k, has = true) {
+  const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => v + '%';
+  return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
+    + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(m.st[0]) + ';top:' + pc(m.st[1]) + ';width:' + pc(m.st[2]) + ';height:' + pc(m.st[3]) + '">'
+    + '<span class="tm-cost" style="right:' + pc(m.cost[0]) + ';top:' + pc(m.cost[1]) + ';width:' + pc(m.cost[2]) + '"><b>' + COST[k] + '</b></span>';
+}
+cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };
+function retratos() {
+  // una foto de cada unidad en reposo (mirando a la derecha), por turnos para no trabar el arranque
+  const cola = ALL.filter(k => !RETRATO[k] && CH[k]);
+  const una = () => {
+    const k = cola.shift(); if (!k) return;
+    try {
+      const u = new Unit(scene, k, 'blue', 0);
+      u.root.list.forEach(c => { if (c.type === 'ParticleEmitter') c.setVisible(false); });
+      u.packDone = true; u.ultUsed = true; u.bar.setVisible(false); u.set('idle'); u.dir = 1; u.update(0);
+      u.root.setPosition(0, 0).setScale(1);
+      const b = u.rig.getBounds(), s = Math.min(1, 320 / Math.max(1, b.height)), pad = 6, sh = H * 0.1 * s;
+      const w = Math.ceil(b.width * s) + pad * 2, h = Math.ceil(b.height * s + sh) + pad * 2, key = 'ret_' + k;
+      u.root.setScale(s);
+      const dt = scene.textures.addDynamicTexture(key, w, h); dt.draw(u.root, -b.x * s + pad, -b.y * s + pad);
+      u.root.destroy(); u.bar.destroy();
+      dt.snapshot(img => {
+        RETRATO[k] = img.src; scene.textures.remove(key);
+        document.querySelectorAll('img[data-ret="' + k + '"]').forEach(i => { i.src = img.src; });
+        if (B && B.blue && $('nextwrap') && !$('nextwrap').hidden && B.blue.queue[0] === k) $('next').src = img.src;
+        setTimeout(una, 16);
+      });
+    } catch (e) { setTimeout(una, 16); }
+  };
+  una();
+}
+(function esperaRetratos() {
+  if (window.__game && scene && scene.sys && scene.sys.isActive() && scene.textures.exists('leg_cuerpo')) retratos(); else setTimeout(esperaRetratos, 400);
+})();
+window.__retratos = () => Object.keys(RETRATO).length;
 
 /* ==== Eventos. Fijo: el Abismo del Despertar. Cada día espera en el fondo una unidad distinta: si es legendaria hay que bajar
    50 niveles; si es ascendida, 60. En cada nivel hay 4 caminos: 3 bajan (y dan botín) y 1 lleva al vacío o a la lava.

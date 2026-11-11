@@ -352,7 +352,7 @@ function cuartel(el) {
 }
 function cuElegir(i) {
   const usados = cuSlots().filter((s, j) => s && j !== i).map(s => s.k), lista = owned().filter(k => !usados.includes(k));
-  pop('<p class="eyebrow">Cuartel · puesto ' + (i + 1) + '</p><h2>¿Quién entrena?</h2><div class="pickgrid">' + lista.map(k => '<button type="button" class="dk ' + (RARITY[k] || 'comun') + '" data-k="' + k + '"><span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + LABEL[k] + '</span></button>').join('') + '</div><p class="note">Si cambias a una unidad, primero recoges lo que lleve entrenado.</p>');
+  pop('<p class="eyebrow">Cuartel · puesto ' + (i + 1) + '</p><h2>¿Quién entrena?</h2><div class="pickgrid">' + lista.map(k => '<button type="button" class="dk tm ' + (RARITY[k] || 'comun') + '" data-k="' + k + '">' + tmInner(k) + '</button>').join('') + '</div><p class="note">Si cambias a una unidad, primero recoges lo que lleve entrenado.</p>');
   document.querySelectorAll('#pop-body [data-k]').forEach(b => { b.onclick = () => { if (cuSlots()[i]) cuCobra(i); cuSlots()[i] = { k: b.dataset.k, t0: Date.now() }; savePerfil(); $('pop').hidden = true; reEdif(); }; });
 }
 setInterval(() => { if (EDIF === 'cuartel' && !$('edif').hidden && $('pop').hidden) reEdif(); }, 30000);

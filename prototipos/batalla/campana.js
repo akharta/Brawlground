@@ -426,9 +426,9 @@ function openDeck(from = 'menu') {
   picking = playerDeck();
   const g = $('deckgrid'), own = owned(); g.innerHTML = '';
   ALL.slice().sort((a, b) => (own.includes(b) - own.includes(a)) || COST[a] - COST[b] || LABEL[a].localeCompare(LABEL[b])).forEach(k => {
-    const has = own.includes(k), b = document.createElement('button'); b.type = 'button'; b.className = 'dk ' + (RARITY[k] || 'comun') + (has ? '' : ' lock'); b.dataset.k = k;
+    const has = own.includes(k), b = document.createElement('button'); b.type = 'button'; b.className = 'dk tm ' + (RARITY[k] || 'comun') + (has ? '' : ' lock'); b.dataset.k = k;
     b.setAttribute('aria-label', NAMES[k] + ', coste ' + COST[k] + (has ? '' : ', bloqueada'));
-    b.innerHTML = '<span class="cost">' + COST[k] + '</span><img src="img/' + k + '_carta.png" alt=""><span class="nm">' + (has ? LABEL[k] : '¿?') + '</span>';
+    b.innerHTML = tmInner(k, has);
     b.onclick = () => {
       if (!has) { const w = prizeWhere(k); return toast(w ? 'Prisionero en ' + w + '. Conquista ese castillo para liberarlo.' : 'Se recluta en la Taberna del Multiverso o en las jaulas (pronto).'); }
       const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck();

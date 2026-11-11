@@ -517,14 +517,14 @@ function renderHand() {
   B.blue.hand.forEach((t, i) => {
     if (!t) return;
     const b = document.createElement('button');
-    b.className = 'hc ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
-    b.innerHTML = '<span class="cost">' + COST[t] + '</span><img src="img/' + t + '_carta.png" alt=""><span class="nm">' + LABEL[t] + '</span>';
+    b.className = 'hc tm ' + (RARITY[t] || 'comun'); b.dataset.i = i; b.setAttribute('aria-label', NAMES[t] + ', coste ' + COST[t]);
+    b.innerHTML = tmInner(t);
     b.onclick = () => play('blue', i);
     h.appendChild(b);
   });
   const nx = B.blue.queue[0];
   $('nextwrap').hidden = !nx;
-  if (nx) { $('next').src = 'img/' + nx + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[nx]; }
+  if (nx) { $('next').src = RETRATO[nx] || 'img/' + nx + '_carta.png'; $('next').alt = 'Siguiente: ' + LABEL[nx]; }
 }
 let lastUI = 0;
 function uiTick() {
