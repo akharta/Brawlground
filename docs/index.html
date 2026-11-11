@@ -4542,6 +4542,7 @@ for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
 for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.25;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
+const VIEW_M = -CAS.x0 + 160;   // la cámara ve más allá del campo: los castillos enteros y un poco de terreno detrás
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
@@ -4636,9 +4637,9 @@ function onDead(u) {            // en batalla las bajas no vuelven
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
 const LANES = 5, LANE_DRIFT = 75 * H / 120;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.55; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.45; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.6;
+  const lim = ROAD_HALF * 0.52;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
@@ -4816,7 +4817,7 @@ function drawScenery(sc) {
   // la escena (vertical) cubre el ancho del campo, con su camino centrado en GROUND; por encima, su cielo y por debajo, su prado
   escObjs.forEach(o => o.destroy()); escObjs = []; clouds = [];
   const f = ESC[escena]; if (!f || !sc.textures.exists(escena)) return;
-  const s = W / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
+  const s = (W + 2 * VIEW_M) / f.w, iw = f.w * s, ih = f.h * s, y0 = GROUND - (f.t + f.b) / 2 * ih;
   ROADW = (f.b - f.t) * ih; ROAD_HALF = ROADW / 2;
   const z = cam.zoom, cx = cam.scrollX + cam.width / 2, cy = cam.scrollY + cam.height / 2, vw = cam.width / z, vh = cam.height / z, top = cy - vh / 2, bot = cy + vh / 2;
   const col = h => Phaser.Display.Color.HexStringToColor(h).color, add = o => (escObjs.push(o), o);
@@ -4849,7 +4850,7 @@ function frameCamera() {
     zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss)); drawScenery(scene); return;
   }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
-  const X0 = 20, X1 = W - 20, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
+  const X0 = -VIEW_M, X1 = W + VIEW_M, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
   const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));   // solo vertical: manda el ancho
   // el campo, en el centro del hueco entre el marcador y el panel de cartas (en vertical sobra alto: cielo arriba y prado abajo)
   const yCss = battle ? (topCss + botCss) / 2 : window.innerHeight / 2, mid = (Y0 + Y1) / 2;
