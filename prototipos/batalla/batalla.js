@@ -17,7 +17,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 1.6, x0: -976, oy: 769, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 2.17, x0: 400 - 860 * 2.17, oy: 783 - 10 / 2.17, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
