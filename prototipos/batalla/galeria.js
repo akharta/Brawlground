@@ -11,6 +11,7 @@ const MARCOS = {
   legionario: { st: [16, 44, 68, 40], cost: [17, 41.5, 27] },
   arquera: { st: [20, 22, 60, 54], cost: [20, 19, 27] },
   valkiria: { st: [19, 27, 62, 46], cost: [19.5, 24, 26] },
+  ninja: { st: [16, 33, 68, 46], cost: [15.5, 29.5, 25] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
