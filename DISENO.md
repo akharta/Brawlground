@@ -585,3 +585,10 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 | fraile | 4 | 9 | 14 | 11 |
 | torque | 3 | 7 | 13 | 10 |
 | mira | 3 | 6 | 5 | 6 |
+
+## Tropas: tarjetas vivas
+
+- Cada unidad tiene su tarjeta: marco, nombre y epíteto, coste (muslo) y, en medio, la unidad de verdad en reposo con su animación.
+- Debajo, la barra del color de su rareza (gris común, verde poco común, azul rara, morado épica, naranja legendaria, rojo ascendida): nivel en el círculo, copias para la siguiente punta en la barra y el escudo de rango a la derecha.
+- Marcos propios: cuando una unidad tenga su marco (img/marcos/<unidad>.png, sin el personaje), se añade a `MARCOS` en galeria.js; mientras, lleva un marco provisional con rayos del color de su rareza.
+- Técnica: las tarjetas son HTML; una segunda escena de Phaser ("galeria") dibuja las unidades sobre el lienzo, que en esta pestaña pasa por encima de la pantalla sin recibir toques, y la escena de la batalla se oculta.
