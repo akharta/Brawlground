@@ -4531,7 +4531,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
 // ky: aplastado en vertical; oy/y0: la base de la torre de abajo, en la hierba
-const CAS = { k: 2.08, ky: 1.912, x0: 400 - 860 * 2.08, oy: 1162, y0: GROUND + 765, front: 860, seat: [485, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 2.08, ky: 1.912, x0: 400 - 860 * 2.08, oy: 1162, y0: GROUND + 765, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS.oy) * CAS.ky, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -4543,7 +4543,7 @@ for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
 for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.6;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
-const VIEW_M = 460 - THRONE.x;   // la cámara empieza justo detrás del trono: se ve menos castillo
+const VIEW_M = 500 - THRONE.x;   // la cámara empieza justo detrás del trono: se ve menos castillo
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
