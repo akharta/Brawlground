@@ -8,8 +8,8 @@
 // dentro del hueco, en su esquina de arriba a la derecha y sin pisar el marco. Las que no
 // tienen marco llevan el provisional, con rayos del color de su rareza
 const MARCOS = {
-  legionario: { st: [16, 44, 68, 40], cost: [17, 42, 16] },
-  arquera: { st: [20, 22, 60, 54], cost: [20.5, 19.5, 14] },
+  legionario: { st: [16, 44, 68, 40], cost: [17, 41.5, 27] },
+  arquera: { st: [20, 22, 60, 54], cost: [20, 19, 27] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
