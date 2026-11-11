@@ -17,9 +17,10 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 2.17, x0: 400 - 860 * 2.17, oy: 783 - 10 / 2.17, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+// ky: aplastado en vertical; oy/y0: la base de la torre de abajo, en la hierba
+const CAS = { k: 2.08, ky: 1.912, x0: 400 - 860 * 2.08, oy: 1162, y0: GROUND + 765, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
-const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 185 * CAS.k };
+const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS.oy) * CAS.ky, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
@@ -29,7 +30,7 @@ for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
 for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.6;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
-const VIEW_M = 400 - THRONE.x;   // la cámara empieza un poco detrás del trono: se ven el trono, las torres y el campo
+const VIEW_M = 150 - THRONE.x;   // la cámara empieza justo detrás del trono: se ve menos castillo
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
@@ -59,7 +60,7 @@ function castleVariants(sc) {
     sc.textures.addCanvas(key, cv);
   }
 }
-const archPos = (team, i) => { const [ax, ay] = CAS.arch[i], x = CAS.x0 + ax * CAS.k; return [team === 'blue' ? x : W - x, GROUND - 10 + (ay - CAS.oy) * CAS.k]; };
+const archPos = (team, i) => { const [ax, ay] = CAS.arch[i], x = CAS.x0 + ax * CAS.k; return [team === 'blue' ? x : W - x, CAS.y0 + (ay - CAS.oy) * CAS.ky]; };
 let cam, db = null;
 (async () => { try { db = await (window.claude?.use?.('db') ?? null); } catch (e) { db = null; } })();
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -186,7 +187,7 @@ function drawCastleUI(dt) {
     if (ci.state !== st) {   // cambia de aspecto: polvo y cascotes
       if (ci.state !== undefined && B && B.t > 0.1) burst(ci.x, GROUND - 40, 0xbfc4d4, st === '_destruido' ? 30 : 14, st === '_destruido' ? 320 : 200);
       ci.state = st; const A = castleArt(team, st); ci.setTexture(colorTex(A.key, TEAM_COLOR[team], TEAM_EMB[team])).setFlipX(!!A.flip);
-      ci.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setPosition(team === 'blue' ? CAS.x0 : W - CAS.x0, GROUND - 10);
+      ci.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k, CAS.ky).setPosition(team === 'blue' ? CAS.x0 : W - CAS.x0, CAS.y0);
       const th = team === 'blue' ? throneImg : throneImgP;   // sin castillo no hay trono: cae entre los cascotes
       if (th) { scene.tweens.killTweensOf(th); if (st === '_destruido') scene.tweens.add({ targets: th, y: THRONE.y + 40, alpha: 0, angle: team === 'blue' ? 25 : -25, duration: 700, ease: 'Quad.in' }); else th.setPosition(team === 'blue' ? THRONE.x : W - THRONE.x, THRONE.y).setAlpha(1).setAngle(0); }
     }
@@ -337,7 +338,7 @@ function frameCamera() {
     zoomCss = z / DPR; TXT_K = Math.max(1, Math.min(3, 0.5 / zoomCss)); drawScenery(scene); return;
   }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
-  const X0 = -VIEW_M, X1 = W + VIEW_M, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
+  const X0 = -VIEW_M, X1 = W + VIEW_M, Y0 = CAS.y0 - CAS.oy * CAS.ky - 20, Y1 = CAS.y0 + (CAS.h - CAS.oy) * CAS.ky + 10;   // los dos castillos enteros
   const z = cw / (X1 - X0);   // solo vertical: manda el ancho
   // el campo, en el centro del hueco entre el marcador y el panel de cartas (en vertical sobra alto: cielo arriba y prado abajo)
   const yCss = battle ? (topCss + botCss) / 2 : window.innerHeight / 2, mid = (Y0 + Y1) / 2;
@@ -366,8 +367,8 @@ function create() {
   flashG = this.add.graphics().setDepth(5);
   castleVariants(this);
   for (const team of ['blue', 'purple']) {
-    const A = castleArt(team), im = this.add.image(team === 'blue' ? CAS.x0 : W - CAS.x0, GROUND - 10, A.key).setFlipX(A.flip);
-    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k).setDepth(-1500); castleImg[team] = im;   // detrás de las unidades
+    const A = castleArt(team), im = this.add.image(team === 'blue' ? CAS.x0 : W - CAS.x0, CAS.y0, A.key).setFlipX(A.flip);
+    im.setOrigin(A.flip ? 1 : 0, CAS.oy / CAS.h).setScale(CAS.k, CAS.ky).setDepth(-1500); castleImg[team] = im;   // detrás de las unidades
   }
   throneImg = this.add.image(THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499);
   throneImgP = this.add.image(W - THRONE.x, THRONE.y, 'aldric_sentado').setDepth(-1499).setFlipX(true);
