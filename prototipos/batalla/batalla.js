@@ -17,7 +17,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 0.9, x0: -180, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 1.0, x0: -230, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 165 };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -119,14 +119,14 @@ function onDead(u) {            // en batalla las bajas no vuelven
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
-const LANES = 5, LANE_DRIFT = 34;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.62; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+const LANES = 5, LANE_DRIFT = 75;   // px por segundo de cambio de carril
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.42; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
-  const lim = ROAD_HALF * 0.75;
+  const lim = ROAD_HALF * 0.6;
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
-    if (o && !o.isCastle && Math.abs(o.x - u.x) < H * 3.2) {
+    if (o && !o.isCastle && Math.abs(o.x - u.x) < H * 7) {   // empiezan a buscarse de lejos: llegan al choque en el mismo carril
       const d = o.lane - u.lane, step = Math.min(Math.abs(d) / 2, LANE_DRIFT * dt);   // los dos van hacia el medio
       if (Math.abs(d) > 6) u.lane += Math.sign(d) * step;
     }

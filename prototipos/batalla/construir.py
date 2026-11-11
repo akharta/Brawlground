@@ -17,7 +17,7 @@ def rep(a, b, n=1):
     global core
     assert core.count(a) == n, (core.count(a), a[:70]); core = core.replace(a, b)
 # campo 1,5 veces más largo; el lienzo sigue siendo de 960
-rep("const W = 960, HGT = 540", "const W = 2160, VW = 960, HGT = 540")
+rep("const W = 960, HGT = 540", "const W = 2800, VW = 960, HGT = 540")
 # en batalla las unidades se reparten más a lo ancho del camino
 rep("Math.round(rand(-18, 16))", "laneRand()")   # cinco carriles a lo ancho del camino (batalla.js)
 # la velocidad de ataque depende de hechizos, bestias y habilidades de rango (atkK en reino.js)
