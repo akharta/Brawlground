@@ -5748,6 +5748,28 @@ window.__addUnitB = (type, team, x) => { units.push(new Unit(scene, type, team, 
 window.__units = () => units;
 window.__castleHp = (team, hp) => { castles[team].hp = hp; if (hp <= 0) castles[team].damage(1); };
 window.__show = show;
+// prueba de equilibrio: escuadra de na unidades a contra nb unidades b (mismo coste total) en el campo de batalla real,
+// sin cartas, sin IA y sin arqueros de las torres; devuelve quién gana y cuánta vida le queda
+window.__simSquad = (a, na, b, nb, maxT = 150, dt = 1 / 30) => {
+  paused = true; clearUnits(); arrows.forEach(q => q.img && q.img.destroy()); arrows = []; fx = [];
+  const ch = { blue: castles.blue.hp, purple: castles.purple.hp };
+  // a y b pueden ser también listas de tipos (ejércitos mixtos); entonces na y nb no se usan
+  const LA = Array.isArray(a) ? a : Array(na).fill(a), LB = Array.isArray(b) ? b : Array(nb).fill(b);
+  LA.forEach((k, i) => units.push(new Unit(scene, k, 'blue', FIELD_L + H * (1 + i * 0.5))));
+  LB.forEach((k, i) => units.push(new Unit(scene, k, 'purple', FIELD_R - H * (1 + i * 0.5))));
+  const alive = team => units.filter(u => u.team === team && u.alive && u.state !== 'die' && !u.isCastle);
+  let t = 0;
+  while (t < maxT && alive('blue').length && alive('purple').length) {
+    fightLogic(dt); laneTick(dt);
+    units.forEach(u => { if (u.alive && u.root.visible) u.update(dt); });
+    for (const u of units) if (u.alive) u.x = Math.max(FIELD_L, Math.min(FIELD_R, u.x));
+    updateArrows(dt); fx = fx.filter(q => (q.life -= dt) > 0); t += dt;
+  }
+  const hpf = team => alive(team).reduce((s, u) => s + Math.max(0, u.hp) / u.max, 0);
+  const r = { a, b, t: +t.toFixed(1), aLeft: +hpf('blue').toFixed(2), bLeft: +hpf('purple').toFixed(2), winner: alive('purple').length ? (alive('blue').length ? 'draw' : 'b') : 'a' };
+  clearUnits(); arrows.forEach(q => q.img && q.img.destroy()); arrows = []; fx = []; castles.blue.hp = ch.blue; castles.purple.hp = ch.purple;
+  return r;
+};
 
 /* ==== Campaña: el señor de un reino pequeño conquista el mundo, reino a reino.
    Cada reino tiene 10 castillos: del 1 al 9 sus vasallos y el 10 el de su rey (o reina), que se une a ti al caer.

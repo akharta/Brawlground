@@ -537,3 +537,51 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - Su cuerpo arde: cada 0,5 s quema con 4 de daño a los enemigos que tiene a melé (0,85 H).
 - El fuego de la cabeza se anima con un resplandor que late y lenguas de fuego y chispas que suben.
 - Mejoras: Brasas (crítico), Piel ardiente (espinas), Infierno (velocidad).
+
+
+## Prueba de equilibrio (simulaciones, nov. 2026)
+
+- Escuadras: cada unidad contra cada otra con 12 de energía (12 legionarios contra 2 Nul…), a los dos lados del campo, 2 rondas: 2.812 combates.
+- Ejércitos: el mismo núcleo (2 legionarios, samurái, 2 arqueras) más 6 de energía de la unidad, todas contra todas, 2 rondas: 2.812 combates.
+- Sin héroes, torres, cartas ni definitivas; nivel 1. Scripts en `pruebas/` (gancho `window.__simSquad` en batalla.js).
+
+| Unidad | Coste | Escuadra % | Ejército % | Media |
+|---|---|---|---|---|
+| abaddon | 6 | 92 | 97 | 95 |
+| lobo | 1 | 93 | 91 | 92 |
+| legionario | 1 | 91 | 93 | 92 |
+| valkiria | 3 | 80 | 95 | 88 |
+| kubi | 2 | 66 | 95 | 81 |
+| rhysida | 7 | 72 | 81 | 77 |
+| kaiju | 7 | 80 | 70 | 75 |
+| ninja | 2 | 84 | 62 | 73 |
+| valdrys | 5 | 61 | 74 | 68 |
+| muerte | 6 | 67 | 68 | 67 |
+| grises | 5 | 62 | 70 | 66 |
+| nul | 7 | 86 | 45 | 66 |
+| morgana | 5 | 74 | 56 | 65 |
+| rhea | 4 | 59 | 71 | 65 |
+| desencadenado | 5 | 49 | 78 | 64 |
+| anubek | 4 | 42 | 81 | 61 |
+| honderillo | 1 | 66 | 47 | 56 |
+| tormund | 5 | 61 | 45 | 53 |
+| acorazado | 4 | 26 | 76 | 51 |
+| imparable | 7 | 61 | 39 | 50 |
+| tercio | 2 | 47 | 51 | 49 |
+| centinela | 7 | 68 | 30 | 49 |
+| rufo | 2 | 50 | 46 | 48 |
+| samurai | 3 | 39 | 54 | 47 |
+| pistolero | 4 | 26 | 44 | 35 |
+| kungfu | 5 | 45 | 22 | 33 |
+| ivo | 2 | 44 | 19 | 31 |
+| arquera | 2 | 36 | 21 | 29 |
+| catapulta | 6 | 32 | 24 | 28 |
+| aurelion | 6 | 15 | 39 | 27 |
+| ezra | 5 | 41 | 9 | 25 |
+| ignis | 5 | 13 | 28 | 20 |
+| nivea | 3 | 28 | 9 | 18 |
+| odo | 3 | 7 | 28 | 17 |
+| zero | 7 | 16 | 11 | 14 |
+| fraile | 4 | 9 | 14 | 11 |
+| torque | 3 | 7 | 13 | 10 |
+| mira | 3 | 6 | 5 | 6 |
