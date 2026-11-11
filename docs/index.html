@@ -1058,6 +1058,10 @@ const CH = {
   // los enemigos con la mitad de vida o menos mueren y el resto pierde un 30 % de su vida
   zero: { hp: 150, dmg: [24, 30], speed: 52, cd: [1.4, 1.8], range: H * 2.6, ranged: true, h: 1.0, ultWait: 30,
     rest: { bh: [-0.25, -0.296], fh: [0.239, -0.366] }, org: [0.492, 1.0], face: [87, 147, 160], uorg: [0.098, 0.367], uh: [[-0.086, 0.197], [0.382, 0.198]], gorg: [0.78, 0.511] },
+  // Ezra, el Ilusionista: no ataca. Cada 15 s alza su espejo ante un enemigo y de él sale una copia de cristal de ese enemigo que
+  // lucha de su lado
+  ezra: { hp: 110, speed: 52, cd: [15, 15], range: H * 2.6, ranged: true, h: 1.1, copyHp: 1,
+    rest: { bh: [-0.204, -0.65], fh: [0.239, -0.498] }, org: [0.574, 1.0], mg: [0.279, 0.83] },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -1159,7 +1163,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { zero: 'ascendida', mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { ezra: 'epica', zero: 'ascendida', mira: 'rara', kaiju: 'legendaria', aurelion: 'legendaria', rhea: 'poco', abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -1311,6 +1315,17 @@ function miraThrow(u, sx, sy) {
     return;
   }
 }
+const GLASS = 0x8feeff;   // tinte de las copias de cristal de Ezra
+function ezraCopy(q, tg, mx, my) {
+  // la copia sale del espejo: el mismo enemigo, de cristal azul, ahora del bando de Ezra
+  if (!tg || !tg.alive || tg.state === 'die' || !CH[tg.type]) return;
+  const v = new Unit(scene, tg.type, q.team, Math.max(typeof FIELD_L !== 'undefined' ? FIELD_L : 60, Math.min(typeof FIELD_R !== 'undefined' ? FIELD_R : W - 60, q.x + q.dir * H * 0.7)));
+  v.lv = tg.lv; v.rk = tg.rk; v.pk = tg.pk; v.perk = tg.perk; if (tg.cfg !== CH[tg.type]) v.cfg = Object.assign({}, tg.cfg);
+  v.max = Math.round((tg.max || v.max) * q.cfg.copyHp); v.hp = v.max; v.glass = true; if (v.rig.postFX) { const L = [0.3, 0.59, 0.11], row = (m, o) => [L[0] * m, L[1] * m, L[2] * m, 0, o]; v.glassFx = v.rig.postFX.addColorMatrix(); v.glassFx.set([...row(0.7, 0), ...row(1.2, 26), ...row(1.1, 38), 0, 0, 0, 1, 0]); } v.ultUsed = true; v.packDone = true; if (tg.gen) v.gen = tg.gen;
+  v.lane = q.lane + rand(-20, 20); v.root.y = v.gy; v.dropH = H * 0.6; v.swing = 0; units.push(v);
+  for (let i = 0; i < 18; i++) fx.push({ x: mx + rand(-12, 12), y: my + rand(-12, 12), vx: q.dir * rand(60, 260), vy: rand(-120, 60), g: 200, r: rand(2, 5), life: 0.5, t: 0.5, color: Math.random() < 0.5 ? GLASS : 0xffffff });
+  burst(tg.x, tg.gy - H * 0.5, GLASS, 10, 160);
+}
 let RHY_ALL = true;                 // en la escena de pruebas se ven las 10; en batalla, las del rango de la unidad
 let slowBy = null, slowReal = 0;    // quién ha ralentizado el tiempo (definitiva de Rhysida) y el dt real de este fotograma
 const BOW = CH.arquera.bow;
@@ -1319,7 +1334,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { ezra: 'Ezra, el Ilusionista', zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1620,6 +1635,13 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'ezra') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'ezr_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'ezr_mano_senala').setScale(k);
+      this.weapon = sc.add.image(0, 0, 'ezr_espejo').setOrigin(c.mg[0], c.mg[1]).setScale(k);
+      this.fh = sc.add.image(0, 0, 'ezr_puno').setScale(k);
+      this.parts = [this.body, this.bh, this.weapon, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 7]];
     } else if (type === 'zero') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'zer_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -2002,6 +2024,17 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  attackEzra(o, t) {
+    // alza el espejo hacia el enemigo, que brilla; de él sale su copia de cristal
+    const r = this.cfg.rest, p = t / 1.1, k = p < 0.35 ? ease(p / 0.35) : p < 0.75 ? 1 : 1 - ease((p - 0.75) / 0.25);
+    o.fh = [r.fh[0] + 0.12 * k, r.fh[1] - 0.18 * k]; o.ma = 0.1 + 0.9 * k; o.shine = p > 0.3 && p < 0.7 ? 1 : 0; o.bh = [r.bh[0] + 0.05 * k, r.bh[1] + 0.02 * k];
+    if (p >= 0.5 && !this.fired) {
+      this.fired = true; const tg = mode === 'fight' ? enemiesOf(this).filter(v => !v.isCastle && !NUL_HERO(v) && v.type !== 'esqueleto' && Math.abs(v.x - this.x) <= this.cfg.range * 1.2).sort((a, b) => Math.abs(a.x - this.x) - Math.abs(b.x - this.x))[0] : null;
+      const kk = this.bigK || 1, mx = this.x + this.dir * (o.fh[0] + 0.1) * H * kk, my = this.gy + (o.fh[1] - 0.3) * H * kk;
+      if (tg) ezraCopy(this, tg, mx, my);
+    }
+    if (p >= 1) this.set('idle');
+  }
   zeroShadow() {   // la sombra del vacío: una imagen suelta en el mundo que le sigue (o vuela a atacar)
     if (!this.zsh || !this.zsh.scene) this.zsh = scene.add.image(this.x, this.gy, 'zer_sombra').setOrigin(0.5, 1);
     return this.zsh;
@@ -2287,6 +2320,7 @@ class Unit {
     else if (this.type === 'morgana') { o.nd = null; o.thread = 0; }
     else if (this.type === 'rhea') { o.sa = this.cfg.sA; }
     else if (this.type === 'aurelion') { o.st = 0; o.glow = 0; }
+    else if (this.type === 'ezra') { o.ma = 0.1; o.shine = 0; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -2446,6 +2480,7 @@ class Unit {
         else if (this.type === 'kaiju') this.attackKai(o, t);
         else if (this.type === 'mira') this.attackMira(o, t);
         else if (this.type === 'zero') this.attackZero(o, t);
+        else if (this.type === 'ezra') this.attackEzra(o, t);
         else if (this.type === 'abeja') { const p = t / 0.35, k = Math.sin(Math.min(1, p) * Math.PI); o.dx = 0.25 * k; o.rot = 0.3 * k; if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); } if (p >= 1) this.set('idle'); }
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
@@ -2893,6 +2928,10 @@ class Unit {
       this.parts.forEach(pt => white ? pt.setTintFill(0xffffff) : pt.clearTint());
     }
     potTick(this, dt);
+    if (this.glass && this.state !== 'die') {   // copia de cristal de Ezra: azul, translúcida y con destellos
+      if (!this.glassFx) this.parts.forEach(pt => { if (this.hurtT <= 0 && pt.setTint && pt.tintTopLeft !== GLASS) pt.setTint(GLASS); });
+      this.rig.setAlpha(0.85); if (Math.random() < 0.06) fx.push({ x: this.x + rand(-H * 0.3, H * 0.3), y: this.gy - rand(0.2, 1) * H, vx: 0, vy: -rand(10, 30), g: 0, r: rand(1.5, 3), life: 0.4, t: 0.4, color: 0xffffff });
+    }
     if (this.liftT > 0) { this.liftT -= dt; o.hop = (o.hop || 0) + Math.sin(Math.max(0, this.liftT) / 0.5 * Math.PI) * H * 0.5; }   // levantado por los pinchos de Abaddon
     this.apply(o, dt);
   }
@@ -3776,6 +3815,9 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'ezra') {
+      this.weapon.setPosition(o.fh[0] * H, o.fh[1] * H).setRotation(o.ma || 0.1);
+      if (o.shine && Math.random() < 0.6) { const k = this.bigK || 1; fx.push({ x: this.x + this.dir * (o.fh[0] + 0.15) * H * k + rand(-10, 10), y: this.gy + (o.fh[1] - 0.35) * H * k + rand(-14, 14), vx: rand(-20, 20), vy: -rand(10, 50), g: 0, r: rand(2, 4), life: 0.35, t: 0.35, color: Math.random() < 0.5 ? GLASS : 0xffffff }); }
     } else if (this.type === 'zero') {
       // normal: niño y manos; en la definitiva, el cuerpo alzado, las manos abiertas y la sombra agarrando la capucha
       const c = this.cfg, U = !!o.zult, now = this.sc.time.now / 1000, dead = this.state === 'die';
@@ -4655,6 +4697,7 @@ function fightLogic(dt) {
     if (u.type === 'rhea') { rheaLogic(u, dt); continue; }
     if (u.type === 'aurelion') { aurLogic(u, dt); continue; }
     if (u.type === 'mira') { miraLogic(u, dt); continue; }
+    if (u.type === 'ezra') { if (!u.ezFirst) { u.ezFirst = true; u.cd = Math.min(u.cd, 2.5); } miraLogic(u, dt); continue; }   // la primera copia, enseguida
     if (u.type === 'kaiju') {   // aliento atómico cada 30 s, en cuanto tiene enemigos (o el castillo) por delante
       u.beamT = (u.beamT === undefined ? 6 : u.beamT) - dt;
       if (u.beamT <= 0 && (u.state === 'idle' || u.state === 'walk') && enemiesOf(u).some(v => (v.x - u.x) * u.dir > 0 && Math.abs(v.x - u.x) < H * 7)) { u.beamT = u.cfg.beamCd; u.set('kaiBeam'); continue; }
@@ -4989,7 +5032,7 @@ function makeAuraTextures(sc) {
 }
 /* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "zero": 7, "mira": 3, "kaiju": 7, "aurelion": 6, "rhea": 4, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
+const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "ezra": 5, "zero": 7, "mira": 3, "kaiju": 7, "aurelion": 6, "rhea": 4, "abaddon": 6, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata'; LABEL.abeja = 'Abeja';
 const ALL = Object.keys(NAMES);
@@ -5014,7 +5057,7 @@ const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: CAS.y0 + (CAS.seat[1] - CAS
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
-for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira' && k !== 'zero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero' && k !== 'rhea' && k !== 'aurelion' && k !== 'kaiju' && k !== 'mira' && k !== 'zero' && k !== 'ezra') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 for (const k in CH) if (CH[k].ranged) CH[k].range *= 0.75;   // todos los tiradores, un 25 % menos de alcance
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
@@ -5463,6 +5506,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'cetro', 'abeja']) L('rhea_' + n, 'rhea/' + n);
       for (const n of ['cuerpo', 'mano', 'puno', 'baculo', 'ala_t', 'ala_d']) L('aur_' + n, 'aurelion/' + n);
       for (const n of ['normal', 'abierta', 'estirado', 'llama', 'aliento']) L('kai_' + n, 'kaiju/' + n);
+      for (const n of ['cuerpo', 'mano_senala', 'puno', 'espejo']) L('ezr_' + n, 'ezra/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'sombra', 'cuerpo_ulti', 'agarre', 'mano_ab_t', 'mano_ab_d', 'forma0', 'forma1', 'forma2', 'forma3', 'forma4', 'forma5', 'forma6', 'forma7', 'forma8']) L('zer_' + n, 'zero/' + n);
       for (const n of ['cuerpo', 'mano', 'mano_bolsa', 'roja', 'morada', 'azul', 'verde', 'amarilla', 'blanca', 'negra', 'naranja']) L('mira_' + n, 'mira/' + n);
       for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
@@ -5604,7 +5648,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'mira', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'aurelion', 'kaiju', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'mira', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'ezra', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'aurelion', 'kaiju', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
@@ -6142,6 +6186,7 @@ const HABILIDAD = {
   morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
+  ezra: 'No ataca: cada 15 s alza su espejo ante un enemigo y de él sale una copia de cristal de ese enemigo que lucha de tu lado.',
   zero: 'Ataca con su sombra, que toma formas y envuelve al enemigo. Definitiva (a los 30 s, una vez): oscuridad total 3 s; después mueren los enemigos con la mitad de vida o menos y el resto pierde un 30 %.',
   mira: 'No ataca: cada 4 s lanza una poción al azar. Las buenas a un aliado (daño, velocidad, ataque o vida) y las malas a un enemigo (lentitud, torpeza, veneno o menos daño).',
   kaiju: 'Llamarada en área. Cada 30 s, aliento atómico: un rayo que cruza el carril, daña a todos los enemigos y llega al castillo.',
@@ -6530,6 +6575,7 @@ const PERKS = {
   morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
+  ezra: [[2, 'Cristal templado', 'escudo', 0.25], [4, 'Doble truco', 'veloz', 0.25], [6, 'Gran ilusión', 'regen', 0.02]],
   zero: [[2, 'Sombra densa', 'escudo', 0.25], [4, 'Hambre del vacío', 'robo', 0.2], [6, 'Nada', 'ejecutar', 0.5]],
   mira: [[2, 'Frascos reforzados', 'escudo', 0.25], [4, 'Mano rápida', 'veloz', 0.2], [6, 'Elixir', 'regen', 0.02]],
   kaiju: [[2, 'Escamas de roca', 'escudo', 0.25], [4, 'Furia radiactiva', 'furia', 0.35], [6, 'Rey de los monstruos', 'aguante', 1]],

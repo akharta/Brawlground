@@ -515,3 +515,11 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
   la capucha, abre las manos con los ojos en blanco y todo se vuelve negro absoluto 3 s. Después, los enemigos con la mitad de
   vida o menos mueren y el resto pierde un 30 % de la vida que les quede (el castillo no).
 - Provisional: 150 de vida. Rango: Sombra densa (escudo), Hambre del vacío (robo), Nada (ejecutar).
+
+## Ezra, el Ilusionista (épica)
+
+- No ataca. Avanza detrás de los suyos y se para a su alcance (2,6 H).
+- Cada 15 s alza su espejo ante el enemigo más cercano y de él sale una **copia de cristal** de ese enemigo, con su nivel, rango y mejoras, que lucha de su lado. La primera copia sale a los 2,5 s de llegar.
+- La copia tiene la vida completa del original, es azul cristal translúcida (filtro de color sobre la unidad) y lanza destellos. Las ascendidas copiadas no tienen definitiva y Los Grises copiados no se dividen.
+- No copia héroes, castillos ni esqueletos invocados.
+- Mejoras: Cristal templado (escudo), Doble truco (velocidad), Gran ilusión (regeneración).
