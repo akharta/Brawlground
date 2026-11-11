@@ -4543,7 +4543,7 @@ for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
 for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.6;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
-const VIEW_M = 240 - THRONE.x;   // la cámara empieza justo detrás del trono: se ve menos castillo
+const VIEW_M = 460 - THRONE.x;   // la cámara empieza justo detrás del trono: se ve menos castillo
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
