@@ -17,9 +17,9 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 1.0, x0: -230, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 1.25, x0: -445, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
-const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 165 };
+const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
 const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
@@ -29,7 +29,7 @@ for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
 for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.25;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
-const VIEW_M = -CAS.x0 + 160;   // la cámara ve más allá del campo: los castillos enteros y un poco de terreno detrás
+const VIEW_M = -CAS.x0 + 120;   // la cámara ve más allá del campo: los castillos enteros y un poco de terreno detrás
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
@@ -130,7 +130,7 @@ function laneTick(dt) {
   for (const u of units) {
     if (!u.alive || u.isCastle || !['walk', 'attack', 'idle'].includes(u.state)) continue;
     const o = nearestEnemy(u);
-    if (o && !o.isCastle && Math.abs(o.x - u.x) < H * 7) {   // empiezan a buscarse de lejos: llegan al choque en el mismo carril
+    if (o && !o.isCastle && !u.cfg.ranged && Math.abs(o.x - u.x) < H * 7) {   // solo los de cuerpo a cuerpo se ponen a la altura de su rival: los de distancia disparan desde su carril   // empiezan a buscarse de lejos: llegan al choque en el mismo carril
       const d = o.lane - u.lane, step = Math.min(Math.abs(d) / 2, LANE_DRIFT * dt);   // los dos van hacia el medio
       if (Math.abs(d) > 6) u.lane += Math.sign(d) * step;
     }
