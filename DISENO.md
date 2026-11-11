@@ -523,3 +523,10 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - La copia tiene la vida completa del original, es azul cristal translúcida (filtro de color sobre la unidad) y lanza destellos. Las ascendidas copiadas no tienen definitiva y Los Grises copiados no se dividen.
 - No copia héroes, castillos ni esqueletos invocados.
 - Mejoras: Cristal templado (escudo), Doble truco (velocidad), Gran ilusión (regeneración).
+
+## Valdrys, el Escudo del paladín (épica, paladines)
+
+- Tanque sin armas: 440 de vida y bloquea el 40 % del daño que le llega de frente. No golpea cuerpo a cuerpo: avanza hasta chocar con el enemigo y aguanta.
+- Cada 5 s, si hay un enemigo a 3,2 H, el escudo se ilumina y lo lanza hecho luz: va recto 4,8 H, atraviesa a todos los enemigos (16–20 de daño a cada uno) y se va apagando hasta la luz tenue y desaparecer. Los escudos enemigos no lo paran; el castillo sí.
+- Tras lanzarlo, el escudo se le vuelve a formar en las manos desde la luz tenue en ~1 s.
+- Mejoras: Égida (escudo), Coraza solar (espinas), Fe inquebrantable (regeneración).
