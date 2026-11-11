@@ -25,6 +25,9 @@ const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
 for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+// las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
+for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
+for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.25;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
@@ -119,8 +122,8 @@ function onDead(u) {            // en batalla las bajas no vuelven
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
-const LANES = 5, LANE_DRIFT = 75;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.42; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+const LANES = 5, LANE_DRIFT = 75 * H / 120;   // px por segundo de cambio de carril
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.55; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
   const lim = ROAD_HALF * 0.6;
   for (const u of units) {

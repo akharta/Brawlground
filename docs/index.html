@@ -967,7 +967,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 <script>
 (() => {
 'use strict';
-const W = 2800, VW = 960, HGT = 540, GROUND = 410, H = 120;
+const W = 2800, VW = 960, HGT = 540, GROUND = 410, H = 190;
 const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
@@ -4538,6 +4538,9 @@ const FIELD_L = CASTLE_FRONT + H * 0.5, FIELD_R = W - FIELD_L;
 // las unidades a distancia atacan a todo lo que esté a tres cuartos del terreno de juego (el fraile y Cole conservan su alcance de siempre; el centinela solo gana alcance con el francotirador: su minigun sigue usando close)
 const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
 for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
+// las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
+for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
+for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.25;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
@@ -4632,8 +4635,8 @@ function onDead(u) {            // en batalla las bajas no vuelven
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
 let ROAD_HALF = H;
-const LANES = 5, LANE_DRIFT = 75;   // px por segundo de cambio de carril
-function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.42; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
+const LANES = 5, LANE_DRIFT = 75 * H / 120;   // px por segundo de cambio de carril
+function laneRand() { const i = Math.floor(Math.random() * LANES), sp = ROAD_HALF * 0.55; return Math.round((i - (LANES - 1) / 2) / ((LANES - 1) / 2) * sp + rand(-6, 6)); }
 function laneTick(dt) {
   const lim = ROAD_HALF * 0.6;
   for (const u of units) {
@@ -4789,7 +4792,7 @@ window.__setKills = (n, team = 'blue') => { B[team].kills = n; };
 window.__heroP = () => B.heroP && { state: B.heroP.state, skillT: B.heroP.skillT, kills: B.purple.kills };
 
 /* ---- escenario: escenas completas (fondo, camino y objetos en una sola imagen); t/b = franja de tierra (fracción del alto) ---- */
-const ESC = {"cerezos": {"t": 0.4198, "b": 0.6561, "w": 841, "h": 1870, "top": "#46b9fe", "bot": "#9ee84d"}, "otono": {"t": 0.4048, "b": 0.6759, "w": 841, "h": 1870, "top": "#16a3fe", "bot": "#c3dd3d"}, "oasis": {"t": 0.415, "b": 0.6914, "w": 841, "h": 1870, "top": "#1ed7fd", "bot": "#c4e655"}, "pinos": {"t": 0.4123, "b": 0.6706, "w": 841, "h": 1870, "top": "#42b5fe", "bot": "#9be06b"}};
+const ESC = {"cerezos": {"t": 0.447, "b": 0.6036, "w": 838, "h": 1877, "top": "#28acfe", "bot": "#a5ed5c"}, "pinos": {"t": 0.4417, "b": 0.6127, "w": 838, "h": 1877, "top": "#1fa7fd", "bot": "#a1ed75"}, "otono": {"t": 0.4369, "b": 0.6173, "w": 837, "h": 1879, "top": "#05a4fe", "bot": "#cbe741"}, "oasis": {"t": 0.4439, "b": 0.6259, "w": 837, "h": 1879, "top": "#0bc7fd", "bot": "#c7ef53"}};
 const ESC_NAME = { cerezos: 'Cerezos', otono: 'Otoño', oasis: 'Oasis', pinos: 'Pinos' };
 let escena = (() => { try { const v = localStorage.getItem('bg-escena'); return ESC[v] ? v : 'cerezos'; } catch (e) { return 'cerezos'; } })(), escObjs = [], clouds = [];
 function escPreload(L) {
