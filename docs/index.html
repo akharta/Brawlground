@@ -967,7 +967,7 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 <script>
 (() => {
 'use strict';
-const W = 2800, VW = 960, HGT = 540, GROUND = 410, H = 190;
+const W = 3660, VW = 960, HGT = 540, GROUND = 410, H = 190;
 const OUT = 0x1e2235, STRING = 0xf6e3c6; let BLUE = 0x3b82f6, PURPLE = 0x8b5cf6;
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3);
 const easeIn = p => p < 0 ? 0 : p > 1 ? 1 : p * p * p;
@@ -4530,7 +4530,7 @@ let myHero = (() => { try { const h = localStorage.getItem('bg-hero'); return HE
 /* ---- castillos (vista aérea): el dibujo, recortado a 865x1180, con el trono dentro y dos torres con arqueros mirando al
    camino. El tuyo a la izquierda; el del rival, volteado a la derecha y con su color. Cuatro aspectos: piedra, roble, hielo y hierro ---- */
 let ROADW = 1250;                                        // anchura del camino (de hierba a hierba), en unidades del mundo (la fija la escena)
-const CAS = { k: 1.25, x0: -445, oy: 560, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
+const CAS = { k: 2.0, x0: -1320, oy: 454, front: 860, seat: [385, 560], arch: [[790, 132], [795, 776]], w: 865, h: 1180 };
 const CASTLE_FRONT = CAS.x0 + CAS.front * CAS.k;            // frente de las torres
 const THRONE = { x: CAS.x0 + CAS.seat[0] * CAS.k, y: GROUND - 10 + (CAS.seat[1] - CAS.oy) * CAS.k, w: 185 * CAS.k };
 // el terreno de juego va de FIELD_L a FIELD_R: nadie pisa ningún castillo (al aparecer, al ser empujado o al lanzarse)
@@ -4540,9 +4540,9 @@ const RANGO_LEJOS = 0.75 * (FIELD_R - FIELD_L);
 for (const k in CH) if (CH[k].ranged && k !== 'fraile' && k !== 'pistolero') CH[k].range = Math.max(CH[k].range, RANGO_LEJOS);
 // las unidades son más grandes que en el campo de pruebas (H = 150): andan en proporción; los héroes, aún más grandes
 for (const k in CH) if (CH[k].speed) CH[k].speed *= H / 120;
-for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.25;
+for (const k of ['aldric', 'lyra', 'gull']) if (CH[k] && CH[k].k) CH[k].k *= 1.6;
 const CASTILLOS = ['piedra', 'roble', 'hielo', 'hierro'];
-const VIEW_M = -CAS.x0 + 120;   // la cámara ve más allá del campo: los castillos enteros y un poco de terreno detrás
+const VIEW_M = 390 - CASTLE_FRONT;   // la cámara empieza un poco antes del frente: se ven las torres, no el resto del castillo   // la cámara ve más allá del campo: los castillos enteros y un poco de terreno detrás
 let castleImg = {};
 let CASTLE_SKIN = { blue: null, purple: null };          // aspecto de cada bando (reino.js); sin él, el de piedra
 function castleArt(team, st = '') {
@@ -4851,7 +4851,7 @@ function frameCamera() {
   }
   const topCss = battle ? $('hudtop').getBoundingClientRect().bottom + 6 : 0, botCss = battle ? $('dock').getBoundingClientRect().top - 2 : window.innerHeight;
   const X0 = -VIEW_M, X1 = W + VIEW_M, Y0 = GROUND - 10 - CAS.oy * CAS.k - 20, Y1 = GROUND - 10 + (CAS.h - CAS.oy) * CAS.k + 10;   // los dos castillos enteros
-  const z = Math.min(cw / (X1 - X0), Math.max(60, botCss - topCss) * DPR / (Y1 - Y0));   // solo vertical: manda el ancho
+  const z = cw / (X1 - X0);   // solo vertical: manda el ancho
   // el campo, en el centro del hueco entre el marcador y el panel de cartas (en vertical sobra alto: cielo arriba y prado abajo)
   const yCss = battle ? (topCss + botCss) / 2 : window.innerHeight / 2, mid = (Y0 + Y1) / 2;
   cam.setZoom(z); cam.centerOn(W / 2, mid - (yCss * DPR - ch / 2) / z);
