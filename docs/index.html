@@ -67,7 +67,6 @@ body.galeria #game { z-index: 31; pointer-events: none; background: transparent;
 .tc-bar .sello.tc-rk { position: absolute; left: 85%; top: 50%; transform: translate(-50%, -50%); height: 92%; width: auto; }
 .tc.lock .tc-fr { filter: saturate(.35) brightness(.8); }
 .tc.lock .tc-bar { filter: grayscale(1) brightness(.7); }
-.tc.up::after { content: '▲'; position: absolute; z-index: 3; right: -5px; top: -5px; width: 22px; height: 22px; border-radius: 50%; background: #3ccf86; color: #fff; border: 2px solid var(--outline); display: grid; place-items: center; font-size: .7rem; }
 
 
 .btn { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: .02em; text-decoration: none; text-align: center;
@@ -323,8 +322,8 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
 .dk.mini .rkb .est { height: 7px; }
 .rk .ests { margin-left: 2px; }
 #up-lv, #up-rk { touch-action: none; user-select: none; -webkit-user-select: none; }
-.dk.up::before { content: '▲'; position: absolute; z-index: 3; right: -6px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: #3ccf86; color: #fff; border: 2px solid var(--outline);
-  display: grid; place-items: center; font-size: .7rem; line-height: 1; animation: pulse 1s ease-in-out infinite; }
+.dk.up::before, .tc.up::after { content: ''; position: absolute; z-index: 3; right: -6px; top: -8px; width: 26px; height: 28px; background: url(img/tarjetas/flecha_subir.png) center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); animation: pulse 1s ease-in-out infinite; }   /* flecha verde: tiene copias para ascender */
 #nav .ndot { position: absolute; top: 4px; right: 22%; width: 12px; height: 12px; border-radius: 50%; background: #3ccf86; border: 2px solid var(--outline); }
 .ustats { border-collapse: collapse; margin: 6px 0 4px; font-size: .84rem; font-variant-numeric: tabular-nums; }
 .ustats th { text-align: left; color: var(--muted); font-weight: 800; padding: 1px 12px 1px 0; }
@@ -580,7 +579,7 @@ body.nav .screen.maps .mapscroll { padding-bottom: 0; }
 #carga #loadtxt, #carga .tip { background: rgba(16,21,42,.78); border-radius: 12px; padding: 4px 12px; text-shadow: 0 1px 0 #000; }   /* legibles aunque pasen sobre los héroes */
 .screen.tabscr, .screen.hogar { background: linear-gradient(rgba(16,22,46,.62), rgba(16,22,46,.72)), #17306e url(img/ui/fondo_azul.jpg) center / cover no-repeat; }
 @media (orientation: landscape) and (max-height: 520px) { .side { top: calc(var(--st) + 70px); gap: 4px; } .sico { width: 38px; height: 38px; } .slbl { display: none; } .sbtn { width: 46px; } }
-@media (prefers-reduced-motion: reduce) { .sello.big, .absil, .rayos, .abcell.hit, .dk.up::before, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .sello.big, .absil, .rayos, .abcell.hit, .dk.up::before, .tc.up::after, .udetail.lvup .dk, .botin.full .chest, .badge, .tribb, #coach, #tap, #hero.ready .ring, .knode.open .kico, .lnode.cur img, .route.next, .reveal, .dk.reveal img, .stars.big i.on { animation: none; } .route.fresh { stroke-dashoffset: 0; } }
 
 /* ==== estructura nueva: tienda, reino, eventos, abismo, promoción ==== */
 .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 12px; }
