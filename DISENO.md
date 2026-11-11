@@ -487,3 +487,11 @@ Arte en bruto en `arte/paladin/`; piezas del juego en `docs/img/aurelion/`.
 - Cura: alza el báculo y lanza un destello verde y dorado al aliado más herido a su alcance (22–28). Se queda detrás de los suyos.
 - Cada 50 s revive al aliado caído más cercano (no héroes ni invocaciones): columna de luz y vuelve donde cayó, con su nivel y rango.
 - Provisional: 170 de vida. Rango: Gracia (escudo), Luz eterna (regenera), Resurrección (aguanta).
+
+## Kaiju Tomo, el Lagarto colosal (legendaria, coste 7)
+
+Arte en bruto en `arte/kaiju/`; piezas del juego en `docs/img/kaiju/` (poses normal, boca abierta y cuello estirado; llama y aliento).
+- Llamarada (ataque básico): abre la boca, estira el cuello y escupe una llama azul que estalla en área (19–25).
+- Aliento atómico (cada 30 s, solo): carga con la boca abierta y lanza un rayo por todo el carril hasta el castillo: 110 a todos
+  los enemigos que tiene delante y 70 al castillo.
+- Provisional: 380 de vida. Rango: Escamas de roca (escudo), Furia radiactiva (furia), Rey de los monstruos (aguanta).

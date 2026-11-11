@@ -16,6 +16,7 @@ const HABILIDAD = {
   morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
+  kaiju: 'Llamarada en área. Cada 30 s, aliento atómico: un rayo que cruza el carril, daña a todos los enemigos y llega al castillo.',
   aurelion: 'Vuela. Cura a sus aliados con destellos de su báculo y, cada 50 s, revive al aliado caído más cercano.',
   rhea: 'No ataca: desde la distancia de Cole, cada 1,5 s su cetro suelta una abeja que vuela a picar (hasta 6 a la vez).',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
