@@ -3295,10 +3295,11 @@ class Unit {
     this.drawAura(dt);
     this.bar.clear();
     if (mode === 'fight' && this.alive && this.state !== 'die') {
-      const bw = 58, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h * (this.bigK || 1) - 22;
-      this.bar.fillStyle(OUT, 1).fillRoundedRect(bx - 3, by - 3, bw + 6, 14, 6);
-      this.bar.fillStyle(0x3a3f55, 1).fillRoundedRect(bx, by, bw, 8, 4);
-      this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4, bw * this.hp / this.max), 8, 4);
+      // barra de vida a escala de las unidades (en batalla son mucho más grandes que en el campo de pruebas)
+      const q = Math.max(1, H / 120) * 0.85, bw = 58 * q, bh = 8 * q, bx = this.x - bw / 2, by = this.gy - H * this.cfg.h * (this.bigK || 1) - 22 * q;
+      this.bar.fillStyle(OUT, 1).fillRoundedRect(bx - 3 * q, by - 3 * q, bw + 6 * q, bh + 6 * q, 6 * q);
+      this.bar.fillStyle(0x3a3f55, 1).fillRoundedRect(bx, by, bw, bh, 4 * q);
+      this.bar.fillStyle(this.team === 'blue' ? BLUE : PURPLE, 1).fillRoundedRect(bx, by, Math.max(4 * q, bw * this.hp / this.max), bh, 4 * q);
     }
     if (this.type === 'imparable' && this.form === 1 && this.alive && this.state !== 'die') drawSkulls(this);
     this.drawUltReady();
