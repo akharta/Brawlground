@@ -457,3 +457,17 @@ Arte en bruto en `arte/costurera/`; piezas del juego en `docs/img/morgana/`.
   (a distancia) cosiéndolos con un hilo rojo ondulante, vuelve atravesándolos otra vez y regresa al moño.
 - Cada puntada (ida y vuelta) hace 14–18; al terminar se cura el 30 % del daño hecho.
 - Provisional: 140 de vida. Habilidades de rango: Puntada fina (críticos), Hilo de sangre (robo de vida), Remate (ejecutar).
+
+## Abaddon, el Devorador insaciable (legendaria, coste 6)
+
+Arte en bruto en `arte/abaddon/`; piezas del juego en `docs/img/abaddon/` (poses normal, fauces cerradas y abiertas; pinchos).
+- Muerde cuerpo a cuerpo (22–28).
+- Pisotón (cada 20 s, al tener enemigos cerca): brotan pinchos de hueso bajo todos los enemigos a su alrededor; los levanta,
+  los aturde 1 s y les hace 40.
+- Devorar (cada 15 s): a un enemigo con el 15 % de vida o menos (no héroes) se lo traga y crece un 10 % en tamaño y vida.
+  El crecimiento se acumula durante la batalla: los siguientes Abaddon de ese bando salen ya crecidos; se reinicia en cada batalla.
+- Provisional: 320 de vida. Rango: Coraza de hueso (escudo), Hambre voraz (robo), Insaciable (furia).
+
+## Ajustes
+- Unidades un 20 % más grandes (H = 374 en batalla); las marcas de Elyss y las cargas de Nul, a escala.
+- Todos los tiradores, un 25 % menos de alcance. Nivea: copos 4–5 y cristal 15–19.

@@ -148,6 +148,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="torque" aria-pressed="false">Torque, el Robot obrero</button>
       <button data-char="anubek" aria-pressed="false">Anubek, el Chacal de arcilla</button>
       <button data-char="morgana" aria-pressed="false">Morgana, la Costurera oscura</button>
+      <button data-char="abaddon" aria-pressed="false">Abaddon, el Devorador insaciable</button>
       <button data-char="kubi" aria-pressed="false">Kubi, la Slime</button>
       <button data-char="tormund" aria-pressed="false">Tormund, el Berserker</button>
       <button data-char="rufo" aria-pressed="false">Rufo, el Perro cobarde</button>
@@ -266,6 +267,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
         <div class="rar">Común</div>
       </div>
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>10</dd><dt>Al morir</dt><dd>Se parte en 2, y luego en 4</dd></dl>
+    </div>
+    <div class="cardbox">
+      <div class="card legend" aria-label="Carta de Abaddon, el Devorador insaciable">
+        <div class="cost">6</div>
+        <div class="art"><img src="img/abaddon_carta.png" alt="Ilustración de Abaddon, el Devorador insaciable"></div>
+        <div class="name">Abaddon</div>
+        <div class="cls">el Devorador insaciable</div>
+        <div class="rar">Legendaria</div>
+      </div>
+      <dl><dt>Vida</dt><dd>320</dd><dt>Daño</dt><dd>25 por mordisco</dd><dt>Ataques</dt><dd>Pisotón de pinchos y devorar</dd></dl>
     </div>
     <div class="cardbox">
       <div class="card epic" aria-label="Carta de Morgana, la Costurera oscura">
@@ -528,7 +539,7 @@ const CH = {
   rufo: { hp: 80, dmg: [12, 16], speed: 92, cd: [0.5, 0.8], range: H * 1.9, ranged: false, h: 0.8, wide: true, rest: { bh: [0, 0], fh: [0, 0] },
     P: {"head": [0.118, -0.503], "body": [-0.096, -0.237], "tail": [-0.285, -0.429], "dl": [-0.111, -0.15], "dv": [0.2, -0.172], "tc": [-0.314, -0.217], "tl": [-0.207, -0.217]} },
   // Nivea, la Maga de hielo: con el libro abierto lanza ráfagas de 3 copos de nieve; cada tercer ataque, un cristal de hielo
-  nivea: { hp: 70, dmg: [5, 7], crystal: [20, 26], speed: 56, cd: [1.4, 1.8], range: H * 4.5, ranged: true, h: 1.05,
+  nivea: { hp: 70, dmg: [4, 5], crystal: [15, 19], speed: 56, cd: [1.4, 1.8], range: H * 4.5, ranged: true, h: 1.05,
     rest: { bh: [-0.238, -0.177], fh: [0.296, -0.299] }, org: 0.589, book: [0.434, -0.486] },
   // Los Grises, las Ratas de cloaca: una carta, cuatro ratas. Sale la del escudo (grises) y con ella las otras tres
   grises: { hp: 110, dmg: [7, 9], speed: 60, cd: [1.0, 1.3], range: H * 1.0, ranged: false, h: 1.05, block: 0.3, push: 18, rat: 'escudo', R: {"org": [0.535, 0.999], "mano_t": [-0.215, -0.359], "mano_d": [0.38, -0.416]} },
@@ -549,6 +560,11 @@ const CH = {
   // los que tiene delante cosiéndolos con su hilo; vuelve atravesándolos otra vez y regresa al moño. Roba vida con cada puntada
   morgana: { hp: 140, dmg: [14, 18], speed: 52, cd: [2.0, 2.4], range: H * 4.5, ranged: true, h: 1.15, steal: 0.3,
     rest: { bh: [-0.244, -0.302], fh: [0.346, -0.39] }, org: [0.586, 0.999], spool: [0.486, -0.648], pin: [-0.082, -0.869], pinA: 2.54 },
+  // Abaddon, el Devorador insaciable: muerde; al acercarse, pisotón que hace brotar pinchos bajo los enemigos (los levanta, los
+  // aturde 1 s y les hace daño; cada 20 s); a un enemigo con el 15 % de vida o menos lo devora (cada 15 s) y crece un 10 % en
+  // tamaño y vida. El crecimiento se acumula en la batalla: los siguientes Abaddon de ese bando salen ya crecidos
+  abaddon: { hp: 320, dmg: [22, 28], speed: 46, cd: [1.3, 1.6], range: H * 1.1, ranged: false, h: 1.25, org: [0.399, 0.997], rest: { bh: [0, 0], fh: [0, 0] },
+    stompCd: 20, stompR: H * 2.8, stompDmg: 40, stompStun: 1, devourCd: 15, devourHp: 0.15, grow: 1.1 },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -650,7 +666,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { abaddon: 'legendaria', morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -747,6 +763,17 @@ function ivoRay(u, wx, wy) {
   burst(wx, wy, 0xfff1a0, 5, 120); burst(tx, ty, 0xffe27a, 8, 150);
   if (tg) tg.damage(Math.round(rand(...u.cfg.dmg)), u, u.x);
 }
+let ABA_STACK = { blue: 0, purple: 0 };   // crecimiento de Abaddon acumulado en esta batalla, por bando
+function abaPinchos(x, y) {
+  // brotan pinchos de hueso del suelo bajo el enemigo y se hunden de nuevo
+  for (let i = 0; i < 3; i++) {
+    const im = scene.add.image(x + (i - 1) * H * 0.22, y + 4, 'aba_pincho' + Math.floor(Math.random() * 5)).setOrigin(0.5, 1).setDepth(y + 2).setFlipX(Math.random() < 0.5);
+    const k = H * rand(0.55, 0.85) / 220; im.setScale(k, 0.05);
+    scene.tweens.add({ targets: im, scaleY: k, duration: 130 / timeScale, delay: i * 40 / timeScale, ease: 'Back.easeOut', onComplete: () =>
+      scene.tweens.add({ targets: im, scaleY: 0.05, alpha: 0, delay: 650 / timeScale, duration: 250 / timeScale, onComplete: () => im.destroy() }) });
+  }
+  burst(x, y, 0xe8d3b0, 12, 200);
+}
 let RHY_ALL = true;                 // en la escena de pruebas se ven las 10; en batalla, las del rango de la unidad
 let slowBy = null, slowReal = 0;    // quién ha ralentizado el tiempo (definitiva de Rhysida) y el dt real de este fotograma
 const BOW = CH.arquera.bow;
@@ -755,7 +782,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1056,6 +1083,9 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'abaddon') {
+      this.body = sc.add.image(0, 0, 'aba_normal').setOrigin(this.cfg.org[0], this.cfg.org[1]).setScale(H / 512);
+      this.parts = [this.body]; this.rig.add(this.parts); this.drops = [];
     } else if (type === 'morgana') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'mor_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -1140,6 +1170,7 @@ class Unit {
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nivea') this.shots = 0;
+    if (this.type === 'abaddon') { this.abaInit = false; this.abaK = 1; this.stompT = 2; this.devT = 0; this.devTg = null; }
     if (this.type === 'morgana') { this.mor = null; if (this.plasmaG) this.plasmaG.clear(); }
     if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
     if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.rufoDone = new Set(); this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
@@ -1167,8 +1198,8 @@ class Unit {
   ultIconPos() { const k = this.bigK || 1; return [this.x, this.gy - H * this.cfg.h * k - (mode === 'fight' ? 62 : 44)]; }
   drawUltReady() {
     if (this.type === 'nul' && this.alive && this.state !== 'die' && mode === 'fight') {   // sus cargas de esquiva, en puntitos
-      const n = this.cfg.charges, y = this.gy + 12;
-      for (let i = 0; i < n; i++) this.bar.fillStyle(i < this.charges ? 0xe9d5ff : 0x1e2235, i < this.charges ? 1 : 0.5).fillCircle(this.x + (i - (n - 1) / 2) * 8, y, 3);
+      const q = Math.max(1, H / 120) * 1.3, n = this.cfg.charges, y = this.gy + 12 * q;
+      for (let i = 0; i < n; i++) this.bar.fillStyle(OUT, 1).fillCircle(this.x + (i - (n - 1) / 2) * 9 * q, y, 4.4 * q).fillStyle(i < this.charges ? 0xe9d5ff : 0x3a3f55, 1).fillCircle(this.x + (i - (n - 1) / 2) * 9 * q, y, 3.2 * q);
     }
     // lista: un círculo con el retrato de su cara sobre la cabeza, que late; tócalo (o a la unidad) para lanzarla
     const ready = this.ultReady;
@@ -1392,6 +1423,14 @@ class Unit {
       if (dn > 0.6 && !this.fired) { this.fired = true; onMelee(this); }
       if (p >= 1) this.set('idle');
     }
+  }
+  attackAba(o, t) {
+    // abre las fauces, se echa atrás y se lanza a morder
+    const p = t / 0.6, k = p < 0.4 ? ease(p / 0.4) : 0, l = p < 0.4 ? 0 : p < 0.55 ? easeIn((p - 0.4) / 0.15) : 1 - ease((p - 0.55) / 0.45);
+    o.abaTex = p < 0.42 ? 'aba_abierta' : p < 0.75 ? 'aba_cerrada' : 'aba_normal';
+    o.rot = -0.08 * k + 0.1 * l; o.dx = -0.05 * k + 0.12 * l;
+    if (p >= 0.5 && !this.fired) { this.fired = true; onMelee(this); }
+    if (p >= 1) this.set('idle');
   }
   morPt(lx, ly) {   // punto del cuerpo (en H) a coordenadas del mundo
     const k = this.bigK || 1; return [this.x + this.dir * lx * H * k, this.gy + ly * H * k + this.rig.y];
@@ -1754,6 +1793,7 @@ class Unit {
         else if (this.type === 'torque') this.attackTorque(o, t);
         else if (this.type === 'anubek') this.attackAnubek(o, t);
         else if (this.type === 'morgana') this.attackMorgana(o, t);
+        else if (this.type === 'abaddon') this.attackAba(o, t);
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
         else if (this.type === 'tormund') this.attackTor(o, t);
@@ -1820,6 +1860,33 @@ class Unit {
       }
       case 'ultR': this.ultRhy(o, t); break;
       case 'ultN': this.ultNul(o, t); break;
+      case 'abaStomp': {             // se alza y da un pisotón: brotan pinchos bajo los enemigos cercanos
+        const k = this.abaK || 1;
+        if (t < 0.4) { const e = ease(t / 0.4); o.hop = H * 0.35 * e; o.rot = -0.1 * e; o.abaTex = 'aba_cerrada'; }
+        else { const e = Math.min(1, (t - 0.4) / 0.08); o.hop = H * 0.35 * (1 - e); o.sy = 1 - 0.12 * Math.sin(Math.min(1, (t - 0.4) / 0.25) * Math.PI); o.sx = 2 - o.sy; o.abaTex = 'aba_abierta';
+          if (!this.fired && e >= 1) {
+            this.fired = true; this.sc.cameras.main.shake(220, 0.01); burst(this.x, this.gy, 0xe8d3b0, 20, 260);
+            if (mode === 'fight') enemiesOf(this).filter(v => !v.isCastle && Math.abs(v.x - this.x) <= this.cfg.stompR * k).forEach(v => {
+              abaPinchos(v.x, v.gy); v.damage(this.cfg.stompDmg, this); if (v.alive && v.state !== 'die') { v.liftT = 0.5; if (v.stun) v.stun(this.cfg.stompStun); }
+            });
+          }
+        }
+        if (t >= 1.0) { this.fired = false; this.set('idle'); }
+        break;
+      }
+      case 'abaDevour': {            // abre las fauces y se traga a su presa; crece un 10 %
+        o.abaTex = t < 0.9 ? 'aba_abierta' : 'aba_cerrada'; o.rot = 0.06 * Math.sin(Math.min(1, t / 0.9) * Math.PI);
+        if (!this.fired && t >= 0.15) {
+          this.fired = true; const v = this.devTg, k = this.abaK || 1;
+          if (v && v.alive && v.state !== 'die') { v.absX0 = v.x; v.absX = this.x + this.dir * H * 0.45 * k; v.absH = H * 0.5 * k; v.set('absorbed'); }
+        }
+        if (t >= 1.15) {
+          if (this.devTg) { const g = this.cfg.grow; ABA_STACK[this.team] = (ABA_STACK[this.team] || 0) + 1; this.abaK = (this.abaK || 1) * g; this.max = Math.round(this.max * g); this.hp = Math.min(this.max, Math.round(this.hp * g + this.max * 0.1));
+            floatText(this.x, this.gy - H * 1.6 * this.abaK, '¡Ñam! +10 %', '#ff7a8a'); }
+          this.devTg = null; this.fired = false; this.set('idle');
+        }
+        break;
+      }
       case 'torThrow': {             // echa el hacha grande atrás y la lanza
         const r = this.cfg.rest, p = t / 0.55, wind = p < 0.45 ? ease(p / 0.45) : 1, fw = p < 0.45 ? 0 : ease(Math.min(1, (p - 0.45) / 0.2));
         o.fh = lerp2(lerp2(r.fh, [-0.1, -0.95], wind), [0.55, -0.7], fw); o.a2 = lerp(lerp(o.a2, -Math.PI / 2 - 1.3, wind), 0.2, fw); o.rot = -0.1 * wind + 0.16 * fw;
@@ -2125,6 +2192,7 @@ class Unit {
       const white = this.hurtT > 0.22;
       this.parts.forEach(pt => white ? pt.setTintFill(0xffffff) : pt.clearTint());
     }
+    if (this.liftT > 0) { this.liftT -= dt; o.hop = (o.hop || 0) + Math.sin(Math.max(0, this.liftT) / 0.5 * Math.PI) * H * 0.5; }   // levantado por los pinchos de Abaddon
     this.apply(o, dt);
   }
   attackSword(o, t) {
@@ -3007,6 +3075,13 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'abaddon') {
+      if (!this.abaInit && this.state !== 'held') {   // sale con el crecimiento acumulado de su bando en esta batalla
+        this.abaInit = true; const n = mode === 'fight' ? ABA_STACK[this.team] || 0 : 0, g = Math.pow(this.cfg.grow, n);
+        this.abaK = g; if (n) { this.max = Math.round(this.max * g); this.hp = this.max; }
+      }
+      const key = o.abaTex || 'aba_normal'; if (this.body.texture.key !== key) this.body.setTexture(key);
+      this.bigK = this.abaK || 1; this.rig.scaleX *= this.bigK; this.rig.scaleY *= this.bigK; this.shadow.setSize(H * 1.0 * this.bigK, H * 0.2 * this.bigK);
     } else if (this.type === 'morgana') {
       // el carrete flota ante su mano; la aguja, en el moño o volando; el hilo rojo va del carrete a la aguja, ondulando
       const c = this.cfg, now = this.sc.time.now / 1000, k = this.bigK || 1, bob = 0.03 * Math.sin(now * 2.2 + this.homeX);
@@ -3641,12 +3716,12 @@ function implode(u) {
 }
 function drawSkulls(u) {
   // 7 calaveritas sobre la cabeza: encendidas las marcas conseguidas
-  const n = IMP_RULES.stacks, sp = 9, g = u.bar, y = u.gy - H * u.cfg.h * (u.bigK || 1) - (mode === 'fight' ? 34 : 18), x0 = u.x - sp * (n - 1) / 2;
+  const q = Math.max(1, H / 120) * 1.3, n = IMP_RULES.stacks, sp = 9 * q, g = u.bar, y = u.gy - H * u.cfg.h * (u.bigK || 1) - (mode === 'fight' ? 34 : 18) * q, x0 = u.x - sp * (n - 1) / 2;
   for (let i = 0; i < n; i++) {
     const on = i < (u.stacks || 0), x = x0 + i * sp;
-    g.fillStyle(OUT, 1).fillCircle(x, y, 4.6).fillRect(x - 3, y + 1, 6, 5);
-    g.fillStyle(on ? 0xd7ff3a : 0x4a4f63, 1).fillCircle(x, y, 3.2).fillRect(x - 2, y + 1, 4, 3.5);
-    g.fillStyle(OUT, 1).fillRect(x - 2, y - 1, 1.6, 1.8).fillRect(x + 0.6, y - 1, 1.6, 1.8);
+    g.fillStyle(OUT, 1).fillCircle(x, y, 4.6 * q).fillRect(x - 3 * q, y + 1 * q, 6 * q, 5 * q);
+    g.fillStyle(on ? 0xd7ff3a : 0x4a4f63, 1).fillCircle(x, y, 3.2 * q).fillRect(x - 2 * q, y + 1 * q, 4 * q, 3.5 * q);
+    g.fillStyle(OUT, 1).fillRect(x - 2 * q, y - 1 * q, 1.6 * q, 1.8 * q).fillRect(x + 0.6 * q, y - 1 * q, 1.6 * q, 1.8 * q);
   }
 }
 function whipHit(u, tg, reach) {
@@ -3820,7 +3895,7 @@ function onDead(u) {
 function fightLogic(dt) {
   for (const u of units) {
     if (!u.alive || u.state === 'die' || u.state === 'spawn') continue;
-    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
+    if (['tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'rise', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) continue;
     if (u.ultReady && (u.team === 'purple' || window.__autoUlt)) {   // la IA lanza su definitiva cuando le sale a cuenta
       const foes = enemiesOf(u).filter(v => !v.isCastle && (v.x - u.x) * u.dir > -H * 0.3);
       if (u.type === 'imparable' ? foes.some(v => Math.abs(v.x - u.x) < H * 3) : foes.length >= 2 || foes.some(v => Math.abs(v.x - u.x) < u.cfg.range)) { if (u.castUlt()) continue; }
@@ -3858,6 +3933,15 @@ function fightLogic(dt) {
       if (e && d > u.cfg.range + H * 0.3 && d <= u.cfg.leapR && u.leapT <= 0) { u.leapT = u.cfg.leapCd; u.torTg = e; u.dir = Math.sign(e.x - u.x) || u.teamDir; u.dashFrom = u.x; u.dashTo = e.x - u.dir * u.cfg.range * 0.8; u.set('torLeap'); continue; }
       if (e && d > u.cfg.leapR && d <= torThrowR() && u.throwT <= 0) { u.throwT = u.cfg.throwCd; u.torTg = e; u.dir = Math.sign(e.x - u.x) || u.teamDir; u.set('torThrow'); continue; }
     } else if (u.type === 'tormund') { u.leapT = (u.leapT || 0) - dt; u.throwT = (u.throwT || 0) - dt; }
+    if (u.type === 'abaddon') {
+      u.stompT -= dt; u.devT -= dt;
+      if (u.state === 'idle' || u.state === 'walk' || u.state === 'attack') {
+        const k = u.abaK || 1, fs = enemiesOf(u).filter(v => !v.isCastle && v.alive && v.state !== 'die' && v.state !== 'absorbed');
+        const prey = u.devT <= 0 && u.state !== 'attack' ? fs.filter(v => !NUL_HERO(v) && v.hp <= v.max * u.cfg.devourHp && Math.abs(v.x - u.x) <= u.cfg.range * k + H * 0.6).sort((a, b) => a.hp - b.hp)[0] : null;
+        if (prey) { u.devT = u.cfg.devourCd; u.devTg = prey; u.dir = Math.sign(prey.x - u.x) || u.teamDir; u.set('abaDevour'); continue; }
+        if (u.stompT <= 0 && u.state !== 'attack' && fs.some(v => Math.abs(v.x - u.x) <= H * 2.2 * k)) { u.stompT = u.cfg.stompCd; u.set('abaStomp'); continue; }
+      }
+    }
     if (u.type === 'rhysida') {   // pasiva: cada pocos segundos, a la espalda del rival con menos vida
       u.tpT -= dt;
       if (u.tpT <= 0 && (u.state === 'idle' || u.state === 'walk')) {
@@ -4136,6 +4220,7 @@ function start() {
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'varita']) L('ivo_' + n, 'ivo/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'carrete', 'aguja']) L('mor_' + n, 'morgana/' + n);
+      for (const n of ['normal', 'cerrada', 'abierta', 'pincho0', 'pincho1', 'pincho2', 'pincho3', 'pincho4']) L('aba_' + n, 'abaddon/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
       for (const n of ['escudo', 'cuchillo', 'palanca']) L('rat_' + n, 'grises/' + n);
@@ -4229,7 +4314,7 @@ $('anim-controls').addEventListener('click', e => {
     return;
   }
   const act = b.dataset.act, u = units[0];
-  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
+  if (!act || !u || !u.alive || ['die', 'tpOut', 'tpIn', 'dash', 'shadeOut', 'shadeIn', 'darkCut', 'knock', 'lunge', 'transform', 'reborn', 'flip', 'launched', 'missiles', 'ultE', 'ultX', 'ultR', 'ultN', 'absorbed', 'torThrow', 'torLeap', 'abaStomp', 'abaDevour', 'kfdash', 'seismic', 'stunned', 'heroJump', 'storm', 'charge'].includes(u.state)) return;
   if (act === 'flip') { if (u.type === 'pistolero') { u.forceFlip = true; u.flipT = 0; u.inPlace = false; u.set('attack'); } return; }
   if (act === 'seismic') { if (u.type === 'aldric') { u.inPlace = false; u.set('seismic'); } return; }
   if (act === 'storm') { if (u.type === 'lyra') { u.inPlace = false; u.set('storm'); } return; }
