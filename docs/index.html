@@ -1383,7 +1383,7 @@ function ignisFlame(u) {
 function valThrow(u) {
   // el escudo, hecho luz, sale recto: atraviesa a todos los enemigos y se va apagando hasta desvanecerse
   const k = u.bigK || 1, sx = u.x + u.dir * 0.8 * H * k, sy = u.gy - 0.5 * H * k, v = 640;
-  const lz = scene.add.image(0, 0, 'val_escudo_luz').setScale(H / 512 * k).setFlipX(u.dir < 0), tn = scene.add.image(0, 0, 'val_escudo_tenue').setScale(H / 512 * k).setFlipX(u.dir < 0).setAlpha(0);
+  const lz = scene.add.image(0, 0, 'vdr_escudo_luz').setScale(H / 512 * k).setFlipX(u.dir < 0), tn = scene.add.image(0, 0, 'vdr_escudo_tenue').setScale(H / 512 * k).setFlipX(u.dir < 0).setAlpha(0);
   const img = scene.add.container(sx, sy, [tn, lz]).setDepth(950);
   burst(sx, sy, 0xffe27a, 12, 180);
   arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: 0, g: 0, t: 0, T: u.cfg.throwD / v, pierce: 99, hit: new Set(), trail: 0xffe9a0, spin: 1e-6, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, light: [lz, tn] });
@@ -1719,11 +1719,11 @@ class Unit {
       this.parts = [this.body, this.weapon, this.bh, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.6, -480, 7]];
     } else if (type === 'valdrys') {
       const k = H / 512, c = this.cfg;
-      this.body = sc.add.image(0, 0, 'val_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
-      this.weapon = sc.add.image(0, 0, 'val_escudo').setScale(k);
-      this.glowS = sc.add.image(0, 0, 'val_escudo_luz').setScale(k).setAlpha(0);
-      this.bh = sc.add.image(0, 0, 'val_puno').setScale(k);
-      this.fh = sc.add.image(0, 0, 'val_puno').setScale(k);
+      this.body = sc.add.image(0, 0, 'vdr_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.weapon = sc.add.image(0, 0, 'vdr_escudo').setScale(k);
+      this.glowS = sc.add.image(0, 0, 'vdr_escudo_luz').setScale(k).setAlpha(0);
+      this.bh = sc.add.image(0, 0, 'vdr_puno').setScale(k);
+      this.fh = sc.add.image(0, 0, 'vdr_puno').setScale(k);
       this.parts = [this.body, this.weapon, this.glowS, this.bh, this.fh]; this.rig.add(this.parts); this.drops = [[this.weapon, 0.5, -420, 5]];
     } else if (type === 'ezra') {
       const k = H / 512, c = this.cfg;
@@ -3956,8 +3956,8 @@ class Unit {
       const gone = st < 0.4, q = Math.min(1, Math.max(0, (st - 0.4) / 0.9));
       this.weapon.setPosition(sx * H, sy * H).setAlpha(gone ? 0 : q);
       this.glowS.setPosition(sx * H, sy * H);
-      if (o.glow > 0 && !gone) { if (this.glowS.texture.key !== 'val_escudo_luz') this.glowS.setTexture('val_escudo_luz'); this.glowS.setAlpha(o.glow); }
-      else if (!gone && q < 1) { if (this.glowS.texture.key !== 'val_escudo_tenue') this.glowS.setTexture('val_escudo_tenue'); this.glowS.setAlpha(1 - q * q); }
+      if (o.glow > 0 && !gone) { if (this.glowS.texture.key !== 'vdr_escudo_luz') this.glowS.setTexture('vdr_escudo_luz'); this.glowS.setAlpha(o.glow); }
+      else if (!gone && q < 1) { if (this.glowS.texture.key !== 'vdr_escudo_tenue') this.glowS.setTexture('vdr_escudo_tenue'); this.glowS.setAlpha(1 - q * q); }
       else this.glowS.setAlpha(0);
       this.bh.setAlpha(1); this.fh.setAlpha(1);
     } else if (this.type === 'ezra') {
@@ -5658,7 +5658,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'puno', 'baculo', 'ala_t', 'ala_d']) L('aur_' + n, 'aurelion/' + n);
       for (const n of ['normal', 'abierta', 'estirado', 'llama', 'aliento']) L('kai_' + n, 'kaiju/' + n);
       for (const n of ['cuerpo', 'mano_senala', 'puno', 'espejo']) L('ezr_' + n, 'ezra/' + n);
-      for (const n of ['cuerpo', 'puno', 'escudo', 'escudo_luz', 'escudo_tenue']) L('val_' + n, 'valdrys/' + n);
+      for (const n of ['cuerpo', 'puno', 'escudo', 'escudo_luz', 'escudo_tenue']) L('vdr_' + n, 'valdrys/' + n);
       for (const [a, b] of [['cuerpo', 'cuerpo'], ['puno', 'puno'], ['mano', 'mano'], ['baston', 'baston'], ['bola', 'bola'], ['llama', 'llamarada']]) L('ign_' + a, 'ignis/' + b);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'sombra', 'cuerpo_ulti', 'agarre', 'mano_ab_t', 'mano_ab_d', 'forma0', 'forma1', 'forma2', 'forma3', 'forma4', 'forma5', 'forma6', 'forma7', 'forma8']) L('zer_' + n, 'zero/' + n);
       for (const n of ['cuerpo', 'mano', 'mano_bolsa', 'roja', 'morada', 'azul', 'verde', 'amarilla', 'blanca', 'negra', 'naranja']) L('mira_' + n, 'mira/' + n);
