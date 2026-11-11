@@ -75,6 +75,7 @@ const PERKS = {
   nivea: [[2, 'Escarcha', 'crit', 0.2], [4, 'Ventisca', 'veloz', 0.2], [6, 'Corazón de hielo', 'escudo', 0.35]],
   rufo: [[2, 'Colmillo', 'crit', 0.2], [4, 'Patas ligeras', 'veloz', 0.2], [6, 'Perro viejo', 'aguante', 1]],
   kubi: [[2, 'Gelatina dura', 'escudo', 0.25], [4, 'Pegajosa', 'aturdir', 0.15], [6, 'Rebote', 'regen', 0.02]],
+  morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
   odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],

@@ -1027,6 +1027,10 @@ const CH = {
   // (una vez), con los trozos algo separados
   anubek: { hp: 150, dmg: [12, 16], speed: 52, cd: [1.1, 1.4], range: H * 1.15, ranged: false, h: 1.25, block: 0.2, revive: 0.6,
     rest: { bh: [-0.257, -0.336], fh: [0.242, -0.274] }, org: [0.468, 0.995], sh: [0.144, 0.015], kg: [0.24, 0.65], knat: -0.15 },
+  // Morgana, la Costurera oscura: la aguja sale de su moño, se enhebra en el carrete que flota ante ella y atraviesa a todos
+  // los que tiene delante cosiéndolos con su hilo; vuelve atravesándolos otra vez y regresa al moño. Roba vida con cada puntada
+  morgana: { hp: 140, dmg: [14, 18], speed: 52, cd: [2.0, 2.4], range: H * 4.5, ranged: true, h: 1.15, steal: 0.3,
+    rest: { bh: [-0.244, -0.302], fh: [0.346, -0.39] }, org: [0.586, 0.999], spool: [0.486, -0.648], pin: [-0.082, -0.869], pinA: 2.54 },
   arquera: { hp: 60, dmg: [11, 15], speed: 60, cd: [1.45, 1.85], range: H * 5, ranged: true, h: 1,
     rest: { bh: [-0.17, -0.211], fh: [0.321, -0.266] },
     bow: { h: 0.91, w: 0.91 * 123 / 512, ox: 0.30, oy: 0.5, tipX: 0.144, tipTop: 0.207, tipBot: 0.669, gripY: 0.742 } },
@@ -1128,7 +1132,7 @@ const IMP_RULES = { stacks: 5, rebornHp: 160, drain: 5, implode: 60, implodeR: H
 const SCY = { len: 1.141, d1: 0.39, d2: 0.2, tip: 1.0 };   // guadaña: largo, agarres desde el extremo del mango y punta del filo (en H)
 const PIKE = { len: 2.0, ox: 0.255, gap: 0.21 };   // largo (en H), agarre trasero y separación entre manos
 // rareza de cada carta y color de su aura (común sin aura)
-const RARITY = { anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
+const RARITY = { morgana: 'epica', anubek: 'rara', torque: 'rara', ivo: 'comun', grises: 'epica', rata_puno: 'epica', rata_cuchillo: 'epica', rata_palanca: 'epica', nivea: 'rara', rufo: 'comun', tormund: 'epica', kubi: 'comun', odo: 'poco', nul: 'ascendida', rhysida: 'ascendida', honderillo: 'comun', ninja: 'rara', imparable: 'ascendida', fraile: 'rara', kungfu: 'legendaria', tercio: 'comun', acorazado: 'rara', muerte: 'legendaria', samurai: 'rara', valkiria: 'poco', arquera: 'comun', legionario: 'comun', desencadenado: 'legendaria', lobo: 'poco', pistolero: 'epica', centinela: 'ascendida', catapulta: 'epica' };
 const AURA = { poco: { c: 0x34d399, light: 0xd1fae5, rate: 5, big: 0.8 }, rara: { c: 0x4da3ff, light: 0xd6ebff, rate: 5, big: 0.8 }, epica: { c: 0xa855f7, light: 0xf0dcff, rate: 5, big: 0.8 }, legendaria: { c: 0xfbbf24, light: 0xfff4c2, rate: 5, big: 0.8 }, ascendida: { c: 0x7a1430, light: 0xd98a9e, rate: 5, big: 0.8 } };   // misma intensidad para todas las rarezas: se distingue sin tapar el campo
 const KAT = { ox: 0.236, g2g: 0.084 };   // origen en la guarda; distancia de la empuñadura a la guarda (en H)
 // revólver: punto de agarre y boca del cañón (fracciones de la imagen recortada)
@@ -1233,7 +1237,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja', pistolero: 'Cole, el Pistolero', lobo: 'Garra, el Lobo', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -1534,6 +1538,15 @@ class Unit {
     } else if (type === 'kubi') {
       this.body = sc.add.image(0, 0, 'kubi_cuerpo').setOrigin(0.5, 1);
       this.parts = [this.body]; this.rig.add(this.parts); this.drops = []; this.gen = 0;
+    } else if (type === 'morgana') {
+      const k = H / 512, c = this.cfg;
+      this.body = sc.add.image(0, 0, 'mor_cuerpo').setOrigin(c.org[0], c.org[1]).setScale(k);
+      this.bh = sc.add.image(0, 0, 'mor_mano_t').setScale(k);
+      this.spool = sc.add.image(0, 0, 'mor_carrete').setScale(k);
+      this.fh = sc.add.image(0, 0, 'mor_mano_d').setScale(k);
+      this.needle = sc.add.image(0, 0, 'mor_aguja').setScale(k);   // va en el contenedor (no gira con ella): vuela por el campo
+      this.parts = [this.bh, this.body, this.spool, this.fh];
+      this.rig.add(this.parts); this.drops = [];
     } else if (type === 'anubek') {
       const k = H / 512, c = this.cfg;
       this.body = sc.add.image(0, 0, 'anu_cuerpo_0').setOrigin(c.org[0], c.org[1]).setScale(k);
@@ -1609,6 +1622,7 @@ class Unit {
     if (this.type === 'imparable') { this.setForm(1); this.stacks = 0; this.reborn = false; this.lungeT = 0.5; this.formK = 1; }
     if (this.type === 'kubi' && this.body) this.body.setTexture('kubi_cuerpo');
     if (this.type === 'nivea') this.shots = 0;
+    if (this.type === 'morgana') { this.mor = null; if (this.plasmaG) this.plasmaG.clear(); }
     if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
     if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.rufoDone = new Set(); this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
     if (this.type === 'tormund') { this.rageT = 0; this.rageUsed = false; this.cdK = 1; this.axeGone = 0; this.leapT = 0; this.throwT = 0; }
@@ -1861,6 +1875,35 @@ class Unit {
       if (p >= 1) this.set('idle');
     }
   }
+  morPt(lx, ly) {   // punto del cuerpo (en H) a coordenadas del mundo
+    const k = this.bigK || 1; return [this.x + this.dir * lx * H * k, this.gy + ly * H * k + this.rig.y];
+  }
+  attackMorgana(o, t) {
+    // 1) la aguja sale del moño y se enhebra en el carrete; 2) atraviesa a todos los de delante; 3) vuelve atravesándolos;
+    // 4) regresa al moño. Cada puntada hace daño y le devuelve vida
+    const c = this.cfg, r = c.rest, A = 0.3, B1 = 0.8, B2 = 1.3, E = 1.6;
+    if (t < 0.02 || !this.mor) {
+      const foes = mode === 'fight' ? enemiesOf(this).filter(v => (v.x - this.x) * this.dir > 0 && Math.abs(v.x - this.x) <= c.range) : [];
+      const far = foes.reduce((m, v) => Math.max(m, Math.abs(v.x - this.x)), 0);
+      this.mor = { foes, end: this.x + this.dir * Math.max(far + H * 0.6, H * 2.5), y: this.gy - H * 0.5, hit1: new Set(), hit2: new Set(), dealt: 0 };
+    }
+    const M = this.mor, sp = this.morPt(c.spool[0], c.spool[1]), pin = this.morPt(c.pin[0], c.pin[1]);
+    const up = Math.min(1, t / 0.2); o.fh = [r.fh[0] + 0.03 * up, r.fh[1] - 0.06 * up]; o.bh = [r.bh[0] + 0.05 * up, r.bh[1] - 0.12 * up];
+    let x, y, a;
+    if (t < A) { const e = ease(t / A); x = lerp(pin[0], sp[0], e); y = lerp(pin[1], sp[1] - H * 0.25, e) - Math.sin(e * Math.PI) * H * 0.3; a = Math.atan2(sp[1] - pin[1], sp[0] - pin[0]); }
+    else if (t < B1) { const e = easeInOut((t - A) / (B1 - A)); x = lerp(sp[0], M.end, e); y = lerp(sp[1], M.y, Math.min(1, e * 3)); a = this.dir > 0 ? 0 : Math.PI; }
+    else if (t < B2) { const e = easeInOut((t - B1) / (B2 - B1)); x = lerp(M.end, sp[0], e); y = lerp(M.y, sp[1], Math.max(0, e * 3 - 2)) + Math.sin(e * Math.PI) * H * 0.18; a = this.dir > 0 ? Math.PI : 0; }
+    else if (t < E) { const e = ease((t - B2) / (E - B2)); x = lerp(sp[0], pin[0], e); y = lerp(sp[1] - H * 0.25, pin[1], e) - Math.sin(e * Math.PI) * H * 0.3; a = Math.atan2(pin[1] - sp[1], pin[0] - sp[0]); }
+    o.nd = t < E ? [x, y, a] : null; o.thread = t >= A * 0.7 && t < E - 0.1 ? 1 : 0;
+    if (mode === 'fight' && t >= A && t < B2) for (const v of M.foes) {   // puntadas: al pasar la aguja por cada uno
+      const set = t < B1 ? M.hit1 : M.hit2; if (set.has(v) || !v.alive || v.state === 'die') continue;
+      if ((x - v.x) * this.dir * (t < B1 ? 1 : -1) >= 0) {
+        set.add(v); const hp0 = v.hp; v.damage(Math.round(rand(...c.dmg)), this); M.dealt += Math.max(0, hp0 - Math.max(0, v.hp));
+        burst(v.x, v.gy - H * 0.5, 0xff2a1a, 7, 140);
+      }
+    }
+    if (t >= E) { if (M.dealt && this.alive) this.healBy(Math.round(M.dealt * c.steal)); this.mor = null; this.set('idle'); }
+  }
   attackAnubek(o, t) {
     // alza el jepés por encima de la cabeza y lo descarga en curva hacia delante, con el escudo por delante
     const r = this.cfg.rest, p = t / 0.6, up = p < 0.4 ? ease(p / 0.4) : 0, dn = p < 0.4 ? 0 : p < 0.58 ? easeIn((p - 0.4) / 0.18) : 1, ret = p > 0.7 ? ease((p - 0.7) / 0.3) : 0;
@@ -2039,6 +2082,7 @@ class Unit {
     else if (this.type === 'odo') { o.drum = true; }
     else if (this.type === 'torque') { o.wa = -0.9; o.bkr = 0; }
     else if (this.type === 'anubek') { o.ka = -1.85; }
+    else if (this.type === 'morgana') { o.nd = null; o.thread = 0; }
     else if (this.type === 'nivea') { o.glow = 0; o.bk = [0, 0]; }
     else if (this.type === 'ivo') { o.wa = -0.25; }
     else if (this.cfg.rat) { o.wa = RAT_W[this.cfg.rat] ? RAT_W[this.cfg.rat].rest : 0; }
@@ -2098,6 +2142,7 @@ class Unit {
         if (this.type === 'nivea') { o.bk = [0, 0.012 * Math.sin(now * 2.2 + this.homeX)]; }
         if (this.type === 'ivo') o.wa += 0.06 * breathe;
         if (this.type === 'anubek') o.ka += 0.04 * breathe;
+        if (this.type === 'morgana') { o.fh[1] += 0.015 * Math.sin(now * 2.4 + this.homeX); }
         if (this.type === 'torque') { o.wa += 0.05 * breathe; o.bkr = 0.05 * Math.sin(now * 2 + this.homeX); }
         if (this.cfg.rat) { o.wa += 0.04 * breathe; if (this.cfg.rat === 'puno') { const b = Math.sin(now * 6 + this.homeX); o.bh[1] += 0.015 * b; o.fh[1] -= 0.015 * b; } }   // el libro flota sobre la mano
         if (this.type === 'tormund') { o.a1 += 0.05 * breathe; o.a2 -= 0.05 * breathe; }
@@ -2190,6 +2235,7 @@ class Unit {
         else if (this.type === 'ivo') this.attackIvo(o, t);
         else if (this.type === 'torque') this.attackTorque(o, t);
         else if (this.type === 'anubek') this.attackAnubek(o, t);
+        else if (this.type === 'morgana') this.attackMorgana(o, t);
         else if (this.cfg.rat) this.attackRat(o, t);
         else if (this.type === 'rufo') this.attackRufo(o, t);
         else if (this.type === 'tormund') this.attackTor(o, t);
@@ -3443,6 +3489,22 @@ class Unit {
       this.head.setPosition((c.head[0] + o.head[0]) * H, (c.head[1] + o.head[1] + o.by) * H).setRotation(o.headR);
       const key = o.bite ? 'lob_mordisco' : 'lob_cabeza';
       if (this.head.texture.key !== key) this.head.setTexture(key);
+    } else if (this.type === 'morgana') {
+      // el carrete flota ante su mano; la aguja, en el moño o volando; el hilo rojo va del carrete a la aguja, ondulando
+      const c = this.cfg, now = this.sc.time.now / 1000, k = this.bigK || 1, bob = 0.03 * Math.sin(now * 2.2 + this.homeX);
+      this.spool.setPosition(c.spool[0] * H, (c.spool[1] + bob) * H).setRotation(0.06 * Math.sin(now * 1.7));
+      if (this.needle.parentContainer !== this.root) this.root.add(this.needle);
+      const nd = this.state === 'attack' && o.nd ? o.nd : null, dead = this.state === 'die';
+      const [px, py] = this.morPt(c.pin[0], c.pin[1]), nx = nd ? nd[0] : px, ny = nd ? nd[1] : py;
+      const na = nd ? nd[2] : (this.dir > 0 ? c.pinA : Math.PI - c.pinA);
+      this.needle.setVisible(!dead).setPosition(nx - this.x, ny - this.gy).setRotation(na).setScale(k * H / 512 * (nd ? 0.75 : 1), k * H / 512);
+      if (!this.plasmaG) this.plasmaG = scene.add.graphics().setDepth(955);
+      const g = this.plasmaG; g.clear();
+      if (o.thread && !dead) {
+        const [sx, sy] = this.morPt(c.spool[0], c.spool[1] + bob), n = 24, L = Math.hypot(nx - sx, ny - sy), amp = Math.min(H * 0.12, L * 0.05);
+        const pts = []; for (let i = 0; i <= n; i++) { const e = i / n; pts.push([lerp(sx, nx, e), lerp(sy, ny, e) + Math.sin(e * Math.PI * 3 + now * 9) * amp * Math.sin(e * Math.PI)]); }
+        for (const [w, col, al] of [[9, 0xff3b2a, 0.25], [4, 0xe5180c, 1], [1.5, 0xffb08a, 0.9]]) { g.lineStyle(w * H / 120, col, al).beginPath(); pts.forEach(([qx, qy], i) => i ? g.lineTo(qx, qy) : g.moveTo(qx, qy)); g.strokePath(); }
+      }
     } else if (this.type === 'anubek') {
       const c = this.cfg;
       this.weapon.setPosition(o.bh[0] * H, o.bh[1] * H).setRotation((o.ka === undefined ? -1.85 : o.ka) - c.knat);
@@ -4513,7 +4575,7 @@ function makeAuraTextures(sc) {
 }
 /* ==== Capa de batalla: castillos, torres, energía, mazo, IA y estadísticas.
    Se monta sobre el código de unidades del campo de pruebas (construir.py). ==== */
-const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
+const COST = {"legionario": 1, "nul": 7, "rhysida": 7, "grises": 5, "nivea": 3, "rufo": 2, "tormund": 5, "kubi": 2, "morgana": 5, "anubek": 4, "torque": 3, "odo": 3, "ivo": 2, "honderillo": 1, "arquera": 2, "valkiria": 3, "ninja": 2, "pistolero": 4, "lobo": 1, "samurai": 3, "kungfu": 5, "tercio": 2, "muerte": 6, "acorazado": 4, "fraile": 4, "catapulta": 6, "centinela": 7, "desencadenado": 5, "imparable": 7};
 const LABEL = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [k, v.split(',')[0]]));
 LABEL.aldric = 'Rey Aldric'; LABEL.lyra = 'Lyra'; LABEL.gull = 'Gūll'; LABEL.guardia = 'Guardián'; LABEL.esqueleto = 'Esqueleto'; LABEL.rata_puno = 'Rata'; LABEL.rata_cuchillo = 'Rata'; LABEL.rata_palanca = 'Rata';
 const ALL = Object.keys(NAMES);
@@ -4977,6 +5039,7 @@ function start() {
       for (const n of ['cuerpo', 'mano', 'libro', 'copo', 'cristal']) L('niv_' + n, 'nivea/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'varita']) L('ivo_' + n, 'ivo/' + n);
       for (const n of ['cuerpo', 'mano_t', 'mano_d', 'cubo', 'paleta']) L('tq_' + n, 'torque/' + n);
+      for (const n of ['cuerpo', 'mano_t', 'mano_d', 'carrete', 'aguja']) L('mor_' + n, 'morgana/' + n);
       for (const n of ['cuerpo_0', 'cuerpo_1', 'cuerpo_2', 'cuerpo_3', 'rehecho', 'roto', 'monton', 'mano_a', 'mano_b', 'khopesh', 'escudo']) L('anu_' + n, 'anubek/' + n);
       for (const n of ['escudo', 'puno', 'cuchillo', 'palanca']) { L('rat_' + n + '_cuerpo', 'grises/' + n + '_cuerpo'); L('rat_' + n + '_mano_t', 'grises/' + n + '_mano_t'); L('rat_' + n + '_mano_d', 'grises/' + n + '_mano_d'); }
       for (const n of ['escudo', 'cuchillo', 'palanca']) L('rat_' + n, 'grises/' + n);
@@ -5115,7 +5178,7 @@ const PRADERAS = [
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'desencadenado'];
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
@@ -5649,6 +5712,7 @@ const HABILIDAD = {
   nivea: 'Lanza ráfagas de 3 copos de nieve desde su libro; cada tercer ataque, un cristal de hielo.',
   rufo: 'A cada rival nuevo: salta a morder, se da la vuelta y se aleja olisqueándose el rabo; después pelea pegado.',
   kubi: 'Salta y aplasta. Al morir se parte en dos slimes más pequeñas, y cada una en otras dos.',
+  morgana: 'Su aguja atraviesa a todos los que tiene delante cosiéndolos con su hilo, vuelve a atravesarlos y le devuelve vida.',
   anubek: 'Jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace (una vez).',
   torque: 'No ataca: se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento.',
   odo: 'No ataca: toca el tambor detrás de los suyos. Los aliados cerca andan y atacan un 25 % más rápido y tienen un 35 % de crítico.',
@@ -6030,6 +6094,7 @@ const PERKS = {
   nivea: [[2, 'Escarcha', 'crit', 0.2], [4, 'Ventisca', 'veloz', 0.2], [6, 'Corazón de hielo', 'escudo', 0.35]],
   rufo: [[2, 'Colmillo', 'crit', 0.2], [4, 'Patas ligeras', 'veloz', 0.2], [6, 'Perro viejo', 'aguante', 1]],
   kubi: [[2, 'Gelatina dura', 'escudo', 0.25], [4, 'Pegajosa', 'aturdir', 0.15], [6, 'Rebote', 'regen', 0.02]],
+  morgana: [[2, 'Puntada fina', 'crit', 0.2], [4, 'Hilo de sangre', 'robo', 0.15], [6, 'Remate', 'ejecutar', 0.5]],
   anubek: [[2, 'Arcilla dura', 'escudo', 0.25], [4, 'Maldición del desierto', 'espinas', 0.25], [6, 'Eterno', 'aguante', 1]],
   torque: [[2, 'Blindaje', 'escudo', 0.3], [4, 'Engrasado', 'regen', 0.02], [6, 'Cemento rápido', 'veloz', 0.25]],
   odo: [[2, 'Piel de tambor', 'escudo', 0.3], [4, 'Buen ritmo', 'regen', 0.02], [6, 'Último redoble', 'aguante', 1]],

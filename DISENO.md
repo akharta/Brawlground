@@ -448,3 +448,12 @@ Se borraron los fondos de batalla, caminos, castillos (y sus 20 aspectos) y subs
 - Castillos más grandes (escala 0,9, la parte de atrás se sale un poco de la pantalla); Aldric sentado en su trono.
 - Marcos de los botones de habilidad: azul y oro para el héroe, morado para las ascendidas (el retrato de su definitiva)
   y rojo para las bestias (`docs/img/ui/marco_*.png`).
+
+## Morgana, la Costurera oscura (épica, coste 5)
+
+Arte en bruto en `arte/costurera/`; piezas del juego en `docs/img/morgana/`.
+
+- La aguja sale de su moño, se enhebra en el carrete que flota ante su mano, atraviesa a todos los enemigos que tiene delante
+  (a distancia) cosiéndolos con un hilo rojo ondulante, vuelve atravesándolos otra vez y regresa al moño.
+- Cada puntada (ida y vuelta) hace 14–18; al terminar se cura el 30 % del daño hecho.
+- Provisional: 140 de vida. Habilidades de rango: Puntada fina (críticos), Hilo de sangre (robo de vida), Remate (ejecutar).
