@@ -22,9 +22,20 @@ const MARCOS = {
   acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.36 },
   kungfu: { st: [14.2, 28.2, 71.5, 55.6] },
   samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
-  muerte: { st: [16.4, 15.9, 67.4, 56.1], dx: 8 },
+  muerte: { st: [18.8, 17.9, 62.4, 51.9], dx: 8 },
   lobo: { st: [17.2, 19.0, 65.5, 54.8] },
   pistolero: { st: [17.3, 33.5, 65.3, 55.0], z: 1.12 },
+  ivo: { st: [16.1, 40.4, 67.9, 47.3] },
+  mira: { st: [15.8, 26.4, 67.8, 53.7] },
+  rufo: { st: [14.7, 39.9, 70.4, 49.2] },
+  valdrys: { st: [15.2, 35.7, 69.5, 48.5] },
+  ezra: { st: [16.6, 28.4, 66.4, 44.4] },
+  zero: { st: [14, 22, 70, 50], frames: 5, anim: 'sombra' },
+  rhysida: { st: [18.8, 19.8, 62.2, 49.9], frames: 4, anim: 'glitch' },
+  honderillo: { st: [18.8, 21.9, 62.4, 58.9] },
+  grises: { st: [14.6, 27.7, 68.3, 55.5] },
+  ignis: { st: [17.2, 33.2, 65.5, 55.7] },
+  nivea: { st: [16.4, 26.6, 67.1, 52.8] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -33,7 +44,7 @@ function tarjetaHtml(k) {
   const has = owned().includes(k), rar = RARITY[k] || 'comun', [nm, ep] = nombreEpiteto(k), marco = MARCOS[k];
   const c = has ? rkCoste(k) : null, cp = has ? copiasOf(k) : 0, lv = has ? lvOf(k) : 1, r = has ? rangoOf(k) : 0;
   return '<button type="button" class="tc ' + rar + (has ? '' : ' lock') + (marco ? ' marco' : '') + (has && puedeRango(k) ? ' up' : '') + '" data-k="' + k + '" aria-label="' + (NAMES[k] || k) + (has ? ', nivel ' + lv + ', rango ' + RANGOS[r] : ', bloqueada') + '">'
-    + '<span class="tc-fr"' + (marco ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>'
+    + '<span class="tc-fr"' + (marco ? ' data-marco="' + k + '" style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>'
     + (marco ? '' : '<span class="tc-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
     + '<span class="tc-stage"' + (marco ? ' style="left:' + marco.st[0] + '%;top:' + marco.st[1] + '%;width:' + marco.st[2] + '%;height:' + marco.st[3] + '%"' : '') + '></span></span>'
     + '<span class="tc-cost"><img src="img/tarjetas/coste.png" alt=""><b>' + COST[k] + '</b></span>'
@@ -90,6 +101,23 @@ function filtrosHtml() {
   $('f-inv').onclick = () => { FILTRO.inv = !FILTRO.inv; guarda(); };
   $('f-reset').onclick = () => { FILTRO = { rar: '', rk: '', tipo: '', est: '', cost: '', ord: 'coste', inv: false }; guarda(); };
 }
+// marcos animados: Zero (la sombra se desplaza, 5 dibujos en vaivén) y Rhysida (interferencias: casi siempre el limpio y,
+// de vez en cuando, un parpadeo rápido por los que tienen interferencias)
+const MARCO_ANIM = { t: 0 };
+const marcoSrc = (k, i) => 'url(img/marcos/' + k + (i ? '_' + i : '') + '.png)';
+setInterval(() => {
+  MARCO_ANIM.t++;
+  for (const k in MARCOS) {
+    const M = MARCOS[k]; if (!M.frames) continue;
+    let i;
+    if (M.anim === 'sombra') { const n = M.frames, q = Math.floor(MARCO_ANIM.t / 3) % (2 * n - 2); i = q < n ? q : 2 * n - 2 - q; }
+    else { const q = MARCO_ANIM.t % 14; i = q < 3 ? 1 + (Math.floor(MARCO_ANIM.t / 14) + q) % (M.frames - 1) : 0; }
+    if (M.cur === i) continue; M.cur = i;
+    document.querySelectorAll('[data-marco="' + k + '"]').forEach(e => { e.style.backgroundImage = marcoSrc(k, i); });
+  }
+}, 80);
+// los dibujos del marco animado se cargan antes, para que no parpadeen al cambiar
+for (const k in MARCOS) for (let i = 1; i < (MARCOS[k].frames || 0); i++) { const im = new Image(); im.src = 'img/marcos/' + k + '_' + i + '.png'; }
 const _showGal = show;
 show = function (id) { _showGal(id); if (id !== 'ejercito') galStop(); else if (GAL.on) galWake(); };
 function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.running) gm.loop.wake(); }
@@ -149,7 +177,7 @@ const MARCO_PROV = { st: [12, 34, 76, 54] };
 function tmInner(k, has = true) {
   const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => (+v.toFixed(2)) + '%', z = m.z || 1, [l, t, w, h] = m.st;
   const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
-  return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
+  return '<span class="tm-fr"' + (MARCOS[k] ? ' data-marco="' + k + '" style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
     + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 || m.clip ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' ' + pc(m.clip ? Math.max(0, (T + h * z - t - h) / (h * z) * 100) : 0) + ' ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
     + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
