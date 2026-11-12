@@ -611,3 +611,8 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - Ejércitos rivales: todas las unidades ordenadas por fuerza (FUERZA en campana.js); cada reino toma un tramo más avanzado. Las ascendidas solo aparecen en el mundo 2 (y en los reyes del Pantano y del Volcán).
 - Dificultad ajustada con simulaciones (la IA juega tu bando con el ejército que tendrías al llegar y al mismo nivel que el rival): ritmo de energía rival 0,88–1,26 y algo menos en los castillos que salían demasiado duros.
 - Héroes: empiezas sin héroe (trono vacío y sin botón). Al conquistar el segundo reino (el Bosque) vuelve el rey Aldric y se te unen Lyra y Gūll; desde ahí, cada rey vencido con nombre se une también. El rival lleva héroe en todos los castillos a partir del Bosque (Aldric, Lyra o Gūll por turnos; en los reales, su rey) y la IA lo hace saltar a las 15 bajas y usa su habilidad.
+
+## Botón de bugs
+
+- Botón 🐞 arriba a la izquierda en todas las pantallas. Al pulsarlo se hace al instante una captura de la pantalla (y la batalla se pausa); escribes qué ha pasado y al enviar se suben a `bugs/` del repositorio la captura (.png) y la nota (.md) con el contexto (pantalla, tiempo, mano, unidades).
+- Para subir hace falta un token de GitHub con permiso de escritura en el repositorio, que se pide la primera vez y se guarda solo en ese móvil. Sin conexión o sin token, los informes esperan en el móvil y se envían después.

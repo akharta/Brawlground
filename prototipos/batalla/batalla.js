@@ -459,7 +459,8 @@ function update(_, deltaMs) {
 function start() {
   const g = $('game');
   window.__game = new Phaser.Game({
-    type: Phaser.AUTO, parent: 'game', transparent: true, width: Math.round(g.clientWidth * DPR), height: Math.round(g.clientHeight * DPR), backgroundColor: '#161b2b',
+    type: Phaser.AUTO, parent: 'game', transparent: true, render: { preserveDrawingBuffer: true },   // para poder fotografiar la pantalla (botón de bugs)
+    width: Math.round(g.clientWidth * DPR), height: Math.round(g.clientHeight * DPR), backgroundColor: '#161b2b',
     scale: { mode: Phaser.Scale.NONE, zoom: 1 / DPR },
     scene: { preload() {
       this.load.on('progress', v => { $('loadfill').style.width = (v * 100) + '%'; $('loadtxt').textContent = 'Cargando… ' + Math.round(v * 100) + ' %'; });

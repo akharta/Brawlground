@@ -802,6 +802,16 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
   #girar { display: grid; place-items: center; position: fixed; inset: 0; z-index: 9999; background: #161b2b; color: #fff; font-family: var(--font-display); text-align: center; padding: 24px; }
   #girar b { font-size: 1.5rem; display: block; } #girar small { font-family: system-ui, sans-serif; opacity: .8; }
 }
+
+/* botón de bugs: siempre a mano, pequeño, arriba a la izquierda */
+#bugbtn { position: fixed; z-index: 70; left: 6px; top: calc(env(safe-area-inset-top, 0px) + 64px); width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--outline); background: rgba(255,255,255,.85); font-size: 1.05rem; line-height: 1; padding: 0; opacity: .75; }
+.bugdlg { position: fixed; inset: 0; z-index: 9000; background: rgba(8,10,20,.7); display: grid; place-items: center; padding: 16px; }
+.bugdlg[hidden] { display: none; }
+.bugbox { width: min(420px, 100%); max-height: 100%; overflow: auto; background: var(--panel, #232a48); color: #fff; border: 3px solid var(--outline); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+.bugbox h3 { margin: 0; }
+.bugbox img { width: 100%; max-height: 38vh; object-fit: contain; border-radius: 8px; background: #000; }
+.bugbox textarea, .bugbox input { width: 100%; box-sizing: border-box; border-radius: 10px; border: 2px solid var(--outline); padding: 8px; font: inherit; color: #1e2235; background: #f4f1e6; }
+.bugbox label { display: grid; gap: 4px; font-size: .8rem; color: #c9d3f5; }
 </style>
 
 </head>
@@ -1010,6 +1020,16 @@ body.nav .screen.abismo { padding-bottom: calc(var(--navh) + var(--sb) + 12px); 
 
 <div id="toast" role="status" hidden></div>
 
+<button type="button" id="bugbtn" aria-label="Informar de un bug: hace una captura de la pantalla">🐞</button>
+<div id="bugdlg" class="bugdlg" hidden role="dialog" aria-label="Informar de un bug">
+  <div class="bugbox">
+    <h3>Informar de un bug</h3>
+    <img id="bug-prev" alt="Captura de la pantalla">
+    <textarea id="bug-nota" rows="4" placeholder="¿Qué ha pasado? (qué hacías, qué esperabas ver…)"></textarea>
+    <div id="bug-tok"><label>Token de GitHub (solo la primera vez; se guarda en este móvil)<input id="bug-tokin" type="password" autocomplete="off" placeholder="github_pat_…"></label></div>
+    <div class="acts"><button type="button" class="btn small" id="bug-borra">Borrar token</button><button type="button" class="btn" id="bug-no">Cancelar</button><button type="button" class="btn gold" id="bug-si">Enviar</button></div>
+  </div>
+</div>
 {{SCRIPT}}
 <!--APP-->
 <script>
