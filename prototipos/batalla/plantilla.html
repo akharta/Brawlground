@@ -174,8 +174,10 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 .eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
 #enum { font-family: var(--font-display); font-size: 1.4rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
 .row { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.hand { display: flex; gap: 8px; }
-.hc { height: min(120px, 16vh, calc((100vw - 170px) / 4 * 1.5)); }
+.hand { display: flex; gap: 6px; }
+.hc { height: min(170px, 21vh, calc((100vw - 96px) / 4 * 1.5)); }
+/* en la mano la figura llena más su hueco, para reconocer la unidad de un vistazo */
+.hand .tm img.tm-u { transform: scale(1.22); transform-origin: 50% 96%; }
 .nextc { display: grid; gap: 2px; justify-items: center; font-size: .7rem; color: var(--muted); }
 .nextc img { width: 40px; height: 40px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
 #hero { display: grid; justify-items: center; gap: 3px; background: none; border: 0; padding: 0; width: 62px; }
@@ -311,7 +313,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   border-radius: 999px; font-family: var(--font-display); font-size: .66rem; line-height: 1.25; padding: 0 6px; white-space: nowrap; pointer-events: none; }
 .lvb.foe { color: #ffb4b4; border-color: #e2363b; }
 .dk.mini .lvb { font-size: .5rem; padding: 0 4px; border-width: 1.5px; }
-.hc .lvb { font-size: .58rem; top: 64%; }
+.hc .lvb { font-size: .58rem; top: 87%; }
 .ugrid { row-gap: 24px; }
 .cpbar { position: absolute; left: 6%; right: 6%; bottom: -17px; height: 14px; background: #0f1322; border: 2px solid var(--outline); border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
 .cpbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#8fd0ff, #3b82f6); }

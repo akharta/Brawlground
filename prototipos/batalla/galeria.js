@@ -147,14 +147,14 @@ function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.run
 function galStart() {
   const gm = window.__game; if (!gm || !scene) return;
   if (!GAL.sc) GAL.sc = gm.scene.add('galeria', { update(_, ms) { galTick(Math.min(0.05, ms / 1000)); } }, true);
-  GAL.u.forEach(u => { u.root.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
+  GAL.u.forEach(unitGone); GAL.u.clear();
   GAL.gris = ['grises', 'rata_puno', 'rata_cuchillo', 'rata_palanca'][Math.floor(Math.random() * 4)];   // cada vez, una rata distinta
   GAL.on = true; document.body.classList.add('galeria'); scene.scene.setVisible(false); GAL.sc.scene.setVisible(true); galWake();
 }
 function galStop() {
   if (!GAL.on) return;
   GAL.on = false; document.body.classList.remove('galeria');
-  GAL.u.forEach(u => { u.root.destroy(); if (u.bar) u.bar.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
+  GAL.u.forEach(unitGone); GAL.u.clear();
   if (scene) scene.scene.setVisible(true); if (GAL.sc) GAL.sc.scene.setVisible(false);
 }
 function galUnit(k) {
@@ -224,7 +224,7 @@ function retratos() {
       const w = Math.ceil(b.width * s) + pad * 2, h = Math.ceil(b.height * s + sh) + pad * 2, key = 'ret_' + k;
       u.root.setScale(s);
       const dt = scene.textures.addDynamicTexture(key, w, h); dt.draw(u.root, -b.x * s + pad, -b.y * s + pad);
-      u.root.destroy(); u.bar.destroy();
+      unitGone(u);
       dt.snapshot(img => {
         RETRATO[k] = img.src; scene.textures.remove(key);
         document.querySelectorAll('img[data-ret="' + k + '"]').forEach(i => { i.src = img.src; });

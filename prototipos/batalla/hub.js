@@ -86,7 +86,7 @@ function idleStep(dt) {
   }
   fightLogic(dt);
   for (const u of units.slice()) if ((u.team === 'blue' && u.x > R + 160) || (u.team === 'purple' && u.x < L - 160)) {
-    units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy();
+    units = units.filter(v => v !== u); unitGone(u);
   }
 }
 const _onDead = onDead;

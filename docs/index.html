@@ -174,8 +174,10 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 .eticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--outline) calc(10% - 3px) 10%); }
 #enum { font-family: var(--font-display); font-size: 1.4rem; min-width: 2ch; text-align: center; color: var(--energy-hi); font-variant-numeric: tabular-nums; }
 .row { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.hand { display: flex; gap: 8px; }
-.hc { height: min(120px, 16vh, calc((100vw - 170px) / 4 * 1.5)); }
+.hand { display: flex; gap: 6px; }
+.hc { height: min(170px, 21vh, calc((100vw - 96px) / 4 * 1.5)); }
+/* en la mano la figura llena más su hueco, para reconocer la unidad de un vistazo */
+.hand .tm img.tm-u { transform: scale(1.22); transform-origin: 50% 96%; }
 .nextc { display: grid; gap: 2px; justify-items: center; font-size: .7rem; color: var(--muted); }
 .nextc img { width: 40px; height: 40px; border: 3px solid var(--outline); border-radius: 10px; object-fit: cover; background: #c7cde0; filter: brightness(.85); }
 #hero { display: grid; justify-items: center; gap: 3px; background: none; border: 0; padding: 0; width: 62px; }
@@ -311,7 +313,7 @@ summary { cursor: pointer; font-family: var(--font-display); color: var(--gold);
   border-radius: 999px; font-family: var(--font-display); font-size: .66rem; line-height: 1.25; padding: 0 6px; white-space: nowrap; pointer-events: none; }
 .lvb.foe { color: #ffb4b4; border-color: #e2363b; }
 .dk.mini .lvb { font-size: .5rem; padding: 0 4px; border-width: 1.5px; }
-.hc .lvb { font-size: .58rem; top: 64%; }
+.hc .lvb { font-size: .58rem; top: 87%; }
 .ugrid { row-gap: 24px; }
 .cpbar { position: absolute; left: 6%; right: 6%; bottom: -17px; height: 14px; background: #0f1322; border: 2px solid var(--outline); border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
 .cpbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#8fd0ff, #3b82f6); }
@@ -1882,7 +1884,7 @@ class Unit {
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
-  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.flame && s !== 'attack') this.flame.setVisible(false); if (this.beamImg && s !== 'kaiBeam') this.beamImg.setVisible(false); if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -5161,8 +5163,13 @@ function drawStage(g) {
 }
 
 /* ---- montaje de modos ---- */
+function unitGone(u) {
+  // borra la unidad y todo lo que dibuja suelto en el campo (llamaradas, alientos, rayos, sombras, espadas…)
+  for (const k of ['root', 'bar', 'zsh', 'zdark', 'laserG', 'ultIcon', 'plasmaG', 'beamG', 'beamImg', 'flame', 'ultSword', 'clipG']) if (u[k]) { try { u[k].destroy(); } catch (e) {} u[k] = null; }
+  if (u.kaiFl) { u.kaiFl.a.destroy(); u.kaiFl.b.destroy(); u.kaiFl = null; }
+}
 function clearUnits() {
-  units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy(); }); units = [];
+  units.forEach(unitGone); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
   rockets.forEach(r => r.img.destroy()); rockets = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
@@ -5371,7 +5378,7 @@ function onDead(u) {            // en batalla las bajas no vuelven (salvo que Au
   if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen)) {
     B.fallen = B.fallen || { blue: [], purple: [] }; B.fallen[u.team].push({ type: u.type, x: u.x, lane: u.lane, lv: u.lv, rk: u.rk });
   }
-  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
+  units = units.filter(v => v !== u); unitGone(u);
 }
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
@@ -6465,7 +6472,7 @@ function idleStep(dt) {
   }
   fightLogic(dt);
   for (const u of units.slice()) if ((u.team === 'blue' && u.x > R + 160) || (u.team === 'purple' && u.x < L - 160)) {
-    units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy();
+    units = units.filter(v => v !== u); unitGone(u);
   }
 }
 const _onDead = onDead;
@@ -8085,14 +8092,14 @@ function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.run
 function galStart() {
   const gm = window.__game; if (!gm || !scene) return;
   if (!GAL.sc) GAL.sc = gm.scene.add('galeria', { update(_, ms) { galTick(Math.min(0.05, ms / 1000)); } }, true);
-  GAL.u.forEach(u => { u.root.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
+  GAL.u.forEach(unitGone); GAL.u.clear();
   GAL.gris = ['grises', 'rata_puno', 'rata_cuchillo', 'rata_palanca'][Math.floor(Math.random() * 4)];   // cada vez, una rata distinta
   GAL.on = true; document.body.classList.add('galeria'); scene.scene.setVisible(false); GAL.sc.scene.setVisible(true); galWake();
 }
 function galStop() {
   if (!GAL.on) return;
   GAL.on = false; document.body.classList.remove('galeria');
-  GAL.u.forEach(u => { u.root.destroy(); if (u.bar) u.bar.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
+  GAL.u.forEach(unitGone); GAL.u.clear();
   if (scene) scene.scene.setVisible(true); if (GAL.sc) GAL.sc.scene.setVisible(false);
 }
 function galUnit(k) {
@@ -8162,7 +8169,7 @@ function retratos() {
       const w = Math.ceil(b.width * s) + pad * 2, h = Math.ceil(b.height * s + sh) + pad * 2, key = 'ret_' + k;
       u.root.setScale(s);
       const dt = scene.textures.addDynamicTexture(key, w, h); dt.draw(u.root, -b.x * s + pad, -b.y * s + pad);
-      u.root.destroy(); u.bar.destroy();
+      unitGone(u);
       dt.snapshot(img => {
         RETRATO[k] = img.src; scene.textures.remove(key);
         document.querySelectorAll('img[data-ret="' + k + '"]').forEach(i => { i.src = img.src; });

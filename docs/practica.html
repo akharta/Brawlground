@@ -1461,7 +1461,7 @@ class Unit {
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
-  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.flame && s !== 'attack') this.flame.setVisible(false); if (this.beamImg && s !== 'kaiBeam') this.beamImg.setVisible(false); if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -4438,7 +4438,7 @@ function slingShot(u, sx, sy) {
   arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, spin: 14 * u.dir, team: u.team, fromX: u.x });
 }
 function onDead(u) {
-  if (u.type === 'esqueleto') { units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); return; }
+  if (u.type === 'esqueleto') { units = units.filter(v => v !== u); unitGone(u); return; }
   if (mode === 'anim') { setTimeout(() => { if (mode === 'anim' && units[0] === u) u.reset(u.homeX); }, 500); return; }
   setTimeout(() => { if (mode === 'fight' && units.includes(u)) u.reset(u.homeX); }, 1600);
 }
@@ -4745,8 +4745,13 @@ function drawStage(g) {
 }
 
 /* ---- montaje de modos ---- */
+function unitGone(u) {
+  // borra la unidad y todo lo que dibuja suelto en el campo (llamaradas, alientos, rayos, sombras, espadas…)
+  for (const k of ['root', 'bar', 'zsh', 'zdark', 'laserG', 'ultIcon', 'plasmaG', 'beamG', 'beamImg', 'flame', 'ultSword', 'clipG']) if (u[k]) { try { u[k].destroy(); } catch (e) {} u[k] = null; }
+  if (u.kaiFl) { u.kaiFl.a.destroy(); u.kaiFl.b.destroy(); u.kaiFl = null; }
+}
 function clearUnits() {
-  units.forEach(u => { u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy(); }); units = [];
+  units.forEach(unitGone); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
   rockets.forEach(r => r.img.destroy()); rockets = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];

@@ -154,7 +154,7 @@ function onDead(u) {            // en batalla las bajas no vuelven (salvo que Au
   if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen)) {
     B.fallen = B.fallen || { blue: [], purple: [] }; B.fallen[u.team].push({ type: u.type, x: u.x, lane: u.lane, lv: u.lv, rk: u.rk });
   }
-  units = units.filter(v => v !== u); u.root.destroy(); u.bar.destroy(); if (u.zsh) u.zsh.destroy(); if (u.zdark) u.zdark.destroy(); if (u.laserG) u.laserG.destroy(); if (u.ultIcon) u.ultIcon.destroy(); if (u.plasmaG) u.plasmaG.destroy(); if (u.beamG) u.beamG.destroy();
+  units = units.filter(v => v !== u); unitGone(u);
 }
 /* ---- carriles: el camino tiene cinco carriles invisibles; cada unidad sale en uno al azar (con un poco de holgura) y, cuando
    se acerca a su rival, se va desviando hacia el carril de él para pelear cara a cara ---- */
