@@ -167,7 +167,7 @@ function nextLevel() {
 }
 function paintHub() {
   if (!perfil) return;
-  const nv = nivelDe(perfil.xp || 0), port = 'img/' + HEROES[playerHero()].portrait + '.png';
+  const nv = nivelDe(perfil.xp || 0), port = playerHero() ? 'img/' + HEROES[playerHero()].portrait + '.png' : 'img/ui/avatar.png';
   $('h-lv').textContent = nv.lv; $('h-xp').style.width = (nv.cur / nv.need * 100) + '%'; $('h-name').textContent = perfil.nombre || 'Señor del Reino';
   $('h-avatar').src = port; document.querySelectorAll('.avatar .ring').forEach(r => { r.style.background = COLORES[myColor()][1]; });
   document.querySelectorAll('.gema-n').forEach(e => { e.textContent = perfil.gemas || 0; });
@@ -293,7 +293,7 @@ function buyMerc(i) {
 
 /* ---- perfil ---- */
 function openPerfil() {
-  const nv = nivelDe(perfil.xp || 0), port = 'img/' + HEROES[playerHero()].portrait + '.png', est = Object.values(perfil.stars || {}).flat().reduce((s, x) => s + x, 0);
+  const nv = nivelDe(perfil.xp || 0), port = playerHero() ? 'img/' + HEROES[playerHero()].portrait + '.png' : 'img/ui/avatar.png', est = Object.values(perfil.stars || {}).flat().reduce((s, x) => s + x, 0);
   $('pf-avatar').src = port; $('pf-name').value = perfil.nombre || 'Señor del Reino';
   $('pf-lv').textContent = 'Nivel ' + nv.lv + ' · ' + nv.cur + ' de ' + nv.need + ' de experiencia para el siguiente'; $('pf-xp').style.width = (nv.cur / nv.need * 100) + '%';
   const stats = [[fmt(perfil.gold), 'de oro'], [perfil.gemas || 0, 'diamantes'], [conquistados(), 'castillos conquistados'], [est, 'estrellas'], [owned().length + '/' + ALL.length, 'unidades'], [heroesOwned().length + '/' + Object.keys(HEROES).length, 'héroes']];

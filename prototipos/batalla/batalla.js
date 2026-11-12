@@ -252,11 +252,12 @@ function resetBattle(o = {}) {
   clearUnits(); paused = false; ABA_STACK = { blue: 0, purple: 0 }; if (scene) scene.tweens.resumeAll();
   const demo = !!o.demo, auto = demo || !!o.sim, rh = () => ['aldric', 'lyra', 'gull'][Math.floor(Math.random() * 3)];
   B = { demo, idle: !!o.idle, sim: !!o.sim, auto, run: o.run || null, blue: newSide(o.deck || (demo ? aiDeck() : myDeck)), purple: newSide(o.enemyDeck || aiDeck(), o.aiK || 1), over: false, t: 0, stats: { blue: {}, purple: {} },
-    hero: { type: o.hero || (demo ? rh() : myHero), state: 'throne', unit: null, skillT: 0 },
+    hero: { type: o.hero !== undefined ? o.hero : demo ? rh() : myHero, state: 'throne', unit: null, skillT: 0 },
     heroP: { type: o.heroP === undefined ? rh() : o.heroP, state: 'throne', unit: null, skillT: 0 } };
   if (!B.heroP.type) B.heroP.state = 'none';
+  if (!B.hero.type) B.hero.state = 'none';   // aún sin héroe: trono vacío y sin botón
   if (throneImg) {
-    setThrone(throneImg, HEROES[B.hero.type].throne);
+    throneImg.setVisible(!!B.hero.type); if (B.hero.type) setThrone(throneImg, HEROES[B.hero.type].throne);
     throneImgP.setVisible(!!B.heroP.type); if (B.heroP.type) setThrone(throneImgP, HEROES[B.heroP.type].throne);
   }
   castles = { blue: makeCastle('blue'), purple: makeCastle('purple', o.enemyHp || CASTLE_HP) };
@@ -304,6 +305,7 @@ function heroAI(team = 'purple') {
 function heroUI() {
   // botón redondo con el retrato: el aro dorado se llena con las bajas y luego con la recarga de la habilidad
   const hr = B.hero, btn = $('hero'), k = B.blue.kills, HD = HEROES[hr.type];
+  btn.hidden = !hr.type; if (!hr.type) return;
   let txt, p, ready = false, label;
   if (hr.state === 'throne') { ready = k >= HERO_GOAL; p = Math.min(1, k / HERO_GOAL); txt = ready ? '¡Salta!' : Math.min(k, HERO_GOAL) + '/' + HERO_GOAL; label = HD.name + (ready ? ': toca para que salte del trono' : ': ' + txt + ' bajas'); }
   else if (hr.state === 'field') { ready = hr.skillT <= 0; p = 1 - hr.skillT / CH[hr.type].skillCd; txt = ready ? '¡Listo!' : Math.ceil(hr.skillT) + ' s'; label = HD.skillName + (ready ? ': lista' : ': ' + txt); }

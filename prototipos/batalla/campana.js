@@ -184,8 +184,11 @@ function coinFly(fromEl, amount) {
 
 /* ---- perfil del jugador ---- */
 const PERFIL_KEY = 'bg-perfil';
-function newPerfil() { return { v: 1, owned: STARTERS.slice(), heroes: ['aldric'], gold: 0, stars: {}, trib: {}, color: 'azul', all: false, pending: null }; }
+function newPerfil() { return { v: 1, owned: STARTERS.slice(), heroes: [], gold: 0, stars: {}, trib: {}, color: 'azul', all: false, pending: null }; }
 let perfil = (() => { try { const p = JSON.parse(localStorage.getItem(PERFIL_KEY) || 'null'); if (p && p.v === 1 && Array.isArray(p.owned)) return Object.assign(newPerfil(), p); } catch (e) {} return newPerfil(); })();
+// héroes: no hay hasta conquistar el segundo reino (el Bosque): entonces vuelve el rey Aldric y se te unen los reyes vencidos
+const HERO_DESDE = 'bosque';
+if (perfil.heroes.length && !perfil.all && !(perfil.stars[HERO_DESDE] && perfil.stars[HERO_DESDE][9] > 0)) perfil.heroes = [];   // perfiles de antes
 function savePerfil() { try { localStorage.setItem(PERFIL_KEY, JSON.stringify(perfil)); } catch (e) {} }
 const owned = () => perfil.all ? ALL.slice() : ALL.filter(k => perfil.owned.includes(k));
 const heroesOwned = () => Object.keys(HEROES).filter(h => perfil.all || perfil.heroes.includes(h));
@@ -209,7 +212,7 @@ function playerDeck() {
   for (const k of own) if (d.length < Math.min(8, own.length) && !d.includes(k)) d.push(k);
   return d.slice(0, 8);
 }
-const playerHero = () => heroesOwned().includes(myHero) ? myHero : 'aldric';
+const playerHero = () => { const hs = heroesOwned(); return hs.includes(myHero) ? myHero : hs[0] || null; };
 function paintGold() {
   document.querySelectorAll('.oro-n').forEach(e => { e.textContent = perfil.gold; });
   const all = KINGDOMS.reduce((s, k) => s + tribKingdom(k.id), 0), bd = $('m-badge');
@@ -226,7 +229,11 @@ function useScene(name, cb) {
   if (scene.textures.exists(name)) return go();
   scene.load.image(name, 'img/esc/' + name + '.jpg'); scene.load.once('complete', go); scene.load.start();
 }
-function levelOpts(kid, i) { const lv = KD(kid).levels[i]; return { enemyDeck: lv.deck, enemyHp: lv.hp, aiK: lv.aiK, heroP: lv.hero || null }; }
+function levelOpts(kid, i) {
+  // el rival lleva héroe en todos los castillos a partir del segundo reino (y siempre en los castillos reales)
+  const lv = KD(kid).levels[i], ki = KINGDOMS.filter(k => k.levels).findIndex(k => k.id === kid), H3 = ['aldric', 'lyra', 'gull'];
+  return { enemyDeck: lv.deck, enemyHp: lv.hp, aiK: lv.aiK, heroP: lv.hero || (ki >= 1 ? H3[(i + ki) % 3] : null) };
+}
 function startRun(run) {
   RUN = run;
   const begin = () => {
@@ -258,7 +265,10 @@ function battleResult(win) {
       if (res.first && lv.prize && !perfil.owned.includes(lv.prize)) { perfil.owned.push(lv.prize); res.prize = lv.prize; }
       if (res.first && lv.royal) {
         res.conquered = true; perfil.pending = run.k;
-        if (kd.ruler && !perfil.heroes.includes(kd.ruler)) { perfil.heroes.push(kd.ruler); res.hero = kd.ruler; }
+        if (run.k === HERO_DESDE) {   // conquistado el segundo reino: llegan los héroes
+          const nuevos = ['aldric'].concat(KINGDOMS.slice(0, KINGDOMS.findIndex(k => k.id === HERO_DESDE) + 1).map(k => k.ruler).filter(Boolean)).filter(h => !perfil.heroes.includes(h));
+          perfil.heroes.push(...nuevos); res.heroes = nuevos; res.hero = nuevos[0] || null;
+        } else if (kd.ruler && perfil.heroes.length && !perfil.heroes.includes(kd.ruler)) { perfil.heroes.push(kd.ruler); res.hero = kd.ruler; }
       }
     }
   } else if (win) res.gold = 20;
@@ -279,7 +289,7 @@ function showResult(res) {
   if (res.gold) pr += '<div class="loot"><span class="oro"><i></i><b>+' + res.gold + '</b></span></div>';
   if (res.prize) pr += '<div class="freed">' + cardHtml(res.prize, 'reveal') + '<p><b>¡Has liberado a ' + NAMES[res.prize] + '!</b><br>Estaba preso en las mazmorras del castillo. Ya puedes llevarlo en tu mazo.</p></div>';
   if (res.first) pr += '<p class="tribnote">Este castillo ya es tuyo: te pagará <b>' + tribRate(run.k, run.i) + ' de oro por hora</b>. Recógelo en el mapa del reino.</p>';
-  if (res.hero) pr += '<div class="freed"><img class="hport reveal" src="img/' + HEROES[res.hero].portrait + '.png" alt=""><p><b>' + NAMES_H[res.hero] + ' se une a tu ejército.</b><br>' + (RULER_TXT[res.hero] || ['', 'Ya puedes elegirlo como héroe.'])[1] + '</p></div>';
+  (res.heroes || (res.hero ? [res.hero] : [])).forEach(h => { pr += '<div class="freed"><img class="hport reveal" src="img/' + HEROES[h].portrait + '.png" alt=""><p><b>' + NAMES_H[h] + ' se une a tu ejército.</b><br>' + (h === 'aldric' ? 'Tu rey vuelve al trono: a las ' + HERO_GOAL + ' bajas salta a la batalla.' : (RULER_TXT[h] || ['', 'Ya puedes elegirlo como héroe.'])[1]) + '</p></div>'; });
   $('over-prize').innerHTML = pr;
   const a = $('over-a'), b = $('over-b');
   if (lv) {
@@ -538,7 +548,7 @@ window.__deckAt = deckAtLevel; window.__enemyPower = (k, i) => enemyPower(k, i);
 window.__simLevel = (kid, i, n = 10, maxT = 420, dt = 1 / 30, over = {}) => {
   const out = [];
   for (let g = 0; g < n; g++) {
-    resetBattle(Object.assign({ sim: true, run: { kind: 'sim' }, deck: deckAtLevel(kid, i), hero: 'aldric' }, levelOpts(kid, i), over));
+    resetBattle(Object.assign({ sim: true, run: { kind: 'sim' }, deck: deckAtLevel(kid, i), hero: KINGDOMS.findIndex(k => k.id === kid) > KINGDOMS.findIndex(k => k.id === HERO_DESDE) ? 'aldric' : null }, levelOpts(kid, i), over));
     while (!B.over && B.t < maxT) battleStep(dt);
     out.push({ win: !!B.win, t: Math.round(B.t), myHp: Math.round(Math.max(0, castles.blue.hp)), foeHp: Math.round(Math.max(0, castles.purple.hp)) });
   }
