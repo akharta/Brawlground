@@ -15,11 +15,11 @@ const MARCOS = {
   odo: { st: [16.4, 20.1, 66.9, 54.8] },
   kubi: { st: [15.8, 35.5, 67.9, 50.1] },
   imparable: { st: [15.9, 17.7, 66.7, 61.5], dy: -7 },
-  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25 },
+  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25, dy: 7, clip: true },
   tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
-  fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.12 },
+  fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.01 },
   catapulta: { st: [16.0, 32.3, 68.0, 49.4] },
-  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.24 },
+  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.36 },
   kungfu: { st: [14.2, 28.2, 71.5, 55.6] },
   samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
   muerte: { st: [16.4, 15.9, 67.4, 56.1], dx: 8 },
@@ -102,7 +102,7 @@ function galStart() {
 function galStop() {
   if (!GAL.on) return;
   GAL.on = false; document.body.classList.remove('galeria');
-  GAL.u.forEach(u => { u.root.destroy(); if (u.bar) u.bar.destroy(); }); GAL.u.clear();
+  GAL.u.forEach(u => { u.root.destroy(); if (u.bar) u.bar.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
   if (scene) scene.scene.setVisible(true); if (GAL.sc) GAL.sc.scene.setVisible(false);
 }
 function galUnit(k) {
@@ -133,6 +133,10 @@ function galTick(dt) {
     const hh = H * (u.cfg.h || 1) * (u.bigK || 1), ox = Math.max(-0.3 * hh, Math.min(0.3 * hh, u.galOx)), oy = Math.max(0, Math.min(0.15 * hh, u.galOy));   // cadenas, látigos y efectos sueltos no cuentan
     const M = MARCOS[k] || {}, s = Math.min(st.width * 0.95 / Math.min(u.galW, hh * 1.7), st.height * 0.95 / u.galH) * DPR * (M.z || 1);
     u.root.setVisible(true).setScale(s).setPosition((st.left + st.width * (0.5 + (M.dx || 0) / 100)) * DPR - ox * s, (st.bottom + st.height * (M.dy || 0) / 100) * DPR - oy * s);
+    if (M.clip) {   // lo que sobresale (cadenas) se corta en los bordes del hueco y por abajo
+      if (!u.clipG) { u.clipG = GAL.sc.make.graphics({}, false); u.root.setMask(u.clipG.createGeometryMask()); }
+      u.clipG.clear().fillStyle(0xffffff).fillRect((st.left - 2) * DPR, (st.top - st.height) * DPR, (st.width + 4) * DPR, (st.height * 2 + 2) * DPR);
+    }
   });
 }
 window.__gal = () => GAL;
@@ -147,7 +151,7 @@ function tmInner(k, has = true) {
   const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
   return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' 0 ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 || m.clip ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' ' + pc(m.clip ? Math.max(0, (T + h * z - t - h) / (h * z) * 100) : 0) + ' ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
     + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
 }
 cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };
