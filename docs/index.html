@@ -53,8 +53,8 @@ body.galeria #game { z-index: 31; pointer-events: none; background: transparent;
 .tc-nm { position: absolute; left: 6%; right: 6%; top: 5%; display: grid; place-items: center; padding: 3px 4px; border-radius: 7px; background: var(--rd); border: 2px solid var(--outline); line-height: 1.05; text-align: center; }
 .tc-nm b { font-family: var(--font-display); font-weight: 400; font-size: .82rem; text-shadow: 0 1px 0 var(--outline); }
 .tc-nm small { font-size: .58rem; opacity: .9; }
-.tc-cost { position: absolute; right: 4%; top: 24%; width: 26%; aspect-ratio: 1; display: grid; place-items: center; }
-.tc.marco .tc-cost { width: 20%; }
+/* muslo del coste: esquina de arriba a la izquierda de la carta, simétrico a la flecha de ascenso */
+.tc-cost { position: absolute; z-index: 3; left: -6px; top: -8px; width: 32px; aspect-ratio: 1; display: grid; place-items: center; }
 .tc-cost img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
 .tc-cost { container-type: inline-size; }
 .tc-cost b { position: relative; margin: 0 0 22% 26%; font-family: var(--font-display); font-weight: 400; font-size: 34cqw; line-height: 1; color: #fff; text-shadow: 0 0 2px var(--outline), 0 1px 0 var(--outline), 0 -1px 0 var(--outline), 1px 0 0 var(--outline), -1px 0 0 var(--outline); }
@@ -127,7 +127,7 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 .tm .tm-nm { position: absolute; left: 6%; right: 6%; top: 5%; display: grid; place-items: center; padding: 2% 3%; border-radius: 6px; background: var(--rd); border: 1.5px solid var(--outline); line-height: 1.05; text-align: center; }
 .tm .tm-nm b { font-family: var(--font-display); font-weight: 400; font-size: 12cqw; text-shadow: 0 1px 0 var(--outline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tm .tm-nm small { font-size: 8cqw; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.tm .tm-cost { position: absolute; aspect-ratio: 1; display: grid; place-items: center; container-type: inline-size; background: url(img/tarjetas/coste.png) center / contain no-repeat; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+.tm .tm-cost { position: absolute; z-index: 3; left: -6px; top: -8px; width: clamp(18px, 32%, 32px); aspect-ratio: 1; display: grid; place-items: center; container-type: inline-size; background: url(img/tarjetas/coste.png) center / contain no-repeat; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
 .tm .tm-cost b { margin: 0 0 22% 26%; font-family: var(--font-display); font-weight: 400; font-size: 34cqw; line-height: 1; color: #fff; text-shadow: 0 0 2px var(--outline), 0 1px 0 var(--outline), 0 -1px 0 var(--outline), 1px 0 0 var(--outline), -1px 0 0 var(--outline); }
 .dk { opacity: .5; width: 100%; }
 .dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
@@ -7910,27 +7910,27 @@ window.__B = () => B; window.__skin = () => CASTLE_SKIN.blue; window.__skinP = (
    juego. Mientras la pestaña de Tropas está abierta, el lienzo pasa por encima de la pantalla (sin recibir toques), la escena
    de la batalla se oculta y esta escena coloca cada unidad en el hueco de su tarjeta y la recorta a la zona visible. ==== */
 // marcos propios de cada unidad (img/marcos/<unidad>.png, 2:3, con el nombre dibujado y el hueco vacío). Por marco: el hueco
-// donde va la unidad [izquierda, arriba, ancho, alto] y el muslo del coste [derecha, arriba, ancho], en % de la tarjeta: siempre
-// dentro del hueco, en su esquina de arriba a la derecha y sin pisar el marco. Las que no
-// tienen marco llevan el provisional, con rayos del color de su rareza
+// donde va la unidad [izquierda, arriba, ancho, alto] en % de la tarjeta, y opcionalmente z (cuánto se agranda la figura) y dx, dy
+// (cuánto se mueve, en % del hueco). El muslo del coste va siempre en la esquina de arriba a la izquierda de la carta, simétrico a la
+// flecha de ascenso. Las que no tienen marco llevan el provisional, con rayos del color de su rareza
 const MARCOS = {
-  legionario: { st: [16, 44, 68, 40], cost: [17, 41.5, 27] },
-  arquera: { st: [20, 22, 60, 54], cost: [20, 19, 27] },
-  valkiria: { st: [19, 27, 62, 46], cost: [19.5, 24, 26] },
-  ninja: { st: [16, 33, 68, 46], cost: [15.5, 29.5, 25] },
-  odo: { st: [16.4, 20.1, 66.9, 54.8], cost: [22.6, 22.6, 25.9] },
-  kubi: { st: [15.8, 35.5, 67.9, 50.1], cost: [15.5, 37.4, 25.9] },
-  imparable: { st: [15.9, 17.7, 66.7, 61.5], cost: [22.1, 18.6, 25.9] },
-  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], cost: [19.4, 35.8, 25.9] },
-  tercio: { st: [13.2, 28.7, 73.2, 49.2], cost: [17.4, 30.4, 25.9] },
-  fraile: { st: [17.3, 16.2, 65.2, 59.7], cost: [28.7, 18.4, 25.9] },
-  catapulta: { st: [16.0, 32.3, 68.0, 49.4], cost: [15.3, 32.2, 25.9] },
-  acorazado: { st: [20.9, 37.1, 58.1, 45.0], cost: [19.7, 36.7, 25.9] },
-  kungfu: { st: [14.2, 28.2, 71.5, 55.6], cost: [20.9, 28.6, 25.9] },
-  samurai: { st: [22.3, 24.2, 55.3, 52.5], cost: [22.0, 25.1, 25.9] },
-  muerte: { st: [20.9, 15.5, 58.1, 48.7], cost: [27.9, 15.9, 25.9] },
-  lobo: { st: [17.2, 19.0, 65.5, 54.8], cost: [25.4, 20.4, 25.9] },
-  pistolero: { st: [17.3, 33.5, 65.3, 55.0], cost: [17.3, 33.1, 25.9] },
+  legionario: { st: [16, 44, 68, 40], z: 1.15 },
+  arquera: { st: [20, 22, 60, 54], z: 1.12 },
+  valkiria: { st: [19, 27, 62, 46], z: 1.15 },
+  ninja: { st: [16, 33, 68, 46], z: 1.12 },
+  odo: { st: [16.4, 20.1, 66.9, 54.8] },
+  kubi: { st: [15.8, 35.5, 67.9, 50.1] },
+  imparable: { st: [15.9, 17.7, 66.7, 61.5], dy: -7 },
+  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 1.6 },
+  tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
+  fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.12 },
+  catapulta: { st: [16.0, 32.3, 68.0, 49.4] },
+  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.55 },
+  kungfu: { st: [14.2, 28.2, 71.5, 55.6] },
+  samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
+  muerte: { st: [16.4, 15.9, 67.4, 56.1], dx: 8 },
+  lobo: { st: [17.2, 19.0, 65.5, 54.8] },
+  pistolero: { st: [17.3, 33.5, 65.3, 55.0], z: 1.12 },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -7941,7 +7941,8 @@ function tarjetaHtml(k) {
   return '<button type="button" class="tc ' + rar + (has ? '' : ' lock') + (marco ? ' marco' : '') + (has && puedeRango(k) ? ' up' : '') + '" data-k="' + k + '" aria-label="' + (NAMES[k] || k) + (has ? ', nivel ' + lv + ', rango ' + RANGOS[r] : ', bloqueada') + '">'
     + '<span class="tc-fr"' + (marco ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>'
     + (marco ? '' : '<span class="tc-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<span class="tc-cost"' + (marco ? ' style="right:' + marco.cost[0] + '%;top:' + marco.cost[1] + '%;width:' + marco.cost[2] + '%"' : '') + '><img src="img/tarjetas/coste.png" alt=""><b>' + COST[k] + '</b></span><span class="tc-stage"' + (marco ? ' style="left:' + marco.st[0] + '%;top:' + marco.st[1] + '%;width:' + marco.st[2] + '%;height:' + marco.st[3] + '%"' : '') + '></span></span>'
+    + '<span class="tc-stage"' + (marco ? ' style="left:' + marco.st[0] + '%;top:' + marco.st[1] + '%;width:' + marco.st[2] + '%;height:' + marco.st[3] + '%"' : '') + '></span></span>'
+    + '<span class="tc-cost"><img src="img/tarjetas/coste.png" alt=""><b>' + COST[k] + '</b></span>'
     + '<span class="tc-bar" style="background-image:url(img/tarjetas/barra_' + (BARRA_RAR[rar] || 'comun') + '.png)"><b class="tc-lv">' + (has ? lv : '?') + '</b>'
     + '<span class="tc-track"><i style="width:' + (has ? (c ? Math.min(100, cp / c.copias * 100) : 100) : 0) + '%"></i><b>' + (has ? (c ? cp + '/' + c.copias : 'Máx.') : '') + '</b></span>'
     + (has ? sello(r, 'tc-rk') : '') + '</span></button>';
@@ -7976,6 +7977,7 @@ function galUnit(k) {
   const u = new Unit(GAL.sc, k, 'blue', 0);
   u.root.list.forEach(c => { if (c.type === 'ParticleEmitter') c.setVisible(false); });   // las partículas del aura van en coordenadas del campo: aquí no
   u.packDone = true; u.ultUsed = true; u.bar.setVisible(false); u.set('idle'); u.dir = 1; u.gal = true;
+  if (k === 'rhysida') u.rhySkins = () => { const r = rangoOf(k); return RHY.skins.slice(0, perfil.all ? 10 : r >= 6 ? 10 : r >= 4 ? 7 : r >= 2 ? 4 : 1); };   // va turnando las skins que tengas
   if (!owned().includes(k)) { u.parts.forEach(pt => pt.setTintFill && pt.setTintFill(0x141826)); u.auraBack.setVisible(false); u.auraFront.setVisible(false); }
   u.update(0); u.root.setPosition(0, 0).setScale(1);
   const b = u.rig.getBounds(); u.galW = Math.max(1, b.width); u.galH = Math.max(1, b.height); const bh = u.body && u.body.displayHeight * Math.abs(u.rig.scaleY || 1); if (bh > 1 && isFinite(bh)) u.galH = Math.min(u.galH, bh * 1.3); u.galOy = b.bottom - u.root.y; u.galOx = b.centerX - u.root.x;   // su tamaño natural, para encajarla (el cuerpo manda: cadenas y armas largas no encogen la unidad)
@@ -7996,8 +7998,8 @@ function galTick(dt) {
     u.x = 0; u.dir = 1; if (u.state !== 'idle') u.set('idle');
     u.update(dt);
     const hh = H * (u.cfg.h || 1) * (u.bigK || 1), ox = Math.max(-0.3 * hh, Math.min(0.3 * hh, u.galOx)), oy = Math.max(0, Math.min(0.15 * hh, u.galOy));   // cadenas, látigos y efectos sueltos no cuentan
-    const s = Math.min(st.width * 0.95 / Math.min(u.galW, hh * 1.7), st.height * 0.95 / u.galH) * DPR;
-    u.root.setVisible(true).setScale(s).setPosition((st.left + st.width / 2) * DPR - ox * s, st.bottom * DPR - oy * s);
+    const M = MARCOS[k] || {}, s = Math.min(st.width * 0.95 / Math.min(u.galW, hh * 1.7), st.height * 0.95 / u.galH) * DPR * (M.z || 1);
+    u.root.setVisible(true).setScale(s).setPosition((st.left + st.width * (0.5 + (M.dx || 0) / 100)) * DPR - ox * s, (st.bottom + st.height * (M.dy || 0) / 100) * DPR - oy * s);
   });
 }
 window.__gal = () => GAL;
@@ -8006,13 +8008,14 @@ window.__gal = () => GAL;
    provisional), su retrato y el muslo del coste. El retrato es una foto de la unidad de verdad en reposo, sacada una vez
    al arrancar con la escena de la batalla ---- */
 const RETRATO = {}, PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const MARCO_PROV = { st: [12, 34, 76, 54], cost: [4, 22, 27] };
+const MARCO_PROV = { st: [12, 34, 76, 54] };
 function tmInner(k, has = true) {
-  const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => v + '%';
+  const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => (+v.toFixed(2)) + '%', z = m.z || 1, [l, t, w, h] = m.st;
+  const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
   return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(m.st[0]) + ';top:' + pc(m.st[1]) + ';width:' + pc(m.st[2]) + ';height:' + pc(m.st[3]) + '">'
-    + '<span class="tm-cost" style="right:' + pc(m.cost[0]) + ';top:' + pc(m.cost[1]) + ';width:' + pc(m.cost[2]) + '"><b>' + COST[k] + '</b></span>';
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + '">'
+    + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
 }
 cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };
 function retratos() {
