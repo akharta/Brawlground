@@ -7940,7 +7940,7 @@ const MARCOS = {
   ninja: { st: [16, 33, 68, 46], z: 1.12 },
   odo: { st: [16.4, 20.1, 66.9, 54.8] },
   kubi: { st: [15.8, 35.5, 67.9, 50.1] },
-  imparable: { st: [15.9, 17.7, 66.7, 61.5], dy: -7 },
+  imparable: { st: [15.8, 17.7, 66.8, 61.5], dy: -7, frames: 5, anim: 'ciclo' },
   desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25, dy: 7, clip: true },
   tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
   fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.01 },
@@ -7962,6 +7962,15 @@ const MARCOS = {
   grises: { st: [14.6, 27.7, 68.3, 55.5] },
   ignis: { st: [17.2, 33.2, 65.5, 55.7] },
   nivea: { st: [16.4, 26.6, 67.1, 52.8] },
+  anubek: { st: [14.4, 26.6, 71.0, 53.8] },
+  rhea: { st: [18.4, 22.2, 63.1, 51.1] },
+  abaddon: { st: [13.0, 22.2, 73.7, 55.1] },
+  nul: { st: [16.8, 23.2, 66.2, 54.3], frames: 6, anim: 'ciclo' },
+  kaiju: { st: [17.2, 21.4, 65.4, 50.4] },
+  morgana: { st: [17.5, 29.0, 64.8, 50.3] },
+  tormund: { st: [17.3, 33.2, 65.2, 53.3] },
+  aurelion: { st: [20.4, 20.2, 59.2, 51.5] },
+  torque: { st: [18.4, 42.1, 63.2, 46.8] },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -8037,6 +8046,7 @@ setInterval(() => {
     const M = MARCOS[k]; if (!M.frames) continue;
     let i;
     if (M.anim === 'sombra') { const n = M.frames, q = Math.floor(MARCO_ANIM.t / 3) % (2 * n - 2); i = q < n ? q : 2 * n - 2 - q; }
+    else if (M.anim === 'ciclo') i = Math.floor(MARCO_ANIM.t / 3) % M.frames;   // Elyss (grietas que se encienden) y Nul (el aro gira)
     else { const q = MARCO_ANIM.t % 14; i = q < 3 ? 1 + (Math.floor(MARCO_ANIM.t / 14) + q) % (M.frames - 1) : 0; }
     if (M.cur === i) continue; M.cur = i;
     document.querySelectorAll('[data-marco="' + k + '"]').forEach(e => { e.style.backgroundImage = marcoSrc(k, i); });
