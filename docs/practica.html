@@ -145,18 +145,18 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <button data-char="acorazado" aria-pressed="false">Gustav, el Acorazado</button>
       <button data-char="fraile" aria-pressed="false">Fray Tomé, el Fraile</button>
       <button data-char="catapulta" aria-pressed="false">Berta, la Catapulta</button>
-      <button data-char="centinela" aria-pressed="false">Unidad X-9, el Centinela</button>
+      <button data-char="centinela" aria-pressed="false">Legionario X-9, el Centinela</button>
       <button data-char="desencadenado" aria-pressed="false">Jhotum, el Desencadenado</button>
       <button data-char="imparable" aria-pressed="false">Elyss, el Insaciable</button>
       <button data-char="honderillo" aria-pressed="false">Pip, el Honderillo</button>
       <button data-char="ivo" aria-pressed="false">Ivo, el Aprendiz de mago</button>
       <button data-char="odo" aria-pressed="false">Odo, el Tamborilero</button>
       <button data-char="torque" aria-pressed="false">Torque, el Robot obrero</button>
-      <button data-char="anubek" aria-pressed="false">Anubek, el Chacal de arcilla</button>
+      <button data-char="anubek" aria-pressed="false">Anubek, el Guardián Chacal</button>
       <button data-char="morgana" aria-pressed="false">Morgana, la Costurera oscura</button>
       <button data-char="abaddon" aria-pressed="false">Abaddon, el Devorador insaciable</button>
       <button data-char="rhea" aria-pressed="false">Rhea, la Reina abeja</button>
-      <button data-char="aurelion" aria-pressed="false">Aurelion, el Bastón del paladín</button>
+      <button data-char="aurelion" aria-pressed="false">Aurelion, el Báculo del paladín</button>
       <button data-char="kaiju" aria-pressed="false">Kaiju Tomo, el Lagarto colosal</button>
       <button data-char="mira" aria-pressed="false">Mira, la Alquimista</button>
       <button data-char="zero" aria-pressed="false">Zero, el Niño de amarillo</button>
@@ -343,11 +343,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <dl><dt>Vida</dt><dd>380</dd><dt>Daño</dt><dd>22 en área</dd><dt>Cada 30 s</dt><dd>Aliento atómico</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card legend" aria-label="Carta de Aurelion, el Bastón del paladín">
+      <div class="card legend" aria-label="Carta de Aurelion, el Báculo del paladín">
         <div class="cost">6</div>
-        <div class="art"><img src="img/aurelion_carta.png" alt="Ilustración de Aurelion, el Bastón del paladín"></div>
+        <div class="art"><img src="img/aurelion_carta.png" alt="Ilustración de Aurelion, el Báculo del paladín"></div>
         <div class="name">Aurelion</div>
-        <div class="cls">el Bastón del paladín</div>
+        <div class="cls">el Báculo del paladín</div>
         <div class="rar">Legendaria</div>
       </div>
       <dl><dt>Vida</dt><dd>170</dd><dt>Cura</dt><dd>25 por destello</dd><dt>Cada 50 s</dt><dd>Revive a un aliado</dd></dl>
@@ -383,11 +383,11 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <dl><dt>Vida</dt><dd>140</dd><dt>Daño</dt><dd>16 por puntada</dd><dt>Ataque</dt><dd>Aguja e hilo que atraviesan y roban vida</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card rare" aria-label="Carta de Anubek, el Chacal de arcilla">
+      <div class="card rare" aria-label="Carta de Anubek, el Guardián Chacal">
         <div class="cost">4</div>
-        <div class="art"><img src="img/anubek_carta.png" alt="Ilustración de Anubek, el Chacal de arcilla"></div>
+        <div class="art"><img src="img/anubek_carta.png" alt="Ilustración de Anubek, el Guardián Chacal"></div>
         <div class="name">Anubek</div>
-        <div class="cls">el Chacal de arcilla</div>
+        <div class="cls">el Guardián Chacal</div>
         <div class="rar">Rara</div>
       </div>
       <dl><dt>Vida</dt><dd>150</dd><dt>Daño</dt><dd>14 por tajo</dd><dt>Al morir</dt><dd>Se rehace una vez</dd></dl>
@@ -553,10 +553,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
       <dl><dt>Vida</dt><dd>120</dd><dt>Daño</dt><dd>35 en área (×3 a castillos)</dd><dt>Alcance</dt><dd>Muy largo; indefensa de cerca</dd></dl>
     </div>
     <div class="cardbox">
-      <div class="card ascended" aria-label="Carta de Unidad X-9, el Centinela">
+      <div class="card ascended" aria-label="Carta de Legionario X-9, el Centinela">
         <div class="cost">7</div>
-        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Unidad X-9, el Centinela"></div>
-        <div class="name">Unidad X-9</div>
+        <div class="art"><img src="img/centinela_carta.png" alt="Ilustración de Legionario X-9, el Centinela"></div>
+        <div class="name">Legionario X-9</div>
         <div class="cls">el Centinela</div>
         <div class="rar">Ascendida</div>
       </div>
@@ -646,7 +646,7 @@ const CH = {
   // Torque, el Robot obrero: no ataca; se queda junto a tu castillo, yendo de un lado a otro, y lo repara con cemento
   torque: { hp: 150, speed: 40, cd: [2.2, 2.6], range: H * 0.5, ranged: false, h: 1.1, support: true, fix: 24,
     rest: { bh: [-0.317, -0.389], fh: [0.477, -0.559] }, org: 0.514, tw: [0.133, 0.793, -0.736], bk: [0.5, 0.045] },
-  // Anubek, el Chacal de arcilla: jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace
+  // Anubek, el Guardián Chacal: jepés y escudo. Se agrieta al perder vida; al morir se rompe en pedazos y a los 2 s se rehace
   // (una vez), con los trozos algo separados
   anubek: { hp: 150, dmg: [12, 16], speed: 52, cd: [1.1, 1.4], range: H * 1.15, ranged: false, h: 1.25, block: 0.2, revive: 0.6,
     rest: { bh: [-0.257, -0.336], fh: [0.242, -0.274] }, org: [0.468, 0.995], sh: [0.144, 0.015], kg: [0.24, 0.65], knat: -0.15 },
@@ -664,7 +664,7 @@ const CH = {
   rhea: { hp: 110, speed: 50, cd: [1.5, 1.5], range: H * 2.7, ranged: true, h: 1.15, bees: 6,
     rest: { bh: [-0.166, -0.302], fh: [0.371, -0.34] }, org: [0.556, 0.999], grip: [0.337, 0.522], sA: -1.343, len: 0.782 },
   abeja: { hp: 22, dmg: [4, 6], speed: 96, cd: [0.6, 0.85], range: H * 0.55, ranged: false, h: 0.6, rest: { bh: [0, 0], fh: [0, 0] } },
-  // Aurelion, el Bastón del paladín: vuela batiendo sus alas de cristal; cura a los aliados con destellos verdes y dorados de su
+  // Aurelion, el Báculo del paladín: vuela batiendo sus alas de cristal; cura a los aliados con destellos verdes y dorados de su
   // báculo y, cada 50 s, revive al aliado caído más cercano
   aurelion: { hp: 170, heal: [22, 28], speed: 50, cd: [2.0, 2.6], range: H * 3.2, ranged: true, h: 1.15, fly: 0.22, keepBack: H * 2.4, reviveCd: 50,
     rest: { bh: [-0.257, -0.55], fh: [0.381, -0.419] }, org: [0.53, 1.0], grip: [0.349, 0.657], sA: 0.064, tip: [0.069, -0.633], w0: [-0.2, -0.566], w1: [0.208, -0.566], w0o: [0.965, 0.726], w1o: [0.075, 0.694] },
@@ -999,7 +999,7 @@ const bowW = BOW.w * H, bowH = BOW.h * H;
 const bowRestFromHand = (h, B = BOW) => [h[0] + (B.ox - (B.restX === undefined ? B.tipX : B.restX)) * B.w, h[1] + (B.oy - B.gripY) * B.h];
 
 let graves = [], scene, mode = 'fight', animChar = 'legionario', timeScale = 1;
-const NAMES = { ignis: 'Ignis, el Mago de fuego', valdrys: 'Valdrys, el Escudo del paladín', ezra: 'Ezra, el Ilusionista', zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Bastón del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Chacal de arcilla', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja del Suriken', pistolero: 'Cole, el Westerner', lobo: 'Garra, el Lobo de Esparta', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Unidad X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
+const NAMES = { ignis: 'Ignis, el Mago de fuego', valdrys: 'Valdrys, el Escudo del paladín', ezra: 'Ezra, el Ilusionista', zero: 'Zero, el Niño de amarillo', mira: 'Mira, la Alquimista', kaiju: 'Kaiju Tomo, el Lagarto colosal', aurelion: 'Aurelion, el Báculo del paladín', rhea: 'Rhea, la Reina abeja', abaddon: 'Abaddon, el Devorador insaciable', morgana: 'Morgana, la Costurera oscura', anubek: 'Anubek, el Guardián Chacal', torque: 'Torque, el Robot obrero', ivo: 'Ivo, el Aprendiz de mago', grises: 'Los Grises, las Ratas de cloaca', nivea: 'Nivea, la Maga de hielo', rufo: 'Rufo, el Perro cobarde', tormund: 'Tormund, el Berserker', kubi: 'Kubi, la Slime', odo: 'Odo, el Tamborilero', nul: 'Nul, el Intocable', rhysida: 'Rhysida, la Interferencia', honderillo: 'Pip, el Honderillo', legionario: 'Tulio, el Legionario', arquera: 'Ailin, la Arquera', valkiria: 'Brynja, la Valkiria', ninja: 'Kazú, el Ninja del Suriken', pistolero: 'Cole, el Westerner', lobo: 'Garra, el Lobo de Esparta', samurai: 'Hayato, el Samurái', kungfu: 'Lin, el Monje', tercio: 'Rodrigo, el Tercio', muerte: 'Velkara, la Muerte', acorazado: 'Gustav, el Acorazado', fraile: 'Fray Tomé, el Fraile', catapulta: 'Berta, la Catapulta', centinela: 'Legionario X-9, el Centinela', desencadenado: 'Jhotum, el Desencadenado', imparable: 'Elyss, el Insaciable' };
 const NEWEST = 'imparable';
 let pickBlue = NEWEST, pickPurple = 'legionario', pickBlue2 = NEWEST === 'fraile' ? 'legionario' : '', pickPurple2 = '';
 let units = [], fx = [], loose = [], arrows = [], fxG;
@@ -2099,7 +2099,7 @@ class Unit {
         if (o.mount) { o.mount.y = Math.max(0, Math.sin(now * 2.2)) * 0.01; o.rider.y = 0.012 * breathe; }
         if (o.sw !== undefined) o.sw += 0.04 * breathe;
         if (o.bow) { o.bow = bowRestFromHand(o.fh, this.bw); o.bowR = 0.03 * breathe; }
-        if (o.scarf) { o.scarf.r = -0.32 + 0.06 * breathe; o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
+        if (o.scarf) { o.scarf.r = -0.85 + 0.07 * Math.sin(now * 1.9 + this.homeX); o.scarf.sx = 0.85 + 0.04 * Math.sin(now * 2.6 + this.homeX); o.bk += 0.04 * breathe; o.fk -= 0.04 * breathe; }
         if (o.bg !== undefined) { o.bg += 0.05 * breathe; o.fg -= 0.05 * breathe; }
         if (o.bs !== undefined) {   // espadas en alto que se mecen; el monstruo jadea, el consumido se balancea
           o.bs += 0.05 * breathe; o.fs -= 0.05 * breathe;
@@ -3629,11 +3629,16 @@ class Unit {
       // el carrete flota ante su mano; la aguja, en el moño o volando; el hilo rojo va del carrete a la aguja, ondulando
       const c = this.cfg, now = this.sc.time.now / 1000, k = this.bigK || 1, bob = 0.03 * Math.sin(now * 2.2 + this.homeX);
       this.spool.setPosition(c.spool[0] * H, (c.spool[1] + bob) * H).setRotation(0.06 * Math.sin(now * 1.7));
-      if (this.needle.parentContainer !== this.root) this.root.add(this.needle);
       const nd = this.state === 'attack' && o.nd ? o.nd : null, dead = this.state === 'die';
       const [px, py] = this.morPt(c.pin[0], c.pin[1]), nx = nd ? nd[0] : px, ny = nd ? nd[1] : py;
       const na = nd ? nd[2] : (this.dir > 0 ? c.pinA : Math.PI - c.pinA);
-      this.needle.setVisible(!dead).setPosition(nx - this.x, ny - this.gy).setRotation(na).setScale(k * H / 512 * (nd ? 0.75 : 1), k * H / 512);
+      if (nd) {   // volando por el campo: en el contenedor, sin girar con ella
+        if (this.needle.parentContainer !== this.root) this.root.add(this.needle);
+        this.needle.setVisible(!dead).setPosition(nx - this.x, ny - this.gy).setRotation(na).setScale(k * H / 512 * 0.75, k * H / 512);
+      } else {    // en el moño: va con su cuerpo y se mueve con ella al respirar
+        if (this.needle.parentContainer !== this.rig) this.rig.add(this.needle);
+        this.needle.setVisible(!dead).setPosition(c.pin[0] * H, c.pin[1] * H).setRotation(c.pinA).setScale(H / 512);
+      }
       if (!this.plasmaG) this.plasmaG = scene.add.graphics().setDepth(955);
       const g = this.plasmaG; g.clear();
       if (o.thread && !dead) {

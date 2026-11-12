@@ -16,7 +16,7 @@ const MARCOS = {
   kubi: { st: [15.8, 35.5, 67.9, 50.1] },
   imparable: { st: [15.8, 17.7, 66.8, 61.5], dy: -7, frames: 5, anim: 'ciclo' },
   desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25, dy: 7, clip: true },
-  tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
+  tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15, dx: 12 },
   fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.01 },
   catapulta: { st: [16.0, 32.3, 68.0, 49.4] },
   acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.36 },
@@ -24,27 +24,28 @@ const MARCOS = {
   samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
   muerte: { st: [18.8, 17.9, 62.4, 51.9], dx: 8 },
   lobo: { st: [17.2, 19.0, 65.5, 54.8] },
-  pistolero: { st: [17.3, 33.5, 65.3, 55.0], z: 1.12 },
+  pistolero: { st: [17.3, 33.5, 65.3, 55.0], z: 1.12, dy: -6 },
   ivo: { st: [16.1, 40.4, 67.9, 47.3] },
   mira: { st: [15.8, 26.4, 67.8, 53.7] },
   rufo: { st: [14.7, 39.9, 70.4, 49.2] },
-  valdrys: { st: [15.2, 35.7, 69.5, 48.5] },
+  valdrys: { st: [15.2, 35.7, 69.5, 48.5], dy: -6 },
   ezra: { st: [16.6, 28.4, 66.4, 44.4] },
   zero: { st: [14, 22, 70, 50], frames: 5, anim: 'sombra' },
   rhysida: { st: [18.8, 19.8, 62.2, 49.9], frames: 4, anim: 'glitch' },
   honderillo: { st: [18.8, 21.9, 62.4, 58.9] },
   grises: { st: [14.6, 27.7, 68.3, 55.5] },
-  ignis: { st: [17.2, 33.2, 65.5, 55.7] },
-  nivea: { st: [16.4, 26.6, 67.1, 52.8] },
+  ignis: { st: [17.2, 33.2, 65.5, 55.7], dx: -6 },
+  nivea: { st: [16.4, 26.6, 67.1, 52.8], z: 1.25 },
   anubek: { st: [14.4, 26.6, 71.0, 53.8] },
   rhea: { st: [18.4, 22.2, 63.1, 51.1] },
-  abaddon: { st: [13.0, 22.2, 73.7, 55.1] },
+  abaddon: { st: [13.0, 22.2, 73.7, 55.1], dy: -6 },
   nul: { st: [16.8, 23.2, 66.2, 54.3], frames: 6, anim: 'ciclo' },
   kaiju: { st: [17.2, 21.4, 65.4, 50.4] },
   morgana: { st: [17.5, 29.0, 64.8, 50.3] },
-  tormund: { st: [17.3, 33.2, 65.2, 53.3] },
+  tormund: { st: [17.3, 33.2, 65.2, 53.3], z: 1.4 },
   aurelion: { st: [20.4, 20.2, 59.2, 51.5] },
-  torque: { st: [18.4, 42.1, 63.2, 46.8] },
+  centinela: { st: [16.2, 28.1, 67.6, 55.1], frames: 5, anim: 'ciclo' },
+  torque: { st: [18.4, 42.1, 63.2, 46.8], z: 1.15, dx: 6 },
 };
 const BARRA_RAR = { comun: 'comun', poco: 'poco', rara: 'rara', epica: 'epica', legendaria: 'legendaria', ascendida: 'ascendida' };
 const GAL = { on: false, sc: null, u: new Map() };
@@ -53,9 +54,9 @@ function tarjetaHtml(k) {
   const has = owned().includes(k), rar = RARITY[k] || 'comun', [nm, ep] = nombreEpiteto(k), marco = MARCOS[k];
   const c = has ? rkCoste(k) : null, cp = has ? copiasOf(k) : 0, lv = has ? lvOf(k) : 1, r = has ? rangoOf(k) : 0;
   return '<button type="button" class="tc ' + rar + (has ? '' : ' lock') + (marco ? ' marco' : '') + (has && puedeRango(k) ? ' up' : '') + '" data-k="' + k + '" aria-label="' + (NAMES[k] || k) + (has ? ', nivel ' + lv + ', rango ' + RANGOS[r] : ', bloqueada') + '">'
-    + '<span class="tc-fr"' + (marco ? ' data-marco="' + k + '" style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>'
+    + '<span class="tc-fr"' + (marco ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>' + capas(k)
     + (marco ? '' : '<span class="tc-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<span class="tc-stage"' + (marco ? ' style="left:' + marco.st[0] + '%;top:' + marco.st[1] + '%;width:' + marco.st[2] + '%;height:' + marco.st[3] + '%"' : '') + '></span></span>'
+    + '<span class="tc-stage"' + (marco ? ' style="left:' + marco.st[0] + '%;top:' + marco.st[1] + '%;width:' + marco.st[2] + '%;height:' + marco.st[3] + '%"' : '') + '>' + retQuieto(k) + '</span></span>'
     + '<span class="tc-cost"><img src="img/tarjetas/coste.png" alt=""><b>' + COST[k] + '</b></span>'
     + '<span class="tc-bar" style="background-image:url(img/tarjetas/barra_' + (BARRA_RAR[rar] || 'comun') + '.png)"><b class="tc-lv">' + (has ? lv : '?') + '</b>'
     + '<span class="tc-track"><i style="width:' + (has ? (c ? Math.min(100, cp / c.copias * 100) : 100) : 0) + '%"></i><b>' + (has ? (c ? cp + '/' + c.copias : 'Máx.') : '') + '</b></span>'
@@ -112,29 +113,42 @@ function filtrosHtml() {
 }
 // marcos animados: Zero (la sombra se desplaza, 5 dibujos en vaivén) y Rhysida (interferencias: casi siempre el limpio y,
 // de vez en cuando, un parpadeo rápido por los que tienen interferencias)
+// cada dibujo del marco va en su propia capa, ya cargada, y solo se enciende la que toca (cambiar la imagen de fondo
+// hacía que el marco parpadeara en negro mientras el móvil la descodificaba)
 const MARCO_ANIM = { t: 0 };
-const marcoSrc = (k, i) => 'url(img/marcos/' + k + (i ? '_' + i : '') + '.png)';
+const capas = k => { const M = MARCOS[k]; if (!M || !M.frames) return ''; let h = ''; for (let i = 1; i < M.frames; i++) h += '<i class="mf" data-mf="' + k + '" data-i="' + i + '" style="background-image:url(img/marcos/' + k + '_' + i + '.png)"></i>'; return h; };
 setInterval(() => {
   MARCO_ANIM.t++;
   for (const k in MARCOS) {
     const M = MARCOS[k]; if (!M.frames) continue;
     let i;
     if (M.anim === 'sombra') { const n = M.frames, q = Math.floor(MARCO_ANIM.t / 3) % (2 * n - 2); i = q < n ? q : 2 * n - 2 - q; }
-    else if (M.anim === 'ciclo') i = Math.floor(MARCO_ANIM.t / 3) % M.frames;   // Elyss (grietas que se encienden) y Nul (el aro gira)
+    else if (M.anim === 'ciclo') i = Math.floor(MARCO_ANIM.t / 3) % M.frames;   // Elyss, Nul y X-9
     else { const q = MARCO_ANIM.t % 14; i = q < 3 ? 1 + (Math.floor(MARCO_ANIM.t / 14) + q) % (M.frames - 1) : 0; }
     if (M.cur === i) continue; M.cur = i;
-    document.querySelectorAll('[data-marco="' + k + '"]').forEach(e => { e.style.backgroundImage = marcoSrc(k, i); });
+    document.querySelectorAll('[data-mf="' + k + '"]').forEach(e => { e.classList.toggle('on', +e.dataset.i === i); });
   }
 }, 80);
-// los dibujos del marco animado se cargan antes, para que no parpadeen al cambiar
-for (const k in MARCOS) for (let i = 1; i < (MARCOS[k].frames || 0); i++) { const im = new Image(); im.src = 'img/marcos/' + k + '_' + i + '.png'; }
+// mientras se desliza la lista, el lienzo no puede seguir al dedo: las unidades vivas se apagan y en su sitio se ve su foto
+// (que va pegada a la tarjeta); al parar, vuelven las vivas
+function retQuieto(k) {
+  const M = MARCOS[k] || {}, z = M.z || 1;
+  return '<img class="tc-ret" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="width:' + (95 * z) + '%;height:' + (95 * z) + '%;left:' + (50 + (M.dx || 0)) + '%;bottom:' + (-(M.dy || 0)) + '%">';
+}
+let galScrollT = 0;
+$('ejercito').addEventListener('scroll', () => {
+  if (!GAL.on) return;
+  document.body.classList.add('gal-mueve'); clearTimeout(galScrollT);
+  galScrollT = setTimeout(() => { galTick(0); requestAnimationFrame(() => document.body.classList.remove('gal-mueve')); }, 160);
+}, { passive: true });
 const _showGal = show;
 show = function (id) { _showGal(id); if (id !== 'ejercito') galStop(); else if (GAL.on) galWake(); };
 function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.running) gm.loop.wake(); }
 function galStart() {
   const gm = window.__game; if (!gm || !scene) return;
   if (!GAL.sc) GAL.sc = gm.scene.add('galeria', { update(_, ms) { galTick(Math.min(0.05, ms / 1000)); } }, true);
-  GAL.u.forEach(u => u.root.destroy()); GAL.u.clear();
+  GAL.u.forEach(u => { u.root.destroy(); if (u.clipG) u.clipG.destroy(); }); GAL.u.clear();
+  GAL.gris = ['grises', 'rata_puno', 'rata_cuchillo', 'rata_palanca'][Math.floor(Math.random() * 4)];   // cada vez, una rata distinta
   GAL.on = true; document.body.classList.add('galeria'); scene.scene.setVisible(false); GAL.sc.scene.setVisible(true); galWake();
 }
 function galStop() {
@@ -145,7 +159,7 @@ function galStop() {
 }
 function galUnit(k) {
   // la unidad de la tarjeta: la misma que en batalla, en reposo; sin barra de vida y sin sacar ratas, abejas ni nada al campo
-  const u = new Unit(GAL.sc, k, 'blue', 0);
+  const u = new Unit(GAL.sc, k === 'grises' ? GAL.gris : k, 'blue', 0);
   u.root.list.forEach(c => { if (c.type === 'ParticleEmitter') c.setVisible(false); });   // las partículas del aura van en coordenadas del campo: aquí no
   u.packDone = true; u.ultUsed = true; u.bar.setVisible(false); u.set('idle'); u.dir = 1; u.gal = true;
   if (k === 'rhysida') u.rhySkins = () => { const r = rangoOf(k); return RHY.skins.slice(0, perfil.all ? 10 : r >= 6 ? 10 : r >= 4 ? 7 : r >= 2 ? 4 : 1); };   // va turnando las skins que tengas
@@ -161,8 +175,9 @@ function galTick(dt) {
   if (bot <= top || rgt <= lft || $('ejercito').hidden) return;
   cam.setViewport(lft * DPR, top * DPR, (rgt - lft) * DPR, (bot - top) * DPR).setScroll(lft * DPR, top * DPR);   // solo por encima de la barra de abajo
   const pop = !$('pop').hidden;
+  const vistos = new Set();
   document.querySelectorAll('#ej-grid .tc').forEach(el => {
-    const k = el.dataset.k, st = el.querySelector('.tc-stage').getBoundingClientRect(), vis = !pop && st.bottom > top && st.top < bot;
+    const k = el.dataset.k; vistos.add(k); const st = el.querySelector('.tc-stage').getBoundingClientRect(), vis = !pop && st.bottom > top && st.top < bot;
     let u = GAL.u.get(k);
     if (!vis) { if (u) u.root.setVisible(false); return; }
     if (!u) { u = galUnit(k); GAL.u.set(k, u); }
@@ -176,6 +191,7 @@ function galTick(dt) {
       u.clipG.clear().fillStyle(0xffffff).fillRect((st.left - 2) * DPR, (st.top - st.height) * DPR, (st.width + 4) * DPR, (st.height * 2 + 2) * DPR);
     }
   });
+  GAL.u.forEach((u, k) => { if (!vistos.has(k)) u.root.setVisible(false); });   // tarjetas que ya no están (filtros)
 }
 window.__gal = () => GAL;
 
@@ -187,7 +203,7 @@ const MARCO_PROV = { st: [12, 34, 76, 54] };
 function tmInner(k, has = true) {
   const m = MARCOS[k] || MARCO_PROV, [nm, ep] = nombreEpiteto(k), pc = v => (+v.toFixed(2)) + '%', z = m.z || 1, [l, t, w, h] = m.st;
   const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
-  return '<span class="tm-fr"' + (MARCOS[k] ? ' data-marco="' + k + '" style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
+  return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '>' + capas(k) + '</span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
     + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 || m.clip ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' ' + pc(m.clip ? Math.max(0, (T + h * z - t - h) / (h * z) * 100) : 0) + ' ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
     + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
