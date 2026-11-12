@@ -151,7 +151,7 @@ function onKill(u) {
 }
 function onDead(u) {            // en batalla las bajas no vuelven (salvo que Aurelion las reviva: se apuntan sus caídos)
   if (B && !B.over) onKill(u);
-  if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen)) {
+  if (B && !B.over && !u.isCastle && !['aldric', 'lyra', 'gull', 'esqueleto', 'abeja', 'guardia'].includes(u.type) && !(u.type === 'kubi' && u.gen) && !u.glass) {
     B.fallen = B.fallen || { blue: [], purple: [] }; B.fallen[u.team].push({ type: u.type, x: u.x, lane: u.lane, lv: u.lv, rk: u.rk });
   }
   units = units.filter(v => v !== u); unitGone(u);

@@ -1455,7 +1455,7 @@ class Unit {
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
-  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.flame && s !== 'attack') this.flame.setVisible(false); if (this.beamImg && s !== 'kaiBeam') this.beamImg.setVisible(false); if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.zdark && s !== 'ultZ') { this.zdark.destroy(); this.zdark = null; } if (s !== 'attack') { this.rufoFrom = undefined; this.zat = null; this.mor = null; this.nulMelee = undefined; } if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.flame && s !== 'attack') this.flame.setVisible(false); if (this.beamImg && s !== 'kaiBeam') this.beamImg.setVisible(false); if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -1496,7 +1496,7 @@ class Unit {
     this.drone.setVisible(!dead).setPosition(-this.dir * H * 0.5 * k, -H * 1.3 * k + Math.sin(now * 3) * 5).setFlipX(this.dir < 0).setRotation(Math.sin(now * 2.2) * 0.08);
     if (!this.beamG) this.beamG = this.sc.add.graphics().setDepth(945);
     this.beamG.clear();
-    if (!dead) {
+    if (!dead && units.includes(this)) {   // el fantasma que arrastras y las figuras de Tropas no curan
       this.droneT -= dt;
       if (this.droneT <= 0) {
         this.droneT = DRONE.every;
@@ -1745,7 +1745,7 @@ class Unit {
     if (p >= 1) this.set('idle');
   }
   zeroShadow() {   // la sombra del vacío: una imagen suelta en el mundo que le sigue (o vuela a atacar)
-    if (!this.zsh || !this.zsh.scene) this.zsh = scene.add.image(this.x, this.gy, 'zer_sombra').setOrigin(0.5, 1);
+    if (!this.zsh || !this.zsh.scene) this.zsh = this.sc.add.image(this.x, this.gy, 'zer_sombra').setOrigin(0.5, 1);
     return this.zsh;
   }
   attackZero(o, t) {
@@ -2059,7 +2059,7 @@ class Unit {
     return o;
   }
   update(dt) {
-    if (slowBy === this && slowReal > 0) dt = slowReal;   // quien ralentiza el tiempo va a su ritmo
+    if (slowBy === this && slowReal > 0 && !(typeof B !== 'undefined' && B && B.over)) dt = slowReal;   // quien ralentiza el tiempo va a su ritmo
     this.t += dt; if (this.knockImm > 0) this.knockImm -= dt; if (this.flipT > 0) this.flipT -= dt;
     if (this.ultT > 0 && mode === 'fight') this.ultT -= dt; if (this.feastT > 0) this.feastT -= dt;
     if (this.pushLeft) {                       // empujón suave: se desliza hacia atrás en unas décimas
@@ -2281,7 +2281,7 @@ class Unit {
         if (!this.zdark) { this.zdark = scene.add.rectangle(W / 2, HGT / 2, W * 6, HGT * 12, 0x000000, 0).setDepth(5000); this.zdone = false; }
         const lift = Math.min(1, t / 0.6); o.hop = H * 0.55 * ease(lift); o.zult = true;
         const a = t < 0.6 ? 0 : t < 0.9 ? (t - 0.6) / 0.3 : t < 3.9 ? 1 : Math.max(0, 1 - (t - 3.9) / 0.4);
-        this.zdark.setFillStyle(0x000000, a);
+        this.zdark.setFillStyle(0x000000, (typeof B !== 'undefined' && B && B.over) ? 0 : a);
         if (t >= 3.9 && !this.zdone) {
           this.zdone = true;
           if (mode === 'fight') enemiesOf(this).filter(v => !v.isCastle && v.alive && v.state !== 'die').forEach(v => {
@@ -2718,7 +2718,7 @@ class Unit {
   }
   stun(t) {
     // aturdido: no se mueve ni ataca; estrellitas girando sobre la cabeza
-    if (!this.alive || this.state === 'die' || this.cfg.hero || ['transform', 'reborn', 'ultE', 'ultX'].includes(this.state)) return;
+    if (!this.alive || this.state === 'die' || this.cfg.hero || ['transform', 'reborn', 'ultE', 'ultX', 'ultZ', 'ultR', 'ultN', 'absorbed', 'tpOut', 'shadeOut', 'spawn'].includes(this.state)) return;
     this.stunT = t; this.set('stunned');
   }
   attackTwin(o, t) {
@@ -4432,7 +4432,7 @@ function slingShot(u, sx, sy) {
   arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * g * T * T) / T, g, t: 0, T, target, dmg: Math.round(rand(...u.cfg.dmg)), stuck: 0, spin: 14 * u.dir, team: u.team, fromX: u.x });
 }
 function onDead(u) {
-  if (u.type === 'esqueleto') { units = units.filter(v => v !== u); unitGone(u); return; }
+  if (u.type === 'esqueleto' || u.type === 'guardia' || u.glass || u.gen) { units = units.filter(v => v !== u); unitGone(u); return; }
   if (mode === 'anim') { setTimeout(() => { if (mode === 'anim' && units[0] === u) u.reset(u.homeX); }, 500); return; }
   setTimeout(() => { if (mode === 'fight' && units.includes(u)) u.reset(u.homeX); }, 1600);
 }
@@ -4740,6 +4740,8 @@ function drawStage(g) {
 
 /* ---- montaje de modos ---- */
 function unitGone(u) {
+  u.alive = false;
+  if (u.type === 'muerte') graves = graves.filter(gv => gv.owner !== u || (gv.img.destroy(), false));
   // borra la unidad y todo lo que dibuja suelto en el campo (llamaradas, alientos, rayos, sombras, espadas…)
   for (const k of ['root', 'bar', 'zsh', 'zdark', 'laserG', 'ultIcon', 'plasmaG', 'beamG', 'beamImg', 'flame', 'ultSword', 'clipG']) if (u[k]) { try { u[k].destroy(); } catch (e) {} u[k] = null; }
   if (u.kaiFl) { u.kaiFl.a.destroy(); u.kaiFl.b.destroy(); u.kaiFl = null; }
@@ -4748,6 +4750,8 @@ function clearUnits() {
   units.forEach(unitGone); units = [];
   graves.forEach(gv => gv.img.destroy()); graves = [];
   rockets.forEach(r => r.img.destroy()); rockets = [];
+  storms.forEach(w => { w.g.destroy(); w.imgs.forEach(q => q.img.destroy()); }); storms = [];
+  odoNotes.forEach(n => n.img.destroy()); odoNotes = [];
   fx = []; loose.forEach(l => l.img.destroy()); loose = []; arrows.forEach(a => a.img.destroy()); arrows = [];
 }
 let spawnTimers = [];

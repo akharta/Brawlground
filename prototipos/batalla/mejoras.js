@@ -155,7 +155,7 @@ Unit.prototype.damage = function (d, src, fromX, crit) {
   const dealt = Math.max(0, before - Math.max(0, this.hp));
   if (src && src.perk && src.alive && src.state !== 'die') {
     if (src.perk.robo && dealt > 0) src.hp = Math.min(src.max, src.hp + dealt * src.perk.robo);
-    if (src.perk.aturdir && this.stun && this.alive && this.state !== 'die' && Math.random() < src.perk.aturdir) this.stun(0.8);
+    if (src.perk.aturdir && dealt > 0 && this.stun && this.alive && this.state !== 'die' && Math.random() < src.perk.aturdir) this.stun(0.8);
   }
   if (this.perk && this.perk.espinas && src && src.damage && !src.isCastle && src.cfg && !src.cfg.ranged && !thornLock && dealt > 0) {
     thornLock = true; src.damage(Math.max(1, Math.round(dealt * this.perk.espinas)), null, this.x); thornLock = false;
