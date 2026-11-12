@@ -136,8 +136,14 @@ function retQuieto(k) {
   return '<img class="tc-ret" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="width:' + (95 * z) + '%;height:' + (95 * z) + '%;left:' + (50 + (M.dx || 0)) + '%;bottom:' + (-(M.dy || 0)) + '%">';
 }
 let galScrollT = 0;
+let galSY = 0, galST = 0;
 $('ejercito').addEventListener('scroll', () => {
   if (!GAL.on) return;
+  // deslizando con calma las unidades siguen vivas y se recolocan en cada paso; solo en un deslizamiento muy rápido, en
+  // el que el lienzo no puede seguir al dedo, se cambian un momento por su foto
+  const now = performance.now(), y = $('ejercito').scrollTop, v = Math.abs(y - galSY) / Math.max(1, now - galST) * 1000; galSY = y; galST = now;
+  galTick(0);
+  if (v < 1800 && !document.body.classList.contains('gal-mueve')) return;
   document.body.classList.add('gal-mueve'); clearTimeout(galScrollT);
   galScrollT = setTimeout(() => { galTick(0); requestAnimationFrame(() => document.body.classList.remove('gal-mueve')); }, 160);
 }, { passive: true });

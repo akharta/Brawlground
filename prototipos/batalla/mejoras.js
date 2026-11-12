@@ -256,7 +256,7 @@ function marcaCartas(sel, fn) {
   document.querySelectorAll(sel).forEach(b => {
     const k = b.dataset.k || (B && B.blue.hand[+b.dataset.i]); if (!k || b.classList.contains('lock')) return;
     const [lv, r] = fn(k), tag = k + ':' + lv + ':' + r; if (b.dataset.pw === tag) return;   // se repinta si cambia
-    b.querySelectorAll('.lvb, .rkb, .rks').forEach(e => e.remove()); b.dataset.pw = tag; b.insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
+    b.querySelectorAll('.lvb, .rkb, .rks').forEach(e => e.remove()); b.dataset.pw = tag; b.insertAdjacentHTML('beforeend', lvBadge(lv, false, 0));   // en las cartas pequeñas solo el nivel: estrellas y rango, en la ficha
   });
 }
 const _renderHandLv = renderHand;
@@ -267,7 +267,7 @@ const _openLevelLv = openLevel;
 openLevel = function (kid, i) {
   _openLevelLv(kid, i);
   const [lv, r] = enemyPower(kid, i);
-  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true, r)));
+  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true, 0)));
   $('nv-desc').textContent += ' Su ejército es de nivel ' + lv + ', rango ' + RANGOS[r] + '.';
 };
 const _openArmyLv = openArmy;

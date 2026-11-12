@@ -6974,7 +6974,7 @@ function marcaCartas(sel, fn) {
   document.querySelectorAll(sel).forEach(b => {
     const k = b.dataset.k || (B && B.blue.hand[+b.dataset.i]); if (!k || b.classList.contains('lock')) return;
     const [lv, r] = fn(k), tag = k + ':' + lv + ':' + r; if (b.dataset.pw === tag) return;   // se repinta si cambia
-    b.querySelectorAll('.lvb, .rkb, .rks').forEach(e => e.remove()); b.dataset.pw = tag; b.insertAdjacentHTML('beforeend', lvBadge(lv, false, r));
+    b.querySelectorAll('.lvb, .rkb, .rks').forEach(e => e.remove()); b.dataset.pw = tag; b.insertAdjacentHTML('beforeend', lvBadge(lv, false, 0));   // en las cartas pequeñas solo el nivel: estrellas y rango, en la ficha
   });
 }
 const _renderHandLv = renderHand;
@@ -6985,7 +6985,7 @@ const _openLevelLv = openLevel;
 openLevel = function (kid, i) {
   _openLevelLv(kid, i);
   const [lv, r] = enemyPower(kid, i);
-  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true, r)));
+  document.querySelectorAll('#nv-army .dk').forEach(b => b.insertAdjacentHTML('beforeend', lvBadge(lv, true, 0)));
   $('nv-desc').textContent += ' Su ejército es de nivel ' + lv + ', rango ' + RANGOS[r] + '.';
 };
 const _openArmyLv = openArmy;
@@ -8085,8 +8085,14 @@ function retQuieto(k) {
   return '<img class="tc-ret" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="width:' + (95 * z) + '%;height:' + (95 * z) + '%;left:' + (50 + (M.dx || 0)) + '%;bottom:' + (-(M.dy || 0)) + '%">';
 }
 let galScrollT = 0;
+let galSY = 0, galST = 0;
 $('ejercito').addEventListener('scroll', () => {
   if (!GAL.on) return;
+  // deslizando con calma las unidades siguen vivas y se recolocan en cada paso; solo en un deslizamiento muy rápido, en
+  // el que el lienzo no puede seguir al dedo, se cambian un momento por su foto
+  const now = performance.now(), y = $('ejercito').scrollTop, v = Math.abs(y - galSY) / Math.max(1, now - galST) * 1000; galSY = y; galST = now;
+  galTick(0);
+  if (v < 1800 && !document.body.classList.contains('gal-mueve')) return;
   document.body.classList.add('gal-mueve'); clearTimeout(galScrollT);
   galScrollT = setTimeout(() => { galTick(0); requestAnimationFrame(() => document.body.classList.remove('gal-mueve')); }, 160);
 }, { passive: true });
