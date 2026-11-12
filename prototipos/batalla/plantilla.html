@@ -141,6 +141,7 @@ select { background: #f4f1e6; color: var(--outline); border: 3px solid var(--out
 .tm .tm-cost { position: absolute; z-index: 3; left: -6px; top: -8px; width: clamp(18px, 32%, 32px); aspect-ratio: 1; display: grid; place-items: center; container-type: inline-size; background: url(img/tarjetas/coste.png) center / contain no-repeat; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
 .tm .tm-cost b { margin: 0 0 22% 26%; font-family: var(--font-display); font-weight: 400; font-size: 34cqw; line-height: 1; color: #fff; text-shadow: 0 0 2px var(--outline), 0 1px 0 var(--outline), 0 -1px 0 var(--outline), 1px 0 0 var(--outline), -1px 0 0 var(--outline); }
 .dk { opacity: .5; width: 100%; }
+.dk.swap { opacity: 1; filter: drop-shadow(0 0 4px #3ccf86) drop-shadow(0 0 4px #3ccf86); animation: pulse 1s ease-in-out infinite; }
 .dk[aria-pressed="true"] { opacity: 1; filter: drop-shadow(0 0 3px var(--gold)) drop-shadow(0 0 3px var(--gold)); }
 .hc.poor { filter: grayscale(.85) brightness(.7); cursor: default; }
 .hc:not(.poor):active { transform: translateY(3px); }

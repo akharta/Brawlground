@@ -438,7 +438,7 @@ let picking = [];
 const deckNeed = () => Math.min(8, owned().length);
 function openDeck(from = 'menu') {
   deckFrom = from;
-  picking = playerDeck();
+  picking = playerDeck(); deckSwap = null;
   const g = $('deckgrid'), own = owned(); g.innerHTML = '';
   ALL.slice().sort((a, b) => (own.includes(b) - own.includes(a)) || COST[a] - COST[b] || LABEL[a].localeCompare(LABEL[b])).forEach(k => {
     const has = own.includes(k), b = document.createElement('button'); b.type = 'button'; b.className = 'dk tm ' + (RARITY[k] || 'comun') + (has ? '' : ' lock'); b.dataset.k = k;
@@ -446,7 +446,12 @@ function openDeck(from = 'menu') {
     b.innerHTML = tmInner(k, has);
     b.onclick = () => {
       if (!has) { const w = prizeWhere(k); return toast(w ? 'Prisionero en ' + w + '. Conquista ese castillo para liberarlo.' : 'Se recluta en la Taberna del Multiverso o en las jaulas (pronto).'); }
-      const i = picking.indexOf(k); if (i >= 0) picking.splice(i, 1); else if (picking.length < 8) picking.push(k); syncDeck();
+      // con el mazo lleno, la carta nueva espera (brilla) y la siguiente carta del mazo que toques sale para dejarle sitio
+      const i = picking.indexOf(k), need = deckNeed();
+      if (i >= 0) { if (deckSwap) { picking[i] = deckSwap; deckSwap = null; } else picking.splice(i, 1); }
+      else if (picking.length < need) { picking.push(k); deckSwap = null; }
+      else { deckSwap = deckSwap === k ? null : k; if (deckSwap) toast('Toca la carta de tu mazo que quieres cambiar por ' + LABEL[k] + '.'); }
+      syncDeck();
     };
     g.appendChild(b);
   });
@@ -466,7 +471,9 @@ function paintColors() {
   document.querySelectorAll('#emblemas .emb').forEach(b => { b.onclick = () => { perfil.emblema = b.dataset.e; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
   document.querySelectorAll('#colores .sw').forEach(b => { b.onclick = () => { perfil.color = b.dataset.c; savePerfil(); paintColors(); if (B && B.demo) applyColors(battleColors(null)); }; });
 }
+let deckSwap = null;
 function syncDeck() {
+  document.querySelectorAll('#deckgrid .dk').forEach(b => b.classList.toggle('swap', b.dataset.k === deckSwap));
   document.querySelectorAll('.dk:not(.mini)').forEach(b => b.setAttribute('aria-pressed', picking.includes(b.dataset.k)));
   document.querySelectorAll('.hpick').forEach(b => b.setAttribute('aria-pressed', b.dataset.h === playerHero()));
   const avg = picking.length ? picking.reduce((s, k) => s + COST[k], 0) / picking.length : 0, need = deckNeed();
@@ -475,7 +482,7 @@ function syncDeck() {
   $('deckgo').disabled = picking.length !== need;
 }
 function keepDeck() { if (picking.length === deckNeed()) { myDeck = picking.slice(); try { localStorage.setItem('bg-deck', JSON.stringify(myDeck)); } catch (e) {} } }
-$('deckrand').onclick = () => { picking = shuffle(owned()).slice(0, deckNeed()); syncDeck(); };
+$('deckrand').onclick = () => { picking = shuffle(owned()).slice(0, deckNeed()); deckSwap = null; syncDeck(); };
 $('deckgo').onclick = () => { keepDeck(); if (deckFrom === 'nivel' && LV) startRun({ kind: 'nivel', k: LV.k, i: LV.i }); else startRun({ kind: 'rapida' }); };
 $('deckback').onclick = () => { keepDeck(); if (deckFrom === 'nivel' && LV) show('nivel'); else show('menu'); };
 $('deckall').onclick = () => { perfil.all = !perfil.all; savePerfil(); openDeck(deckFrom); };
