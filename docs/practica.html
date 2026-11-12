@@ -614,7 +614,7 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, melee: [10, 13], fly: 0.26,   // fly: vuela a 0,20 de su altura
+    ringCd: 30, ringFirst: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, melee: [10, 13], fly: 0.26,   // fly: vuela a 0,20 de su altura
    
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   // Odo, el Tamborilero: no ataca; toca el tambor sin parar (salen notas) y va dos pasos por detrás de su aliado. Los aliados
@@ -1457,11 +1457,11 @@ class Unit {
     if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
     if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.rufoDone = new Set(); this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
     if (this.type === 'tormund') { this.rageT = 0; this.rageUsed = false; this.cdK = 1; this.axeGone = 0; this.leapT = 0; this.throwT = 0; }
-    if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
+    if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = this.cfg.ringFirst; this.rg = null; this.ultS = null; this.nulHide(); }
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
-  set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -1781,19 +1781,34 @@ class Unit {
     return [this.x + this.dir * m[0] * H * k, this.gy + m[1] * H * k + this.rig.y];
   }
   attackKai(o, t) {
-    // abre la boca, estira el cuello hacia delante y escupe una llamarada que estalla en área
-    const p = t / 0.9;
-    o.kai = p < 0.3 ? 'abierta' : p < 0.75 ? 'estirado' : 'normal';
-    if (p >= 0.38 && !this.fired) {
-      this.fired = true; const [mx, my] = this.kaiMouth('estirado'); const tg = mode === 'fight' ? nearestEnemy(this) : null;
-      const tx = tg ? tg.x : this.x + this.dir * H * 3, ty = tg ? tg.gy - H * 0.4 : this.gy - H * 0.4, T = Math.max(0.25, Math.abs(tx - mx) / 900);
-      const img = scene.add.image(mx, my, 'kai_llama').setOrigin(0.85, 0.5).setDepth(950).setScale(this.dir * 1.0 * H / 300, 1.0 * H / 300);
-      scene.tweens.add({ targets: img, x: tx, y: ty, duration: T * 1000 / timeScale, onComplete: () => {
-        img.destroy(); burst(tx, ty, 0x35c8ff, 16, 220); burst(tx, ty, 0xffffff, 8, 160);
-        if (mode === 'fight' && this.alive) enemiesOf(this).filter(v => Math.abs(v.x - tx) <= this.cfg.splash).forEach(v => v.damage(Math.round(rand(...this.cfg.dmg)), this));
-      } });
+    // abre la boca, estira el cuello y suelta una llamarada: un chorro de fuego azul que sale de la boca, crece hasta el
+    // enemigo, ondea y se apaga; al llegar estalla en área
+    const p = t / 1.3;
+    o.kai = p < 0.22 ? 'abierta' : p < 0.82 ? 'estirado' : 'normal';
+    if (p >= 0.25 && !this.kaiFl && !this.fired) {
+      this.fired = true; this.kaiFl = { tg: mode === 'fight' ? nearestEnemy(this) : null, hit: false };
+      this.kaiFl.a = scene.add.image(0, 0, 'kai_llama').setOrigin(0.03, 0.5).setDepth(950);
+      this.kaiFl.b = scene.add.image(0, 0, 'kai_llama').setOrigin(0.03, 0.5).setDepth(951).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.45);
     }
-    if (p >= 1) this.set('idle');
+    const F = this.kaiFl;
+    if (F) {
+      const [mx, my] = this.kaiMouth('estirado'), tg = F.tg && F.tg.alive ? F.tg : null;
+      if (tg) { F.tx = tg.x; F.ty = tg.gy - H * 0.45; } else if (F.tx === undefined) { F.tx = this.x + this.dir * H * 3; F.ty = this.gy - H * 0.4; }
+      const dx = F.tx - mx, dy = F.ty - my, L = Math.max(H, Math.hypot(dx, dy)), q = (p - 0.25) / 0.6;
+      const grow = Math.min(1, q / 0.3), fade = q > 0.8 ? Math.max(0, 1 - (q - 0.8) / 0.2) : 1, now = this.sc.time.now / 1000;
+      const sx = L * grow / 800, sy = H * 0.62 / 257 * (0.75 + 0.25 * grow);
+      const ang = Math.atan2(dy, Math.abs(dx)) * Math.sign(dx || this.dir);
+      F.a.setPosition(mx, my).setScale(Math.sign(dx || this.dir) * sx, sy * (1 + 0.12 * Math.sin(now * 38))).setRotation(ang).setAlpha(fade);
+      F.b.setPosition(mx, my).setScale(Math.sign(dx || this.dir) * sx * (0.96 + 0.05 * Math.sin(now * 29)), -sy * (0.85 + 0.15 * Math.sin(now * 23 + 1))).setRotation(ang).setAlpha(0.45 * fade);
+      if (fade > 0.3) for (let i = 0; i < 3; i++) { const f = Math.random() * grow; fx.push({ x: mx + dx * f + rand(-8, 8), y: my + dy * f + rand(-H * 0.12, H * 0.12), vx: rand(-30, 30) + Math.sign(dx) * 60, vy: -rand(20, 90), g: 0, r: rand(2, 5), life: 0.35, t: 0.35, color: [0x35c8ff, 0x9ff0ff, 0xffffff, 0x2a6bff][Math.floor(Math.random() * 4)] }); }
+      if (grow >= 1 && !F.hit) {
+        F.hit = true; burst(F.tx, F.ty, 0x35c8ff, 18, 240); burst(F.tx, F.ty, 0xffffff, 10, 170);
+        if (mode === 'fight' && this.alive) enemiesOf(this).filter(v => Math.abs(v.x - F.tx) <= this.cfg.splash).forEach(v => v.damage(Math.round(rand(...this.cfg.dmg)), this));
+      }
+      if (grow >= 1 && Math.random() < 0.5) burst(F.tx + rand(-H * 0.3, H * 0.3), F.ty + rand(-H * 0.2, H * 0.2), 0x35c8ff, 3, 120);
+      if (q >= 1 || this.state === 'die') { F.a.destroy(); F.b.destroy(); this.kaiFl = null; }
+    }
+    if (p >= 1) { if (this.kaiFl) { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } this.set('idle'); }
   }
   attackAur(o, t) {
     // alza el báculo, la gema brilla y sale un destello que vuela hasta el aliado herido
@@ -4398,10 +4413,11 @@ function nulBlade(u) {
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#fffbe0'); g.addColorStop(0.55, 'rgba(255,236,110,.95)'); g.addColorStop(0.8, 'rgba(255,200,60,.35)'); g.addColorStop(1, 'rgba(255,190,40,0)');
     c.fillStyle = g; c.fillRect(0, 0, 96, 96); t.refresh();
   }
-  const sx = u.x + u.dir * H * 0.8, sy = u.gy - H * (0.95 + u.cfg.fly), v = 760;
+  const sx = u.x + u.dir * H * 0.8, sy = u.gy - H * (0.95 + u.cfg.fly), v = 760, tg = mode === 'fight' ? nearestEnemy(u) : null;
+  const tx = tg ? tg.x : sx + u.dir * H * 4, ty = tg ? tg.gy - H * (tg.isCastle ? 0.8 : 0.5) : u.gy - H * 0.5, dd = Math.max(1, Math.hypot(tx - sx, ty - sy));   // recta al enemigo, como cualquier proyectil
   const img = scene.add.image(sx, sy, 'nul_orbe').setDepth(950).setScale(0.55 * H / 96);
   burst(sx, sy, 0xfff3a0, 6, 140);
-  arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: (u.gy - H * 0.5 - sy) / 0.35, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, spin: 0.01, level: u.gy - H * 0.5, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / dd * v, vy: (ty - sy) / dd * v, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, spin: 0.01, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x });
 }
 function glitchBurst(x, y, n = 12) {
   // chispas cuadradas cian y magenta (interferencia)

@@ -43,6 +43,10 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid
 /* Tropas: el lienzo pasa por encima de la pantalla (y de la barra de abajo, para que Chrome lo pinte entero) para dibujar las
    unidades vivas en sus tarjetas, sin recibir toques; la escena de la galería solo dibuja por encima de la barra */
 body.galeria #game { z-index: 31; pointer-events: none; background: transparent; }
+.filtros { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: flex-end; margin: 0 0 12px; }
+.filtros label { display: grid; gap: 2px; font-size: .68rem; color: #c9d3f5; }
+.filtros select { padding: 4px 6px; border-width: 2px; border-radius: 8px; font-size: .78rem; max-width: 9.5rem; }
+.filtros .btn.small { padding: 5px 9px; font-size: .75rem; }
 .ugrid.tcgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; }
 .tc { position: relative; display: flex; flex-direction: column; padding: 0; border: 0; background: none; min-width: 0; cursor: pointer; font: inherit; color: #fff; --rc: #c7cde0; --rd: #6b7390; }
 .tc-fr { position: relative; display: block; aspect-ratio: 932 / 1390; border-radius: 10px; overflow: hidden; border: 3px solid var(--outline);

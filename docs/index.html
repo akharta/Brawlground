@@ -43,6 +43,10 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid
 /* Tropas: el lienzo pasa por encima de la pantalla (y de la barra de abajo, para que Chrome lo pinte entero) para dibujar las
    unidades vivas en sus tarjetas, sin recibir toques; la escena de la galería solo dibuja por encima de la barra */
 body.galeria #game { z-index: 31; pointer-events: none; background: transparent; }
+.filtros { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: flex-end; margin: 0 0 12px; }
+.filtros label { display: grid; gap: 2px; font-size: .68rem; color: #c9d3f5; }
+.filtros select { padding: 4px 6px; border-width: 2px; border-radius: 8px; font-size: .78rem; max-width: 9.5rem; }
+.filtros .btn.small { padding: 5px 9px; font-size: .75rem; }
 .ugrid.tcgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; }
 .tc { position: relative; display: flex; flex-direction: column; padding: 0; border: 0; background: none; min-width: 0; cursor: pointer; font: inherit; color: #fff; --rc: #c7cde0; --rd: #6b7390; }
 .tc-fr { position: relative; display: block; aspect-ratio: 932 / 1390; border-radius: 10px; overflow: hidden; border: 3px solid var(--outline);
@@ -1024,7 +1028,7 @@ const CH = {
   // cada 4 s); cada 20 s su aro sube sobre los enemigos y se traga al del centro (y a los que estén cerca con el 30 % de vida o
   // menos; a los héroes no); definitiva: una estrella que crece en cuatro fases y cae sobre el campo.
   nul: { hp: 120, dmg: [16, 20], speed: 50, cd: [1.3, 1.7], range: H * 5, ranged: true, h: 1.3, pierce: 4, charges: 7, chargeCd: 4,
-    ringCd: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, melee: [10, 13], fly: 0.26,   // fly: vuela a 0,20 de su altura
+    ringCd: 30, ringFirst: 20, ringR: H * 0.85, ringLow: 0.3, ultDmg: 180, ultR: H * 3, ringW: 0.24, melee: [10, 13], fly: 0.26,   // fly: vuela a 0,20 de su altura
    
     rest: { bh: [-0.317, -0.347], fh: [0.375, -0.465] }, org: [0.488, 1], grip: [0.337, 0.622], face: [13, 191, 264] },
   // Odo, el Tamborilero: no ataca; toca el tambor sin parar (salen notas) y va dos pasos por detrás de su aliado. Los aliados
@@ -1867,11 +1871,11 @@ class Unit {
     if (this.type === 'anubek') { this.revived = false; [this.weapon, this.bh, this.shield, this.fh].forEach(pt => pt.setVisible(true)); }
     if (this.type === 'rufo') { this.rufoFrom = undefined; this.rufoRan = false; this.rufoDone = new Set(); this.cfg = Object.assign({}, this.cfg, { range: CH.rufo.range }); }
     if (this.type === 'tormund') { this.rageT = 0; this.rageUsed = false; this.cdK = 1; this.axeGone = 0; this.leapT = 0; this.throwT = 0; }
-    if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = 8; this.rg = null; this.ultS = null; this.nulHide(); }
+    if (this.type === 'nul') { this.nulMelee = undefined; this.atkN = 0; this.charges = this.cfg.charges; this.depleted = false; this.chT = 0; this.dodgeT = 0; this.dodgeI = 0; this.ringT = this.cfg.ringFirst; this.rg = null; this.ultS = null; this.nulHide(); }
     if (this.type === 'rhysida') { this.tpT = 3; this.cuts = null; this.hits = 0; this.drawn = false; if (slowBy === this) slowBy = null; }
     this.set('spawn');
   }
-  set(s) { if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
+  set(s) { if (this.kaiFl && s !== 'attack') { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } if (this.state === 'attack' && s !== 'attack') this.cd = Math.max(this.cd, this.type === 'rhysida' ? 0.1 : this.type === 'tormund' && this.rageT > 0 ? 0.05 : this.type === 'imparable' && this.form === 3 ? 0.05 : 0.4); this.state = s; this.t = 0; this.fired = false; if (this.arrow && s !== 'attack') this.arrow.setVisible(false); }
   shove(dx) { if (['idle', 'walk', 'attack'].includes(this.state)) { this.pushLeft = (this.pushLeft || 0) + dx; this.hurtT = Math.max(this.hurtT, 0.25); } }
   knock(dir) {
     if (!this.alive || this.state === 'die' || this.hp <= 0) return;
@@ -2191,19 +2195,34 @@ class Unit {
     return [this.x + this.dir * m[0] * H * k, this.gy + m[1] * H * k + this.rig.y];
   }
   attackKai(o, t) {
-    // abre la boca, estira el cuello hacia delante y escupe una llamarada que estalla en área
-    const p = t / 0.9;
-    o.kai = p < 0.3 ? 'abierta' : p < 0.75 ? 'estirado' : 'normal';
-    if (p >= 0.38 && !this.fired) {
-      this.fired = true; const [mx, my] = this.kaiMouth('estirado'); const tg = mode === 'fight' ? nearestEnemy(this) : null;
-      const tx = tg ? tg.x : this.x + this.dir * H * 3, ty = tg ? tg.gy - H * 0.4 : this.gy - H * 0.4, T = Math.max(0.25, Math.abs(tx - mx) / 900);
-      const img = scene.add.image(mx, my, 'kai_llama').setOrigin(0.85, 0.5).setDepth(950).setScale(this.dir * 1.0 * H / 300, 1.0 * H / 300);
-      scene.tweens.add({ targets: img, x: tx, y: ty, duration: T * 1000 / timeScale, onComplete: () => {
-        img.destroy(); burst(tx, ty, 0x35c8ff, 16, 220); burst(tx, ty, 0xffffff, 8, 160);
-        if (mode === 'fight' && this.alive) enemiesOf(this).filter(v => Math.abs(v.x - tx) <= this.cfg.splash).forEach(v => v.damage(Math.round(rand(...this.cfg.dmg)), this));
-      } });
+    // abre la boca, estira el cuello y suelta una llamarada: un chorro de fuego azul que sale de la boca, crece hasta el
+    // enemigo, ondea y se apaga; al llegar estalla en área
+    const p = t / 1.3;
+    o.kai = p < 0.22 ? 'abierta' : p < 0.82 ? 'estirado' : 'normal';
+    if (p >= 0.25 && !this.kaiFl && !this.fired) {
+      this.fired = true; this.kaiFl = { tg: mode === 'fight' ? nearestEnemy(this) : null, hit: false };
+      this.kaiFl.a = scene.add.image(0, 0, 'kai_llama').setOrigin(0.03, 0.5).setDepth(950);
+      this.kaiFl.b = scene.add.image(0, 0, 'kai_llama').setOrigin(0.03, 0.5).setDepth(951).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.45);
     }
-    if (p >= 1) this.set('idle');
+    const F = this.kaiFl;
+    if (F) {
+      const [mx, my] = this.kaiMouth('estirado'), tg = F.tg && F.tg.alive ? F.tg : null;
+      if (tg) { F.tx = tg.x; F.ty = tg.gy - H * 0.45; } else if (F.tx === undefined) { F.tx = this.x + this.dir * H * 3; F.ty = this.gy - H * 0.4; }
+      const dx = F.tx - mx, dy = F.ty - my, L = Math.max(H, Math.hypot(dx, dy)), q = (p - 0.25) / 0.6;
+      const grow = Math.min(1, q / 0.3), fade = q > 0.8 ? Math.max(0, 1 - (q - 0.8) / 0.2) : 1, now = this.sc.time.now / 1000;
+      const sx = L * grow / 800, sy = H * 0.62 / 257 * (0.75 + 0.25 * grow);
+      const ang = Math.atan2(dy, Math.abs(dx)) * Math.sign(dx || this.dir);
+      F.a.setPosition(mx, my).setScale(Math.sign(dx || this.dir) * sx, sy * (1 + 0.12 * Math.sin(now * 38))).setRotation(ang).setAlpha(fade);
+      F.b.setPosition(mx, my).setScale(Math.sign(dx || this.dir) * sx * (0.96 + 0.05 * Math.sin(now * 29)), -sy * (0.85 + 0.15 * Math.sin(now * 23 + 1))).setRotation(ang).setAlpha(0.45 * fade);
+      if (fade > 0.3) for (let i = 0; i < 3; i++) { const f = Math.random() * grow; fx.push({ x: mx + dx * f + rand(-8, 8), y: my + dy * f + rand(-H * 0.12, H * 0.12), vx: rand(-30, 30) + Math.sign(dx) * 60, vy: -rand(20, 90), g: 0, r: rand(2, 5), life: 0.35, t: 0.35, color: [0x35c8ff, 0x9ff0ff, 0xffffff, 0x2a6bff][Math.floor(Math.random() * 4)] }); }
+      if (grow >= 1 && !F.hit) {
+        F.hit = true; burst(F.tx, F.ty, 0x35c8ff, 18, 240); burst(F.tx, F.ty, 0xffffff, 10, 170);
+        if (mode === 'fight' && this.alive) enemiesOf(this).filter(v => Math.abs(v.x - F.tx) <= this.cfg.splash).forEach(v => v.damage(Math.round(rand(...this.cfg.dmg)), this));
+      }
+      if (grow >= 1 && Math.random() < 0.5) burst(F.tx + rand(-H * 0.3, H * 0.3), F.ty + rand(-H * 0.2, H * 0.2), 0x35c8ff, 3, 120);
+      if (q >= 1 || this.state === 'die') { F.a.destroy(); F.b.destroy(); this.kaiFl = null; }
+    }
+    if (p >= 1) { if (this.kaiFl) { this.kaiFl.a.destroy(); this.kaiFl.b.destroy(); this.kaiFl = null; } this.set('idle'); }
   }
   attackAur(o, t) {
     // alza el báculo, la gema brilla y sale un destello que vuela hasta el aliado herido
@@ -4808,10 +4827,11 @@ function nulBlade(u) {
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#fffbe0'); g.addColorStop(0.55, 'rgba(255,236,110,.95)'); g.addColorStop(0.8, 'rgba(255,200,60,.35)'); g.addColorStop(1, 'rgba(255,190,40,0)');
     c.fillStyle = g; c.fillRect(0, 0, 96, 96); t.refresh();
   }
-  const sx = u.x + u.dir * H * 0.8, sy = u.gy - H * (0.95 + u.cfg.fly), v = 760;
+  const sx = u.x + u.dir * H * 0.8, sy = u.gy - H * (0.95 + u.cfg.fly), v = 760, tg = mode === 'fight' ? nearestEnemy(u) : null;
+  const tx = tg ? tg.x : sx + u.dir * H * 4, ty = tg ? tg.gy - H * (tg.isCastle ? 0.8 : 0.5) : u.gy - H * 0.5, dd = Math.max(1, Math.hypot(tx - sx, ty - sy));   // recta al enemigo, como cualquier proyectil
   const img = scene.add.image(sx, sy, 'nul_orbe').setDepth(950).setScale(0.55 * H / 96);
   burst(sx, sy, 0xfff3a0, 6, 140);
-  arrows.push({ img, x: sx, y: sy, vx: u.dir * v, vy: (u.gy - H * 0.5 - sy) / 0.35, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, spin: 0.01, level: u.gy - H * 0.5, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, src: u });
+  arrows.push({ img, x: sx, y: sy, vx: (tx - sx) / dd * v, vy: (ty - sy) / dd * v, g: 0, t: 0, T: (u.cfg.range + H * 1.5) / v, pierce: u.cfg.pierce, hit: new Set(), trail: 0xfff3a0, spin: 0.01, dmg: Math.round(rand(...u.cfg.dmg)), team: u.team, fromX: u.x, src: u });
 }
 function glitchBurst(x, y, n = 12) {
   // chispas cuadradas cian y magenta (interferencia)
@@ -7921,11 +7941,11 @@ const MARCOS = {
   odo: { st: [16.4, 20.1, 66.9, 54.8] },
   kubi: { st: [15.8, 35.5, 67.9, 50.1] },
   imparable: { st: [15.9, 17.7, 66.7, 61.5], dy: -7 },
-  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 1.6 },
+  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25 },
   tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
   fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.12 },
   catapulta: { st: [16.0, 32.3, 68.0, 49.4] },
-  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.55 },
+  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.24 },
   kungfu: { st: [14.2, 28.2, 71.5, 55.6] },
   samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
   muerte: { st: [16.4, 15.9, 67.4, 56.1], dx: 8 },
@@ -7953,10 +7973,49 @@ openArmy = function (seg) {
   if (armySeg !== 'unidades') { galStop(); return; }
   const own = owned();
   $('ej-grid').classList.add('tcgrid');
-  $('ej-grid').innerHTML = ALL.slice().sort((a, b) => (own.includes(b) - own.includes(a)) || COST[a] - COST[b]).map(tarjetaHtml).join('');
+  filtrosHtml();
+  const lista = tropasFiltradas();
+  $('ej-grid').innerHTML = lista.length ? lista.map(tarjetaHtml).join('') : '<p class="note">Ninguna unidad cumple los filtros.</p>';
   document.querySelectorAll('#ej-grid .tc').forEach(b => { b.onclick = () => openUnit(b.dataset.k); });
   galStart();
 };
+/* ---- filtros y orden de Tropas (se recuerdan en este móvil) ---- */
+const RAR_ORD = ['comun', 'poco', 'rara', 'epica', 'legendaria', 'ascendida'];
+let FILTRO = { rar: '', rk: '', tipo: '', est: '', cost: '', ord: 'coste', inv: false };
+try { Object.assign(FILTRO, JSON.parse(localStorage.getItem('bg-filtro') || '{}')); } catch (e) {}
+function statsDe(k) {   // lo que vale ahora la unidad (con su nivel y rango si la tienes)
+  const c = CH[k] || {}, has = owned().includes(k), K = has ? poderK(lvOf(k), rangoF(k)) : 1, d = c.dmg || c.snipe || c.heal;
+  return { hp: (c.hp || 0) * K, dmg: d ? (d[0] + d[1]) / 2 * K : 0, dps: d ? (d[0] + d[1]) / 2 * K / ((c.cd[0] + c.cd[1]) / 2) : 0, range: c.range || 0, speed: c.speed || 0 };
+}
+const tipoDe = k => { const c = CH[k] || {}; return c.heal || c.support || !(c.dmg || c.snipe) ? 'apoyo' : c.ranged ? 'distancia' : 'cuerpo'; };
+const ORDENES = { coste: ['Coste', k => COST[k]], rareza: ['Rareza', k => RAR_ORD.indexOf(RARITY[k] || 'comun')], nivel: ['Nivel', k => owned().includes(k) ? lvOf(k) : 0],
+  rango: ['Rango', k => owned().includes(k) ? rangoF(k) : -1], vida: ['Vida', k => statsDe(k).hp], dano: ['Daño por golpe', k => statsDe(k).dmg], dps: ['Daño por segundo', k => statsDe(k).dps],
+  alcance: ['Alcance', k => statsDe(k).range], velocidad: ['Velocidad', k => statsDe(k).speed], copias: ['Copias', k => copiasOf(k)], nombre: ['Nombre', k => LABEL[k] || k] };
+function tropasFiltradas() {
+  const own = owned(), F = FILTRO;
+  const l = ALL.filter(k => (!F.rar || (RARITY[k] || 'comun') === F.rar) && (F.rk === '' || (own.includes(k) && rangoOf(k) === +F.rk))
+    && (!F.tipo || tipoDe(k) === F.tipo) && (!F.cost || (F.cost === '6' ? COST[k] >= 6 : COST[k] === +F.cost))
+    && (!F.est || (F.est === 'tengo' ? own.includes(k) : F.est === 'faltan' ? !own.includes(k) : own.includes(k) && puedeRango(k))));
+  const f = (ORDENES[F.ord] || ORDENES.coste)[1], dir = F.inv ? -1 : 1;
+  return l.sort((a, b) => { const x = f(a), y = f(b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * dir || COST[a] - COST[b] || (LABEL[a] || a).localeCompare(LABEL[b] || b); });
+}
+function filtrosHtml() {
+  let el = $('ej-filtros');
+  if (!el) { el = document.createElement('div'); el.id = 'ej-filtros'; el.className = 'filtros'; $('ej-grid').before(el); }
+  const sel = (id, lab, ops) => '<label><span>' + lab + '</span><select data-f="' + id + '">' + ops.map(([v, t]) => '<option value="' + v + '"' + (String(FILTRO[id]) === v ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>';
+  el.innerHTML = sel('ord', 'Ordenar', Object.entries(ORDENES).map(([v, [t]]) => [v, t]))
+    + '<button type="button" class="btn small" id="f-inv" aria-label="Invertir el orden">' + (FILTRO.inv ? '↓ Mayor' : '↑ Menor') + '</button>'
+    + sel('rar', 'Rareza', [['', 'Todas']].concat(RAR_ORD.map(r => [r, RAREZA[r]])))
+    + sel('rk', 'Rango', [['', 'Todos']].concat(RANGOS.map((r, i) => [String(i), r])))
+    + sel('tipo', 'Tipo', [['', 'Todos'], ['cuerpo', 'Cuerpo a cuerpo'], ['distancia', 'A distancia'], ['apoyo', 'Apoyo']])
+    + sel('cost', 'Coste', [['', 'Todos'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6 o más']])
+    + sel('est', 'Mostrar', [['', 'Todas'], ['tengo', 'Desbloqueadas'], ['faltan', 'Bloqueadas'], ['subir', 'Pueden ascender']])
+    + '<button type="button" class="btn small" id="f-reset">Quitar filtros</button>';
+  const guarda = () => { try { localStorage.setItem('bg-filtro', JSON.stringify(FILTRO)); } catch (e) {} openArmy('unidades'); };
+  el.querySelectorAll('select').forEach(s => { s.onchange = () => { FILTRO[s.dataset.f] = s.value; guarda(); }; });
+  $('f-inv').onclick = () => { FILTRO.inv = !FILTRO.inv; guarda(); };
+  $('f-reset').onclick = () => { FILTRO = { rar: '', rk: '', tipo: '', est: '', cost: '', ord: 'coste', inv: false }; guarda(); };
+}
 const _showGal = show;
 show = function (id) { _showGal(id); if (id !== 'ejercito') galStop(); else if (GAL.on) galWake(); };
 function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.running) gm.loop.wake(); }
@@ -8014,7 +8073,7 @@ function tmInner(k, has = true) {
   const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
   return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + '">'
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' 0 ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
     + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
 }
 cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };

@@ -15,11 +15,11 @@ const MARCOS = {
   odo: { st: [16.4, 20.1, 66.9, 54.8] },
   kubi: { st: [15.8, 35.5, 67.9, 50.1] },
   imparable: { st: [15.9, 17.7, 66.7, 61.5], dy: -7 },
-  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 1.6 },
+  desencadenado: { st: [18.3, 36.0, 63.1, 51.2], z: 2.1, dx: -25 },
   tercio: { st: [13.2, 28.7, 73.2, 49.2], z: 1.15 },
   fraile: { st: [17.3, 16.2, 65.2, 59.7], z: 1.12 },
   catapulta: { st: [16.0, 32.3, 68.0, 49.4] },
-  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.55 },
+  acorazado: { st: [20.9, 37.1, 58.1, 45.0], z: 1.24 },
   kungfu: { st: [14.2, 28.2, 71.5, 55.6] },
   samurai: { st: [22.3, 24.2, 55.3, 52.5], z: 1.12 },
   muerte: { st: [16.4, 15.9, 67.4, 56.1], dx: 8 },
@@ -47,10 +47,49 @@ openArmy = function (seg) {
   if (armySeg !== 'unidades') { galStop(); return; }
   const own = owned();
   $('ej-grid').classList.add('tcgrid');
-  $('ej-grid').innerHTML = ALL.slice().sort((a, b) => (own.includes(b) - own.includes(a)) || COST[a] - COST[b]).map(tarjetaHtml).join('');
+  filtrosHtml();
+  const lista = tropasFiltradas();
+  $('ej-grid').innerHTML = lista.length ? lista.map(tarjetaHtml).join('') : '<p class="note">Ninguna unidad cumple los filtros.</p>';
   document.querySelectorAll('#ej-grid .tc').forEach(b => { b.onclick = () => openUnit(b.dataset.k); });
   galStart();
 };
+/* ---- filtros y orden de Tropas (se recuerdan en este móvil) ---- */
+const RAR_ORD = ['comun', 'poco', 'rara', 'epica', 'legendaria', 'ascendida'];
+let FILTRO = { rar: '', rk: '', tipo: '', est: '', cost: '', ord: 'coste', inv: false };
+try { Object.assign(FILTRO, JSON.parse(localStorage.getItem('bg-filtro') || '{}')); } catch (e) {}
+function statsDe(k) {   // lo que vale ahora la unidad (con su nivel y rango si la tienes)
+  const c = CH[k] || {}, has = owned().includes(k), K = has ? poderK(lvOf(k), rangoF(k)) : 1, d = c.dmg || c.snipe || c.heal;
+  return { hp: (c.hp || 0) * K, dmg: d ? (d[0] + d[1]) / 2 * K : 0, dps: d ? (d[0] + d[1]) / 2 * K / ((c.cd[0] + c.cd[1]) / 2) : 0, range: c.range || 0, speed: c.speed || 0 };
+}
+const tipoDe = k => { const c = CH[k] || {}; return c.heal || c.support || !(c.dmg || c.snipe) ? 'apoyo' : c.ranged ? 'distancia' : 'cuerpo'; };
+const ORDENES = { coste: ['Coste', k => COST[k]], rareza: ['Rareza', k => RAR_ORD.indexOf(RARITY[k] || 'comun')], nivel: ['Nivel', k => owned().includes(k) ? lvOf(k) : 0],
+  rango: ['Rango', k => owned().includes(k) ? rangoF(k) : -1], vida: ['Vida', k => statsDe(k).hp], dano: ['Daño por golpe', k => statsDe(k).dmg], dps: ['Daño por segundo', k => statsDe(k).dps],
+  alcance: ['Alcance', k => statsDe(k).range], velocidad: ['Velocidad', k => statsDe(k).speed], copias: ['Copias', k => copiasOf(k)], nombre: ['Nombre', k => LABEL[k] || k] };
+function tropasFiltradas() {
+  const own = owned(), F = FILTRO;
+  const l = ALL.filter(k => (!F.rar || (RARITY[k] || 'comun') === F.rar) && (F.rk === '' || (own.includes(k) && rangoOf(k) === +F.rk))
+    && (!F.tipo || tipoDe(k) === F.tipo) && (!F.cost || (F.cost === '6' ? COST[k] >= 6 : COST[k] === +F.cost))
+    && (!F.est || (F.est === 'tengo' ? own.includes(k) : F.est === 'faltan' ? !own.includes(k) : own.includes(k) && puedeRango(k))));
+  const f = (ORDENES[F.ord] || ORDENES.coste)[1], dir = F.inv ? -1 : 1;
+  return l.sort((a, b) => { const x = f(a), y = f(b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * dir || COST[a] - COST[b] || (LABEL[a] || a).localeCompare(LABEL[b] || b); });
+}
+function filtrosHtml() {
+  let el = $('ej-filtros');
+  if (!el) { el = document.createElement('div'); el.id = 'ej-filtros'; el.className = 'filtros'; $('ej-grid').before(el); }
+  const sel = (id, lab, ops) => '<label><span>' + lab + '</span><select data-f="' + id + '">' + ops.map(([v, t]) => '<option value="' + v + '"' + (String(FILTRO[id]) === v ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>';
+  el.innerHTML = sel('ord', 'Ordenar', Object.entries(ORDENES).map(([v, [t]]) => [v, t]))
+    + '<button type="button" class="btn small" id="f-inv" aria-label="Invertir el orden">' + (FILTRO.inv ? '↓ Mayor' : '↑ Menor') + '</button>'
+    + sel('rar', 'Rareza', [['', 'Todas']].concat(RAR_ORD.map(r => [r, RAREZA[r]])))
+    + sel('rk', 'Rango', [['', 'Todos']].concat(RANGOS.map((r, i) => [String(i), r])))
+    + sel('tipo', 'Tipo', [['', 'Todos'], ['cuerpo', 'Cuerpo a cuerpo'], ['distancia', 'A distancia'], ['apoyo', 'Apoyo']])
+    + sel('cost', 'Coste', [['', 'Todos'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6 o más']])
+    + sel('est', 'Mostrar', [['', 'Todas'], ['tengo', 'Desbloqueadas'], ['faltan', 'Bloqueadas'], ['subir', 'Pueden ascender']])
+    + '<button type="button" class="btn small" id="f-reset">Quitar filtros</button>';
+  const guarda = () => { try { localStorage.setItem('bg-filtro', JSON.stringify(FILTRO)); } catch (e) {} openArmy('unidades'); };
+  el.querySelectorAll('select').forEach(s => { s.onchange = () => { FILTRO[s.dataset.f] = s.value; guarda(); }; });
+  $('f-inv').onclick = () => { FILTRO.inv = !FILTRO.inv; guarda(); };
+  $('f-reset').onclick = () => { FILTRO = { rar: '', rk: '', tipo: '', est: '', cost: '', ord: 'coste', inv: false }; guarda(); };
+}
 const _showGal = show;
 show = function (id) { _showGal(id); if (id !== 'ejercito') galStop(); else if (GAL.on) galWake(); };
 function galWake() { const gm = window.__game; if (gm && gm.loop && !gm.loop.running) gm.loop.wake(); }
@@ -108,7 +147,7 @@ function tmInner(k, has = true) {
   const L = l - w * (z - 1) / 2 + w * (m.dx || 0) / 100, T = t - h * (z - 1) + h * (m.dy || 0) / 100;   // agrandada desde los pies
   return '<span class="tm-fr"' + (MARCOS[k] ? ' style="background-image:url(img/marcos/' + k + '.png)"' : '') + '></span>'
     + (MARCOS[k] ? '' : '<span class="tm-nm"><b>' + (has ? nm : '¿?') + '</b>' + (has && ep ? '<small>' + ep + '</small>' : '') + '</span>')
-    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + '">'
+    + '<img class="tm-u" data-ret="' + k + '" src="' + (RETRATO[k] || PIXEL) + '" alt="" style="left:' + pc(L) + ';top:' + pc(T) + ';width:' + pc(w * z) + ';height:' + pc(h * z) + (z > 1.3 ? ';clip-path:inset(0 ' + pc(Math.max(0, (L + w * z - l - w - 4) / (w * z) * 100)) + ' 0 ' + pc(Math.max(0, (l - 4 - L) / (w * z) * 100)) + ')' : '') + '">'
     + '<span class="tm-cost"><b>' + COST[k] + '</b></span>';
 }
 cardHtml = function (k, cls = '') { return '<span class="dk mini tm ' + (RARITY[k] || 'comun') + ' ' + cls + '">' + tmInner(k, !String(cls).includes('shadow')) + '</span>'; };

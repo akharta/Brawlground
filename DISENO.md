@@ -594,3 +594,6 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - La barra granate con dorado es solo para los héroes ascendidos a S+.
 - Técnica: las tarjetas son HTML; una segunda escena de Phaser ("galeria") dibuja las unidades sobre el lienzo, que en esta pestaña pasa por encima de la pantalla sin recibir toques, y la escena de la batalla se oculta.
 - Fuera el diseño viejo de cartas (marcos por rareza img/esc/marco_*.png, borrados): en toda la app (mano de batalla, mazo, ficha, premios, tienda, cuartel…) las cartas son la tarjeta nueva en pequeño, con el retrato de la unidad de verdad (una foto en reposo que se saca al arrancar).
+- Tropas tiene filtros (rareza, rango, tipo, coste, desbloqueadas/bloqueadas/pueden ascender) y orden (coste, rareza, nivel, rango, vida, daño por golpe, daño por segundo, alcance, velocidad, copias, nombre; ascendente o descendente). Vida y daño cuentan el nivel y el rango que tengas. Se recuerdan en el móvil.
+- Kaiju Tomo: la llamarada es un chorro de fuego azul que sale de la boca, crece hasta el enemigo ondeando con chispas y estalla en área al llegar.
+- Nul: sus bolas de luz van rectas al enemigo como cualquier proyectil; el aro se puede usar a los 20 s de salir y luego cada 30 s.
