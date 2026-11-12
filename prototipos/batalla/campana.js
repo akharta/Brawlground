@@ -8,44 +8,49 @@ const STARTERS = ['legionario', 'arquera', 'tercio'];   // los guerreros origina
 // hp y aiK ajustados simulando: la IA que juega tu bando (con el ejército que tendrías al llegar) gana de ~90 % en el 1 a ~30 % en el 10
 const PRADERAS = [
   { name: 'Granja del Camino', esc: 'cerezos', deck: ['legionario', 'arquera'], hp: 800, aiK: 0.77, gold: 60, prize: 'lobo' },
-  { name: 'Torre del Cartel', esc: 'pinos', deck: ['legionario', 'arquera', 'tercio'], hp: 900, aiK: 1.16, gold: 70, prize: null },
-  { name: 'Fortín del Molino', esc: 'otono', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 1000, aiK: 1.3, gold: 80, prize: 'valkiria' },
-  { name: 'Torre del Pozo', esc: 'cerezos', deck: ['legionario', 'arquera', 'lobo', 'valkiria'], hp: 1100, aiK: 1.5, gold: 90, prize: null },
+  { name: 'Torre del Cartel', esc: 'pinos', deck: ['legionario', 'arquera', 'tercio'], hp: 900, aiK: 1.16, gold: 70, prize: 'honderillo' },
+  { name: 'Fortín del Molino', esc: 'otono', deck: ['legionario', 'tercio', 'lobo', 'arquera'], hp: 1000, aiK: 1.1, gold: 80, prize: 'valkiria' },
+  { name: 'Torre del Pozo', esc: 'cerezos', deck: ['legionario', 'arquera', 'lobo', 'valkiria', 'honderillo'], hp: 1100, aiK: 1.5, gold: 90, prize: 'kubi' },
   { name: 'Granja Fortificada', esc: 'oasis', deck: ['tercio', 'lobo', 'valkiria', 'ninja', 'arquera'], hp: 1200, aiK: 1.89, gold: 100, prize: 'ninja' },
-  { name: 'Castillo del Lago', esc: 'pinos', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1300, aiK: 1.4, gold: 110, prize: 'samurai' },
-  { name: 'Bastión del Otoño', esc: 'otono', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja'], hp: 1400, aiK: 1.25, gold: 120, prize: null },
+  { name: 'Castillo del Lago', esc: 'pinos', deck: ['legionario', 'arquera', 'ninja', 'samurai', 'tercio'], hp: 1300, aiK: 1.2, gold: 110, prize: 'samurai' },
+  { name: 'Bastión del Otoño', esc: 'otono', deck: ['lobo', 'valkiria', 'samurai', 'acorazado', 'arquera', 'ninja', 'kubi'], hp: 1400, aiK: 1.25, gold: 120, prize: 'ivo' },
   { name: 'Atalaya del Alba', esc: 'oasis', deck: ['legionario', 'fraile', 'acorazado', 'samurai', 'arquera', 'valkiria'], hp: 1500, aiK: 1.28, gold: 130, prize: 'fraile' },
   { name: 'Muralla de los Pinos', esc: 'pinos', deck: ['acorazado', 'fraile', 'samurai', 'ninja', 'pistolero', 'arquera', 'valkiria', 'tercio'], hp: 1600, aiK: 1.67, gold: 140, prize: 'acorazado' },
   { name: 'Castillo Real de las Praderas', esc: 'cerezos', deck: ['valkiria', 'samurai', 'acorazado', 'fraile', 'pistolero', 'catapulta', 'ninja', 'arquera'], hp: 2200, aiK: 1.12, gold: 300, prize: null, hero: 'lyra', royal: true },
 ];
 // reinos 2 a 6: castillos con nombre propio y ejércitos que crecen. Provisional: su dificultad aún no está ajustada con simulaciones
 const ESCENAS = ['cerezos', 'otono', 'oasis', 'pinos'];
-const FUERZA = ['legionario', 'honderillo', 'ivo', 'kubi', 'rufo', 'arquera', 'tercio', 'lobo', 'valkiria', 'rhea', 'odo', 'torque', 'nivea', 'ninja', 'samurai', 'mira', 'anubek', 'fraile', 'acorazado', 'pistolero', 'morgana', 'ezra', 'valdrys', 'ignis', 'tormund', 'grises', 'catapulta', 'kungfu', 'muerte', 'abaddon', 'aurelion', 'kaiju', 'desencadenado'];
+// unidades de los ejércitos rivales, de menos a más fuerza: cada reino toma un tramo más avanzado (las ascendidas solo en el mundo 2)
+const FUERZA = ['legionario', 'honderillo', 'ivo', 'arquera', 'tercio', 'rufo', 'odo', 'ninja', 'samurai', 'nivea', 'rhea', 'mira', 'torque', 'lobo', 'kubi', 'valkiria', 'pistolero', 'anubek', 'fraile', 'acorazado',
+  'grises', 'ignis', 'morgana', 'catapulta', 'ezra', 'tormund', 'valdrys', 'kungfu', 'muerte', 'desencadenado', 'aurelion', 'abaddon', 'kaiju', 'centinela', 'imparable', 'nul', 'zero', 'rhysida'];
+const FUERZA_M1 = FUERZA.indexOf('centinela');   // el mundo 1 no saca ascendidas en castillos normales
 function genReino(n, nombres, premios, rey) {
   // n: orden del reino (2 = Bosque … 6 = Volcán). premios: { nivel: unidad } prisioneros que liberas
   return nombres.map((name, i) => {
-    const royal = i === 9, top = Math.min(FUERZA.length, 6 + n + Math.floor(i / 2)), pool = FUERZA.slice(Math.max(0, top - 9), top);
+    const royal = i === 9, lim = n <= 6 ? FUERZA_M1 : FUERZA.length, top = Math.min(lim, 6 + Math.round(n * (n <= 6 ? 4 : 1.5)) + Math.floor(i / 2) + (n > 6 ? 10 : -4)), pool = FUERZA.slice(Math.max(0, top - 9), top);   // 9: el salto de 5 en 5 recorre todo el tramo
     const deck = []; for (let k = 0; deck.length < Math.min(8, 4 + Math.floor((i + n) / 2)) && k < 60; k++) { const u = pool[(k * 5 + i * 3 + n) % pool.length]; if (!deck.includes(u)) deck.push(u); }
-    if (royal && n >= 5) deck[deck.length - 1] = n === 6 ? 'imparable' : 'centinela';
-    return { name, esc: ESCENAS[(i * 3 + n * 7) % ESCENAS.length], deck, hp: royal ? 2200 + Math.min(300 * (n - 1), 1500 + 120 * (n - 6)) : 1300 + Math.min(120 * n, 720 + 40 * n) + 80 * i, aiK: +(royal ? 1.1 + 0.05 * n : 1 + 0.04 * n + 0.03 * i).toFixed(2),
+    if (royal && (n === 5 || n === 6)) deck[deck.length - 1] = n === 6 ? 'imparable' : 'centinela';   // los reyes del mundo 1 guardan una ascendida
+    return { name, esc: ESCENAS[(i * 3 + n * 7) % ESCENAS.length], deck, hp: royal ? 2200 + Math.min(300 * (n - 1), 1500 + 120 * (n - 6)) : 1200 + Math.min(100 * n, 720 + 40 * n) + 40 * i, aiK: +((royal ? 1.0 + 0.02 * n : 0.88 + 0.01 * n + 0.012 * i) * (n > 6 ? 0.88 : 1)).toFixed(2),   // ritmo de energía rival, ajustado con simulaciones
       gold: royal ? 300 + 100 * (n - 1) : 80 + 30 * n + 10 * i, prize: premios[i] || null, hero: royal ? rey : undefined, royal: royal || undefined };
   });
 }
-const BOSQUE = genReino(2, ['Claro del Leñador', 'Torre del Musgo', 'Puente de Troncos', 'Cabaña del Cazador', 'Fortín de las Setas', 'Atalaya del Roble', 'Empalizada del Arroyo', 'Bastión de los Helechos', 'Muralla del Jabalí', 'Castillo Real del Bosque'], { 2: 'pistolero', 6: 'catapulta' }, 'gull');
-const DESIERTO = genReino(3, ['Oasis de las Palmas', 'Torre de Arena', 'Fortín de las Dunas', 'Pozo del Caravanero', 'Atalaya del Sol', 'Bastión de Adobe', 'Puerta del Cañón', 'Fuerte del Escorpión', 'Muralla Dorada', 'Palacio Real del Desierto'], { 4: 'kungfu' }, null);
-const NIEVE = genReino(4, ['Refugio del Pino', 'Torre de Escarcha', 'Fortín del Glaciar', 'Lago Helado', 'Atalaya de Cristal', 'Paso de la Ventisca', 'Bastión Blanco', 'Fuerte de la Aurora', 'Muralla de Hielo', 'Castillo Real de las Nieves'], { 5: 'muerte' }, null);
-const PANTANO = genReino(5, ['Embarcadero Hundido', 'Torre del Lodo', 'Fortín de los Juncos', 'Ciénaga Brumosa', 'Atalaya del Sauce', 'Isla de las Ranas', 'Bastión del Musgo', 'Fuerte de la Niebla', 'Muralla Podrida', 'Castillo Real del Pantano'], { 6: 'desencadenado' }, null);
-const VOLCAN = genReino(6, ['Paso de la Ceniza', 'Torre de Basalto', 'Fortín del Azufre', 'Río de Lava', 'Atalaya del Cráter', 'Forja Ardiente', 'Bastión de Obsidiana', 'Fuerte del Humo', 'Muralla de Fuego', 'Fortaleza Real del Volcán'], {}, null);
+const BOSQUE = genReino(2, ['Claro del Leñador', 'Torre del Musgo', 'Puente de Troncos', 'Cabaña del Cazador', 'Fortín de las Setas', 'Atalaya del Roble', 'Empalizada del Arroyo', 'Bastión de los Helechos', 'Muralla del Jabalí', 'Castillo Real del Bosque'], { 0: 'rufo', 2: 'pistolero', 4: 'odo', 6: 'catapulta', 8: 'rhea' }, 'gull');
+const DESIERTO = genReino(3, ['Oasis de las Palmas', 'Torre de Arena', 'Fortín de las Dunas', 'Pozo del Caravanero', 'Atalaya del Sol', 'Bastión de Adobe', 'Puerta del Cañón', 'Fuerte del Escorpión', 'Muralla Dorada', 'Palacio Real del Desierto'], { 1: 'anubek', 4: 'kungfu', 7: 'mira' }, null);
+const NIEVE = genReino(4, ['Refugio del Pino', 'Torre de Escarcha', 'Fortín del Glaciar', 'Lago Helado', 'Atalaya de Cristal', 'Paso de la Ventisca', 'Bastión Blanco', 'Fuerte de la Aurora', 'Muralla de Hielo', 'Castillo Real de las Nieves'], { 2: 'nivea', 5: 'muerte', 8: 'torque' }, null);
+const PANTANO = genReino(5, ['Embarcadero Hundido', 'Torre del Lodo', 'Fortín de los Juncos', 'Ciénaga Brumosa', 'Atalaya del Sauce', 'Isla de las Ranas', 'Bastión del Musgo', 'Fuerte de la Niebla', 'Muralla Podrida', 'Castillo Real del Pantano'], { 2: 'grises', 6: 'desencadenado', 8: 'morgana' }, null);
+const VOLCAN = genReino(6, ['Paso de la Ceniza', 'Torre de Basalto', 'Fortín del Azufre', 'Río de Lava', 'Atalaya del Cráter', 'Forja Ardiente', 'Bastión de Obsidiana', 'Fuerte del Humo', 'Muralla de Fuego', 'Fortaleza Real del Volcán'], { 2: 'ignis', 6: 'tormund', 9: 'valdrys' }, null);
 // de momento todos los reinos y castillos están abiertos para poder recorrer los mapas (poner a false para jugar en orden)
 const CAMPANA_ABIERTA = true;
 // MUNDO 2: siete reinos al otro lado del mar (de abajo arriba). Ejércitos de nivel más alto; dificultad provisional
-const PLAYA = genReino(7, ['Muelle de las Conchas', 'Torre del Coral', 'Fortín de la Marea', 'Cala de las Perlas', 'Atalaya del Faro', 'Bastión de Arena', 'Puerto de las Gaviotas', 'Fuerte del Arrecife', 'Muralla de Nácar', 'Palacio Real de la Playa'], {}, null);
-const SETAS = genReino(8, ['Claro de los Hongos', 'Torre del Champiñón', 'Fortín de las Esporas', 'Prado del Musgo', 'Atalaya del Helecho', 'Bastión del Sombrerillo', 'Puente de Raíces', 'Fuerte de la Seta Roja', 'Muralla del Moho', 'Castillo Real de las Setas'], {}, null);
-const HUESOS = genReino(9, ['Paso del Colmillo', 'Torre de Costillas', 'Fortín del Cráneo', 'Barranco Rojo', 'Atalaya de Arenisca', 'Bastión del Fósil', 'Puerta de las Vértebras', 'Fuerte del Dragón Muerto', 'Muralla de Hueso', 'Fortaleza Real de los Huesos'], {}, null);
-const ENGRANAJES = genReino(10, ['Taller del Vapor', 'Torre del Engranaje', 'Fortín de las Tuberías', 'Fundición de Latón', 'Atalaya del Reloj', 'Bastión de Remaches', 'Puente de Cadenas', 'Fuerte de la Caldera', 'Muralla de Acero', 'Ciudadela Real de los Engranajes'], {}, null);
-const CRISTAL = genReino(11, ['Mina de Amatista', 'Torre del Cuarzo', 'Fortín del Prisma', 'Cascada Violeta', 'Atalaya de la Geoda', 'Bastión Reluciente', 'Paso del Brillo', 'Fuerte de la Gema', 'Muralla de Cristal', 'Castillo Real de Cristal'], {}, null);
-const CEMENTERIO = genReino(12, ['Verja Oxidada', 'Torre de las Lápidas', 'Fortín del Fuego Fatuo', 'Cripta Olvidada', 'Atalaya del Cuervo', 'Bastión de las Ánimas', 'Arco de la Niebla', 'Fuerte del Sepulturero', 'Muralla del Silencio', 'Castillo Real del Cementerio'], {}, null);
-const CIELO = genReino(13, ['Escalera de Nubes', 'Torre del Viento', 'Fortín de las Cascadas', 'Isla Flotante', 'Atalaya del Sol', 'Bastión Dorado', 'Arco Celeste', 'Fuerte del Trueno', 'Muralla de Oro', 'Palacio Real del Cielo'], {}, null);
+const PLAYA = genReino(7, ['Muelle de las Conchas', 'Torre del Coral', 'Fortín de la Marea', 'Cala de las Perlas', 'Atalaya del Faro', 'Bastión de Arena', 'Puerto de las Gaviotas', 'Fuerte del Arrecife', 'Muralla de Nácar', 'Palacio Real de la Playa'], { 3: 'ezra', 9: 'aurelion' }, null);
+const SETAS = genReino(8, ['Claro de los Hongos', 'Torre del Champiñón', 'Fortín de las Esporas', 'Prado del Musgo', 'Atalaya del Helecho', 'Bastión del Sombrerillo', 'Puente de Raíces', 'Fuerte de la Seta Roja', 'Muralla del Moho', 'Castillo Real de las Setas'], { 9: 'abaddon' }, null);
+const HUESOS = genReino(9, ['Paso del Colmillo', 'Torre de Costillas', 'Fortín del Cráneo', 'Barranco Rojo', 'Atalaya de Arenisca', 'Bastión del Fósil', 'Puerta de las Vértebras', 'Fuerte del Dragón Muerto', 'Muralla de Hueso', 'Fortaleza Real de los Huesos'], { 9: 'kaiju' }, null);
+const ENGRANAJES = genReino(10, ['Taller del Vapor', 'Torre del Engranaje', 'Fortín de las Tuberías', 'Fundición de Latón', 'Atalaya del Reloj', 'Bastión de Remaches', 'Puente de Cadenas', 'Fuerte de la Caldera', 'Muralla de Acero', 'Ciudadela Real de los Engranajes'], { 9: 'centinela' }, null);
+const CRISTAL = genReino(11, ['Mina de Amatista', 'Torre del Cuarzo', 'Fortín del Prisma', 'Cascada Violeta', 'Atalaya de la Geoda', 'Bastión Reluciente', 'Paso del Brillo', 'Fuerte de la Gema', 'Muralla de Cristal', 'Castillo Real de Cristal'], { 9: 'nul' }, null);
+const CEMENTERIO = genReino(12, ['Verja Oxidada', 'Torre de las Lápidas', 'Fortín del Fuego Fatuo', 'Cripta Olvidada', 'Atalaya del Cuervo', 'Bastión de las Ánimas', 'Arco de la Niebla', 'Fuerte del Sepulturero', 'Muralla del Silencio', 'Castillo Real del Cementerio'], { 9: 'zero' }, null);
+const CIELO = genReino(13, ['Escalera de Nubes', 'Torre del Viento', 'Fortín de las Cascadas', 'Isla Flotante', 'Atalaya del Sol', 'Bastión Dorado', 'Arco Celeste', 'Fuerte del Trueno', 'Muralla de Oro', 'Palacio Real del Cielo'], { 9: 'rhysida' }, null);
+// castillos que en las simulaciones salían demasiado duros: un poco menos de ritmo rival
+[[DESIERTO, [0, 1]], [NIEVE, [1, 8, 9]], [PANTANO, [2, 7, 9]], [VOLCAN, [4, 6, 9]], [SETAS, [7]], [HUESOS, [2]], [CRISTAL, [6, 9]], [CEMENTERIO, [9]], [CIELO, [1, 8, 9]]].forEach(([R, l]) => l.forEach(i => { R[i].aiK = +(R[i].aiK * 0.9).toFixed(2); }));
 // mapa del mundo (de abajo arriba). pos en % del mapa (ancho, alto). art: imagen del mapa cuando llegue (si no, se dibuja uno provisional)
 const KINGDOMS = [
   { id: 'hogar', name: 'Tu reino', pos: [50, 89.8], biome: '#7fcf6a', home: true },
@@ -523,7 +528,13 @@ const _heroUI = heroUI;
 heroUI = function () { _heroUI(); coachTick(); };
 
 /* ---- simulación de niveles (para ajustar la dificultad): la IA juega tu bando con el ejército que tendrías al llegar ---- */
-function deckAtLevel(kid, i) { const kd = KD(kid), d = STARTERS.slice(); kd.levels.slice(0, i).forEach(l => { if (l.prize) d.push(l.prize); }); return d.slice(-8); }
+function deckAtLevel(kid, i) {
+  // el ejército que tendrías al llegar: los de casa y todos los presos liberados hasta aquí (de este reino y los anteriores); los 8 más fuertes
+  const d = STARTERS.slice(), ki = KINGDOMS.findIndex(k => k.id === kid);
+  KINGDOMS.slice(0, ki + 1).forEach((k, j) => (j < ki ? k.levels || [] : (k.levels || []).slice(0, i)).forEach(l => { if (l.prize && !d.includes(l.prize)) d.push(l.prize); }));
+  return d.sort((a, b) => FUERZA.indexOf(b) - FUERZA.indexOf(a)).slice(0, 8);
+}
+window.__deckAt = deckAtLevel; window.__enemyPower = (k, i) => enemyPower(k, i);
 window.__simLevel = (kid, i, n = 10, maxT = 420, dt = 1 / 30, over = {}) => {
   const out = [];
   for (let g = 0; g < n; g++) {

@@ -187,7 +187,7 @@ const _resetLv = resetBattle;
 resetBattle = function (o = {}) {
   _resetLv(o);
   const real = !o.demo && !o.sim;
-  B.blue.pw = real ? Object.fromEntries(owned().map(k => [k, [lvOf(k), rangoF(k)]])) : {};
+  B.blue.pw = o.playerPw ? Object.fromEntries(ALL.map(k => [k, o.playerPw])) : real ? Object.fromEntries(owned().map(k => [k, [lvOf(k), rangoF(k)]])) : {};
   const d = B.blue.deck || [], pw = d.map(k => B.blue.pw[k] || [1, 0]);
   const media = pw.length ? [Math.round(pw.reduce((s, p) => s + p[0], 0) / pw.length), Math.round(pw.reduce((s, p) => s + p[1], 0) / pw.length)] : [1, 0];
   B.purple.pwAll = o.enemyPw || (o.run && o.run.kind === 'rapida' ? media : [1, 0]);

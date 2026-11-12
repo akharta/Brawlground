@@ -597,3 +597,16 @@ Arte en bruto en `arte/zero/`; piezas del juego en `docs/img/zero/`.
 - Tropas tiene filtros (rareza, rango, tipo, coste, desbloqueadas/bloqueadas/pueden ascender) y orden (coste, rareza, nivel, rango, vida, daño por golpe, daño por segundo, alcance, velocidad, copias, nombre; ascendente o descendente). Vida y daño cuentan el nivel y el rango que tengas. Se recuerdan en el móvil.
 - Kaiju Tomo: la llamarada es un chorro de fuego azul que sale de la boca, crece hasta el enemigo ondeando con chispas y estalla en área al llegar.
 - Nul: sus bolas de luz van rectas al enemigo como cualquier proyectil; el aro se puede usar a los 20 s de salir y luego cada 30 s.
+
+## Campaña con las unidades nuevas (repaso nov. 2026)
+
+- Presos que liberas (primera victoria en ese castillo):
+  - Praderas: Garra (1), Pip (2), Brynja (3), Kubi (4), Kazú (5), Hayato (6), Ivo (7), Fray Tomé (8), Gustav (9).
+  - Bosque: Rufo (1), Cole (3), Odo (5), Berta (7), Rhea (9).
+  - Desierto: Anubek (2), Lin (5), Mira (8).
+  - Nieves: Nivea (3), Velkara (6), Torque (9).
+  - Pantano: Los Grises (3), Jhotum (7), Morgana (9).
+  - Volcán: Ignis (3), Tormund (7), Valdrys (castillo real).
+  - Mundo 2: Ezra (Playa 4), Aurelion (rey de la Playa), Abaddon (rey de las Setas), Kaiju Tomo (rey de los Huesos), Legionario X-9 (rey de los Engranajes), Nul (rey de Cristal), Zero (rey del Cementerio), Rhysida (rey del Cielo). Elyss sigue en el Abismo.
+- Ejércitos rivales: todas las unidades ordenadas por fuerza (FUERZA en campana.js); cada reino toma un tramo más avanzado. Las ascendidas solo aparecen en el mundo 2 (y en los reyes del Pantano y del Volcán).
+- Dificultad ajustada con simulaciones (la IA juega tu bando con el ejército que tendrías al llegar y al mismo nivel que el rival): ritmo de energía rival 0,88–1,26 y algo menos en los castillos que salían demasiado duros.
