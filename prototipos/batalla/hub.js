@@ -5,7 +5,7 @@ const RAREZA = { comun: 'Común', poco: 'Poco común', rara: 'Rara', epica: 'Ép
 const HABILIDAD = {
   legionario: 'Espada y escudo. Aguanta en primera línea.',
   arquera: 'Dispara flechas en parábola desde lejos.',
-  nul: 'Vuela. Lanza bolas de luz que atraviesan. 7 cargas de esquiva. Cada 20 s su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
+  nul: 'Vuela. Lanza bolas de luz que atraviesan. 7 cargas de esquiva. A los 20 s de salir, y luego cada 30 s, su aro se traga al enemigo del centro. Definitiva: una estrella que cae sobre el campo.',
   rhysida: 'Dos tajos y un remolino. Se teletransporta a la espalda del rival más débil. Definitiva: ralentiza el tiempo y corta a todos los rivales. Cambia de skin al subir de rango.',
   tormund: 'Lanza sus hachas girando desde lejos; a 6 cuerpos salta y cae como una guillotina. Al 40 % de vida entra en furia: ataca el doble de rápido y roba vida.',
   grises: 'Cuatro ratas en una carta: la del escudo (tapa de alcantarilla), la boxeadora, la del cuchillo y la de la palanca.',
